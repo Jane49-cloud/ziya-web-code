@@ -1,11 +1,24 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { FaPlus, FaMinus } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
+import clsx from "clsx"; // Utility for conditional classNames
 
-const Sidebar = () => {
+interface SidebarProps {
+  closeSidebar: () => void;
+}
+
+interface SidebarItem {
+  title: string;
+  icon: string;
+  path?: string;
+  dropdown?: { title: string; path: string }[];
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
   const [openDropdowns, setOpenDropdowns] = useState<{
     [key: string]: boolean;
   }>({});
+  const location = useLocation();
 
   const handleDropdownToggle = (menu: string) => {
     setOpenDropdowns((prev) => ({
@@ -14,7 +27,7 @@ const Sidebar = () => {
     }));
   };
 
-  const sidebarItems = [
+  const sidebarItems: SidebarItem[] = [
     {
       title: "Dashboard",
       icon: "dashboard",
@@ -69,44 +82,75 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="bg-white shadow-lg w-64 h-full fixed top-0 left-0 z-50">
+    <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300">
       {/* Logo */}
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-lg font-bold text-gray-800">Ziya</h1>
+      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h1 className="text-xl font-bold text-gray-800 px-5">Ziya</h1>
+        {/* Close button visible on small screens */}
+        <button
+          className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
+          onClick={closeSidebar}
+          aria-label="Close Sidebar"
+        >
+          <FaTimes className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Menu */}
-      <nav className="py-4 px-4">
+      <nav className="flex-1 py-4 px-2 overflow-y-auto">
         {sidebarItems.map((item, index) => {
+          const isActive = item.path && location.pathname === item.path;
+
           if (item.dropdown) {
+            const isOpen = openDropdowns[item.title];
+
             return (
-              <div key={index} className="mb-4">
+              <div key={index} className="mb-2">
                 <button
                   onClick={() => handleDropdownToggle(item.title)}
-                  className="flex justify-between items-center w-full text-left p-2 rounded-lg hover:bg-gray-100 text-gray-700"
+                  className="flex justify-between items-center w-full px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700 focus:outline-none transition-colors duration-200"
+                  aria-expanded={isOpen}
+                  aria-controls={`${item.title}-dropdown`}
                 >
-                  <span className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span className="menu-icon">
-                      <i className={`icon-${item.icon}`} />
+                      <i className={`icon-${item.icon} text-lg`} />
                     </span>
-                    {item.title}
-                  </span>
-                  {openDropdowns[item.title] ? <FaMinus /> : <FaPlus />}
+                    <span className="font-medium">{item.title}</span>
+                  </div>
+                  {isOpen ? <FaMinus /> : <FaPlus />}
                 </button>
+                {/* Dropdown Menu */}
                 <div
-                  className={`ml-6 mt-2 space-y-2 overflow-hidden transition-all duration-300 ${
-                    openDropdowns[item.title] ? "max-h-screen" : "max-h-0"
-                  }`}
+                  id={`${item.title}-dropdown`}
+                  className={clsx(
+                    "ml-6 mt-1 space-y-1 overflow-hidden transition-all duration-300",
+                    {
+                      "max-h-60 opacity-100 border-l border-gray-200": isOpen,
+                      "max-h-0 opacity-0": !isOpen,
+                    }
+                  )}
                 >
-                  {item.dropdown.map((subItem, subIndex) => (
-                    <Link
-                      key={subIndex}
-                      to={subItem.path}
-                      className="block text-sm text-gray-600 hover:text-gray-900"
-                    >
-                      {subItem.title}
-                    </Link>
-                  ))}
+                  {item.dropdown.map((subItem, subIndex) => {
+                    const isSubActive = location.pathname === subItem.path;
+                    return (
+                      <Link
+                        key={subIndex}
+                        to={subItem.path}
+                        onClick={closeSidebar}
+                        className={clsx(
+                          "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
+                          {
+                            "bg-gray-200 text-gray-900": isSubActive,
+                            "text-gray-600": !isSubActive,
+                          }
+                        )}
+                        aria-current={isSubActive ? "page" : undefined}
+                      >
+                        {subItem.title}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -115,19 +159,41 @@ const Sidebar = () => {
           return (
             <Link
               key={index}
-              to={item.path}
-              className="flex items-center justify-between p-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              to={item.path || "#"}
+              onClick={closeSidebar}
+              className={clsx(
+                "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700 focus:outline-none transition-colors duration-200",
+                {
+                  "bg-gray-200 text-gray-900": isActive,
+                }
+              )}
+              aria-current={isActive ? "page" : undefined}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-3">
                 <span className="menu-icon">
-                  <i className={`icon-${item.icon}`} />
+                  <i className={`icon-${item.icon} text-lg`} />
                 </span>
-                {item.title}
+                <span className="font-medium">{item.title}</span>
               </span>
             </Link>
           );
         })}
       </nav>
+
+      {/* Logout Footer */}
+      <div className="border-t border-gray-200 p-4">
+        <button
+          onClick={() => {
+            // Handle logout logic here
+            console.log("Logout clicked");
+          }}
+          className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:bg-blue-100 rounded-lg text-base font-bold transition-colors duration-200"
+          aria-label="Logout"
+        >
+          <FaSignOutAlt className="mr-2" />
+          Logout
+        </button>
+      </div>
     </div>
   );
 };
