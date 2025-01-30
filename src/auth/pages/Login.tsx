@@ -1,15 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import clsx from "clsx";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import { Alert } from "../../components/Alert";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
-// If you have icons from your 'media' folder:
-import { icons } from "../../media"; // or remove if not used
+import { icons } from "../../media";
+import { useLoginMutation } from "../features/authApi";
 
-// 1) Yup validation schema
 const loginSchema = Yup.object().shape({
   email: Yup.string()
     .email("Invalid email format")
@@ -22,8 +22,10 @@ const loginSchema = Yup.object().shape({
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
+  const [serverStatus, setServerStatus] = useState("");
+  const navigate = useNavigate();
 
-  // 2) Formik setup
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -31,38 +33,47 @@ export function Login() {
       remember: false,
     },
     validationSchema: loginSchema,
-    onSubmit: (values, { setStatus }) => {
-      // Example "auth" check:
-      if (
-        values.email === "demo@keenthemes.com" &&
-        values.password === "demo1234"
-      ) {
+
+    onSubmit: async (values, { setSubmitting, setStatus }) => {
+      // Reset statuses
+      setSubmitting(true);
+      setStatus("");
+      setServerStatus("");
+
+      try {
+        // Attempt login via RTK Query mutation
+        const response = await login({
+          email: values.email,
+          password: values.password,
+        }).unwrap();
         setStatus("Login successful!");
-      } else {
-        setStatus("Wrong credentials!");
+        console.log(response.token);
+        localStorage.setItem("ziya-access", JSON.stringify(response.token));
+      } catch (error: any) {
+        if (error?.data?.message) {
+          setStatus(error.data.message);
+        } else {
+          setStatus("Login failed. Please check your credentials.");
+        }
+      } finally {
+        setSubmitting(false);
       }
     },
   });
 
-  // 3) Toggle show/hide password
+  // Toggle show/hide password
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center  py-12 sm:px-6 lg:px-8">
-      {/* Center container */}
+    <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Optional brand / header above card */}
-        <div className="mb-8 text-center">
-          {/* Could place a brand logo here if you wish */}
-        </div>
-
-        {/* Actual card */}
+        <div className="mb-8 text-center">{/* Logo can go here */}</div>
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
-          {/* Sign In heading and sign-up link */}
+          {/* Heading + Sign Up Link */}
           <div className="mb-4 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 leading-none mb-2.5">
+            <h3 className="mb-2.5 text-xl font-semibold leading-none text-gray-900">
               Sign In
             </h3>
             <div className="flex items-center justify-center text-sm">
@@ -76,13 +87,12 @@ export function Login() {
             </div>
           </div>
 
-          {/* Social Sign-In Buttons */}
+          {/* Social Sign-In (Optional) */}
           <div className="mb-8 mt-2 grid grid-cols-2 gap-2.5">
             <button
               type="button"
-              className="flex  items-center justify-center rounded border px-3 py-2 text-sm  border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="flex items-center justify-center rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              {/* Google icon or fallback */}
               <img
                 src={icons?.google || "/media/brand-logos/google-icon.svg"}
                 className="mr-2 h-5 w-5"
@@ -90,21 +100,20 @@ export function Login() {
               />
               Use Google
             </button>
-
             <button
               type="button"
-              className="flex  items-center justify-center rounded border px-3 py-2 text-sm  border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="flex items-center justify-center rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <img
                 src={icons?.facebook || "/media/brand-logos/google-icon.svg"}
                 className="mr-2 h-5 w-5"
-                alt="apple icon"
+                alt="facebook icon"
               />
-              Use facebook
+              Use Facebook
             </button>
           </div>
 
-          {/* Or divider */}
+          {/* OR Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-b border-gray-200" />
@@ -115,14 +124,14 @@ export function Login() {
           </div>
 
           {/* Show success/error Alert */}
-          {formik.status && (
+          {(formik.status || serverStatus) && (
             <Alert
               variant={
                 formik.status === "Login successful!" ? "success" : "danger"
               }
               className="mb-4"
             >
-              {formik.status}
+              {formik.status || serverStatus}
             </Alert>
           )}
 
@@ -167,12 +176,12 @@ export function Login() {
                 >
                   Password
                 </label>
-                <a
-                  href="reset-password/enter-email"
+                <Link
+                  to="/reset-password/enter-email"
                   className="text-xs font-medium text-indigo-600 hover:underline"
                 >
                   Forgot Password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -229,21 +238,21 @@ export function Login() {
             {/* Submit Button */}
             <button
               type="submit"
+              disabled={formik.isSubmitting || isLoading}
               className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              disabled={formik.isSubmitting}
             >
-              {formik.isSubmitting ? "Please wait..." : "Sign In"}
+              {formik.isSubmitting || isLoading ? "Please wait..." : "Sign In"}
             </button>
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <a
-              href="/auth/signup"
+            <Link
+              to="/auth/signup"
               className="font-medium text-indigo-600 hover:underline"
             >
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </div>
