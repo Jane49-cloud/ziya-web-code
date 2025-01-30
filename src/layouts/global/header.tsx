@@ -1,8 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiMenu, FiBell, FiMail, FiChevronDown } from "react-icons/fi";
 import { IconContext } from "react-icons";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useLoadUserQuery } from "../../redux/api";
+import { customAvatar, getUser } from "../../utils";
 
+// Click-outside hook
 function useOutsideClick(
   ref: React.RefObject<HTMLElement>,
   handler: () => void
@@ -54,7 +57,7 @@ const iconButtons = [
 const profileMenuItems = [
   { to: "/profile", label: "My Profile" },
   { to: "/settings", label: "Settings" },
-  { to: "/logout", label: "Logout" },
+  { label: "Logout" },
 ];
 
 interface HeaderProps {
@@ -64,13 +67,42 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
+
   useOutsideClick(profileRef, () => setProfileDropdownOpen(false));
+
+  const token = localStorage.getItem("ziya-access");
+
+  const user = getUser();
+  const fullName = user
+    ? `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim()
+    : "";
+
+  const {
+    data: userData,
+    refetch: refetchUserDetails,
+    isLoading,
+  } = useLoadUserQuery(null, { skip: !token });
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("ziya-access");
+    localStorage.removeItem("ziya-profile");
+    navigate("/auth/login");
+  };
+
+  useEffect(() => {
+    if (token && !user && !isLoading) {
+      refetchUserDetails();
+      localStorage.setItem("ziya-profile", JSON.stringify(userData));
+      console.log(userData, "userdata");
+    }
+  }, [token, refetchUserDetails, user, userData, isLoading]);
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
       <header className="sticky top-0 z-30 bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 h-[3.75rem]">
-          {/* Sidebar Toggle (Hamburger) on Mobile */}
+        <div className="container mx-auto flex items-center justify-between px-4 lg:px-8 h-[3.75rem]">
           <button
             onClick={toggleSidebar}
             className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors duration-200"
@@ -79,7 +111,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <FiMenu className="w-6 h-6" />
           </button>
 
-          {/* Main Navigation (hidden on mobile) */}
           <nav className="hidden lg:flex space-x-4">
             {navLinks.map(({ to, label }) => (
               <NavLink
@@ -92,7 +123,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             ))}
           </nav>
 
-          {/* Right side icons + User Profile */}
           <div className="flex items-center space-x-3">
             {iconButtons.map(({ ariaLabel, icon, badgeCount, badgeColor }) => (
               <button
@@ -109,7 +139,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </button>
             ))}
 
-            {/* User Profile Dropdown */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileDropdownOpen((prev) => !prev)}
@@ -117,10 +146,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 aria-haspopup="true"
                 aria-expanded={isProfileDropdownOpen}
               >
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold uppercase">
-                  JD
-                </div>
-                <span className="hidden sm:block font-medium">John Doe</span>
+                <div>{customAvatar(fullName)}</div>
+
+                <span className="hidden sm:block font-medium">
+                  {fullName || "John Doe"}
+                </span>
                 <FiChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${
                     isProfileDropdownOpen ? "rotate-180" : ""
@@ -128,7 +158,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 />
               </button>
 
-              {/* Dropdown Menu */}
               <div
                 className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-10 transform transition-all duration-300 ease-out
                   ${
@@ -140,16 +169,30 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 aria-orientation="vertical"
                 aria-labelledby="user-menu"
               >
-                {profileMenuItems.map(({ to, label }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    role="menuitem"
-                  >
-                    {label}
-                  </NavLink>
-                ))}
+                {profileMenuItems.map(({ to, label }) => {
+                  if (label === "Logout") {
+                    return (
+                      <button
+                        key="logout"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                        onClick={handleLogout}
+                        role="menuitem"
+                      >
+                        Logout
+                      </button>
+                    );
+                  }
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to!}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      role="menuitem"
+                    >
+                      {label}
+                    </NavLink>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     return (
                       <Link
                         key={subIndex}
-                        to={subItem.path}
+                        to={"#"}
                         onClick={closeSidebar}
                         className={clsx(
                           "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
@@ -163,7 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
           return (
             <Link
               key={index}
-              to={item.path || "#"}
+              to={"#"}
               onClick={closeSidebar}
               className={clsx(
                 "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700 focus:outline-none transition-colors duration-200",

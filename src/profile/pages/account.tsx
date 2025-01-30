@@ -135,42 +135,6 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
         </div>
-
-        {/* Role */}
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Role
-          </label>
-          <input
-            id="role"
-            name="role"
-            type="text"
-            value={user?.role}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
-
-        {/* Activation Code */}
-        <div>
-          <label
-            htmlFor="activation_code"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Activation Code
-          </label>
-          <input
-            id="activation_code"
-            name="activation_code"
-            type="text"
-            value={user?.activation_code || ""}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
       </div>
 
       <div>

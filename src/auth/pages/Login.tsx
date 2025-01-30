@@ -78,13 +78,13 @@ export function Login() {
               Sign In
             </h3>
             <div className="flex items-center justify-center text-sm">
-              <span className="mr-1 text-gray-600">Need an account?</span>
-              <Link
+              {/* <span className="mr-1 text-gray-600">Need an account?</span> */}
+              {/* <Link
                 to="/auth/signup"
                 className="font-medium text-indigo-600 hover:underline"
               >
                 Sign up
-              </Link>
+              </Link> */}
             </div>
           </div>
 
@@ -246,7 +246,7 @@ export function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-gray-600 hidden">
             Already have an account?{" "}
             <Link
               to="/auth/signup"

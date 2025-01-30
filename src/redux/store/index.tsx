@@ -16,6 +16,8 @@ const initializeApp = async () => {
     apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
   );
 
+  localStorage.setItem("ziya-profile", JSON.stringify(data));
+
   if (status === "fulfilled" && data?.Success) {
     localStorage.setItem("ziya-profile", JSON.stringify(data.Data));
   } else if (error || status !== "fulfilled") {

@@ -1,11 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export const getUser = (): any | null => {
+import { UserProfile } from "../profile/pages";
+export const getUser = (): UserProfile | null => {
   const user = localStorage.getItem("ziya-profile");
-  if (user) {
-    return JSON.parse(user) as any;
+
+  if (!user) {
+    return null;
   }
-  return null;
+
+  try {
+    return JSON.parse(user) as UserProfile;
+  } catch (error) {
+    console.error("Error parsing user data from localStorage:", error);
+    return null;
+  }
 };
 
 export const getInitials = (name: string) => {

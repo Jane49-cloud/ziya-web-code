@@ -47,7 +47,9 @@ const Layout: React.FC<LayoutProps> = () => {
 
           {/* Main content */}
           <main className="flex-1 p-4 overflow-auto">
-            <Outlet />
+            <div className="container mx-auto">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

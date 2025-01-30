@@ -23,7 +23,7 @@ const initialUser = getUser();
 console.log(initialUser);
 
 export const UserProfilePage: React.FC = () => {
-  const [user, setUser] = useState<UserProfile>(initialUser);
+  const [user, setUser] = useState(initialUser);
 
   const tabItems = [
     {
@@ -49,23 +49,23 @@ export const UserProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto container rounded-md bg-white p-6 shadow sm:p-8">
-        {/* Header with Avatar and Basic Info */}
         <div className="flex items-center space-x-4">
-          {/* If user.avatar is provided, else fallback to customAvatar */}
-          {user?.avatar ? (
-            <img
-              src={user?.avatar}
-              alt={fullName || "User Avatar"}
-              className="h-16 w-16 rounded-full object-cover"
-            />
-          ) : (
-            customAvatar(fullName || "User")
-          )}
+          {user?.avatar
+            ? // <img
+              //   src={user?.avatar}
+              //   alt={fullName || "User Avatar"}
+              //   className="h-16 w-16 rounded-full object-cover"
+              // />
+              customAvatar(fullName || "User")
+            : customAvatar(fullName || "User")}
           <div>
             <h1 className="text-xl font-bold text-gray-800">
               {fullName || "No Name"}
             </h1>
             <p className="text-sm text-gray-500">{user?.email}</p>
+            <p className="text-sm text-gray-500">
+              {user?.role || "Ziya staff"}
+            </p>
           </div>
         </div>
 
