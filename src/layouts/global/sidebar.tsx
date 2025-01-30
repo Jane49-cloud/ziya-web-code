@@ -82,10 +82,14 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
   ];
 
   return (
-    <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300">
+    <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300 z-50">
       {/* Logo */}
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800 px-5">Ziya</h1>
+      <div className="p-4 border-gray-200 flex justify-between items-center">
+        <img
+          src="/public/media/logos/Ziya_logo_transparent_bg.png"
+          className="w-full h-16 object-contain "
+          alt=""
+        />
         {/* Close button visible on small screens */}
         <button
           className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
