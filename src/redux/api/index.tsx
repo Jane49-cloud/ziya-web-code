@@ -4,15 +4,10 @@ export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:4000/api/v1",
-
     prepareHeaders: (headers) => {
-      const accessToken = "";
-      const refreshToken = "";
+      const accessToken = localStorage.getItem("ziya-access");
       if (accessToken) {
-        headers.set("Bearer", accessToken);
-      }
-      if (refreshToken) {
-        headers.set("refresh-token", refreshToken);
+        headers.set("Authorization", `Bearer ${accessToken}`);
       }
       return headers;
     },
@@ -26,8 +21,8 @@ export const apiSlice = createApi({
     }),
     loadUser: builder.query({
       query: () => ({
-        url: "/user/auth/profile",
-        method: "POST",
+        url: "/staff/profile",
+        method: "GET",
       }),
     }),
   }),

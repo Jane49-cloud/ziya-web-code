@@ -48,7 +48,8 @@ export function Login() {
         }).unwrap();
         setStatus("Login successful!");
         console.log(response.token);
-        localStorage.setItem("ziya-access", JSON.stringify(response.token));
+        localStorage.setItem("ziya-access", response.token);
+        navigate("/");
       } catch (error: any) {
         if (error?.data?.message) {
           setStatus(error.data.message);

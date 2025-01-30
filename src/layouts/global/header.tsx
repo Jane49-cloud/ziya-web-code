@@ -40,13 +40,13 @@ const iconButtons = [
   {
     ariaLabel: "Notifications",
     icon: <FiBell className="w-5 h-5" />,
-    badgeCount: 3,
+    badgeCount: 0,
     badgeColor: "bg-red-600",
   },
   {
     ariaLabel: "Messages",
     icon: <FiMail className="w-5 h-5" />,
-    badgeCount: 5,
+    badgeCount: 0,
     badgeColor: "bg-green-600",
   },
 ];
