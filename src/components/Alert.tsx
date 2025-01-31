@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { KeenIcon } from "./keenIcons/KeenIcon";
 
 interface IAlertProps {
-  variant?: "success" | "info" | "danger" | "primary" | "warning";
+  variant?: "success" | "info" | "danger" | "primary" | "warning" | "";
   icon?: string;
   children: React.ReactNode;
   className?: string;

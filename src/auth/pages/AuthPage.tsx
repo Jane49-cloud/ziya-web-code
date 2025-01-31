@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router";
+import { Route, Routes } from "react-router";
 
 import { Login } from "./Login";
 import { Signup } from "./Register";
@@ -33,7 +33,6 @@ const AuthPage = () => (
         path="/reset-password/changed"
         element={<ResetPasswordChanged />}
       />
-      <Route path="*" element={<Navigate to="/error/404" />} />
     </Route>
   </Routes>
 );

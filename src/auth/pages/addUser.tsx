@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useFormik } from "formik";
 import clsx from "clsx";
 import * as Yup from "yup";
 import { Alert } from "../../components/Alert";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { useRegisterMutation } from "../features/authApi";
+import { styles } from "../../styles";
 
 const initialValues = {
   firstname: "",
@@ -15,8 +16,8 @@ const initialValues = {
   country_code: "",
   phone_number: "",
   password: "",
-  role: "agent",
-  activation_code: "ABC123",
+  user_role: "agent",
+  activation_code: "ABC123", // static if needed
 };
 
 const addUserSchema = Yup.object().shape({
@@ -31,8 +32,8 @@ const addUserSchema = Yup.object().shape({
     .required("Last name is required"),
   email: Yup.string()
     .email("Invalid email format")
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
+    .min(3, "Minimum 3 characters")
+    .max(50, "Maximum 50 characters")
     .required("Email is required"),
   country_code: Yup.string().required("Country code is required"),
   phone_number: Yup.string().required("Phone number is required"),
@@ -40,27 +41,33 @@ const addUserSchema = Yup.object().shape({
     .min(6, "Minimum 6 characters")
     .max(50, "Maximum 50 characters")
     .required("Password is required"),
-  role: Yup.string()
-    .oneOf(["dev", "agent", "admin", "customer"], "Invalid role selection")
-    .required("Role is required"),
+  user_role: Yup.string()
+    .oneOf(["dev", "agent", "super admin", "customer"], "Invalid user_role")
+    .required("user_role is required"),
 });
 
-type FormFieldProps = {
+type AddUserProps = {
+  // This callback is passed from the parent (Staff) to switch tabs
+  onUserCreated?: () => void;
+};
+
+// Reusable input field component
+function FormField({
+  id,
+  label,
+  formik,
+  type = "text",
+  placeholder,
+}: {
   id: keyof typeof initialValues;
   label: string;
   type?: string;
   placeholder?: string;
   formik: ReturnType<typeof useFormik<typeof initialValues>>;
-};
-
-function FormField({
-  id,
-  label,
-  type = "text",
-  placeholder,
-  formik,
-}: FormFieldProps) {
+}) {
   const { touched, errors, getFieldProps } = formik;
+  const hasError = touched[id] && errors[id];
+
   return (
     <div>
       <label
@@ -76,20 +83,19 @@ function FormField({
         {...getFieldProps(id)}
         className={clsx(
           "form-control block w-full rounded-md border px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
-          {
-            "border-red-500 focus:ring-red-200": touched[id] && errors[id],
-            "border-gray-300 focus:ring-indigo-200": !errors[id],
-          }
+          hasError
+            ? "border-red-500 focus:ring-red-200"
+            : "border-gray-300 focus:ring-indigo-200"
         )}
       />
-      {touched[id] && errors[id] && (
+      {hasError && (
         <div className="mt-1 text-xs text-red-500">{errors[id]}</div>
       )}
     </div>
   );
 }
 
-export function AddUser() {
+export function AddUser({ onUserCreated }: AddUserProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [registerUser, { isLoading, error }] = useRegisterMutation();
 
@@ -98,58 +104,86 @@ export function AddUser() {
     validationSchema: addUserSchema,
     onSubmit: async (values, { setStatus, setSubmitting, resetForm }) => {
       try {
-        await registerUser(values).unwrap();
-        setStatus("User added successfully!");
+        const response = await registerUser(values).unwrap();
+
+        setStatus(response.message || "User added successfully!");
         resetForm();
+
+        if (onUserCreated) {
+          onUserCreated();
+        }
       } catch (err: any) {
-        setStatus(err?.data?.message || "An error occurred.");
+        setStatus(err?.data?.error || "An error occurred.");
       } finally {
         setSubmitting(false);
       }
     },
   });
 
-  const togglePassword = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setShowPassword((prev) => !prev);
-  };
+  const togglePassword = () => setShowPassword((prev) => !prev);
+
+  const rtkErrorMessage =
+    (error as any)?.data?.error ?? (error as any)?.error ?? null;
 
   return (
-    <div className="flex  flex-col justify-center ">
-      <div className="sm:mx-auto sm:w-full sm:max-w-7xl">
+    <div className="flex flex-col justify-center mt-5">
+      <div className="sm:w-full sm:max-w-4xl">
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
           <div className="mb-4 text-center">
             <h3 className="text-xl font-semibold text-gray-900 leading-none mb-2.5">
               Add User
             </h3>
           </div>
-          {formik.status && (
+
+          {formik.status && !rtkErrorMessage && (
             <Alert variant="success" className="mb-4">
               {formik.status}
             </Alert>
           )}
-          {(error as any) && (
+
+          {/* If there's an RTK Query error, show that */}
+          {rtkErrorMessage && (
             <Alert variant="danger" className="mb-4">
-              {"Something went wrong!"}
+              {rtkErrorMessage}
             </Alert>
           )}
+
           <form onSubmit={formik.handleSubmit} className="space-y-5">
+            {/* First Name */}
             <FormField id="firstname" label="First Name" formik={formik} />
+
+            {/* Middle Name */}
             <FormField id="middlename" label="Middle Name" formik={formik} />
+
+            {/* Last Name */}
             <FormField id="lastname" label="Last Name" formik={formik} />
-            <FormField id="email" label="Email" type="email" formik={formik} />
+
+            {/* Email */}
+            <FormField
+              id="email"
+              label="Email"
+              type="email"
+              formik={formik}
+              placeholder="e.g. john.doe@example.com"
+            />
+
+            {/* Country Code */}
             <FormField
               id="country_code"
               label="Country Code"
-              placeholder="e.g. +1"
               formik={formik}
+              placeholder="e.g. +1"
             />
+
+            {/* Phone Number */}
             <FormField
               id="phone_number"
               label="Phone Number"
-              placeholder="e.g. 9876543210"
               formik={formik}
+              placeholder="e.g. 9876543210"
             />
+
+            {/* Password Field */}
             <div>
               <label
                 htmlFor="password"
@@ -164,12 +198,9 @@ export function AddUser() {
                   {...formik.getFieldProps("password")}
                   className={clsx(
                     "form-control block w-full rounded-md border px-3 py-2 pr-10 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
-                    {
-                      "border-red-500 focus:ring-red-200":
-                        formik.touched.password && formik.errors.password,
-                      "border-gray-300 focus:ring-indigo-200":
-                        !formik.errors.password,
-                    }
+                    formik.touched.password && formik.errors.password
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:ring-indigo-200"
                   )}
                 />
                 <button
@@ -194,40 +225,41 @@ export function AddUser() {
                 </div>
               )}
             </div>
+
+            {/* User Role */}
             <div>
               <label
-                htmlFor="role"
+                htmlFor="user_role"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                Role
+                user_role
               </label>
               <select
-                id="role"
-                {...formik.getFieldProps("role")}
+                id="user_role"
+                {...formik.getFieldProps("user_role")}
                 className={clsx(
                   "form-control block w-full rounded-md border px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
-                  {
-                    "border-red-500 focus:ring-red-200":
-                      formik.touched.role && formik.errors.role,
-                    "border-gray-300 focus:ring-indigo-200":
-                      !formik.errors.role,
-                  }
+                  formik.touched.user_role && formik.errors.user_role
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-gray-300 focus:ring-indigo-200"
                 )}
               >
                 <option value="dev">Dev</option>
                 <option value="agent">Agent</option>
-                <option value="admin">Admin</option>
+                <option value="super admin">Super Admin</option>
                 <option value="customer">Customer</option>
               </select>
-              {formik.touched.role && formik.errors.role && (
+              {formik.touched.user_role && formik.errors.user_role && (
                 <div className="mt-1 text-xs text-red-500">
-                  {formik.errors.role}
+                  {formik.errors.user_role}
                 </div>
               )}
             </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              className={styles.btn}
               disabled={formik.isSubmitting || isLoading}
             >
               {isLoading ? "Submitting..." : "Add User"}

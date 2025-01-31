@@ -19,7 +19,8 @@ const initializeApp = async () => {
   localStorage.setItem("ziya-profile", JSON.stringify(data));
 
   if (status === "fulfilled" && data?.Success) {
-    localStorage.setItem("ziya-profile", JSON.stringify(data.Data));
+    console.log(status);
+    localStorage.setItem("ziya-profile", JSON.stringify(data));
   } else if (error || status !== "fulfilled") {
     console.error("Failed to load user profile:", error || data?.Message);
   }

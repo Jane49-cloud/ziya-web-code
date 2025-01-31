@@ -37,7 +37,7 @@ const navLinks = [
   { to: "/profile", label: "Profile" },
   { to: "/help", label: "Help" },
   { to: "/history", label: "History" },
-  { to: "/add-user", label: "Add user" },
+  { to: "/staff", label: "Staff" },
 ];
 
 const iconButtons = [
@@ -89,6 +89,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const handleLogout = () => {
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
+    localStorage.clear();
     navigate("/auth/login");
   };
 
@@ -150,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div>{customAvatar(fullName)}</div>
 
                 <span className="hidden sm:block font-medium capitalize">
-                  {fullName || "John Doe"}
+                  {fullName}
                 </span>
                 <FiChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${

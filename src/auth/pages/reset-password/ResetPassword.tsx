@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { Link } from "react-router-dom";
 import { Alert } from "../../../components/Alert";
 import { KeenIcon } from "../../../components/keenIcons/KeenIcon";
+import { styles } from "../../../styles";
 
 // 1) Define initial form values
 const initialValues = {
@@ -110,7 +111,7 @@ function ResetPassword() {
             <div>
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                className={styles.btn}
                 disabled={loading || formik.isSubmitting}
               >
                 {loading || formik.isSubmitting

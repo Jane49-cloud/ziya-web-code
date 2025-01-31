@@ -9,6 +9,7 @@ import { Alert } from "../../components/Alert";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { icons } from "../../media";
 import { useLoginMutation } from "../features/authApi";
+import { styles } from "../../styles";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -24,6 +25,10 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
   const [serverStatus, setServerStatus] = useState("");
+  const [color, setColor] = useState<
+    "success" | "info" | "danger" | "primary" | "warning" | ""
+  >("danger");
+
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -35,25 +40,28 @@ export function Login() {
     validationSchema: loginSchema,
 
     onSubmit: async (values, { setSubmitting, setStatus }) => {
-      // Reset statuses
       setSubmitting(true);
       setStatus("");
       setServerStatus("");
 
       try {
-        // Attempt login via RTK Query mutation
         const response = await login({
           email: values.email,
           password: values.password,
         }).unwrap();
-        setStatus("Login successful!");
+        setColor("success");
+        setStatus(response.message || "Login successful!");
         console.log(response.token);
         localStorage.setItem("ziya-access", response.token);
-        navigate("/");
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       } catch (error: any) {
-        if (error?.data?.message) {
-          setStatus(error.data.message);
+        if (error?.data?.error) {
+          setColor("danger");
+          setStatus(error.data.error);
         } else {
+          setColor("danger");
           setStatus("Login failed. Please check your credentials.");
         }
       } finally {
@@ -128,7 +136,7 @@ export function Login() {
           {(formik.status || serverStatus) && (
             <Alert
               variant={
-                formik.status === "Login successful!" ? "success" : "danger"
+                formik.status === "Login successful!" ? "success" : color
               }
               className="mb-4"
             >
@@ -240,7 +248,7 @@ export function Login() {
             <button
               type="submit"
               disabled={formik.isSubmitting || isLoading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              className={styles.btn}
             >
               {formik.isSubmitting || isLoading ? "Please wait..." : "Sign In"}
             </button>

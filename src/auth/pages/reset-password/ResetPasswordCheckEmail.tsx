@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { KeenIcon } from "../../../components/keenIcons/KeenIcon";
+import { styles } from "../../../styles";
 
 function ResetPasswordCheckEmail() {
   const [email, setEmail] = useState<string | null>(null);
@@ -62,10 +63,7 @@ function ResetPasswordCheckEmail() {
 
           {/* Back to Home Button */}
           <div className="flex justify-center mb-6">
-            <Link
-              to="/"
-              className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 sm:w-auto"
-            >
+            <Link to="/" className={`${styles.btn} sm:w-auto`}>
               <KeenIcon icon="home" className="mr-2 h-5 w-5" />
               Back to Home
             </Link>

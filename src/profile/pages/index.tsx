@@ -1,12 +1,11 @@
 // pages/UserProfilePage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs } from "antd"; // npm install antd
 import { customAvatar, getUser } from "../../utils";
 import AccountTab from "./account";
 import CustomersTab from "./customers";
 import HistoryTab from "./history";
 
-// Define the user profile structure
 export interface UserProfile {
   firstname: string;
   middlename: string;
@@ -20,10 +19,10 @@ export interface UserProfile {
   role: string;
 }
 const initialUser = getUser();
-console.log(initialUser);
 
 export const UserProfilePage: React.FC = () => {
   const [user, setUser] = useState(initialUser);
+  useEffect(() => {}, [user]);
 
   const tabItems = [
     {

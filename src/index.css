@@ -1,4 +1,33 @@
 @import "tailwindcss";
+@tailwind utilities;
+
+@layer utilities {
+  .bg-primary {
+    background-color: #32c5f4;
+  }
+  .bg-secondary {
+    background-color: #28466a;
+  }
+  .bg-tertiary {
+    background-color: #ecbe1d;
+  }
+  .bg-hover {
+    background-color: #289ac2;
+  }
+
+  .text-primary {
+    color: #32c5f4;
+  }
+  .text-secondary {
+    color: #28466a;
+  }
+  .text-tertiary {
+    color: #ecbe1d;
+  }
+  .text-hover {
+    color: #289ac2;
+  }
+}
 
 @font-face {
   font-family: "GitLab Sans";

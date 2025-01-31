@@ -8,17 +8,14 @@ interface AccountTabProps {
 }
 
 const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
-  // Handle text input changes
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUser((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  // Example 'save' action
   const handleSaveChanges = () => {
     console.log("Saved user data:", user);
     alert("Changes saved!");
-    // In a real app, you might call an API or dispatch a Redux action here.
   };
 
   return (
