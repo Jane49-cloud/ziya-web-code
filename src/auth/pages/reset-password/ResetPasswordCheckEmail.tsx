@@ -11,14 +11,14 @@ function ResetPasswordCheckEmail() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center  py-12 sm:px-6 lg:px-8">
       {/* Center container */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Optional brand / header above card */}
         <div className="mb-8 text-center">
           {/* Place a brand logo here if desired */}
           <img
-            src={"/media/logos/your-logo.svg"}
+            src={"/media/logos/Ziya_logo_transparent_bg.png"}
             alt="Brand Logo"
             className="mx-auto h-12 w-auto"
           />
@@ -54,7 +54,7 @@ function ResetPasswordCheckEmail() {
               href={`mailto:${email}`}
               className="font-medium text-indigo-600 hover:text-indigo-700"
             >
-              {email || "your email"}
+              {email || "janedoe@ziya.co.ke"}
             </a>
             <br />
             to reset your password. Thank you!

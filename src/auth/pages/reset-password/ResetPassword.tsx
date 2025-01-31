@@ -53,7 +53,10 @@ function ResetPassword() {
     <div className="flex min-h-screen flex-col justify-center  py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mb-8 text-center">
-          <img src={"/media/logos/logo"} className="mx-auto h-12 w-auto" />
+          <img
+            src={"/media/logos/Ziya_logo_transparent_bg.png"}
+            className="mx-auto h-14 w-auto"
+          />
         </div>
 
         <div className="rounded-md bg-white p-8 shadow sm:p-10">

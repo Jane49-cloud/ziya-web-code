@@ -159,7 +159,7 @@ export function Login() {
                       !formik.errors.email,
                   }
                 )}
-                placeholder="demo@keenthemes.com"
+                placeholder="janedoe@ziya.co.ke"
               />
               {formik.touched.email && formik.errors.email && (
                 <div className="mt-1 text-xs text-red-500">
@@ -178,7 +178,7 @@ export function Login() {
                   Password
                 </label>
                 <Link
-                  to="/reset-password/enter-email"
+                  to="/auth/reset-password"
                   className="text-xs font-medium text-indigo-600 hover:underline"
                 >
                   Forgot Password?
@@ -198,7 +198,7 @@ export function Login() {
                         !formik.errors.password,
                     }
                   )}
-                  placeholder="demo1234"
+                  placeholder="Enter password"
                 />
                 <button
                   type="button"
