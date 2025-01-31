@@ -37,6 +37,7 @@ const navLinks = [
   { to: "/profile", label: "Profile" },
   { to: "/help", label: "Help" },
   { to: "/history", label: "History" },
+  { to: "/add-user", label: "Add user" },
 ];
 
 const iconButtons = [
@@ -101,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
-      <header className="sticky top-0 z-30 bg-white shadow-sm">
+      <header className="sticky top-0 z-30 bg-white shadow-sm py-2">
         <div className="container mx-auto flex items-center justify-between px-4 lg:px-8 h-[3.75rem]">
           <button
             onClick={toggleSidebar}
@@ -148,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               >
                 <div>{customAvatar(fullName)}</div>
 
-                <span className="hidden sm:block font-medium">
+                <span className="hidden sm:block font-medium capitalize">
                   {fullName || "John Doe"}
                 </span>
                 <FiChevronDown

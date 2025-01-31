@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiSlice } from "../../redux/api";
 import { userLoggedIn, userLoggedOut, userRegistration } from "./authSlice";
 
@@ -6,17 +7,10 @@ type RegistrationResponse = {
   Data: string;
 };
 
-type RegistrationData = {
-  fullName: string;
-  email?: string;
-  phoneNumber?: string;
-  password?: string;
-};
-
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Register endpoint
-    register: builder.mutation<RegistrationResponse, RegistrationData>({
+    register: builder.mutation<RegistrationResponse, any>({
       query: (data) => ({
         url: "/user/auth/signup",
         method: "POST",
@@ -51,7 +45,7 @@ export const authApi = apiSlice.injectEndpoints({
     // Login endpoint
     login: builder.mutation({
       query: (values) => ({
-        url: "/staff/login",
+        url: "/user/auth/signin",
         method: "POST",
         body: values,
       }),

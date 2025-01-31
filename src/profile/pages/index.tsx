@@ -47,8 +47,8 @@ export const UserProfilePage: React.FC = () => {
   const fullName = `${user?.firstname} ${user?.lastname}`.trim();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto container rounded-md bg-white p-6 shadow sm:p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+      <div className="rounded-md bg-white p-6 shadow sm:p-8">
         <div className="flex items-center space-x-4">
           {user?.avatar
             ? // <img
@@ -59,10 +59,10 @@ export const UserProfilePage: React.FC = () => {
               customAvatar(fullName || "User")
             : customAvatar(fullName || "User")}
           <div>
-            <h1 className="text-xl font-bold text-gray-800">
-              {fullName || "No Name"}
+            <h1 className="text-xl font-bold text-gray-800 capitalize">
+              {fullName}
             </h1>
-            <p className="text-sm text-gray-500">{user?.email}</p>
+            <p className="text-sm text-gray-500 ">{user?.email}</p>
             <p className="text-sm text-gray-500">
               {user?.role || "Ziya staff"}
             </p>
