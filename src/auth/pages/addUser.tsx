@@ -232,7 +232,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                 htmlFor="user_role"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                user_role
+                User Role
               </label>
               <select
                 id="user_role"

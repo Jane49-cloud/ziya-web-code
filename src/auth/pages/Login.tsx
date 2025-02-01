@@ -78,7 +78,12 @@ export function Login() {
   return (
     <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mb-8 text-center">{/* Logo can go here */}</div>
+        <div className="mb-8 text-center">
+          <img
+            src={"/media/logos/Ziya_logo_transparent_bg.png"}
+            className="mx-auto h-14 w-auto"
+          />
+        </div>
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
           {/* Heading + Sign Up Link */}
           <div className="mb-4 text-center">
@@ -97,7 +102,7 @@ export function Login() {
           </div>
 
           {/* Social Sign-In (Optional) */}
-          <div className="mb-8 mt-2 grid grid-cols-2 gap-2.5">
+          <div className="mb-8 mt-2  grid-cols-2 gap-2.5 hidden">
             <button
               type="button"
               className="flex items-center justify-center rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -123,7 +128,7 @@ export function Login() {
           </div>
 
           {/* OR Divider */}
-          <div className="relative mb-6">
+          <div className="relative mb-6 hidden">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-b border-gray-200" />
             </div>
