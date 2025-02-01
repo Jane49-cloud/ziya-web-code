@@ -1,6 +1,6 @@
-// pages/UserProfilePage.tsx
 import React, { useEffect, useState } from "react";
-import { Tabs } from "antd"; // npm install antd
+import { Tabs } from "antd";
+import { useLoadUserQuery } from "../../redux/api";
 import { customAvatar, getUser } from "../../utils";
 import AccountTab from "./account";
 import CustomersTab from "./customers";
@@ -18,11 +18,21 @@ export interface UserProfile {
   activation_code?: string;
   role: string;
 }
-const initialUser = getUser();
 
 export const UserProfilePage: React.FC = () => {
-  const [user, setUser] = useState(initialUser);
-  useEffect(() => {}, [user]);
+  const { data: userData, refetch } = useLoadUserQuery(null);
+  const [user, setUser] = useState<UserProfile | null>(getUser());
+
+  useEffect(() => {
+    if (userData) {
+      setUser(userData);
+      localStorage.setItem("ziya-profile", JSON.stringify(userData));
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const tabItems = [
     {
@@ -42,33 +52,24 @@ export const UserProfilePage: React.FC = () => {
     },
   ];
 
-  // Combine full name (for fallback avatar initials)
-  const fullName = `${user?.firstname} ${user?.lastname}`.trim();
+  const fullName = `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim();
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="rounded-md bg-white p-6 shadow sm:p-8">
         <div className="flex items-center space-x-4">
-          {user?.avatar
-            ? // <img
-              //   src={user?.avatar}
-              //   alt={fullName || "User Avatar"}
-              //   className="h-16 w-16 rounded-full object-cover"
-              // />
-              customAvatar(fullName || "User")
-            : customAvatar(fullName || "User")}
+          {customAvatar(fullName || "User")}
           <div>
             <h1 className="text-xl font-bold text-gray-800 capitalize">
               {fullName}
             </h1>
-            <p className="text-sm text-gray-500 ">{user?.email}</p>
+            <p className="text-sm text-gray-500">{user?.email}</p>
             <p className="text-sm text-gray-500">
               {user?.role || "Ziya staff"}
             </p>
           </div>
         </div>
 
-        {/* AntD Tabs */}
         <div className="mt-6">
           <Tabs defaultActiveKey="account" items={tabItems} />
         </div>

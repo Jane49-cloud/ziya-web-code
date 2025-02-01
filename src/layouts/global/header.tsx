@@ -10,7 +10,7 @@ function useOutsideClick(
   ref: React.RefObject<HTMLElement>,
   handler: () => void
 ) {
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) {
         return;
@@ -23,13 +23,6 @@ function useOutsideClick(
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [ref, handler]);
-}
-
-function navLinkClasses(isActive: boolean): string {
-  const baseClasses = "transition-colors duration-200";
-  return isActive
-    ? `text-blue-600 font-semibold ${baseClasses}`
-    : `text-gray-700 hover:text-gray-900 ${baseClasses}`;
 }
 
 const navLinks = [
@@ -73,16 +66,30 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   const token = localStorage.getItem("ziya-access");
 
-  const user = getUser();
-  const fullName = user
-    ? `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim()
-    : "";
-
+  // Fetch user data dynamically
   const {
     data: userData,
     refetch: refetchUserDetails,
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
+
+  // Use state for local updates
+  const [user, setUser] = useState(getUser());
+
+  // Update user state when data is fetched
+  useEffect(() => {
+    if (userData && !isLoading) {
+      setUser(userData);
+      localStorage.setItem("ziya-profile", JSON.stringify(userData));
+    }
+  }, [userData, isLoading]);
+
+  // Ensure latest user details are fetched when needed
+  useEffect(() => {
+    if (token) {
+      refetchUserDetails();
+    }
+  }, [token, refetchUserDetails]);
 
   const navigate = useNavigate();
 
@@ -90,16 +97,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
     localStorage.clear();
+    refetchUserDetails();
     navigate("/auth/login");
   };
 
-  useEffect(() => {
-    if (token && !user && !isLoading) {
-      refetchUserDetails();
-      localStorage.setItem("ziya-profile", JSON.stringify(userData));
-      console.log(userData, "userdata");
-    }
-  }, [token, refetchUserDetails, user, userData, isLoading]);
+  const fullName = user
+    ? `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim()
+    : "";
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
@@ -118,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <NavLink
                 key={to}
                 to={to}
-                className={({ isActive }) => navLinkClasses(isActive)}
+                className="text-gray-700 hover:text-gray-900"
               >
                 {label}
               </NavLink>
