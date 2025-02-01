@@ -155,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div>{customAvatar(fullName)}</div>
 
                 <span className="hidden sm:block font-medium capitalize">
-                  {fullName}
+                  {fullName || "Ziya"}
                 </span>
                 <FiChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${

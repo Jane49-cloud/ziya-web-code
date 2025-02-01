@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:4000/api/v1",
+  baseUrl: "http://34.223.223.41:8000/api/v1",
   prepareHeaders: (headers) => {
     const accessToken = localStorage.getItem("ziya-access");
     if (accessToken) {
@@ -42,7 +42,7 @@ const baseQueryWithAuth = async (
 
 export const apiSlice = createApi({
   reducerPath: "api",
-  baseQuery: baseQueryWithAuth, // Use the wrapped baseQuery
+  baseQuery: baseQueryWithAuth,
   endpoints: (builder) => ({
     loadUser: builder.query({
       query: () => ({
