@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
       {/* Logo */}
       <div className="p-4 border-gray-200 flex justify-between items-center">
         <img
-          src="/public/media/logos/Ziya_logo_transparent_bg.png"
+          src="/media/logos/Ziya_logo_transparent_bg.png"
           className="w-full h-16 object-contain "
           alt=""
         />
