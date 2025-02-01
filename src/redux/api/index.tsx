@@ -26,12 +26,10 @@ const baseQueryWithAuth = async (
   if (result.error && result.error.status === 401) {
     console.warn("Token expired. Logging out...");
 
-    // 🚀 Clear storage
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
     localStorage.clear();
 
-    // 🚀 Prevent infinite redirect loop
     if (window.location.pathname !== "/auth/login") {
       window.location.href = "/auth/login";
     }
