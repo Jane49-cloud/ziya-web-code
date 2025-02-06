@@ -33,4 +33,4 @@ COPY --from=build /app/dist /app/dist
 EXPOSE 3000
 
 # Serve the app
-CMD ["serve", "-s", "dist"]
+CMD ["serve", "-s", "dist", "-p", "3000"]

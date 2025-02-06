@@ -7,6 +7,7 @@ import { Alert } from "../../components/Alert";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { useRegisterMutation } from "../features/authApi";
 import { styles } from "../../styles";
+import { useGetAllRolesQuery } from "../../roles/features/rolesSlice";
 
 const initialValues = {
   firstname: "",
@@ -41,9 +42,7 @@ const addUserSchema = Yup.object().shape({
     .min(6, "Minimum 6 characters")
     .max(50, "Maximum 50 characters")
     .required("Password is required"),
-  user_role: Yup.string()
-    .oneOf(["dev", "agent", "super admin", "customer"], "Invalid user_role")
-    .required("user_role is required"),
+  user_role: Yup.string().required("User role is required"),
 });
 
 type AddUserProps = {
@@ -96,6 +95,11 @@ function FormField({
 }
 
 export function AddUser({ onUserCreated }: AddUserProps) {
+  const {
+    data: rolesData,
+    isLoading: rolesLoading,
+    isError: rolesError,
+  } = useGetAllRolesQuery({});
   const [showPassword, setShowPassword] = useState(false);
   const [registerUser, { isLoading, error }] = useRegisterMutation();
 
@@ -234,6 +238,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               >
                 User Role
               </label>
+              {/* Render the roles dynamically */}
               <select
                 id="user_role"
                 {...formik.getFieldProps("user_role")}
@@ -243,12 +248,23 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                     ? "border-red-500 focus:ring-red-200"
                     : "border-gray-300 focus:ring-indigo-200"
                 )}
+                disabled={rolesLoading || rolesError}
               >
-                <option value="dev">Dev</option>
-                <option value="agent">Agent</option>
-                <option value="super admin">Super Admin</option>
-                <option value="customer">Customer</option>
+                <option value="" disabled>
+                  Select Role
+                </option>
+                {!rolesLoading &&
+                  !rolesError &&
+                  rolesData?.roles?.map((role: any) => (
+                    <option key={role.id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
               </select>
+              {rolesLoading && <p>Loading roles...</p>}
+              {rolesError && (
+                <p className="text-red-500">Error loading roles.</p>
+              )}
               {formik.touched.user_role && formik.errors.user_role && (
                 <div className="mt-1 text-xs text-red-500">
                   {formik.errors.user_role}
