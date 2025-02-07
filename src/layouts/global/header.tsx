@@ -31,6 +31,8 @@ const navLinks = [
   { to: "/help", label: "Help" },
   { to: "/history", label: "History" },
   { to: "/staff", label: "Staff" },
+  { to: "/roles", label: "Roles" },
+  { to: "/customers", label: "Customers" },
 ];
 
 const iconButtons = [

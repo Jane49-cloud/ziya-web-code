@@ -1,0 +1,123 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { FC } from "react";
+import { Form, Input, Button, Select, Card, Row, Col } from "antd";
+// import { UploadOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
+
+export const CustomerForm: FC<{
+  onSubmit: (values: any) => void;
+  isLoading: boolean;
+}> = ({ onSubmit, isLoading }) => {
+  const [form] = Form.useForm();
+
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      onSubmit(values);
+    });
+  };
+
+  // Reusable form field generator
+  const renderInput = (
+    name: string,
+    label: string,
+    rules: any[] = [{ required: true }],
+    inputType: "text" | "password" = "text"
+  ) => (
+    <Form.Item name={name} label={label} rules={rules}>
+      <Input type={inputType} />
+    </Form.Item>
+  );
+
+  return (
+    <Card className="shadow-lg p-6 bg-white rounded-lg">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        Customer Form
+      </h2>
+      <Form layout="vertical" form={form} onFinish={handleSubmit}>
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            {renderInput("firstname", "First Name")}
+          </Col>
+          <Col xs={24} sm={12}>
+            {renderInput("middlename", "Middle Name", [{ required: false }])}
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            {renderInput("lastname", "Last Name")}
+          </Col>
+          <Col xs={24} sm={12}>
+            {renderInput("email", "Email", [
+              { required: true },
+              { type: "email" },
+            ])}
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="country_code"
+              label="Country Code"
+              rules={[{ required: true }]}
+            >
+              <Select placeholder="Select country code">
+                <Option value="+1">+1 (USA)</Option>
+                <Option value="+44">+44 (UK)</Option>
+                <Option value="+254">+254 (Kenya)</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            {renderInput("phone_number", "Phone Number")}
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            {renderInput(
+              "password",
+              "Password",
+              [{ required: true }],
+              "password"
+            )}
+          </Col>
+          {/* <Col xs={24} sm={12}>
+            <Form.Item name="avatar" label="Profile Picture">
+              <Upload maxCount={1} beforeUpload={() => false}>
+                <Button icon={<UploadOutlined />}>Upload Avatar</Button>
+              </Upload>
+            </Form.Item>
+          </Col> */}
+        </Row>
+
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="identification_type"
+              label="ID Type"
+              rules={[{ required: true }]}
+            >
+              <Select placeholder="Select Identification Type">
+                <Option value="ID Card">ID Card</Option>
+                <Option value="Passport">Passport</Option>
+                <Option value="Driver’s License">Driver’s License</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            {renderInput("identification_number", "ID Number")}
+          </Col>
+        </Row>
+
+        <Form.Item className="text-right">
+          <Button type="primary" htmlType="submit" loading={isLoading}>
+            Save
+          </Button>
+        </Form.Item>
+      </Form>
+    </Card>
+  );
+};

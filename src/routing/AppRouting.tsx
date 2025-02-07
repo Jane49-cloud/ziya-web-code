@@ -8,6 +8,7 @@ import { AddUser } from "../auth/pages/addUser";
 import NotFound from "../errors/404";
 import Staff from "../users/staff/pages/index.";
 import { RolesManagement } from "../roles";
+import CustomerManagement from "../customer";
 
 const AppRouting = (): ReactElement => {
   const PrivateRoutes = () => {
@@ -27,6 +28,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/add-user" element={<AddUser />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
+          <Route path="/customers" element={<CustomerManagement />} />
         </Route>
       </Route>
     </Routes>

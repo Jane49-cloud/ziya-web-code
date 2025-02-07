@@ -9,7 +9,14 @@ export const UserSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    updateUser: builder.mutation({
+      query: ({ id, userData }) => ({
+        url: `/staff/${id}`,
+        method: "PUT",
+        body: userData,
+      }),
+    }),
   }),
 });
 
-export const { useGetAllUsersQuery } = UserSlice;
+export const { useGetAllUsersQuery, useUpdateUserMutation } = UserSlice;

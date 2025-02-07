@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// components/AccountTab.tsx
 import React, { ChangeEvent } from "react";
+import { useUpdateUserMutation } from "../../users/features/userSlice";
 
 interface AccountTabProps {
   user: any;
@@ -8,14 +8,28 @@ interface AccountTabProps {
 }
 
 const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
+  const [updateUser, { isLoading, isError, error }] = useUpdateUserMutation();
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUser((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveChanges = () => {
-    console.log("Saved user data:", user);
-    alert("Changes saved!");
+  const handleSaveChanges = async () => {
+    try {
+      // Prepare the updated user data (without status)
+      const updatedUser = {
+        ...user,
+        status: undefined, // Ensure status is not included
+      };
+
+      // Call the updateUser mutation to save changes
+      await updateUser(updatedUser).unwrap();
+      alert("Changes saved!");
+    } catch (err) {
+      console.error("Error updating user:", err);
+      alert("Failed to save changes. Please try again.");
+    }
   };
 
   return (
@@ -139,10 +153,18 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
           type="button"
           onClick={handleSaveChanges}
           className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          disabled={isLoading}
         >
-          Save Changes
+          {isLoading ? "Saving..." : "Save Changes"}
         </button>
       </div>
+
+      {/* Show error message if any */}
+      {isError && error && (
+        <div className="mt-4 text-red-500">
+          <p>{"Failed to update the user. Please try again."}</p>
+        </div>
+      )}
     </div>
   );
 };
