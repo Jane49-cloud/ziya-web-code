@@ -9,7 +9,8 @@ import NotFound from "../errors/404";
 import Staff from "../users/staff/pages/index.";
 import { RolesManagement } from "../roles";
 import CustomerManagement from "../customer";
-import LoanManagementPage from "../Loans";
+import LoanManagementPage from "../Loans/pages/loanManagement";
+// import LoanManagementPage from "../Loans";
 
 const AppRouting = (): ReactElement => {
   const PrivateRoutes = () => {
@@ -30,6 +31,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/customers" element={<CustomerManagement />} />
+          {/* <Route path="/loans" element={<LoanManagementPage />} /> */}
           <Route path="/loans" element={<LoanManagementPage />} />
         </Route>
       </Route>
