@@ -13,17 +13,12 @@ import {
 import LoanDefinitionModal from "./components/modal";
 
 const LoanManagementPage: FC = () => {
-  const {
-    data: loanDefinitions,
-    isLoading,
-    isError,
-  } = useGetLoanDefinitionsQuery({});
+  const { data: loanDefinitions, isLoading } = useGetLoanDefinitionsQuery({});
   const [createLoanDefinition, { isLoading: creating }] =
     useCreateLoanDefinitionMutation();
   const [updateLoanDefinition, { isLoading: updating }] =
     useUpdateLoanDefinitionMutation();
-  const [toggleStatus, { isLoading: toggling }] =
-    useToggleLoanDefinitionStatusMutation();
+  const [toggleStatus] = useToggleLoanDefinitionStatusMutation();
 
   const [selectedLoan, setSelectedLoan] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");

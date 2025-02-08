@@ -8,7 +8,7 @@ export const RoleList: FC<{
   onEdit: (roleId: string) => void;
   onDelete: (roleId: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-}> = ({ onEdit, onDelete }) => {
+}> = ({ onDelete }) => {
   const { data, isLoading, isError } = useGetAllRolesQuery({});
   const roles = data?.roles;
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);

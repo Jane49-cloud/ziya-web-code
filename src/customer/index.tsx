@@ -13,11 +13,10 @@ import {
 } from "./features/customerSlice";
 
 const CustomerManagement: FC = () => {
-  const { data: customers, isLoading, isError } = useGetAllCustomersQuery({});
+  const { data: customers, isLoading } = useGetAllCustomersQuery({});
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
-  const [toggleStatus, { isLoading: toggling }] =
-    useToggleCustomerStatusMutation();
+  const [toggleStatus] = useToggleCustomerStatusMutation();
 
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null); // For editing
   const [activeTab, setActiveTab] = useState("1");

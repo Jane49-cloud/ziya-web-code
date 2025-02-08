@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { ChangeEvent } from "react";
+import React, { useEffect } from "react";
+import { Form, Input, Button, notification } from "antd";
 import { useUpdateUserMutation } from "../../users/features/userSlice";
 
 interface AccountTabProps {
@@ -7,28 +9,38 @@ interface AccountTabProps {
   setUser: React.Dispatch<React.SetStateAction<any>>;
 }
 
-const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
+const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
   const [updateUser, { isLoading, isError, error }] = useUpdateUserMutation();
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setUser((prev: any) => ({ ...prev, [name]: value }));
-  };
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    form.setFieldsValue(user);
+  }, [user]);
 
   const handleSaveChanges = async () => {
     try {
-      // Prepare the updated user data (without status)
-      const updatedUser = {
+      const userData = {
         ...user,
-        status: undefined, // Ensure status is not included
+        status: user.status ?? undefined,
       };
 
-      // Call the updateUser mutation to save changes
-      await updateUser(updatedUser).unwrap();
-      alert("Changes saved!");
+      const payload = {
+        id: user.id,
+        userData,
+      };
+
+      await updateUser(payload).unwrap();
+
+      // Notify on successful update
+      notification.success({
+        message: "User updated successfully",
+      });
     } catch (err) {
       console.error("Error updating user:", err);
-      alert("Failed to save changes. Please try again.");
+      notification.error({
+        message: "Failed to save changes. Please try again.",
+      });
     }
   };
 
@@ -38,126 +50,67 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, setUser }) => {
         Edit Account Information
       </h2>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* First Name */}
-        <div>
-          <label
-            htmlFor="firstname"
-            className="block text-sm font-medium text-gray-700"
-          >
-            First Name
-          </label>
-          <input
-            id="firstname"
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSaveChanges}
+        initialValues={user}
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* First Name */}
+          <Form.Item
+            label="First Name"
             name="firstname"
-            type="text"
-            value={user?.firstname}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
-
-        {/* Middle Name */}
-        <div>
-          <label
-            htmlFor="middlename"
-            className="block text-sm font-medium text-gray-700"
+            rules={[{ required: true, message: "First name is required!" }]}
           >
-            Middle Name
-          </label>
-          <input
-            id="middlename"
-            name="middlename"
-            type="text"
-            value={user?.middlename}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
+            <Input />
+          </Form.Item>
 
-        {/* Last Name */}
-        <div>
-          <label
-            htmlFor="lastname"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Last Name
-          </label>
-          <input
-            id="lastname"
+          {/* Middle Name */}
+          <Form.Item label="Middle Name" name="middlename">
+            <Input />
+          </Form.Item>
+
+          {/* Last Name */}
+          <Form.Item
+            label="Last Name"
             name="lastname"
-            type="text"
-            value={user?.lastname}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            rules={[{ required: true, message: "Last name is required!" }]}
           >
-            Email
-          </label>
-          <input
-            id="email"
+            <Input />
+          </Form.Item>
+
+          {/* Email */}
+          <Form.Item
+            label="Email"
             name="email"
-            type="email"
-            value={user?.email}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
-
-        {/* Country Code */}
-        <div>
-          <label
-            htmlFor="country_code"
-            className="block text-sm font-medium text-gray-700"
+            rules={[
+              { required: true, message: "Email is required!" },
+              { type: "email", message: "Invalid email format!" },
+            ]}
           >
-            Country Code
-          </label>
-          <input
-            id="country_code"
-            name="country_code"
-            type="text"
-            value={user?.country_code}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
+            <Input />
+          </Form.Item>
 
-        {/* Phone Number */}
-        <div>
-          <label
-            htmlFor="phone_number"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Phone Number
-          </label>
-          <input
-            id="phone_number"
+          {/* Country Code */}
+          <Form.Item label="Country Code" name="country_code">
+            <Input />
+          </Form.Item>
+
+          {/* Phone Number */}
+          <Form.Item
+            label="Phone Number"
             name="phone_number"
-            type="text"
-            value={user?.phone_number}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
+            rules={[{ required: true, message: "Phone number is required!" }]}
+          >
+            <Input />
+          </Form.Item>
         </div>
-      </div>
 
-      <div>
-        <button
-          type="button"
-          onClick={handleSaveChanges}
-          className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          disabled={isLoading}
-        >
+        <Button type="primary" htmlType="submit" loading={isLoading}>
           {isLoading ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+        </Button>
+      </Form>
 
       {/* Show error message if any */}
       {isError && error && (
