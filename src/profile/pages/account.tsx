@@ -11,7 +11,7 @@ interface AccountTabProps {
 }
 
 const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
-  const [updateUser, { isLoading, isError, error }] = useUpdateUserMutation();
+  const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [form] = Form.useForm();
 
   // State for showing alert messages
@@ -30,8 +30,7 @@ const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
       const payload = {
         id: user.id,
         userData: {
-          ...values, // Use form values directly
-          status: user.status ?? undefined,
+          ...values,
         },
       };
 
