@@ -13,7 +13,8 @@ import {
 } from "./features/customerSlice";
 
 const CustomerManagement: FC = () => {
-  const { data: customers, isLoading } = useGetAllCustomersQuery({});
+  const { data, isLoading } = useGetAllCustomersQuery({});
+  const customers = data?.customers;
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
   const [toggleStatus] = useToggleCustomerStatusMutation();
