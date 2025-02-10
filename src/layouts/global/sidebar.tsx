@@ -112,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
               <div key={index} className="mb-2">
                 <button
                   onClick={() => handleDropdownToggle(item.title)}
-                  className="flex justify-between items-center w-full px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700 focus:outline-none transition-colors duration-200"
+                  className="flex justify-between items-center w-full px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-500 focus:outline-none transition-colors duration-200"
                   aria-expanded={isOpen}
                   aria-controls={`${item.title}-dropdown`}
                 >
@@ -166,7 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
               to={"#"}
               onClick={closeSidebar}
               className={clsx(
-                "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700 focus:outline-none transition-colors duration-200",
+                "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-500 focus:outline-none transition-colors duration-200",
                 {
                   "bg-gray-200 text-gray-900": isActive,
                 }
