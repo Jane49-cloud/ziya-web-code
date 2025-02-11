@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
-import { Form, Input, Button, Select, Upload, Card, Row, Col } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Select, Row, Col } from "antd";
 
 const { Option } = Select;
 
@@ -31,8 +30,8 @@ export const EditCustomerForm: FC<{
   );
 
   return (
-    <Card className="shadow-lg p-6 bg-white rounded-lg">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="p-6 ">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 hidden">
         Edit Customer
       </h2>
       <Form
@@ -40,6 +39,7 @@ export const EditCustomerForm: FC<{
         form={form}
         initialValues={customer}
         onFinish={handleSubmit}
+        className=""
       >
         <Row gutter={16}>
           <Col xs={24} sm={12}>
@@ -81,7 +81,7 @@ export const EditCustomerForm: FC<{
           </Col>
         </Row>
 
-        <Row gutter={16}>
+        {/* <Row gutter={16}>
           <Col xs={24} sm={12}>
             {renderInput(
               "password",
@@ -97,7 +97,7 @@ export const EditCustomerForm: FC<{
               </Upload>
             </Form.Item>
           </Col>
-        </Row>
+        </Row> */}
 
         <Row gutter={16}>
           <Col xs={24} sm={12}>
@@ -124,6 +124,6 @@ export const EditCustomerForm: FC<{
           </Button>
         </Form.Item>
       </Form>
-    </Card>
+    </div>
   );
 };

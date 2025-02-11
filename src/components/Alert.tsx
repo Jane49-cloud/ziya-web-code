@@ -1,5 +1,4 @@
-import React from "react";
-
+import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 import { KeenIcon } from "./keenIcons/KeenIcon";
 
@@ -24,8 +23,22 @@ export const Alert: React.FC<IAlertProps> = ({
   children,
   className = "",
 }) => {
+  const [isVisible, setIsVisible] = useState(true);
   const styles = variantStyles[variant] || variantStyles.primary;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+  };
+
+  if (!isVisible) return null;
   return (
     <div
       role="alert"
@@ -40,6 +53,15 @@ export const Alert: React.FC<IAlertProps> = ({
 
       {/* Alert text */}
       <div className="text-sm">{children}</div>
+
+      {/* Close button */}
+      <button
+        onClick={handleClose}
+        className="ml-3 text-lg text-gray-600 hover:text-gray-800"
+        aria-label="Close alert"
+      >
+        <KeenIcon icon="x" style="solid" />
+      </button>
     </div>
   );
 };

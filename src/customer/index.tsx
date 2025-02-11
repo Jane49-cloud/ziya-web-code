@@ -1,16 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState } from "react";
-import { Tabs, Table, notification, Modal } from "antd";
+import { Tabs, Table, Modal, Space, Avatar } from "antd";
 import { CustomerForm } from "./components/addCustomer";
-import { CustomerTableActions } from "./components/customerTable";
+import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
+
 import {
   useGetAllCustomersQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
 } from "./features/customerSlice";
+import { ColumnsType } from "antd/es/table";
+import { customAvatar } from "../utils";
+import { Alert } from "../components/Alert";
+import { useFetchCustomer } from "./util";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -19,8 +24,13 @@ const CustomerManagement: FC = () => {
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
   const [toggleStatus] = useToggleCustomerStatusMutation();
 
-  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null); // For editing
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const refetchCustomer = useFetchCustomer();
+  const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
+    undefined
+  );
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -29,46 +39,67 @@ const CustomerManagement: FC = () => {
   const handleSaveCustomer = async (values: any) => {
     try {
       await createCustomer(values).unwrap();
-      notification.success({ message: "Customer created successfully!" });
-    } catch (err) {
-      notification.error({ message: "Failed to create customer." });
+      setAlertMessage("Customer created successfully!");
+      setAlertType("success");
+      refetchCustomer();
+      setActiveTab("1");
+    } catch (err: any) {
+      setAlertMessage(err?.data?.error || "Failed to create customer.");
+      setAlertType("danger");
     }
   };
 
   const handleUpdateCustomer = async (values: any) => {
     try {
       await updateCustomer(values).unwrap();
-      notification.success({ message: "Customer updated successfully!" });
-      setSelectedCustomer(null); // Close modal
-    } catch (err) {
-      notification.error({ message: "Failed to update customer." });
+      setAlertMessage("Customer updated successfully!");
+      setAlertType("success");
+      refetchCustomer();
+      setSelectedCustomer(null);
+      setActiveTab("1"); // Redirect to the first tab (Customer List)
+    } catch (err: any) {
+      setAlertMessage(err?.data?.error || "Failed to update customer.");
+      setAlertType("danger");
     }
   };
 
   const handleToggleStatus = async (id: string, status: number) => {
     try {
       await toggleStatus({ id, status }).unwrap();
-      notification.success({
-        message: `Customer ${
-          status === 1 ? "activated" : "deactivated"
-        } successfully!`,
-      });
-    } catch (err) {
-      notification.error({ message: "Failed to change customer status." });
+      setAlertMessage(
+        `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
+      );
+      setAlertType("success");
+      refetchCustomer();
+    } catch (err: any) {
+      setAlertMessage("Failed to change customer status.");
+      setAlertType("danger");
     }
   };
 
   // Table Columns
-  const columns = [
+  const columns: ColumnsType<any> = [
     {
-      title: "First Name",
-      dataIndex: "firstname",
-      key: "firstname",
+      title: "#",
+      dataIndex: "index",
+      key: "index",
+      render: (_: any, __: any, index: number) => index + 1,
+      width: 60,
+      align: "center" as const,
     },
     {
-      title: "Last Name",
-      dataIndex: "lastname",
-      key: "lastname",
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (_: any, record: any) => {
+        const fullName = `${record.firstname} ${record.lastname}`;
+        return (
+          <Space>
+            <Avatar src={customAvatar(fullName)}>{fullName[0]}</Avatar>
+            <span>{fullName}</span>
+          </Space>
+        );
+      },
     },
     {
       title: "Email",
@@ -81,7 +112,7 @@ const CustomerManagement: FC = () => {
       render: (_: any, customer: any) => (
         <CustomerTableActions
           customer={customer}
-          onEdit={() => setSelectedCustomer(customer)} // Set the customer for editing
+          onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
         />
       ),
@@ -89,11 +120,18 @@ const CustomerManagement: FC = () => {
   ];
 
   const handleCloseModal = () => {
-    setSelectedCustomer(null); // Close modal
+    setSelectedCustomer(null);
   };
 
   return (
     <div className="customer-management">
+      {/* Show status alert */}
+      {alertMessage && alertType && (
+        <Alert variant={alertType} className="mb-4">
+          {alertMessage}
+        </Alert>
+      )}
+
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         {/* Tab 1: Customer List */}
         <Tabs.TabPane tab="Customer List" key="1">
@@ -103,6 +141,8 @@ const CustomerManagement: FC = () => {
             rowKey="id"
             loading={isLoading}
             pagination={{ pageSize: 10 }}
+            scroll={{ x: true }}
+            bordered
           />
         </Tabs.TabPane>
 
@@ -124,6 +164,7 @@ const CustomerManagement: FC = () => {
         onCancel={handleCloseModal}
         footer={null}
         width={800}
+        style={{ top: "20%", marginTop: "10px" }}
       >
         {selectedCustomer && (
           <EditCustomerForm

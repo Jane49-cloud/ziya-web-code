@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
 import { Form, Input, Button, Select, Card, Row, Col } from "antd";
@@ -84,13 +85,6 @@ export const CustomerForm: FC<{
               "password"
             )}
           </Col>
-          {/* <Col xs={24} sm={12}>
-            <Form.Item name="avatar" label="Profile Picture">
-              <Upload maxCount={1} beforeUpload={() => false}>
-                <Button icon={<UploadOutlined />}>Upload Avatar</Button>
-              </Upload>
-            </Form.Item>
-          </Col> */}
         </Row>
 
         <Row gutter={16}>

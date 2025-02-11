@@ -13,7 +13,7 @@ export const CustomerTableActions: FC<{
   };
 
   return (
-    <div>
+    <div className="flex gap-2">
       <Button onClick={onEdit} type="primary" size="small">
         Edit
       </Button>
@@ -21,9 +21,13 @@ export const CustomerTableActions: FC<{
         onClick={handleActivateDeactivate}
         type="default"
         size="small"
-        danger
+        style={{
+          backgroundColor: customer?.status === 1 ? "#fca5a5" : "#86efac",
+          color: customer?.status === 1 ? "#991b1b" : "#166534",
+          borderColor: customer?.status === 1 ? "#dc2626" : "#22c55e",
+        }}
       >
-        {customer.status === 1 ? "Deactivate" : "Activate"}
+        {customer?.status === 1 ? "Deactivate" : "Activate"}
       </Button>
     </div>
   );
