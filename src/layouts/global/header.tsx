@@ -5,7 +5,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
 import { customAvatar, getUser } from "../../utils";
 
-// Click-outside hook
 function useOutsideClick(
   ref: React.RefObject<HTMLElement>,
   handler: () => void
@@ -28,8 +27,6 @@ function useOutsideClick(
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/profile", label: "Profile" },
-  { to: "/help", label: "Help" },
-  { to: "/history", label: "History" },
   { to: "/staff", label: "Staff" },
   { to: "/roles", label: "Roles" },
   { to: "/customers", label: "Customers" },
@@ -52,7 +49,7 @@ const iconButtons = [
 
 const profileMenuItems = [
   { to: "/profile", label: "My Profile" },
-  { to: "/settings", label: "Settings" },
+  // { to: "/settings", label: "Settings" },
   { label: "Logout" },
 ];
 
@@ -68,17 +65,14 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   const token = localStorage.getItem("ziya-access");
 
-  // Fetch user data dynamically
   const {
     data: userData,
     refetch: refetchUserDetails,
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
 
-  // Use state for local updates
   const [user, setUser] = useState(getUser());
 
-  // Update user state when data is fetched
   useEffect(() => {
     if (userData && !isLoading) {
       setUser(userData);
@@ -86,7 +80,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     }
   }, [userData, isLoading]);
 
-  // Ensure latest user details are fetched when needed
   useEffect(() => {
     if (token) {
       refetchUserDetails();
@@ -110,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
       <header className="sticky top-0 z-30 bg-white shadow-sm py-2">
-        <div className="container mx-auto flex items-center justify-between px-4 lg:px-8 h-[3.75rem]">
+        <div className="container mx-auto flex items-center justify-between h-[3.75rem]">
           <button
             onClick={toggleSidebar}
             className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors duration-200"
@@ -124,7 +117,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <NavLink
                 key={to}
                 to={to}
-                className="text-gray-700 hover:text-gray-900"
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-[#ecbe1d] font-bold"
+                    : "text-gray-700 hover:text-gray-900"
+                }
               >
                 {label}
               </NavLink>
@@ -194,7 +191,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                     <NavLink
                       key={to}
                       to={to!}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "text-blue-600 font-bold"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }
                       role="menuitem"
                     >
                       {label}

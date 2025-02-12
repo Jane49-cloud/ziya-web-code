@@ -31,54 +31,54 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     {
       title: "Dashboard",
       icon: "dashboard",
-      path: "/dashboard",
+      path: "/",
     },
+    // {
+    //   title: "Loan Management",
+    //   icon: "money-check",
+    //   dropdown: [
+    //     { title: "New Loan Application", path: "/loans/new" },
+    //     { title: "Active Loans", path: "/loans/active" },
+    //     { title: "Loan Approvals", path: "/loans/approvals" },
+    //     { title: "Loan Repayments", path: "/loans/repayments" },
+    //   ],
+    // },
     {
-      title: "Loan Management",
-      icon: "money-check",
-      dropdown: [
-        { title: "New Loan Application", path: "/loans/new" },
-        { title: "Active Loans", path: "/loans/active" },
-        { title: "Loan Approvals", path: "/loans/approvals" },
-        { title: "Loan Repayments", path: "/loans/repayments" },
-      ],
-    },
-    {
-      title: "Clients",
+      title: "Users",
       icon: "users",
       dropdown: [
-        { title: "All Clients", path: "/clients/all" },
-        { title: "Client Details", path: "/clients/details" },
+        { title: "Staff", path: "/staff" },
+        { title: "Customers", path: "/customers" },
       ],
     },
-    {
-      title: "Reports",
-      icon: "file-alt",
-      dropdown: [
-        { title: "Loan Performance", path: "/reports/loans" },
-        { title: "Client Statistics", path: "/reports/clients" },
-        { title: "Financial Summary", path: "/reports/finance" },
-      ],
-    },
-    {
-      title: "Settings",
-      icon: "cog",
-      dropdown: [
-        { title: "User Management", path: "/settings/users" },
-        { title: "System Preferences", path: "/settings/preferences" },
-        { title: "Notification Settings", path: "/settings/notifications" },
-      ],
-    },
-    {
-      title: "Support",
-      icon: "headset",
-      path: "/support",
-    },
-    {
-      title: "Help",
-      icon: "info-circle",
-      path: "/help",
-    },
+    // {
+    //   title: "Reports",
+    //   icon: "file-alt",
+    //   dropdown: [
+    //     { title: "Loan Performance", path: "/reports/loans" },
+    //     { title: "Client Statistics", path: "/reports/clients" },
+    //     { title: "Financial Summary", path: "/reports/finance" },
+    //   ],
+    // },
+    // {
+    //   title: "Settings",
+    //   icon: "cog",
+    //   dropdown: [
+    //     { title: "User Management", path: "/settings/users" },
+    //     { title: "System Preferences", path: "/settings/preferences" },
+    //     { title: "Notification Settings", path: "/settings/notifications" },
+    //   ],
+    // },
+    // {
+    //   title: "Support",
+    //   icon: "headset",
+    //   path: "/support",
+    // },
+    // {
+    //   title: "Help",
+    //   icon: "info-circle",
+    //   path: "/help",
+    // },
   ];
 
   return (
@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     return (
                       <Link
                         key={subIndex}
-                        to={"#"}
+                        to={subItem?.path}
                         onClick={closeSidebar}
                         className={clsx(
                           "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
@@ -163,7 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
           return (
             <Link
               key={index}
-              to={"#"}
+              to={item?.path || "#"}
               onClick={closeSidebar}
               className={clsx(
                 "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-500 focus:outline-none transition-colors duration-200",
