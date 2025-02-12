@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
 import clsx from "clsx"; // Utility for conditional classNames
+import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 
 interface SidebarProps {
   closeSidebar: () => void;
@@ -9,7 +10,7 @@ interface SidebarProps {
 
 interface SidebarItem {
   title: string;
-  icon: string;
+  icon: string; // Using KeenIcon names here
   path?: string;
   dropdown?: { title: string; path: string }[];
 }
@@ -30,19 +31,14 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
   const sidebarItems: SidebarItem[] = [
     {
       title: "Dashboard",
-      icon: "dashboard",
+      icon: "chart-line-star",
+      path: "/roles",
+    },
+    {
+      title: "Roles",
+      icon: "profile-circle",
       path: "/",
     },
-    // {
-    //   title: "Loan Management",
-    //   icon: "money-check",
-    //   dropdown: [
-    //     { title: "New Loan Application", path: "/loans/new" },
-    //     { title: "Active Loans", path: "/loans/active" },
-    //     { title: "Loan Approvals", path: "/loans/approvals" },
-    //     { title: "Loan Repayments", path: "/loans/repayments" },
-    //   ],
-    // },
     {
       title: "Users",
       icon: "users",
@@ -51,46 +47,17 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         { title: "Customers", path: "/customers" },
       ],
     },
-    // {
-    //   title: "Reports",
-    //   icon: "file-alt",
-    //   dropdown: [
-    //     { title: "Loan Performance", path: "/reports/loans" },
-    //     { title: "Client Statistics", path: "/reports/clients" },
-    //     { title: "Financial Summary", path: "/reports/finance" },
-    //   ],
-    // },
-    // {
-    //   title: "Settings",
-    //   icon: "cog",
-    //   dropdown: [
-    //     { title: "User Management", path: "/settings/users" },
-    //     { title: "System Preferences", path: "/settings/preferences" },
-    //     { title: "Notification Settings", path: "/settings/notifications" },
-    //   ],
-    // },
-    // {
-    //   title: "Support",
-    //   icon: "headset",
-    //   path: "/support",
-    // },
-    // {
-    //   title: "Help",
-    //   icon: "info-circle",
-    //   path: "/help",
-    // },
   ];
 
   return (
     <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300 z-50">
-      {/* Logo */}
       <div className="p-4 border-gray-200 flex justify-between items-center">
         <img
           src="/media/logos/Ziya_logo_transparent_bg.png"
-          className="w-full h-16 object-contain "
+          className="w-full h-16 object-contain"
           alt=""
         />
-        {/* Close button visible on small screens */}
+
         <button
           className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
           onClick={closeSidebar}
@@ -100,7 +67,6 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         </button>
       </div>
 
-      {/* Menu */}
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         {sidebarItems.map((item, index) => {
           const isActive = item.path && location.pathname === item.path;
@@ -118,13 +84,13 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 >
                   <div className="flex items-center gap-3">
                     <span className="menu-icon">
-                      <i className={`icon-${item.icon} text-lg`} />
+                      <KeenIcon icon={item.icon} className="text-lg" />{" "}
                     </span>
                     <span className="font-medium">{item.title}</span>
                   </div>
                   {isOpen ? <FaMinus /> : <FaPlus />}
                 </button>
-                {/* Dropdown Menu */}
+
                 <div
                   id={`${item.title}-dropdown`}
                   className={clsx(
@@ -175,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
             >
               <span className="flex items-center gap-3">
                 <span className="menu-icon">
-                  <i className={`icon-${item.icon} text-lg`} />
+                  <KeenIcon icon={item.icon} className="text-lg" />{" "}
                 </span>
                 <span className="font-medium">{item.title}</span>
               </span>
@@ -184,11 +150,9 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         })}
       </nav>
 
-      {/* Logout Footer */}
       <div className="border-t border-gray-200 p-4">
         <button
           onClick={() => {
-            // Handle logout logic here
             console.log("Logout clicked");
           }}
           className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:bg-blue-100 rounded-lg text-base font-bold transition-colors duration-200"

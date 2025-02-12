@@ -34,7 +34,7 @@ const Layout: React.FC<LayoutProps> = () => {
         {/* Overlay for sidebar on mobile */}
         {isSidebarOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
             onClick={closeSidebar}
             aria-hidden="true"
           />

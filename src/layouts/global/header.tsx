@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             {iconButtons.map(({ ariaLabel, icon, badgeCount, badgeColor }) => (
               <button
                 key={ariaLabel}
-                className="relative  items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 focus:outline-none transition hidden"
+                className="relative items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 focus:outline-none transition hidden"
                 aria-label={ariaLabel}
               >
                 {icon}
@@ -149,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 onClick={() => setProfileDropdownOpen((prev) => !prev)}
                 className="flex items-center space-x-2 h-10 pl-2 pr-3 rounded-full hover:bg-gray-100 text-gray-600 focus:outline-none transition-colors duration-200"
                 aria-haspopup="true"
-                aria-expanded={isProfileDropdownOpen}
+                aria-expanded={isProfileDropdownOpen ? "true" : "false"}
               >
                 <div>{customAvatar(fullName)}</div>
 
@@ -163,13 +163,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 />
               </button>
 
+              {/* Dropdown Menu */}
               <div
-                className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-10 transform transition-all duration-300 ease-out
-                  ${
-                    isProfileDropdownOpen
-                      ? "opacity-100 scale-100 pointer-events-auto"
-                      : "opacity-0 scale-95 pointer-events-none"
-                  }`}
+                className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20 transform transition-all duration-300 ease-out ${
+                  isProfileDropdownOpen
+                    ? "opacity-100 scale-100 pointer-events-auto"
+                    : "opacity-0 scale-95 pointer-events-none"
+                }`}
                 role="menu"
                 aria-orientation="vertical"
                 aria-labelledby="user-menu"
@@ -193,8 +193,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       to={to!}
                       className={({ isActive }) =>
                         isActive
-                          ? "text-blue-600 font-bold"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "block px-4 py-2 text-sm text-blue-600 font-bold hover:bg-gray-100"
+                          : "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       }
                       role="menuitem"
                     >
