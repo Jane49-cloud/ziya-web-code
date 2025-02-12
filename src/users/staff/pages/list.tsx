@@ -4,7 +4,7 @@ import { UsersCardGrid } from "../components/userCards";
 import { useGetAllUsersQuery } from "../../features/userSlice";
 
 export function AllUsers() {
-  const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [viewMode] = useState<"table" | "card">("table");
 
   const { data, isLoading, error } = useGetAllUsersQuery(undefined);
   const users = data?.staffs;
@@ -17,7 +17,7 @@ export function AllUsers() {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button
+        {/* <button
           onClick={() => setViewMode("table")}
           className={`px-5 py-2 rounded-l-md ${
             viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200"
@@ -32,7 +32,7 @@ export function AllUsers() {
           }`}
         >
           Card View
-        </button>
+        </button> */}
       </div>
       {viewMode === "table" ? (
         <UsersTable users={users} />

@@ -4,7 +4,8 @@ import { useLoadUserQuery } from "../../redux/api";
 import { customAvatar, getUser } from "../../utils";
 import AccountTab from "./account";
 import CustomersTab from "./customers";
-import HistoryTab from "./history";
+// import HistoryTab from "./history";
+import { UpdatePassword } from "./updatePassword";
 
 export interface UserProfile {
   firstname: string;
@@ -46,9 +47,9 @@ export const UserProfilePage: React.FC = () => {
       children: <CustomersTab />,
     },
     {
-      key: "history",
-      label: "History",
-      children: <HistoryTab />,
+      key: "Password",
+      label: "update password",
+      children: <UpdatePassword />,
     },
   ];
 

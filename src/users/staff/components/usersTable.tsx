@@ -3,6 +3,7 @@
 import { Table, Avatar, Space, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../../../utils";
+import { useNavigate } from "react-router-dom";
 
 interface UserData {
   id: string;
@@ -20,6 +21,7 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users }: UsersTableProps) {
+  const navigate = useNavigate();
   const columns: ColumnsType<UserData> = [
     {
       title: "#",
@@ -61,12 +63,16 @@ export function UsersTable({ users }: UsersTableProps) {
       key: "actions",
       render: (_: any, _record: UserData) => (
         <Space>
-          <Button type="link" style={{ color: "#1677ff" }}>
+          <Button
+            type="link"
+            style={{ color: "#1677ff" }}
+            onClick={() => navigate(`/staff/${_record?.id}`)}
+          >
             View
           </Button>
-          <Button type="link" danger>
+          {/* <Button type="link" danger>
             Delete
-          </Button>
+          </Button> */}
         </Space>
       ),
       align: "center",

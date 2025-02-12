@@ -69,39 +69,58 @@ export const RoleForm: FC<RoleFormProps> = ({ roleId, roles, onSubmit }) => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">
+    <div className=" bg-white shadow-md rounded-lg p-6">
+      <h1 className="text-2xl font-semibold text-gray-800 mb-4">
         {currentRoleId ? "Edit Role" : "Create New Role"}
       </h1>
 
-      <div className="space-y-6">
+      <p className="text-gray-600 text-sm mb-6">
+        {currentRoleId
+          ? "Modify the role details below."
+          : "Fill in the details to create a new role."}
+      </p>
+
+      <div className="space-y-5">
+        {/* Role Name Field */}
         <div>
-          <label className="block text-sm font-medium">Role Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Role Name
+          </label>
           <Input
             value={roleDetails.name}
             onChange={(e) =>
               setRoleDetails({ ...roleDetails, name: e.target.value })
             }
             placeholder="Enter the role name"
+            required
+            className="w-full border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
 
+        {/* Description Field */}
         <div>
-          <label className="block text-sm font-medium">Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
           <Input.TextArea
             value={roleDetails.description}
             onChange={(e) =>
               setRoleDetails({ ...roleDetails, description: e.target.value })
             }
             placeholder="Describe the role"
+            className="w-full border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            rows={3}
+            required
           />
         </div>
 
+        {/* Action Button */}
         <Button
           type="primary"
           onClick={handleSubmit}
           loading={creatingRole || updatingRole}
           disabled={creatingRole || updatingRole}
+          className="w-full py-2 font-medium"
         >
           {currentRoleId ? "Update Role" : "Create Role"}
         </Button>

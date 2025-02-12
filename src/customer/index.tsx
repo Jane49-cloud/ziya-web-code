@@ -152,9 +152,9 @@ const CustomerManagement: FC = () => {
         </Tabs.TabPane>
 
         {/* Tab 4: Manage Status */}
-        <Tabs.TabPane tab="Manage Status" key="4">
+        {/* <Tabs.TabPane tab="Manage Status" key="4">
           <div>Manage customer status here.</div>
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
       </Tabs>
 
       {/* Modal for editing customer */}

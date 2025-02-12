@@ -10,12 +10,14 @@ import Staff from "../users/staff/pages/index.";
 import { RolesManagement } from "../roles";
 import CustomerManagement from "../customer";
 import LoanManagementPage from "../Loans/pages/loanManagement";
+import PublicProfile from "../profile/pages/publicProfile";
 // import LoanManagementPage from "../Loans";
 
 const AppRouting = (): ReactElement => {
   const PrivateRoutes = () => {
     const token = localStorage.getItem("ziya-access");
-    return token ? <Outlet /> : <Navigate to="auth/login" />;
+    const user = localStorage.getItem("ziya-profile");
+    return token && user ? <Outlet /> : <Navigate to="auth/login" />;
   };
 
   return (
@@ -33,6 +35,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/customers" element={<CustomerManagement />} />
           {/* <Route path="/loans" element={<LoanManagementPage />} /> */}
           <Route path="/loans" element={<LoanManagementPage />} />
+          <Route path="/staff/:id" element={<PublicProfile />} />
         </Route>
       </Route>
     </Routes>

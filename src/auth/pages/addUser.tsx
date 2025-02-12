@@ -250,9 +250,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                 )}
                 disabled={rolesLoading || rolesError}
               >
-                <option value="" disabled>
-                  Select Role
-                </option>
+                <option value="">Select Role</option>
                 {!rolesLoading &&
                   !rolesError &&
                   rolesData?.roles?.map((role: any) => (
