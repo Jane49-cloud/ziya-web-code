@@ -24,7 +24,7 @@ export const rolesApi = apiSlice.injectEndpoints({
     }),
     deleteRole: builder.mutation({
       query: (id) => ({
-        url: `/roles/definitions/delete/${id}`,
+        url: `/roles/definitions/remove/${id}`,
         method: "DELETE",
       }),
     }),

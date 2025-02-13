@@ -44,13 +44,15 @@ function UpdatePassword() {
       setLoading(true);
       setHasErrors(undefined);
       try {
-        await updatePassword({
+        const response = await updatePassword({
           userId,
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         }).unwrap();
         setHasErrors(false);
-        setStatus("Password has been successfully updated!");
+        await setStatus(
+          response.message || "Password has been successfully updated!"
+        );
 
         resetForm();
       } catch (error: any) {
@@ -81,7 +83,7 @@ function UpdatePassword() {
   };
 
   return (
-    <div className="flex  flex-col py-12 sm:px-6 lg:px-8">
+    <div className="flex flex-col py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
           <div className="mb-6 text-center">
