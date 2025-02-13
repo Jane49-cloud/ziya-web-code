@@ -16,15 +16,16 @@ export const rolesApi = apiSlice.injectEndpoints({
       }),
     }),
     updateRole: builder.mutation({
-      query: ({ id, role }) => ({
+      query: ({ id, ...roleData }) => ({
         url: `/roles/definitions/update/${id}`,
         method: "PUT",
-        body: role,
+        body: roleData,
       }),
     }),
+
     deleteRole: builder.mutation({
       query: (id) => ({
-        url: `/roles/definitions/remove/${id}`,
+        url: `/roles/definitions/delete/${id}`,
         method: "DELETE",
       }),
     }),

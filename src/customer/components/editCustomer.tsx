@@ -81,24 +81,6 @@ export const EditCustomerForm: FC<{
           </Col>
         </Row>
 
-        {/* <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            {renderInput(
-              "password",
-              "New Password (Optional)",
-              [{ required: false }],
-              "password"
-            )}
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item name="avatar" label="Profile Picture">
-              <Upload maxCount={1} beforeUpload={() => false}>
-                <Button icon={<UploadOutlined />}>Upload Avatar</Button>
-              </Upload>
-            </Form.Item>
-          </Col>
-        </Row> */}
-
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             <Form.Item

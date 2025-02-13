@@ -16,6 +16,7 @@ import { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../utils";
 import { Alert } from "../components/Alert";
 import { useFetchCustomer } from "./util";
+import { useNavigate } from "react-router-dom";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -31,6 +32,7 @@ const CustomerManagement: FC = () => {
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
+  const navigate = useNavigate();
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -77,6 +79,10 @@ const CustomerManagement: FC = () => {
     }
   };
 
+  const handleView = async (id: string) => {
+    navigate(`/customer/${id}`);
+  };
+
   // Table Columns
   const columns: ColumnsType<any> = [
     {
@@ -114,6 +120,7 @@ const CustomerManagement: FC = () => {
           customer={customer}
           onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
+          handleView={handleView}
         />
       ),
     },

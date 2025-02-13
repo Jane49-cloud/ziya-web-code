@@ -1,6 +1,12 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Modal, Form, Input } from "antd";
 import { useUpdateRoleMutation } from "../features/rolesSlice";
+
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 interface EditRoleModalProps {
   visible: boolean;
@@ -18,36 +24,51 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
   const [form] = Form.useForm();
   const [updateRole, { isLoading }] = useUpdateRoleMutation();
 
+  useEffect(() => {
+    if (visible && role) {
+      form.setFieldsValue({ name: role.name, description: role.description });
+    } else {
+      form.resetFields();
+    }
+  }, [form, role, visible]);
+
   const handleSave = async () => {
     try {
-      // Validate and get form values
       const values = await form.validateFields();
 
-      // Ensure role is not null
       if (!role) {
-        console.error("No role selected.");
+        console.error("🛑 No role selected.");
         return;
       }
 
-      // Call the mutation with the updated values
-      await updateRole({ id: role.id, ...values }).unwrap();
-      onUpdate(); // Callback to update the parent component state
-      onClose(); // Close the modal
+      const payload = {
+        id: role.id,
+        name: values.name,
+        description: values.description || "",
+      };
+
+      console.log("🚀 Sending Payload:", payload);
+      await updateRole(payload).unwrap();
+      console.log("✅ Role Updated Successfully");
+
+      onUpdate();
+      onClose();
+      form.resetFields();
     } catch (error) {
-      console.error("Failed to update role:", error);
+      console.error("🛑 Failed to update role:", error);
     }
   };
 
   return (
     <Modal
-      visible={visible}
+      open={visible}
       title="Edit Role"
       onCancel={onClose}
       onOk={handleSave}
       confirmLoading={isLoading}
+      forceRender
     >
-      {/* Form initialValues should be an empty object or the role object */}
-      <Form form={form} layout="vertical" initialValues={role || {}}>
+      <Form form={form} layout="vertical">
         <Form.Item
           label="Role Name"
           name="name"

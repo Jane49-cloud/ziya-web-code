@@ -19,7 +19,7 @@ export const customerSlice = apiSlice.injectEndpoints({
 
     getCustomerById: builder.query({
       query: (id) => ({
-        url: `/customers/get/${id}`,
+        url: `/customers/get/single/${id}`,
         method: "GET",
       }),
     }),
@@ -38,6 +38,40 @@ export const customerSlice = apiSlice.injectEndpoints({
         method: "PUT",
       }),
     }),
+
+    // ✅ Get Businesses for a Customer
+    getBusinessesByCustomer: builder.query({
+      query: (customerId) => ({
+        url: `/customer-business/get-by-customer/${customerId}`,
+        method: "GET",
+      }),
+    }),
+
+    // ✅ Create Business for Customer
+    createBusiness: builder.mutation({
+      query: (businessData) => ({
+        url: "/customer-business/create",
+        method: "POST",
+        body: businessData,
+      }),
+    }),
+
+    // ✅ Update Business
+    updateBusiness: builder.mutation({
+      query: ({ id, ...businessData }) => ({
+        url: `/customer-business/update/${id}`,
+        method: "PUT",
+        body: businessData,
+      }),
+    }),
+
+    // ✅ Delete Business
+    deleteBusiness: builder.mutation({
+      query: (id) => ({
+        url: `/customer-business/delete/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -47,4 +81,8 @@ export const {
   useGetCustomerByIdQuery,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
+  useGetBusinessesByCustomerQuery,
+  useCreateBusinessMutation,
+  useUpdateBusinessMutation,
+  useDeleteBusinessMutation,
 } = customerSlice;

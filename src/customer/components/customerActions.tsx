@@ -5,15 +5,16 @@ import { FC } from "react";
 export const CustomerTableActions: FC<{
   customer: any;
   onEdit: () => void;
+  handleView: (id: any) => void;
   onStatusChange: (id: string, status: number) => void;
-}> = ({ customer, onEdit, onStatusChange }) => {
+}> = ({ customer, onEdit, onStatusChange, handleView }) => {
   const handleActivateDeactivate = () => {
     const newStatus = customer.status === 1 ? 0 : 1;
     onStatusChange(customer.id, newStatus);
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 space-x-10">
       <Button onClick={onEdit} type="primary" size="small">
         Edit
       </Button>
@@ -25,10 +26,17 @@ export const CustomerTableActions: FC<{
           backgroundColor: customer?.status === 1 ? "#fca5a5" : "#86efac",
           color: customer?.status === 1 ? "#991b1b" : "#166534",
           borderColor: customer?.status === 1 ? "#dc2626" : "#22c55e",
+          width: "70px",
         }}
       >
         {customer?.status === 1 ? "Deactivate" : "Activate"}
       </Button>
+      <button
+        onClick={() => handleView(customer.id)} // ✅ Now passing the correct ID
+        className="bg-amber-200 text-amber-500 px-4 rounded"
+      >
+        View
+      </button>
     </div>
   );
 };
