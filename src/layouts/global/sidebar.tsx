@@ -32,12 +32,12 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     {
       title: "Dashboard",
       icon: "chart-line-star",
-      path: "/roles",
+      path: "/",
     },
     {
       title: "Roles",
       icon: "profile-circle",
-      path: "/",
+      path: "/roles",
     },
     {
       title: "Users",
