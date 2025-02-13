@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 import { useFormik } from "formik";
@@ -6,9 +7,12 @@ import * as Yup from "yup";
 import { Alert } from "../../components/Alert";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { styles } from "../../styles";
-import { useUpdatePasswordMutation } from "../../auth/features/authApi"; // Import the mutation hook
+import { useUpdatePasswordMutation } from "../../auth/features/authApi";
+import { getUser } from "../../utils";
 
-// 1) Define Yup validation schema
+const user = getUser();
+const userId = user?.id;
+
 const passwordSchema = Yup.object().shape({
   currentPassword: Yup.string()
     .min(6, "Password must be at least 6 characters")
@@ -27,11 +31,8 @@ function UpdatePassword() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [updatePassword] = useUpdatePasswordMutation();
 
-  // 2) Use the resetPassword mutation from the API slice
-  const [resetPassword] = useUpdatePasswordMutation();
-
-  // 3) Formik setup
   const formik = useFormik({
     initialValues: {
       currentPassword: "",
@@ -39,61 +40,50 @@ function UpdatePassword() {
       confirmPassword: "",
     },
     validationSchema: passwordSchema,
-    onSubmit: async (values, { setStatus, setSubmitting }) => {
+    onSubmit: async (values, { setStatus, setSubmitting, resetForm }) => {
       setLoading(true);
       setHasErrors(undefined);
-
       try {
-        // Call the resetPassword mutation here with current and new password
-        await resetPassword({
+        await updatePassword({
+          userId,
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         }).unwrap();
-
         setHasErrors(false);
         setStatus("Password has been successfully updated!");
-      } catch (error) {
-        setHasErrors(true);
-        setStatus("Password update failed. Please try again.");
+
+        resetForm();
+      } catch (error: any) {
+        if (error?.data?.error) {
+          setHasErrors(true);
+          setStatus(error.data.error);
+        } else {
+          setHasErrors(true);
+          setStatus("Password update failed. Please try again.");
+        }
       }
       setLoading(false);
       setSubmitting(false);
     },
   });
 
-  // 4) Handlers to toggle password visibility
   const toggleCurrentPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setShowCurrentPassword(!showCurrentPassword);
   };
-
   const toggleNewPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setShowNewPassword(!showNewPassword);
   };
-
   const toggleConfirmPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
-    <div className="flex min-h-screen flex-col py-12 sm:px-6 lg:px-8">
-      {/* Center container */}
+    <div className="flex  flex-col py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Optional brand / header above card */}
-        <div className="mb-8 text-center">
-          {/* Place a brand logo here if desired */}
-          <img
-            src={"/media/logos/Ziya_logo_transparent_bg.png"}
-            alt="Brand Logo"
-            className="mx-auto h-12 w-auto"
-          />
-        </div>
-
-        {/* Actual card */}
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
-          {/* Header */}
           <div className="mb-6 text-center">
             <h3 className="text-xl font-semibold text-gray-900">
               Update Your Password
@@ -102,17 +92,12 @@ function UpdatePassword() {
               Please enter your current password and your new password below.
             </p>
           </div>
-
-          {/* Alerts */}
           {hasErrors !== undefined && (
             <Alert variant={hasErrors ? "danger" : "success"} className="mb-4">
               {formik.status}
             </Alert>
           )}
-
-          {/* Update Password Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-6">
-            {/* Current Password Field */}
             <div>
               <label
                 htmlFor="currentPassword"
@@ -158,8 +143,6 @@ function UpdatePassword() {
                   </div>
                 )}
             </div>
-
-            {/* New Password Field */}
             <div>
               <label
                 htmlFor="newPassword"
@@ -203,8 +186,6 @@ function UpdatePassword() {
                 </div>
               )}
             </div>
-
-            {/* Confirm Password Field */}
             <div>
               <label
                 htmlFor="confirmPassword"
@@ -250,8 +231,6 @@ function UpdatePassword() {
                   </div>
                 )}
             </div>
-
-            {/* Submit Button */}
             <div>
               <button
                 type="submit"

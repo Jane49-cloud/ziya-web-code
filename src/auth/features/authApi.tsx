@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// authApi.ts
 import { apiSlice } from "../../redux/api";
 import { userLoggedIn, userLoggedOut, userRegistration } from "./authSlice";
 
@@ -19,7 +20,6 @@ export const authApi = apiSlice.injectEndpoints({
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
         try {
           const result = await queryFulfilled;
-          console.log("register res ", result);
           dispatch(
             userRegistration({
               token: result.data.Data,
@@ -42,6 +42,7 @@ export const authApi = apiSlice.injectEndpoints({
         },
       }),
     }),
+
     // Login endpoint
     login: builder.mutation({
       query: (values) => ({
@@ -52,7 +53,6 @@ export const authApi = apiSlice.injectEndpoints({
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
         try {
           const result = await queryFulfilled;
-          //  Set access and refresh tokens
           dispatch(
             userLoggedIn({
               accessToken: result.data.accessToken,
@@ -67,12 +67,13 @@ export const authApi = apiSlice.injectEndpoints({
     }),
 
     updatePassword: builder.mutation({
-      query: (data) => ({
-        url: "/staff/password/update",
+      query: ({ userId, currentPassword, newPassword }) => ({
+        url: `/staff/password/update/${userId}`,
         method: "PUT",
-        body: data,
+        body: { currentPassword, newPassword },
       }),
     }),
+
     logOut: builder.query({
       query: () => ({
         url: "",

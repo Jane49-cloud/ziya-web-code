@@ -18,6 +18,7 @@ export interface UserProfile {
   avatar?: string;
   activation_code?: string;
   role: string;
+  id?: string;
 }
 
 export const UserProfilePage: React.FC = () => {
