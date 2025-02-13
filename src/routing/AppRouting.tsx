@@ -12,6 +12,7 @@ import CustomerManagement from "../customer";
 import LoanManagementPage from "../Loans/pages/loanManagement";
 import PublicProfile from "../profile/pages/publicProfile";
 import CustomerPage from "../customer/pages/singleCustomer";
+import BusinessList from "../Business";
 // import LoanManagementPage from "../Loans";
 
 const AppRouting = (): ReactElement => {
@@ -38,6 +39,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/loans" element={<LoanManagementPage />} />
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
+          <Route path="/businesses" element={<BusinessList />} />
         </Route>
       </Route>
     </Routes>
