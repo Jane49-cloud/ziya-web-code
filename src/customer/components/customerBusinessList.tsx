@@ -7,6 +7,7 @@ import {
   useDeleteBusinessMutation,
 } from "../features/customerSlice";
 import CustomerBusinessForm from "./customerBusinessForm";
+import { refetchCustomerBusiness } from "../util";
 
 const CustomerBusinessList = ({ customerId }: any) => {
   const { data, isLoading } = useGetBusinessesByCustomerQuery(customerId);
@@ -14,10 +15,12 @@ const CustomerBusinessList = ({ customerId }: any) => {
   const [deleteBusiness] = useDeleteBusinessMutation();
   const [editBusiness, setEditBusiness] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const refetch = refetchCustomerBusiness(customerId);
 
   const handleDelete = async (id: any) => {
     try {
       await deleteBusiness(id).unwrap();
+      refetch();
       message.success("Business deleted successfully!");
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

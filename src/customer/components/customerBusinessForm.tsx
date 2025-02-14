@@ -6,6 +6,7 @@ import {
   useCreateBusinessMutation,
   useUpdateBusinessMutation,
 } from "../features/customerSlice";
+import { refetchCustomerBusiness } from "../util";
 
 const { Option } = Select;
 
@@ -18,6 +19,7 @@ const CustomerBusinessForm = ({
   const [form] = Form.useForm();
   const [createBusiness, { isLoading: creating }] = useCreateBusinessMutation();
   const [updateBusiness, { isLoading: updating }] = useUpdateBusinessMutation();
+  const refetch = refetchCustomerBusiness(customerId);
 
   useEffect(() => {
     if (visible) {
@@ -32,9 +34,11 @@ const CustomerBusinessForm = ({
       const values = await form.validateFields();
       if (business) {
         await updateBusiness({ id: business.id, ...values }).unwrap();
+        refetch();
         message.success("Business updated successfully!");
       } else {
         await createBusiness({ ...values, customer_id: customerId }).unwrap();
+        refetch();
         message.success("Business created successfully!");
       }
       onClose();

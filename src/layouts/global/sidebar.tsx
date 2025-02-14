@@ -47,6 +47,11 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         { title: "Customers", path: "/customers" },
       ],
     },
+    {
+      title: "Businesses",
+      icon: "shop",
+      path: "/businesses",
+    },
   ];
 
   return (
