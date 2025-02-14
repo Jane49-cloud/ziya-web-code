@@ -1,12 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, Table, Button } from "antd";
 import { useState } from "react";
 import CustomerForm from "../components/customerForm";
 
-const CustomerTabs = ({ customer }: any) => {
+interface Customer {
+  firstname: string;
+  middlename?: string;
+  lastname: string;
+  email: string;
+  country_code: string;
+  phone_number: string;
+  status: number;
+  identification_type: string;
+  identification_number: string;
+  last_login: string;
+  date_created: string;
+  date_updated: string;
+}
+
+interface CustomerTabsProps {
+  customer: Customer;
+}
+
+const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
   const [editVisible, setEditVisible] = useState(false);
 
-  // Table Data
   const customerData = [
     {
       key: "1",
@@ -58,7 +75,7 @@ const CustomerTabs = ({ customer }: any) => {
       title: "Field",
       dataIndex: "label",
       key: "label",
-      className: "font-semibold",
+      className: "font-semibold text-gray-700",
       width: "40%",
     },
     {
@@ -71,29 +88,26 @@ const CustomerTabs = ({ customer }: any) => {
   ];
 
   return (
-    <>
-      <Card bordered={false} className="p-6 shadow-sm">
-        <Table
-          dataSource={customerData}
-          columns={columns}
-          size="small"
-          pagination={false}
-          bordered
-        />
-
-        <div className="mt-4 flex justify-end">
-          <Button type="primary" onClick={() => setEditVisible(true)}>
-            Edit Customer
-          </Button>
-        </div>
-      </Card>
-
+    <Card className="p-6 shadow-sm rounded-lg">
+      <Table
+        dataSource={customerData}
+        columns={columns}
+        size="middle"
+        pagination={false}
+        bordered
+        rowClassName="hover:bg-gray-50"
+      />
+      <div className="mt-4 flex justify-end">
+        <Button type="primary" onClick={() => setEditVisible(true)}>
+          Edit Customer
+        </Button>
+      </div>
       <CustomerForm
         visible={editVisible}
         onClose={() => setEditVisible(false)}
         customer={customer}
       />
-    </>
+    </Card>
   );
 };
 

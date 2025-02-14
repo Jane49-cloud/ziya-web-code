@@ -1,4 +1,4 @@
-import { Table, Spin } from "antd";
+import { Table, Spin, Card } from "antd";
 import { useGetAllBusinessesQuery } from "./features/businessSlice";
 
 const BusinessList = () => {
@@ -20,7 +20,7 @@ const BusinessList = () => {
   if (isLoading) return <Spin />;
 
   return (
-    <>
+    <Card className="mt-10 py-5" title="All Businesses Registered">
       {/* <Button
         type="primary"
         className="mb-4"
@@ -54,7 +54,7 @@ const BusinessList = () => {
         onClose={() => { setIsModalOpen(false); setEditBusiness(null); }}
         business={editBusiness}
       /> */}
-    </>
+    </Card>
   );
 };
 

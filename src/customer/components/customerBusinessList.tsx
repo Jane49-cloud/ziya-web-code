@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Table, Button, Popconfirm, Spin, message } from "antd";
+import { Table, Button, Popconfirm, Spin, message, Card } from "antd";
 
 import { useState } from "react";
 import {
@@ -31,7 +31,7 @@ const CustomerBusinessList = ({ customerId }: any) => {
   if (isLoading) return <Spin />;
 
   return (
-    <>
+    <Card className="mt-10">
       <Button
         type="primary"
         className="mb-4"
@@ -40,7 +40,7 @@ const CustomerBusinessList = ({ customerId }: any) => {
         Add Business
       </Button>
 
-      <Table dataSource={businesses} rowKey="id">
+      <Table dataSource={businesses} rowKey="id" bordered>
         <Table.Column title="Business Name" dataIndex="name" />
         <Table.Column title="Type" dataIndex="business_type" />
         <Table.Column title="Sector" dataIndex="sector" />
@@ -80,7 +80,7 @@ const CustomerBusinessList = ({ customerId }: any) => {
         customerId={customerId}
         business={editBusiness}
       />
-    </>
+    </Card>
   );
 };
 
