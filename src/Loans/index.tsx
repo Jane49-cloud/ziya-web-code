@@ -9,16 +9,19 @@ import {
   useCreateLoanDefinitionMutation,
   useUpdateLoanDefinitionMutation,
   useToggleLoanDefinitionStatusMutation,
-} from "./features/loanDefinations";
-import LoanDefinitionModal from "./components/modal";
+} from "./features/loanDefinationsSlice";
+import LoanDefinitionModal from "./components/LoanDefinationModal";
+import { useRefetchLoanDefinations } from "./utils";
 
-const LoanManagementPage: FC = () => {
-  const { data: loanDefinitions, isLoading } = useGetLoanDefinitionsQuery({});
+const LoanCategories: FC = () => {
+  const { data, isLoading } = useGetLoanDefinitionsQuery({});
+  const loanDefinitions = data?.loanDefinitions;
   const [createLoanDefinition, { isLoading: creating }] =
     useCreateLoanDefinitionMutation();
   const [updateLoanDefinition, { isLoading: updating }] =
     useUpdateLoanDefinitionMutation();
   const [toggleStatus] = useToggleLoanDefinitionStatusMutation();
+  const refetch = useRefetchLoanDefinations();
 
   const [selectedLoan, setSelectedLoan] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
@@ -30,17 +33,34 @@ const LoanManagementPage: FC = () => {
   const handleSaveLoanDefinition = async (values: any) => {
     try {
       await createLoanDefinition(values).unwrap();
+      refetch();
+      setActiveTab("1");
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleUpdateLoanDefinition = async (values: any) => {
+    if (!selectedLoan?.id) {
+      console.error("Error: LoanDefinition ID is missing");
+      return;
+    }
+
     try {
-      await updateLoanDefinition(values).unwrap();
+      await updateLoanDefinition({ id: selectedLoan.id, ...values }).unwrap();
+      await refetch();
       setSelectedLoan(null);
     } catch (err) {
-      console.error(err);
+      console.error("Update failed:", err);
+    }
+  };
+  const handleToggleLoanStatus = async (id: number, status: number) => {
+    try {
+      await toggleStatus({ id, status }).unwrap();
+
+      await refetch();
+    } catch (error) {
+      console.error("Error toggling status:", error);
     }
   };
 
@@ -53,7 +73,7 @@ const LoanManagementPage: FC = () => {
             loanDefinitions={loanDefinitions}
             isLoading={isLoading}
             onEdit={setSelectedLoan}
-            onToggleStatus={toggleStatus}
+            onToggleStatus={handleToggleLoanStatus}
           />
         </Tabs.TabPane>
 
@@ -76,4 +96,4 @@ const LoanManagementPage: FC = () => {
   );
 };
 
-export default LoanManagementPage;
+export default LoanCategories;

@@ -5,7 +5,7 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
     // Create a new loan definition
     createLoanDefinition: builder.mutation({
       query: (loanData) => ({
-        url: "/customers/loan-definitions/create",
+        url: "/loan-definitions/create",
         method: "POST",
         body: loanData,
       }),
@@ -14,7 +14,7 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
     // Get all loan definitions
     getLoanDefinitions: builder.query({
       query: () => ({
-        url: "/customers/loan-definitions/get/all",
+        url: "/loan-definitions/get/all",
         method: "GET",
       }),
     }),
@@ -22,7 +22,7 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
     // Update a loan definition
     updateLoanDefinition: builder.mutation({
       query: (loanData) => ({
-        url: `/customers/loan-definitions/update/${loanData.id}`,
+        url: `/loan-definitions/update/${loanData.id}`,
         method: "PUT",
         body: loanData,
       }),
@@ -31,7 +31,7 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
     // Activate or deactivate a loan definition
     toggleLoanDefinitionStatus: builder.mutation({
       query: ({ id, status }) => ({
-        url: `/customers/loan-definitions/status/${id}/${status}`,
+        url: `/loan-definitions/status/${id}/${status}`,
         method: "PUT",
       }),
     }),
@@ -39,7 +39,7 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
     // Retrieve all loans for a specific loan definition
     getLoansByLoanDefinitionId: builder.query({
       query: (loanDefinitionId) => ({
-        url: `/customers/loan-definitions/get/loans/${loanDefinitionId}`,
+        url: `/loan-definitions/get/loans/${loanDefinitionId}`,
         method: "GET",
       }),
     }),

@@ -5,7 +5,7 @@
 import { FC, useState } from "react";
 import { Tabs, notification } from "antd";
 import LoanCard from "../components/loanCard";
-import LoanForm from "../components/loanForm";
+import LoanForm from "../components/loanApplicationForm";
 import LoanTable from "../components/loansTable";
 import { useGetLoansQuery, useCreateLoanMutation } from "../features/loanSlice";
 import { Alert } from "../../components/Alert";

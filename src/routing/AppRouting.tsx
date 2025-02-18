@@ -9,11 +9,11 @@ import NotFound from "../errors/404";
 import Staff from "../users/staff/pages/index.";
 import { RolesManagement } from "../roles";
 import CustomerManagement from "../customer";
-import LoanManagementPage from "../Loans/pages/loanManagement";
 import PublicProfile from "../profile/pages/publicProfile";
 import CustomerPage from "../customer/pages/singleCustomer";
 import BusinessList from "../Business";
-// import LoanManagementPage from "../Loans";
+import LoanCategories from "../Loans";
+import LoanManagementPage from "../Loans/pages/loanManagement";
 
 const AppRouting = (): ReactElement => {
   const PrivateRoutes = () => {
@@ -35,7 +35,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/customers" element={<CustomerManagement />} />
-          {/* <Route path="/loans" element={<LoanManagementPage />} /> */}
+          <Route path="/loan-categories" element={<LoanCategories />} />
           <Route path="/loans" element={<LoanManagementPage />} />
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
