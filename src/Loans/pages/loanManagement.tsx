@@ -7,12 +7,15 @@ import { Tabs, notification } from "antd";
 import LoanCard from "../components/loanCard";
 import LoanForm from "../components/loanApplicationForm";
 import LoanTable from "../components/loansTable";
-import { useGetLoansQuery, useCreateLoanMutation } from "../features/loanSlice";
+import {
+  useCreateLoanMutation,
+  useGetAllLoansQuery,
+} from "../features/loanSlice";
 import { Alert } from "../../components/Alert";
 import { Loan } from "../@types/common";
 
 const LoanManagementPage: FC = () => {
-  const { data: loans, isLoading } = useGetLoansQuery({});
+  const { data: loans, isLoading } = useGetAllLoansQuery({});
   const [createLoan, { isLoading: creating }] = useCreateLoanMutation();
 
   const [activeTab, setActiveTab] = useState("1");

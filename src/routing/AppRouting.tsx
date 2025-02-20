@@ -14,6 +14,7 @@ import CustomerPage from "../customer/pages/singleCustomer";
 import BusinessList from "../Business";
 import LoanCategories from "../Loans";
 import LoanManagementPage from "../Loans/pages/loanManagement";
+import SingleLoanPage from "../Loans/pages/singleLoanPage";
 
 const AppRouting = (): ReactElement => {
   const PrivateRoutes = () => {
@@ -40,6 +41,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
           <Route path="/businesses" element={<BusinessList />} />
+          <Route path="/loans/:loanId" element={<SingleLoanPage />} />
         </Route>
       </Route>
     </Routes>

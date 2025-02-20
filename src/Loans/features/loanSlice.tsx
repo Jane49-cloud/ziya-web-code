@@ -1,30 +1,48 @@
 import { apiSlice } from "../../redux/api";
-import { CreateLoanRequest } from "../@types/common";
 
 export const loansSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // Create a new loan for a customer
     createLoan: builder.mutation({
-      query: (loanData: CreateLoanRequest) => ({
-        url: "/customers/loans/create",
+      query: (loanData) => ({
+        url: "/customer-loans/create",
         method: "POST",
         body: loanData,
       }),
     }),
 
-    // Get all loans for all customers
-    getLoans: builder.query({
+    getAllLoans: builder.query({
       query: () => ({
-        url: "/customers/loans/get/all",
+        url: "/customer-loans/get/all",
         method: "GET",
       }),
     }),
 
-    // Get all loans for a specific customer
     getLoansByCustomerId: builder.query({
-      query: (customerId: number) => ({
-        url: `/customers/loans/get/customer/${customerId}`,
+      query: (customerId) => ({
+        url: `/customer-loans/get/customer/${customerId}`,
         method: "GET",
+      }),
+    }),
+
+    getLoanById: builder.query({
+      query: (customerId) => ({
+        url: `/customer-loans/get/customer/${customerId}`,
+        method: "GET",
+      }),
+    }),
+
+    updateLoan: builder.mutation({
+      query: ({ loanId, ...loanData }) => ({
+        url: `/customer-loans/update/${loanId}`,
+        method: "PUT",
+        body: loanData,
+      }),
+    }),
+
+    deleteLoan: builder.mutation({
+      query: (loanId) => ({
+        url: `/customer-loans/delete/${loanId}`,
+        method: "DELETE",
       }),
     }),
   }),
@@ -32,6 +50,9 @@ export const loansSlice = apiSlice.injectEndpoints({
 
 export const {
   useCreateLoanMutation,
-  useGetLoansQuery,
+  useGetAllLoansQuery,
   useGetLoansByCustomerIdQuery,
+  useUpdateLoanMutation,
+  useDeleteLoanMutation,
+  useGetLoanByIdQuery,
 } = loansSlice;

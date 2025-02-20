@@ -6,6 +6,7 @@ import CustomerTabs from "../tabs/customerTabs";
 import { customAvatar } from "../../utils";
 import { FaEnvelope } from "react-icons/fa6";
 import { FaPhoneAlt } from "react-icons/fa";
+import CustomerLoansList from "./customerLoans";
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +50,9 @@ const CustomerPage = () => {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Businesses" key="2">
           <CustomerBusinessList customerId={customer.id} />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Loans" key="3">
+          <CustomerLoansList customerId={customer.id} />
         </Tabs.TabPane>
       </Tabs>
     </div>
