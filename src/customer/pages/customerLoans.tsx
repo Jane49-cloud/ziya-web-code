@@ -40,7 +40,7 @@ interface CustomerLoansListProps {
 const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   customerId,
 }) => {
-  const { data, isLoading } = useGetLoansByCustomerIdQuery(customerId);
+  const { data, isLoading, refetch } = useGetLoansByCustomerIdQuery(customerId);
   const { data: loanDefinitionsData } = useGetLoanDefinitionsQuery({});
   const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
   const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
@@ -75,13 +75,14 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   }) => {
     if (isEditMode && selectedLoan) {
       await updateLoan({ loanId: selectedLoan.id, ...values });
+      refetch();
     } else {
       await createLoan({ ...values, customer_id: customerId });
+      refetch();
     }
     closeModal();
   };
 
-  // ✅ Save selected loan to local storage & navigate to single loan page
   const handleViewLoan = (loan: LoanType) => {
     localStorage.setItem("selectedLoan", JSON.stringify(loan));
     navigate(`/loans/${loan.id}`);

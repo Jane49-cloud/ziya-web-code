@@ -26,7 +26,7 @@ interface LoanRepaymentHistoryProps {
 const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   loanId,
 }) => {
-  const { data, isLoading } = useGetLoanPaymentsByLoanIdQuery(loanId);
+  const { data, isLoading, refetch } = useGetLoanPaymentsByLoanIdQuery(loanId);
   const [createPayment, { isLoading: isCreating }] =
     useCreateLoanPaymentMutation();
   const [updatePayment, { isLoading: isUpdating }] =
@@ -75,8 +75,10 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   }) => {
     if (isEditMode && selectedPayment) {
       await updatePayment({ paymentId: selectedPayment.id, ...values });
+      refetch();
     } else {
       await createPayment({ ...values, customer_loan_id: loanId });
+      refetch();
     }
     closeModal();
   };
