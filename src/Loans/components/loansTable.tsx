@@ -3,6 +3,7 @@
 import { FC } from "react";
 import { Table } from "antd";
 import { Loan } from "../@types/common";
+import { formatDate } from "../../utils";
 
 interface LoanTableProps {
   loans: Loan[];
@@ -14,7 +15,12 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
     { title: "Loan ID", dataIndex: "id", key: "id" },
     { title: "Amount", dataIndex: "amount", key: "amount" },
     { title: "Currency", dataIndex: "currency", key: "currency" },
-    { title: "Approved On", dataIndex: "approved_on", key: "approved_on" },
+    {
+      title: "Approved On",
+      dataIndex: "approved_on",
+      key: "approved_on",
+      render: (date: string) => formatDate(date),
+    },
     { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
   ];
 

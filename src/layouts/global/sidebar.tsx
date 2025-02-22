@@ -47,10 +47,19 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         { title: "Customers", path: "/customers" },
       ],
     },
+
     {
       title: "Businesses",
       icon: "shop",
       path: "/businesses",
+    },
+    {
+      title: "Loans",
+      icon: "bank",
+      dropdown: [
+        { title: "Categories", path: "/loan-categories" },
+        { title: "Loans List", path: "/loans" },
+      ],
     },
   ];
 

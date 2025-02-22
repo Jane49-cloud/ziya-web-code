@@ -32,3 +32,12 @@ export const customAvatar = (name: string) => (
     {getInitials(name)}
   </div>
 );
+
+export const formatDate = (dateString: string) => {
+  if (!dateString) return "N/A";
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(dateString));
+};
