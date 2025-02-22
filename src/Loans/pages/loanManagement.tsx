@@ -41,13 +41,7 @@ const LoanManagementPage: FC = () => {
         {/* Card View Tab with Pagination */}
         <Tabs.TabPane tab="Card View" key="2">
           <div style={{ marginTop: 16 }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "16px",
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 ">
               {paginatedLoans.map((loan: Loan) => (
                 <LoanCard key={loan.id} loan={loan} />
               ))}

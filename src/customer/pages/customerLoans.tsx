@@ -9,7 +9,7 @@ import {
   Select,
   Spin,
   DatePicker,
-  Empty,
+  //   Empty,
   Card,
 } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -71,15 +71,19 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
     currency: string;
     approved_on: string;
     loan_definition_id: number;
-    approved_by: number;
   }) => {
+    const payload = {
+      ...values,
+      approved_by: user?.id || 0,
+      customer_id: customerId,
+    };
+
     if (isEditMode && selectedLoan) {
-      await updateLoan({ loanId: selectedLoan.id, ...values });
-      refetch();
+      await updateLoan({ loanId: selectedLoan.id, ...payload });
     } else {
-      await createLoan({ ...values, customer_id: customerId });
-      refetch();
+      await createLoan(payload);
     }
+    refetch();
     closeModal();
   };
 
@@ -89,7 +93,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   };
 
   if (isLoading) return <Spin size="large" />;
-  if (loans.length === 0) return <Empty description="No loans found" />;
+  //   if (loans.length === 0) return <Empty description="No loans found" />;
 
   return (
     <Card className="">
@@ -170,9 +174,14 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item name="approved_by" hidden>
-            <Input type="number" value={Number(user?.id) || 0} />
+          <Form.Item
+            name="updated_by"
+            initialValue={Number(user?.id) || 0}
+            style={{ display: "none" }}
+          >
+            <Input type="number" />
           </Form.Item>
+
           <Button
             type="primary"
             htmlType="submit"

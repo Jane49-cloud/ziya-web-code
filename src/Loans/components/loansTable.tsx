@@ -31,6 +31,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       rowKey="id"
       loading={isLoading}
       pagination={{ pageSize: 10 }}
+      bordered
     />
   );
 };

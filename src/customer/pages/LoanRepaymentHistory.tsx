@@ -71,15 +71,19 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   const handleSubmitPayment = async (values: {
     amount: number;
     currency: string;
-    updated_by: number;
   }) => {
+    const payload = {
+      ...values,
+      updated_by: user?.id || 0,
+      customer_loan_id: loanId,
+    };
+
     if (isEditMode && selectedPayment) {
-      await updatePayment({ paymentId: selectedPayment.id, ...values });
-      refetch();
+      await updatePayment({ paymentId: selectedPayment.id, ...payload });
     } else {
-      await createPayment({ ...values, customer_loan_id: loanId });
-      refetch();
+      await createPayment(payload);
     }
+    refetch();
     closeModal();
   };
 
@@ -88,7 +92,8 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   };
 
   if (isLoading) return <Spin size="large" />;
-  //   if (payments.length === 0) return <Empty description="No payments found" />;
+
+  console.log("the user id is", user?.id);
 
   return (
     <Card className="">
@@ -147,9 +152,13 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item name="approved_by" hidden>
-            <Input type="number" value={Number(user?.id) || 0} />
-          </Form.Item>
+          {/* <Form.Item
+            name="updated_by"
+            initialValue={user?.id || 0}
+            //    className='hidden'
+          >
+            <Input />
+          </Form.Item> */}
 
           <Button
             type="primary"

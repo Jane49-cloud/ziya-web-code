@@ -23,6 +23,7 @@ const LoanDefinitionModal: FC<LoanDefinitionModalProps> = ({
       onCancel={onCancel}
       footer={null}
       width={800}
+      className="border-none"
     >
       {loan && (
         <LoanDefinitionForm

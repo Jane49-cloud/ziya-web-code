@@ -14,7 +14,7 @@ const LoanDefinitionForm: FC<LoanDefinitionFormProps> = ({
   isLoading,
 }) => {
   return (
-    <Card className="p-4 shadow-md rounded-lg bg-white">
+    <Card className="p-4 " bordered={false}>
       <Form
         layout="vertical"
         initialValues={loanDefinition}
