@@ -19,6 +19,7 @@ import {
   useUpdateLoanMutation,
 } from "../../Loans/features/loanSlice";
 import { useGetLoanDefinitionsQuery } from "../../Loans/features/loanDefinationsSlice";
+import { getUser } from "../../utils";
 
 const { Option } = Select;
 
@@ -43,6 +44,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const { data: loanDefinitionsData } = useGetLoanDefinitionsQuery({});
   const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
   const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
+  const user = getUser();
   const navigate = useNavigate();
 
   const loans: LoanType[] = data?.loans || [];
@@ -167,14 +169,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="approved_by"
-            label="Approved By"
-            rules={[{ required: true }]}
-          >
-            <Input type="number" placeholder="Enter Approver ID" />
+          <Form.Item name="approved_by" hidden>
+            <Input type="number" value={Number(user?.id) || 0} />
           </Form.Item>
-
           <Button
             type="primary"
             htmlType="submit"

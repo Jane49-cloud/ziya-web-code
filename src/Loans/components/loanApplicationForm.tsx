@@ -1,6 +1,8 @@
 import { FC } from "react";
 import { Form, Input, Button, DatePicker, Select, Card } from "antd";
 import { CreateLoanRequest } from "../@types/common";
+import { getUser } from "../../utils";
+import dayjs from "dayjs";
 
 interface LoanFormProps {
   onSubmit: (values: CreateLoanRequest) => void;
@@ -10,14 +12,28 @@ interface LoanFormProps {
 const { Option } = Select;
 
 const LoanForm: FC<LoanFormProps> = ({ onSubmit, isLoading }) => {
+  const user = getUser();
+
   const handleFormSubmit = (values: CreateLoanRequest) => {
-    onSubmit(values);
+    const approvedById = user?.id ? Number(user.id) : 0;
+
+    const updatedValues: CreateLoanRequest = {
+      ...values,
+      approved_by: approvedById,
+    };
+
+    onSubmit(updatedValues);
   };
 
   return (
     <Card className="p-4 shadow-md rounded-lg bg-white">
-      <Form layout="vertical" onFinish={handleFormSubmit}>
-        {/* Customer ID */}
+      <Form<CreateLoanRequest>
+        layout="vertical"
+        onFinish={handleFormSubmit}
+        initialValues={{
+          approved_on: dayjs(),
+        }}
+      >
         <Form.Item
           label="Customer ID"
           name="customer_id"
@@ -70,15 +86,6 @@ const LoanForm: FC<LoanFormProps> = ({ onSubmit, isLoading }) => {
             placeholder="Select approval date & time"
             className="w-full"
           />
-        </Form.Item>
-
-        {/* Approved By */}
-        <Form.Item
-          label="Approved By"
-          name="approved_by"
-          rules={[{ required: true, message: "Approver name is required" }]}
-        >
-          <Input placeholder="Enter approver's name" />
         </Form.Item>
 
         {/* Submit Button */}
