@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Form, Input, Button, Select, Row, Col } from "antd";
 
 const { Option } = Select;
@@ -11,13 +11,17 @@ export const EditCustomerForm: FC<{
 }> = ({ customer, onSubmit, isLoading }) => {
   const [form] = Form.useForm();
 
+  useEffect(() => {
+    // Update form fields when customer data changes
+    form.setFieldsValue(customer);
+  }, [customer, form]);
+
   const handleSubmit = () => {
     form.validateFields().then((values) => {
       onSubmit({ ...customer, ...values });
     });
   };
 
-  // Reusable input field function
   const renderInput = (
     name: string,
     label: string,
@@ -34,12 +38,7 @@ export const EditCustomerForm: FC<{
       <h2 className="text-lg font-semibold text-gray-800 mb-4 hidden">
         Edit Customer
       </h2>
-      <Form
-        layout="vertical"
-        form={form}
-        initialValues={customer}
-        onFinish={handleSubmit}
-      >
+      <Form layout="vertical" form={form} onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             {renderInput("firstname", "First Name")}

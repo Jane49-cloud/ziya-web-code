@@ -19,7 +19,7 @@ import {
   useUpdateLoanMutation,
 } from "../../Loans/features/loanSlice";
 import { useGetLoanDefinitionsQuery } from "../../Loans/features/loanDefinationsSlice";
-import { getUser } from "../../utils";
+import { formatDate, getUser } from "../../utils";
 
 const { Option } = Select;
 
@@ -104,7 +104,12 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
       <Table dataSource={loans} rowKey="id" className="mt-4">
         <Table.Column title="Loan ID" dataIndex="id" key="id" />
         <Table.Column title="Amount" dataIndex="amount" key="amount" />
-        <Table.Column title="Currency" dataIndex="currency" key="currency" />
+        <Table.Column
+          title="Last update"
+          dataIndex="date_updated"
+          key="creationDate"
+          render={(date: string) => formatDate(date)}
+        />
         <Table.Column
           title="Actions"
           key="actions"

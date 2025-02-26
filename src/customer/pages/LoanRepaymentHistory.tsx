@@ -6,7 +6,7 @@ import {
   useUpdateLoanPaymentMutation,
   useDeleteLoanPaymentMutation,
 } from "../../Loans/features/loanRepaymnetSlice";
-import { getUser } from "../../utils";
+import { formatDate, getUser } from "../../utils";
 
 const { Option } = Select;
 
@@ -105,9 +105,10 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
         <Table.Column title="Amount" dataIndex="amount" key="amount" />
         <Table.Column title="Currency" dataIndex="currency" key="currency" />
         <Table.Column
-          title="Updated By"
-          dataIndex="updated_by"
-          key="updated_by"
+          title="Last update"
+          dataIndex="date_updated"
+          key="creationDate"
+          render={(date: string) => formatDate(date)}
         />
         <Table.Column
           title="Actions"
@@ -121,6 +122,7 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
                 danger
                 onClick={() => handleDeletePayment(record.id)}
                 disabled={isDeleting}
+                hidden
               >
                 {isDeleting ? <Spin size="small" /> : "Delete"}
               </Button>

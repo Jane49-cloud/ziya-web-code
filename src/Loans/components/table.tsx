@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
-import { Table } from "antd";
+import { Card, Table } from "antd";
 import { LoanDefinition } from "../@types/common";
 import LoanDefinitionActions from "./actions";
 
@@ -48,14 +48,16 @@ const LoanDefinitionTable: FC<LoanDefinitionTableProps> = ({
   ];
 
   return (
-    <Table
-      dataSource={loanDefinitions}
-      columns={columns}
-      rowKey="id"
-      loading={isLoading}
-      pagination={{ pageSize: 10 }}
-      bordered
-    />
+    <Card title="Manage Ziya Loan types">
+      <Table
+        dataSource={loanDefinitions}
+        columns={columns}
+        rowKey="id"
+        loading={isLoading}
+        pagination={{ pageSize: 10 }}
+        bordered
+      />
+    </Card>
   );
 };
 

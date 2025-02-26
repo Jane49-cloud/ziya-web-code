@@ -2,7 +2,7 @@
 // components/LoanTable.tsx
 
 import { FC } from "react";
-import { Table, Space } from "antd";
+import { Table, Space, Card } from "antd";
 import { Loan } from "../@types/common";
 import { formatDate } from "../../utils";
 import { useNavigate } from "react-router-dom";
@@ -48,14 +48,16 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
   ];
 
   return (
-    <Table
-      dataSource={loans}
-      columns={columns}
-      rowKey="id"
-      loading={isLoading}
-      pagination={{ pageSize: 10 }}
-      bordered
-    />
+    <Card title="View all customer loans  ">
+      <Table
+        dataSource={loans}
+        columns={columns}
+        rowKey="id"
+        loading={isLoading}
+        pagination={{ pageSize: 10 }}
+        bordered
+      />
+    </Card>
   );
 };
 

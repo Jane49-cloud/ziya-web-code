@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState } from "react";
-import { Tabs, Table, Modal, Space, Avatar } from "antd";
+import { Tabs, Table, Modal, Space, Avatar, Card } from "antd";
 import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
@@ -142,15 +142,17 @@ const CustomerManagement: FC = () => {
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         {/* Tab 1: Customer List */}
         <Tabs.TabPane tab="Customer List" key="1">
-          <Table
-            dataSource={customers}
-            columns={columns}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{ pageSize: 10 }}
-            scroll={{ x: true }}
-            bordered
-          />
+          <Card title="Manage Ziya Customers">
+            <Table
+              dataSource={customers}
+              columns={columns}
+              rowKey="id"
+              loading={isLoading}
+              pagination={{ pageSize: 10 }}
+              scroll={{ x: true }}
+              bordered
+            />
+          </Card>
         </Tabs.TabPane>
 
         {/* Tab 2: Add Customer */}
