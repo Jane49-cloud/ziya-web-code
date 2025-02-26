@@ -4,8 +4,7 @@ import CustomerBusinessList from "../components/customerBusinessList";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import CustomerTabs from "../tabs/customerTabs";
 import { customAvatar } from "../../utils";
-import { FaEnvelope } from "react-icons/fa6";
-import { FaPhoneAlt } from "react-icons/fa";
+import { FaIdBadge, FaPhoneAlt } from "react-icons/fa";
 import CustomerLoansList from "./customerLoans";
 
 const CustomerPage = () => {
@@ -32,14 +31,14 @@ const CustomerPage = () => {
           </div>
           <div>
             <h2 className="text-3xl font-semibold text-gray-900">{`${customer?.firstname} ${customer?.middlename} ${customer?.lastname}`}</h2>
-            <p className="text-gray-500">{customer?.email}</p>
+            {/* <p className="text-gray-500">{customer?.email}</p> */}
             <p className="flex items-center text-gray-600 mt-2">
               <FaPhoneAlt className="mr-2 text-gray-400" />
               {customer?.country_code} {customer?.phone_number}
             </p>
             <p className="flex items-center text-gray-600 mt-1">
-              <FaEnvelope className="mr-2 text-gray-400" />
-              {customer?.email}
+              <FaIdBadge className="mr-2 text-gray-400" />
+              {customer.identification_number}
             </p>
           </div>
         </div>

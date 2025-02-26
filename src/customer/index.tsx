@@ -108,9 +108,9 @@ const CustomerManagement: FC = () => {
       },
     },
     {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
+      title: "Phone",
+      dataIndex: "phone_number",
+      key: "phone",
     },
     {
       title: "Actions",

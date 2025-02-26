@@ -32,7 +32,7 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
         customer.lastname
       }`,
     },
-    { key: "2", label: "Email", value: customer.email },
+    // { key: "2", label: "Email", value: customer.email },
     {
       key: "3",
       label: "Phone",
