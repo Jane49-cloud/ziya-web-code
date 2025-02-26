@@ -1,117 +1,96 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
-import { Form, Input, Button, Select, Card, Row, Col } from "antd";
-// import { UploadOutlined } from "@ant-design/icons";
-
-const { Option } = Select;
 
 export const CustomerForm: FC<{
   onSubmit: (values: any) => void;
   isLoading: boolean;
 }> = ({ onSubmit, isLoading }) => {
-  const [form] = Form.useForm();
-
-  const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      onSubmit(values);
-    });
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const values = Object.fromEntries(formData.entries());
+    onSubmit(values);
   };
 
-  // Reusable form field generator
   const renderInput = (
     name: string,
     label: string,
-    rules: any[] = [{ required: true }],
-    inputType: "text" | "password" = "text"
+    type: "text" | "password" = "text",
+    required = true
   ) => (
-    <Form.Item name={name} label={label} rules={rules}>
-      <Input type={inputType} />
-    </Form.Item>
+    <div className="flex flex-col">
+      <label htmlFor={name} className="text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
+      />
+    </div>
   );
 
   return (
-    <Card className="shadow-lg p-6 bg-white rounded-lg">
+    <div className=" bg-white p-6 shadow-lg rounded-lg">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Customer Form
       </h2>
-      <Form layout="vertical" form={form} onFinish={handleSubmit}>
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            {renderInput("firstname", "First Name")}
-          </Col>
-          <Col xs={24} sm={12}>
-            {renderInput("middlename", "Middle Name", [{ required: false }])}
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            {renderInput("lastname", "Last Name")}
-          </Col>
-          <Col xs={24} sm={12}>
-            {renderInput("email", "Email", [
-              { required: true },
-              { type: "email" },
-            ])}
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            <Form.Item
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {renderInput("firstname", "First Name")}
+          {renderInput("middlename", "Middle Name", "text", false)}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {renderInput("lastname", "Last Name")}
+          {renderInput("phone_number", "Phone Number")}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">
+              Country Code
+            </label>
+            <select
               name="country_code"
-              label="Country Code"
-              rules={[{ required: true }]}
+              required
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
             >
-              <Select placeholder="Select country code">
-                <Option value="+1">+1 (USA)</Option>
-                <Option value="+44">+44 (UK)</Option>
-                <Option value="+254">+254 (Kenya)</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            {renderInput("phone_number", "Phone Number")}
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            {renderInput(
-              "password",
-              "Password",
-              [{ required: true }],
-              "password"
-            )}
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            <Form.Item
+              <option value="+1">+1 (USA)</option>
+              <option value="+44">+44 (UK)</option>
+              <option value="+254">+254 (Kenya)</option>
+            </select>
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">ID Type</label>
+            <select
               name="identification_type"
-              label="ID Type"
-              rules={[{ required: true }]}
+              required
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
             >
-              <Select placeholder="Select Identification Type">
-                <Option value="ID Card">ID Card</Option>
-                <Option value="Passport">Passport</Option>
-                <Option value="Driver’s License">Driver’s License</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            {renderInput("identification_number", "ID Number")}
-          </Col>
-        </Row>
+              <option value="ID Card">ID Card</option>
+              <option value="Passport">Passport</option>
+              <option value="Driver’s License">Driver’s License</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {renderInput("identification_number", "ID Number")}
+        </div>
 
-        <Form.Item className="text-right">
-          <Button type="primary" htmlType="submit" loading={isLoading}>
-            Save
-          </Button>
-        </Form.Item>
-      </Form>
-    </Card>
+        <div className="text-right">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {isLoading ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };

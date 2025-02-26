@@ -30,7 +30,7 @@ export const EditCustomerForm: FC<{
   );
 
   return (
-    <div className="p-6 ">
+    <div className="p-6">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 hidden">
         Edit Customer
       </h2>
@@ -39,7 +39,6 @@ export const EditCustomerForm: FC<{
         form={form}
         initialValues={customer}
         onFinish={handleSubmit}
-        className=""
       >
         <Row gutter={16}>
           <Col xs={24} sm={12}>
@@ -55,10 +54,7 @@ export const EditCustomerForm: FC<{
             {renderInput("lastname", "Last Name")}
           </Col>
           <Col xs={24} sm={12}>
-            {renderInput("email", "Email", [
-              { required: true },
-              { type: "email" },
-            ])}
+            {renderInput("phone_number", "Phone Number")}
           </Col>
         </Row>
 
@@ -77,12 +73,6 @@ export const EditCustomerForm: FC<{
             </Form.Item>
           </Col>
           <Col xs={24} sm={12}>
-            {renderInput("phone_number", "Phone Number")}
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
             <Form.Item
               name="identification_type"
               label="ID Type"
@@ -95,6 +85,9 @@ export const EditCustomerForm: FC<{
               </Select>
             </Form.Item>
           </Col>
+        </Row>
+
+        <Row gutter={16}>
           <Col xs={24} sm={12}>
             {renderInput("identification_number", "ID Number")}
           </Col>

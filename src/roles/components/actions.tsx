@@ -6,19 +6,22 @@ interface RoleActionsProps {
   role: Role;
   onEdit: (roleId: string) => void;
   onDelete: (roleId: string) => void;
+  refetch: () => void;
 }
 
 export const RoleActions: FC<RoleActionsProps> = ({
   role,
   onEdit,
   onDelete,
+  refetch,
 }) => {
   const [deleteRole, { isLoading }] = useDeleteRoleMutation();
 
   const handleDelete = async () => {
     try {
       await deleteRole(role.id).unwrap();
-      onDelete(role.id); // Inform parent about the deletion
+      onDelete(role.id);
+      refetch();
     } catch (error) {
       console.error("Failed to delete role:", error);
     }

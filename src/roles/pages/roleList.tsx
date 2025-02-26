@@ -9,13 +9,14 @@ export const RoleList: FC<{
   onDelete: (roleId: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 }> = ({ onDelete }) => {
-  const { data, isLoading, isError } = useGetAllRolesQuery({});
+  const { data, isLoading, isError, refetch } = useGetAllRolesQuery({});
   const roles = data?.roles;
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const handleEdit = (roleId: string) => {
     const role = roles?.find((r: { id: string }) => r.id === roleId) || null;
     setSelectedRole(role);
+    refetch();
   };
 
   const handleCloseModal = () => {
@@ -23,8 +24,8 @@ export const RoleList: FC<{
   };
 
   const handleUpdate = () => {
-    // After update, you can refetch the roles or handle state changes
     setSelectedRole(null);
+    refetch();
   };
 
   const columns = [
@@ -46,7 +47,12 @@ export const RoleList: FC<{
       key: "actions",
       render: (_text: string, role: Role) => (
         <Space size="small">
-          <RoleActions role={role} onEdit={handleEdit} onDelete={onDelete} />
+          <RoleActions
+            role={role}
+            onEdit={handleEdit}
+            onDelete={onDelete}
+            refetch={refetch}
+          />
         </Space>
       ),
       width: 150,
