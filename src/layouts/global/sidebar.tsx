@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
-import clsx from "clsx"; // Utility for conditional classNames
+import clsx from "clsx";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { getRole } from "../../utils";
 
@@ -11,7 +11,7 @@ interface SidebarProps {
 
 interface SidebarItem {
   title: string;
-  icon: string; // Using KeenIcon names here
+  icon: string;
   path?: string;
   allowedRoles?: string[];
   dropdown?: { title: string; path: string; allowedRoles?: string[] }[];
@@ -22,6 +22,15 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     [key: string]: boolean;
   }>({});
   const location = useLocation();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const role = getRole();
+    if (role?.name) {
+      setUserRole(role.name);
+    }
+  }, []); // ✅ Runs only once on component mount
 
   const handleDropdownToggle = (menu: string) => {
     setOpenDropdowns((prev) => ({
@@ -30,9 +39,12 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     }));
   };
 
-  const role = getRole();
-
-  const userRole = role?.name;
+  const handleLogout = () => {
+    localStorage.removeItem("ziya-access");
+    localStorage.removeItem("ziya-profile");
+    localStorage.clear();
+    navigate("/auth/login");
+  };
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -72,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         {
           title: "Categories",
           path: "/loan-categories",
-          allowedRoles: ["admin", "dev", " relationship manager"],
+          allowedRoles: ["admin", "dev", "relationship manager"],
         },
         {
           title: "Loans List",
@@ -102,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
 
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         {sidebarItems.map((item, index) => {
-          if (item.allowedRoles && !item.allowedRoles.includes(userRole))
+          if (item.allowedRoles && !item.allowedRoles.includes(userRole ?? ""))
             return null;
 
           const isActive = item.path && location.pathname === item.path;
@@ -141,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     .filter(
                       (subItem) =>
                         !subItem.allowedRoles ||
-                        subItem.allowedRoles.includes(userRole)
+                        subItem.allowedRoles.includes(userRole ?? "")
                     )
                     .map((subItem, subIndex) => {
                       const isSubActive = location.pathname === subItem.path;
@@ -194,9 +206,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
 
       <div className="border-t border-gray-200 p-4">
         <button
-          onClick={() => {
-            console.log("Logout clicked");
-          }}
+          onClick={handleLogout}
           className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:bg-blue-100 rounded-lg text-base font-bold transition-colors duration-200"
           aria-label="Logout"
         >
