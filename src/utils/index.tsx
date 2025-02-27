@@ -16,6 +16,21 @@ export const getUser = (): UserProfile | null => {
   }
 };
 
+export const getRole = (): any | null => {
+  const role = localStorage.getItem("ziya-role");
+
+  if (!role) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(role) as any;
+  } catch (error) {
+    console.error("Error parsing user role from localStorage:", error);
+    return null;
+  }
+};
+
 export const getInitials = (name: string) => {
   if (!name) {
     return "N/A";

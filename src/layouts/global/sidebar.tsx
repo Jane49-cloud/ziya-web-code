@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
 import clsx from "clsx"; // Utility for conditional classNames
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
+import { getRole } from "../../utils";
 
 interface SidebarProps {
   closeSidebar: () => void;
@@ -12,7 +13,8 @@ interface SidebarItem {
   title: string;
   icon: string; // Using KeenIcon names here
   path?: string;
-  dropdown?: { title: string; path: string }[];
+  allowedRoles?: string[];
+  dropdown?: { title: string; path: string; allowedRoles?: string[] }[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
@@ -28,37 +30,51 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     }));
   };
 
+  const role = getRole();
+
+  const userRole = role?.name;
+
   const sidebarItems: SidebarItem[] = [
     {
       title: "Dashboard",
       icon: "chart-line-star",
       path: "/",
+      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
     {
       title: "Roles",
       icon: "profile-circle",
       path: "/roles",
+      allowedRoles: ["admin", "dev"],
     },
     {
       title: "Users",
       icon: "users",
       dropdown: [
-        { title: "Staff", path: "/staff" },
-        { title: "Customers", path: "/customers" },
+        { title: "Staff", path: "/staff", allowedRoles: ["admin", "dev"] },
+        {
+          title: "Customers",
+          path: "/customers",
+          allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+        },
       ],
     },
-
     {
       title: "Businesses",
       icon: "shop",
       path: "/businesses",
+      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
     {
       title: "Loans",
       icon: "bank",
       dropdown: [
-        { title: "Categories", path: "/loan-categories" },
-        { title: "Loans List", path: "/loans" },
+        {
+          title: "Categories",
+          path: "/loan-categories",
+          allowedRoles: ["admin", "dev"],
+        },
+        { title: "Loans List", path: "/loans", allowedRoles: ["admin", "dev"] },
       ],
     },
   ];
@@ -69,9 +85,8 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         <img
           src="/media/logos/Ziya_logo_transparent_bg.png"
           className="w-full h-16 object-contain"
-          alt=""
+          alt="Ziya Logo"
         />
-
         <button
           className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
           onClick={closeSidebar}
@@ -83,6 +98,9 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
 
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         {sidebarItems.map((item, index) => {
+          if (item.allowedRoles && !item.allowedRoles.includes(userRole))
+            return null;
+
           const isActive = item.path && location.pathname === item.path;
 
           if (item.dropdown) {
@@ -98,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 >
                   <div className="flex items-center gap-3">
                     <span className="menu-icon">
-                      <KeenIcon icon={item.icon} className="text-lg" />{" "}
+                      <KeenIcon icon={item.icon} className="text-lg" />
                     </span>
                     <span className="font-medium">{item.title}</span>
                   </div>
@@ -115,26 +133,32 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     }
                   )}
                 >
-                  {item.dropdown.map((subItem, subIndex) => {
-                    const isSubActive = location.pathname === subItem.path;
-                    return (
-                      <Link
-                        key={subIndex}
-                        to={subItem?.path}
-                        onClick={closeSidebar}
-                        className={clsx(
-                          "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
-                          {
-                            "bg-gray-200 text-gray-900": isSubActive,
-                            "text-gray-600": !isSubActive,
-                          }
-                        )}
-                        aria-current={isSubActive ? "page" : undefined}
-                      >
-                        {subItem.title}
-                      </Link>
-                    );
-                  })}
+                  {item.dropdown
+                    .filter(
+                      (subItem) =>
+                        !subItem.allowedRoles ||
+                        subItem.allowedRoles.includes(userRole)
+                    )
+                    .map((subItem, subIndex) => {
+                      const isSubActive = location.pathname === subItem.path;
+                      return (
+                        <Link
+                          key={subIndex}
+                          to={subItem?.path}
+                          onClick={closeSidebar}
+                          className={clsx(
+                            "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
+                            {
+                              "bg-gray-200 text-gray-900": isSubActive,
+                              "text-gray-600": !isSubActive,
+                            }
+                          )}
+                          aria-current={isSubActive ? "page" : undefined}
+                        >
+                          {subItem.title}
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             );
@@ -155,7 +179,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
             >
               <span className="flex items-center gap-3">
                 <span className="menu-icon">
-                  <KeenIcon icon={item.icon} className="text-lg" />{" "}
+                  <KeenIcon icon={item.icon} className="text-lg" />
                 </span>
                 <span className="font-medium">{item.title}</span>
               </span>

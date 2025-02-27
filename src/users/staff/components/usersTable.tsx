@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Table, Avatar, Space, Button } from "antd";
+import { Table, Avatar, Space, Button, Card } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../../../utils";
 import { useNavigate } from "react-router-dom";
@@ -80,13 +80,15 @@ export function UsersTable({ users }: UsersTableProps) {
   ];
 
   return (
-    <Table
-      columns={columns}
-      dataSource={users}
-      rowKey={(record) => record.id}
-      scroll={{ x: true }}
-      pagination={{ pageSize: 10 }}
-      bordered
-    />
+    <Card title="Manage Ziya Staff">
+      <Table
+        columns={columns}
+        dataSource={users}
+        rowKey={(record) => record.id}
+        scroll={{ x: true }}
+        pagination={{ pageSize: 10 }}
+        bordered
+      />
+    </Card>
   );
 }

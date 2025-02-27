@@ -8,7 +8,7 @@ export function AllUsers() {
 
   const { data, isLoading, error } = useGetAllUsersQuery(undefined);
   const users = data?.staffs;
-  console.log(users);
+  // console.log(users);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error loading users.</div>;

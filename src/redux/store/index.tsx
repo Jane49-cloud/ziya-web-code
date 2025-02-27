@@ -16,11 +16,14 @@ const initializeApp = async () => {
     apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
   );
 
-  localStorage.setItem("ziya-profile", JSON.stringify(data));
+  localStorage.setItem("ziya-profile", JSON.stringify(data?.staffData));
+  localStorage.setItem("ziya-role", JSON.stringify(data?.userRole));
+  // console.log(data.staffData, "from redux");
 
   if (status === "fulfilled" && data?.Success) {
     console.log(status);
-    localStorage.setItem("ziya-profile", JSON.stringify(data));
+    localStorage.setItem("ziya-profile", JSON.stringify(data.staffData));
+    localStorage.setItem("ziya-role", JSON.stringify(data.userRole));
   } else if (error || status !== "fulfilled") {
     console.error("Failed to load user profile:", error || data?.Message);
   }

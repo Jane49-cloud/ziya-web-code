@@ -9,7 +9,9 @@ import { useGetUserByIdQuery } from "../../users/features/userSlice";
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useGetUserByIdQuery(id);
-  const user = data?.staff;
+  const user = data?.staff.staffData;
+  const role = data?.staff.userRole;
+  // console.log(user);
 
   if (isLoading) {
     return (
@@ -87,6 +89,8 @@ const PublicProfile: React.FC = () => {
           <div>
             <h2 className="text-3xl font-semibold text-gray-900">{`${firstname} ${middlename} ${lastname}`}</h2>
             <p className="text-gray-500">{email}</p>
+            <p className="text-green-500 capitalize">({role.name})</p>
+
             <p className="flex items-center text-gray-600 mt-2">
               <FaPhoneAlt className="mr-2 text-gray-400" />
               {country_code} {phone_number}

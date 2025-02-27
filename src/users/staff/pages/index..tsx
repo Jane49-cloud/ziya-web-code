@@ -6,8 +6,8 @@ import { AllUsers } from "./list";
 const TABS = [
   { id: "all", label: "All Users" },
   { id: "add", label: "Add User" },
-  { id: "reports", label: "Reports" },
-  { id: "settings", label: "Settings" },
+  // { id: "reports", label: "Reports" },
+  // { id: "settings", label: "Settings" },
 ];
 
 export default function Staff() {
