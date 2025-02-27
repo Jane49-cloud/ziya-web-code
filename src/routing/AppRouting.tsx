@@ -1,12 +1,13 @@
-import { ReactElement } from "react";
+import { ReactElement, useState, useEffect } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router";
+import { Spin } from "antd";
 import { AuthPage } from "../auth/pages/AuthPage";
 import Layout from "../layouts/global";
 import { UserProfilePage } from "../profile/pages";
 import Dashboard from "../dashboard";
 import { AddUser } from "../auth/pages/addUser";
 import NotFound from "../errors/404";
-import Unauthorized from "../errors/403"; // New Unauthorized Page
+import Unauthorized from "../errors/403";
 import Staff from "../users/staff/pages/index.";
 import { RolesManagement } from "../roles";
 import CustomerManagement from "../customer";
@@ -19,18 +20,41 @@ import SingleLoanPage from "../Loans/pages/singleLoanPage";
 import { getRole } from "../utils";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const token = localStorage.getItem("ziya-access");
-  const user = JSON.parse(localStorage.getItem("ziya-profile") || "{}");
-  const role = getRole();
-  const userRole = role?.name;
-  console.log(userRole);
 
-  if (!token || !user) {
-    return <Navigate to="/auth/login" />;
+  useEffect(() => {
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchRole = async () => {
+      const role = getRole();
+      if (role?.name) {
+        setUserRole(role.name);
+      }
+      setIsLoading(false);
+    };
+
+    fetchRole();
+  }, [token]);
+
+  if (!token) {
+    return <Navigate to="/auth/login" replace />;
   }
 
-  if (!allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (userRole && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <Outlet />;
@@ -80,7 +104,13 @@ const AppRouting = (): ReactElement => {
       </Route>
 
       {/* Loans - Admin & Dev Only */}
-      <Route element={<PrivateRoutes allowedRoles={["admin", "dev"]} />}>
+      <Route
+        element={
+          <PrivateRoutes
+            allowedRoles={["admin", "dev", "relationship manager"]}
+          />
+        }
+      >
         <Route element={<Layout children={undefined} />}>
           <Route path="/loan-categories" element={<LoanCategories />} />
           <Route path="/loans" element={<LoanManagementPage />} />

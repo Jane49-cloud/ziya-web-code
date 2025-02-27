@@ -54,8 +54,8 @@ export function Login() {
         console.log(response.token);
         localStorage.setItem("ziya-access", response.token);
         setTimeout(() => {
-          navigate("/");
-        }, 1500);
+          navigate("/profile");
+        }, 2000);
       } catch (error: any) {
         if (error?.data?.error) {
           setColor("danger");

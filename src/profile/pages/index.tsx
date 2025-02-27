@@ -22,13 +22,14 @@ export interface UserProfile {
 }
 
 export const UserProfilePage: React.FC = () => {
-  const { data: userData, refetch } = useLoadUserQuery(null);
+  const { data, refetch } = useLoadUserQuery(null);
+  const userData = data?.staffData;
   const [user, setUser] = useState<UserProfile | null>(getUser());
 
   useEffect(() => {
     if (userData) {
       setUser(userData);
-      localStorage.setItem("ziya-profile", JSON.stringify(userData));
+      localStorage.setItem("ziya-profile", JSON.stringify(userData?.staffData));
     }
   }, [userData]);
 
@@ -66,8 +67,8 @@ export const UserProfilePage: React.FC = () => {
               {fullName}
             </h1>
             <p className="text-sm text-gray-500">{user?.email}</p>
-            <p className="text-sm text-gray-500">
-              {user?.role || "Ziya staff"}
+            <p className="text-sm text-green-500 capitalize">
+              ({data?.userRole?.name || "Ziya staff"})
             </p>
           </div>
         </div>
