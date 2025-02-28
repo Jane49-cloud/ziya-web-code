@@ -23,6 +23,7 @@ const baseQueryWithAuth = async (
   extraOptions: object
 ) => {
   const result = await baseQuery(args, api, extraOptions);
+  console.log("the result", result);
 
   if (result.error && result.error.status === 401) {
     console.warn("Token expired. Logging out...");

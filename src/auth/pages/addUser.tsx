@@ -18,7 +18,6 @@ const initialValues = {
   phone_number: "",
   password: "",
   user_role: "agent",
-  activation_code: "ABC123", // static if needed
 };
 
 const addUserSchema = Yup.object().shape({
