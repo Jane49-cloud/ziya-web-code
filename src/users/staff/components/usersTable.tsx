@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Table, Avatar, Space, Button, Card } from "antd";
+import { useState } from "react";
+import { Table, Avatar, Space, Button, Card, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../../../utils";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +23,24 @@ interface UsersTableProps {
 
 export function UsersTable({ users }: UsersTableProps) {
   const navigate = useNavigate();
+  const [searchText, setSearchText] = useState("");
+
+  // Filter users based on search text (searching in name, email, and phone)
+  const filteredUsers = users.filter((user) => {
+    const fullName = `${user.firstname} ${user.middlename || ""} ${
+      user.lastname || ""
+    }`
+      .trim()
+      .toLowerCase();
+    const email = user.email.toLowerCase();
+    const phone = `${user.country_code} ${user.phone_number}`.toLowerCase();
+    return (
+      fullName.includes(searchText.toLowerCase()) ||
+      email.includes(searchText.toLowerCase()) ||
+      phone.includes(searchText.toLowerCase())
+    );
+  });
+
   const columns: ColumnsType<UserData> = [
     {
       title: "#",
@@ -36,8 +55,8 @@ export function UsersTable({ users }: UsersTableProps) {
       dataIndex: "name",
       key: "name",
       render: (_: any, record: UserData) => {
-        const fullName = `${record.firstname} ${
-          record.middlename || ""
+        const fullName = `${record.firstname} ${record.middlename || ""} ${
+          record.lastname || ""
         }`.trim();
         return (
           <Space>
@@ -66,13 +85,10 @@ export function UsersTable({ users }: UsersTableProps) {
           <Button
             type="link"
             style={{ color: "#1677ff" }}
-            onClick={() => navigate(`/staff/${_record?.id}`)}
+            onClick={() => navigate(`/staff/${_record.id}`)}
           >
             View
           </Button>
-          {/* <Button type="link" danger>
-            Delete
-          </Button> */}
         </Space>
       ),
       align: "center",
@@ -80,14 +96,25 @@ export function UsersTable({ users }: UsersTableProps) {
   ];
 
   return (
-    <Card title="Manage Ziya Staff">
+    <Card
+      title="Manage Ziya Staff"
+      extra={
+        <Input.Search
+          placeholder="Search Staff"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 200 }}
+          allowClear
+        />
+      }
+    >
       <Table
         columns={columns}
-        dataSource={users}
+        dataSource={filteredUsers}
         rowKey={(record) => record.id}
         scroll={{ x: true }}
         pagination={{ pageSize: 10 }}
         bordered
+        size="small"
       />
     </Card>
   );

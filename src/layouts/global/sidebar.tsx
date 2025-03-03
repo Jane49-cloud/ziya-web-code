@@ -84,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         {
           title: "Categories",
           path: "/loan-categories",
-          allowedRoles: ["admin", "dev", "relationship manager"],
+          allowedRoles: ["admin", "dev"],
         },
         {
           title: "Loans List",

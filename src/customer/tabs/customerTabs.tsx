@@ -1,4 +1,4 @@
-import { Card, Table, Button } from "antd";
+import { Card, Table, Button, Input } from "antd";
 import { useState } from "react";
 import CustomerForm from "../components/customerForm";
 
@@ -23,6 +23,7 @@ interface CustomerTabsProps {
 
 const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
   const [editVisible, setEditVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const customerData = [
     {
@@ -32,7 +33,6 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
         customer.lastname
       }`,
     },
-    // { key: "2", label: "Email", value: customer.email },
     {
       key: "3",
       label: "Phone",
@@ -70,6 +70,13 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
     },
   ];
 
+  // Filter data based on the search query (searching both labels and details)
+  const filteredData = customerData.filter(
+    (item) =>
+      item.label.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.value.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const columns = [
     {
       title: "Field",
@@ -89,8 +96,16 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
 
   return (
     <Card className="p-6 shadow-sm rounded-lg">
+      <div className="mb-4 flex justify-end">
+        <Input.Search
+          placeholder="Search details"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 200 }}
+          allowClear
+        />
+      </div>
       <Table
-        dataSource={customerData}
+        dataSource={filteredData}
         columns={columns}
         size="middle"
         pagination={false}

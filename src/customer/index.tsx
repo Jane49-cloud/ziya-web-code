@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState } from "react";
-import { Tabs, Table, Modal, Space, Avatar, Card } from "antd";
+import { Tabs, Table, Modal, Space, Avatar, Card, Input } from "antd";
 import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
-
 import {
   useGetAllCustomersQuery,
   useCreateCustomerMutation,
@@ -33,6 +32,9 @@ const CustomerManagement: FC = () => {
     undefined
   );
   const navigate = useNavigate();
+
+  // NEW: Search state for filtering customers
+  const [searchText, setSearchText] = useState("");
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -130,6 +132,19 @@ const CustomerManagement: FC = () => {
     setSelectedCustomer(null);
   };
 
+  // NEW: Filter customers based on search text (searching name and phone)
+  const filteredCustomers = customers
+    ? customers.filter((customer: any) => {
+        const fullName =
+          `${customer.firstname} ${customer.lastname}`.toLowerCase();
+        const phone = customer.phone_number.toLowerCase();
+        return (
+          fullName.includes(searchText.toLowerCase()) ||
+          phone.includes(searchText.toLowerCase())
+        );
+      })
+    : [];
+
   return (
     <div className="customer-management">
       {/* Show status alert */}
@@ -142,9 +157,19 @@ const CustomerManagement: FC = () => {
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         {/* Tab 1: Customer List */}
         <Tabs.TabPane tab="Customer List" key="1">
-          <Card title="Manage Ziya Customers">
+          <Card
+            title="Manage Ziya Customers"
+            extra={
+              <Input.Search
+                placeholder="Search customers"
+                allowClear
+                style={{ width: 200 }}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            }
+          >
             <Table
-              dataSource={customers}
+              dataSource={filteredCustomers}
               columns={columns}
               rowKey="id"
               loading={isLoading}
@@ -159,11 +184,6 @@ const CustomerManagement: FC = () => {
         <Tabs.TabPane tab="Add Customer" key="2">
           <CustomerForm onSubmit={handleSaveCustomer} isLoading={creating} />
         </Tabs.TabPane>
-
-        {/* Tab 4: Manage Status */}
-        {/* <Tabs.TabPane tab="Manage Status" key="4">
-          <div>Manage customer status here.</div>
-        </Tabs.TabPane> */}
       </Tabs>
 
       {/* Modal for editing customer */}

@@ -86,6 +86,7 @@ const AppRouting = (): ReactElement => {
         <Route element={<Layout children={undefined} />}>
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
+          <Route path="/loan-categories" element={<LoanCategories />} />
         </Route>
       </Route>
 
@@ -112,7 +113,6 @@ const AppRouting = (): ReactElement => {
         }
       >
         <Route element={<Layout children={undefined} />}>
-          <Route path="/loan-categories" element={<LoanCategories />} />
           <Route path="/loans" element={<LoanManagementPage />} />
           <Route path="/loans/:loanId" element={<SingleLoanPage />} />
         </Route>
