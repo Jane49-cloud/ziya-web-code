@@ -9,8 +9,8 @@ import {
   Select,
   Spin,
   DatePicker,
-  //   Empty,
   Card,
+  message,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import {
 } from "../../Loans/features/loanSlice";
 import { useGetLoanDefinitionsQuery } from "../../Loans/features/loanDefinationsSlice";
 import { formatDate, getUser } from "../../utils";
+import { useGetBusinessesByCustomerQuery } from "../features/customerSlice";
 
 const { Option } = Select;
 
@@ -31,6 +32,7 @@ interface LoanType {
   customer_id: number;
   loan_definition_id: number;
   approved_by: number;
+  customer_business_id: number;
 }
 
 interface CustomerLoansListProps {
@@ -44,6 +46,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const { data: loanDefinitionsData } = useGetLoanDefinitionsQuery({});
   const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
   const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
+  const { data: businessData } = useGetBusinessesByCustomerQuery(customerId);
+
+  const businesses = businessData?.customerBusinesses || [];
   const user = getUser();
   const navigate = useNavigate();
 
@@ -55,6 +60,12 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const [selectedLoan, setSelectedLoan] = useState<LoanType | null>(null);
 
   const showModal = (loan: LoanType | null = null) => {
+    if (businesses.length === 0) {
+      message.warning(
+        "No businesses found. Please create a customer business first."
+      );
+      return;
+    }
     setSelectedLoan(loan);
     setIsEditMode(!!loan);
     setIsModalOpen(true);
@@ -71,6 +82,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
     currency: string;
     approved_on: string;
     loan_definition_id: number;
+    customer_business_id: number;
   }) => {
     const payload = {
       ...values,
@@ -93,10 +105,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   };
 
   if (isLoading) return <Spin size="large" />;
-  //   if (loans.length === 0) return <Empty description="No loans found" />;
 
   return (
-    <Card className="">
+    <Card>
       <Button type="primary" onClick={() => showModal()} disabled={isCreating}>
         {isCreating ? <Spin size="small" /> : "Add Loan"}
       </Button>
@@ -134,10 +145,10 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
           initialValues={
             selectedLoan || {
               amount: "",
-              currency: "USD",
+              currency: "KSH",
               approved_on: "",
               loan_definition_id: null,
-              approved_by: null,
+              customer_business_id: null,
             }
           }
         >
@@ -151,8 +162,6 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             rules={[{ required: true }]}
           >
             <Select>
-              <Option value="USD">USD</Option>
-              <Option value="EUR">EUR</Option>
               <Option value="KSh">KSh</Option>
             </Select>
           </Form.Item>
@@ -174,6 +183,20 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
               {loanDefinitions.map((loanDef: any) => (
                 <Option key={loanDef.id} value={loanDef.id}>
                   {loanDef.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="customer_business_id"
+            label="Customer Business"
+            rules={[{ required: true, message: "Please select a business" }]}
+          >
+            <Select placeholder="Select Customer Business">
+              {businesses.map((business: any) => (
+                <Option key={business.id} value={business.id}>
+                  {business.name}
                 </Option>
               ))}
             </Select>

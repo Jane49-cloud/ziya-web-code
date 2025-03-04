@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     if (role?.name) {
       setUserRole(role.name);
     }
-  }, []); // ✅ Runs only once on component mount
+  }, [location.pathname]);
 
   const handleDropdownToggle = (menu: string) => {
     setOpenDropdowns((prev) => ({

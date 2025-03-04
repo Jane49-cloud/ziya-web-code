@@ -55,8 +55,8 @@ export function UsersTable({ users }: UsersTableProps) {
       dataIndex: "name",
       key: "name",
       render: (_: any, record: UserData) => {
-        const fullName = `${record.firstname} ${record.middlename || ""} ${
-          record.lastname || ""
+        const fullName = `${record.firstname} ${
+          record.middlename || ""
         }`.trim();
         return (
           <Space>

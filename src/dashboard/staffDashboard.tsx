@@ -82,7 +82,7 @@ const StaffDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Total Amount Loaned"
-            value={`$${totalLoanedAmount.toFixed(2)}`}
+            value={`Ksh ${totalLoanedAmount.toFixed(2)}`}
             prefix={<RiMoneyDollarCircleLine className="text-green-500" />}
           />
         )}
@@ -95,7 +95,7 @@ const StaffDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Total Amount Repaid"
-            value={`$${totalRepaid.toFixed(2)}`}
+            value={`Ksh  ${totalRepaid.toFixed(2)}`}
             prefix={<BsBank className="text-purple-500" />}
           />
         )}
@@ -108,7 +108,7 @@ const StaffDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Outstanding Balance"
-            value={`$${outstandingBalance.toFixed(2)}`}
+            value={`Ksh  ${outstandingBalance.toFixed(2)}`}
             prefix={<RiMoneyDollarCircleLine className="text-red-500" />}
           />
         )}

@@ -56,7 +56,7 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   useEffect(() => {
     if (isModalOpen) {
       form.setFieldsValue(
-        selectedPayment || { amount: "", currency: "USD", updated_by: null }
+        selectedPayment || { amount: "", currency: "KSH", updated_by: null }
       );
     }
   }, [selectedPayment, isModalOpen, form]);
@@ -148,8 +148,6 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
             rules={[{ required: true }]}
           >
             <Select>
-              <Option value="USD">USD</Option>
-              <Option value="EUR">EUR</Option>
               <Option value="KSh">KSh</Option>
             </Select>
           </Form.Item>

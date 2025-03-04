@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+// import { useState } from "react";
 import { useFormik } from "formik";
 import clsx from "clsx";
 import * as Yup from "yup";
 import { Alert } from "../../components/Alert";
-import { KeenIcon } from "../../components/keenIcons/KeenIcon";
+// import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { useRegisterMutation } from "../features/authApi";
 import { styles } from "../../styles";
 import { useGetAllRolesQuery } from "../../roles/features/rolesSlice";
@@ -16,7 +16,6 @@ const initialValues = {
   email: "",
   country_code: "",
   phone_number: "",
-  password: "",
   user_role: "agent",
 };
 
@@ -37,10 +36,7 @@ const addUserSchema = Yup.object().shape({
     .required("Email is required"),
   country_code: Yup.string().required("Country code is required"),
   phone_number: Yup.string().required("Phone number is required"),
-  password: Yup.string()
-    .min(6, "Minimum 6 characters")
-    .max(50, "Maximum 50 characters")
-    .required("Password is required"),
+
   user_role: Yup.string().required("User role is required"),
 });
 
@@ -99,7 +95,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
     isLoading: rolesLoading,
     isError: rolesError,
   } = useGetAllRolesQuery({});
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
   const [registerUser, { isLoading, error }] = useRegisterMutation();
 
   const formik = useFormik({
@@ -123,7 +119,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
     },
   });
 
-  const togglePassword = () => setShowPassword((prev) => !prev);
+  // const togglePassword = () => setShowPassword((prev) => !prev);
 
   const rtkErrorMessage =
     (error as any)?.data?.error ?? (error as any)?.error ?? null;
@@ -187,7 +183,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
             />
 
             {/* Password Field */}
-            <div>
+            {/* <div>
               <label
                 htmlFor="password"
                 className="mb-1 block text-sm font-medium text-gray-700"
@@ -227,7 +223,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                   {formik.errors.password}
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* User Role */}
             <div>
