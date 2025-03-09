@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
       title: "Dashboard",
       icon: "chart-line-star",
       path: "/",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+      // allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
     {
       title: "Roles",
@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         {
           title: "Customers",
           path: "/customers",
-          allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+          // allowedRoles: ["admin", "dev", "relationship manager", "staff"],
         },
       ],
     },
@@ -89,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         {
           title: "Loans List",
           path: "/loans",
-          allowedRoles: ["admin", "dev", "relationship manager"],
+          // allowedRoles: ["admin", "dev", "relationship manager"],
         },
       ],
     },

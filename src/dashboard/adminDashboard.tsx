@@ -24,6 +24,10 @@ const { Title, Text } = Typography;
 interface Loan {
   id: string;
   amount: number;
+  customer_name: string;
+  business_type: string;
+  sector: string;
+  monthly_revenue: string;
 }
 
 interface Payment {

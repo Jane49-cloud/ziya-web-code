@@ -189,7 +189,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
           </Form.Item>
 
           <Form.Item
-            name="customer_business_id"
+            name="business_id"
             label="Customer Business"
             rules={[{ required: true, message: "Please select a business" }]}
           >

@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// components/LoanTable.tsx
-
-import { FC } from "react";
-import { Table, Space, Card } from "antd";
+import React, { FC, useState } from "react";
+import { Table, Space, Card, Input, Tag } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { Loan } from "../@types/common";
 import { formatDate } from "../../utils";
 import { useNavigate } from "react-router-dom";
+
+const { Search } = Input;
 
 interface LoanTableProps {
   loans: Loan[];
@@ -14,33 +14,109 @@ interface LoanTableProps {
 
 const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
   const navigate = useNavigate();
+  const [searchText, setSearchText] = useState<string>("");
 
-  const handleViewLoan = (loan: Loan) => {
+  const handleViewLoan = (loan: Loan): void => {
     localStorage.setItem("selectedLoan", JSON.stringify(loan));
     navigate(`/loans/${loan.id}`);
   };
 
-  const columns = [
-    { title: "Loan ID", dataIndex: "id", key: "id" },
-    { title: "Amount", dataIndex: "amount", key: "amount" },
-    { title: "Currency", dataIndex: "currency", key: "currency" },
+  // Filter loans based on search query (searching in id, amount, currency, approved date, or loan type)
+  const filteredLoans = loans.filter((loan) => {
+    const search = searchText.toLowerCase();
+    const id = loan.id.toString().toLowerCase();
+    const currency = loan.currency.toLowerCase();
+    const amount = loan.amount.toString();
+    const approvedOn = formatDate(loan.approved_on).toLowerCase();
+    const loanType = loan.loan_definition_name.toLowerCase();
+    return (
+      id.includes(search) ||
+      currency.includes(search) ||
+      amount.includes(search) ||
+      approvedOn.includes(search) ||
+      loanType.includes(search)
+    );
+  });
+
+  // Calculate total loan amount
+  const totalLoanAmount = loans.reduce((total, loan) => total + loan.amount, 0);
+
+  const columns: ColumnsType<Loan> = [
+    {
+      title: "Loan ID",
+      dataIndex: "id",
+      key: "id",
+      sorter: (a: Loan, b: Loan) => a.id - b.id,
+      render: (id: number) => (
+        <span className="font-medium text-gray-900">
+          #{id.toString().padStart(4, "0")}
+        </span>
+      ),
+    },
+    {
+      title: "Loan Type",
+      dataIndex: "loan_definition_name",
+      key: "loan_definition_name",
+      sorter: (a: Loan, b: Loan) =>
+        a.loan_definition_name.localeCompare(b.loan_definition_name),
+      render: (name: string) => (
+        <Tag color="blue" className="px-3 py-1 text-sm">
+          {name}
+        </Tag>
+      ),
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      sorter: (a: Loan, b: Loan) => a.amount - b.amount,
+      render: (amount: number, record: Loan) => (
+        <span className="font-medium">
+          {record.currency} {amount.toLocaleString()}
+        </span>
+      ),
+      align: "right",
+    },
+    {
+      title: "Status",
+      dataIndex: "loan_definition_status",
+      key: "loan_definition_status",
+      render: (status: number) => (
+        <Tag color={status === 1 ? "green" : "red"} className="px-3 py-1">
+          {status === 1 ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
     {
       title: "Approved On",
       dataIndex: "approved_on",
       key: "approved_on",
-      render: (date: string) => formatDate(date),
+      render: (date: string) => (
+        <span className="text-gray-600">{formatDate(date)}</span>
+      ),
+      sorter: (a: Loan, b: Loan) =>
+        new Date(a.approved_on).getTime() - new Date(b.approved_on).getTime(),
     },
-    // { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
+    {
+      title: "Created On",
+      dataIndex: "date_created",
+      key: "date_created",
+      render: (date: string) => (
+        <span className="text-gray-600">{formatDate(date)}</span>
+      ),
+      sorter: (a: Loan, b: Loan) =>
+        new Date(a.date_created).getTime() - new Date(b.date_created).getTime(),
+    },
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: Loan) => (
+      render: (_: unknown, record: Loan) => (
         <Space size="small">
           <button
             onClick={() => handleViewLoan(record)}
-            className="border p-1 bg-amber-100 text-amber-500 rounded"
+            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
           >
-            View Loan
+            View Details
           </button>
         </Space>
       ),
@@ -48,14 +124,61 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
   ];
 
   return (
-    <Card title="View all customer loans  ">
+    <Card
+      title={
+        <div className="flex justify-between items-center">
+          <span className="text-xl font-semibold">View all customer loans</span>
+          <div className="flex items-center gap-4">
+            <div className="text-right flex justify-center items-center gap-5">
+              <p className="text-sm text-gray-600">Total Loan Amount</p>
+              <p className="text-lg font-semibold text-amber-300">
+                KSh {totalLoanAmount.toLocaleString()}
+              </p>
+            </div>
+            <Search
+              placeholder="Search loans..."
+              allowClear
+              className="w-64"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearchText(e.target.value)
+              }
+            />
+          </div>
+        </div>
+      }
+      bordered={false}
+    >
       <Table
-        dataSource={loans}
+        dataSource={filteredLoans}
         columns={columns}
         rowKey="id"
         loading={isLoading}
-        pagination={{ pageSize: 10 }}
-        bordered
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} loans`,
+          className: "px-4",
+        }}
+        bordered={false}
+        rowClassName="hover:bg-gray-50 transition-colors"
+        summary={() => (
+          <Table.Summary fixed>
+            <Table.Summary.Row>
+              <Table.Summary.Cell index={0} colSpan={2}>
+                <strong>Page Total</strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={2} align="right">
+                <span className="font-semibold text-blue-600">
+                  KSh{" "}
+                  {filteredLoans
+                    .reduce((total, loan) => total + loan.amount, 0)
+                    .toLocaleString()}
+                </span>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={3} colSpan={4} />
+            </Table.Summary.Row>
+          </Table.Summary>
+        )}
       />
     </Card>
   );
