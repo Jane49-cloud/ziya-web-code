@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Card, Statistic, Skeleton, List, Avatar, Typography } from "antd";
+import { Card, Statistic, Skeleton, Table, Avatar, Typography } from "antd";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { BsGraphUp, BsBank } from "react-icons/bs";
 import {
@@ -18,38 +18,64 @@ import { Link } from "react-router-dom";
 import { useGetAllBusinessesQuery } from "../Business/features/businessSlice";
 import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
-// Define data types
-interface Loan {
-  id: string;
-  amount: number;
-  customer_name: string;
-  business_type: string;
-  sector: string;
-  monthly_revenue: string;
-}
+// Business Table Columns
+const businessColumns = [
+  {
+    title: "Business Name",
+    dataIndex: "name",
+    key: "name",
+  },
+  {
+    title: "Type",
+    dataIndex: "business_type",
+    key: "business_type",
+  },
+  {
+    title: "Registration No.",
+    dataIndex: "registration_number",
+    key: "registration_number",
+  },
+  {
+    title: "Sector",
+    dataIndex: "sector",
+    key: "sector",
+  },
+  {
+    title: "Monthly Revenue",
+    dataIndex: "monthly_revenue",
+    key: "monthly_revenue",
+    render: (revenue: string) => `Ksh ${revenue}`,
+  },
+];
 
-interface Payment {
-  id: string;
-  amount: number;
-}
-
-interface Business {
-  id: string;
-  name: string;
-}
-
-interface Customer {
-  id: string;
-  firstname: string;
-  middlename: string;
-  lastname: string;
-  email: string;
-  phone_number: string;
-  avatar: string;
-  last_login: string;
-}
+// Customer Table Columns
+const customerColumns = [
+  {
+    title: "Avatar",
+    dataIndex: "avatar",
+    key: "avatar",
+    render: (avatar: string) => (
+      <Avatar src={avatar || "https://via.placeholder.com/40"} />
+    ),
+  },
+  {
+    title: "Full Name",
+    dataIndex: "fullName",
+    key: "fullName",
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    key: "email",
+  },
+  {
+    title: "Phone",
+    dataIndex: "phone_number",
+    key: "phone_number",
+  },
+];
 
 const AdminDashboard: React.FC = () => {
   // Queries
@@ -70,11 +96,11 @@ const AdminDashboard: React.FC = () => {
   // Calculations
   const totalLoansIssued = loans.length;
   const totalLoanedAmount = loans.reduce(
-    (sum: number, loan: Loan) => sum + loan.amount,
+    (sum: number, loan: { amount: number }) => sum + loan.amount,
     0
   );
   const totalRepaid = payments.reduce(
-    (sum: number, payment: Payment) => sum + payment.amount,
+    (sum: number, payment: { amount: number }) => sum + payment.amount,
     0
   );
   const outstandingBalance = totalLoanedAmount - totalRepaid;
@@ -85,17 +111,14 @@ const AdminDashboard: React.FC = () => {
     { name: "Outstanding", amount: outstandingBalance },
   ];
 
-  // Format last login
-  //   const formatLastLogin = (dateString: string) => {
-  //     const date = new Date(dateString);
-  //     return isNaN(date.getTime())
-  //       ? "N/A"
-  //       : date.toLocaleDateString("en-US", {
-  //           month: "short",
-  //           day: "numeric",
-  //           year: "numeric",
-  //         });
-  //   };
+  // Process Customers for Table
+  const customerData = customers.map((customer: any) => ({
+    key: customer.id,
+    avatar: customer.avatar,
+    fullName: `${customer.firstname} ${customer.middlename} ${customer.lastname}`,
+    email: customer.email,
+    phone_number: customer.phone_number,
+  }));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
@@ -118,7 +141,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Total Amount Loaned"
-            value={`Ksh   ${totalLoanedAmount.toFixed(2)}`}
+            value={`Ksh ${totalLoanedAmount.toFixed(2)}`}
             prefix={<RiMoneyDollarCircleLine className="text-green-500" />}
           />
         )}
@@ -130,7 +153,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Total Amount Repaid"
-            value={`Ksh   ${totalRepaid.toFixed(2)}`}
+            value={`Ksh ${totalRepaid.toFixed(2)}`}
             prefix={<BsBank className="text-purple-500" />}
           />
         )}
@@ -142,7 +165,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <Statistic
             title="Outstanding Balance"
-            value={`Ksh   ${outstandingBalance.toFixed(2)}`}
+            value={`Ksh ${outstandingBalance.toFixed(2)}`}
             prefix={<RiMoneyDollarCircleLine className="text-red-500" />}
           />
         )}
@@ -169,7 +192,7 @@ const AdminDashboard: React.FC = () => {
         )}
       </Card>
 
-      {/* Recent Businesses */}
+      {/* Business Table */}
       <Card className="shadow-md col-span-1 md:col-span-2">
         <div className="flex justify-between items-center mb-4">
           <Title level={4}>Recent Businesses</Title>
@@ -180,18 +203,15 @@ const AdminDashboard: React.FC = () => {
         {businessesLoading ? (
           <Skeleton active />
         ) : (
-          <List
+          <Table
             dataSource={businesses.slice(0, 5)}
-            renderItem={(business: Business) => (
-              <List.Item>
-                <Text>{business.name}</Text>
-              </List.Item>
-            )}
+            columns={businessColumns}
+            pagination={false}
           />
         )}
       </Card>
 
-      {/* Recent Customers */}
+      {/* Customer Table */}
       <Card className="shadow-md col-span-1 md:col-span-2">
         <div className="flex justify-between items-center mb-4">
           <Title level={4}>Recent Customers</Title>
@@ -202,31 +222,10 @@ const AdminDashboard: React.FC = () => {
         {customersLoading ? (
           <Skeleton active />
         ) : (
-          <List
-            dataSource={customers.slice(0, 5)}
-            renderItem={(customer: Customer) => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={
-                    <Avatar
-                      src={customer.avatar || "https://via.placeholder.com/40"}
-                    />
-                  }
-                  title={`${customer.firstname} ${customer.middlename} ${customer.lastname}`}
-                  description={
-                    <>
-                      <Text>Email: {customer.email}</Text>
-                      <br />
-                      <Text>Phone: {customer.phone_number}</Text>
-                      <br />
-                      <Text>
-                        {/* Last Login: {formatLastLogin(customer.last_login)} */}
-                      </Text>
-                    </>
-                  }
-                />
-              </List.Item>
-            )}
+          <Table
+            dataSource={customerData}
+            columns={customerColumns}
+            pagination={false}
           />
         )}
       </Card>

@@ -1,4 +1,4 @@
-interface Business {
+export interface Business {
   id: number;
   customer_id: number;
   name: string;
@@ -12,7 +12,7 @@ interface Business {
   deleted_at: string | null;
 }
 
-interface Loan {
+export interface Loan {
   id: number;
   customer_id: number;
   loan_definition_id: number;
@@ -22,4 +22,4 @@ interface Loan {
   approved_by: number;
   loan_definition_status: number;
   // ... other fields ...
-} 
+}
