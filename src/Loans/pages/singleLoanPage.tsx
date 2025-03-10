@@ -30,7 +30,7 @@ const SingleLoanPage = () => {
     loan?.approved_by ?? 0,
     { skip: !loan?.approved_by }
   );
-  const approvingUser = data?.staff;
+  const approvingUser = data?.staff.staffData;
 
   if (!loan) {
     return (
