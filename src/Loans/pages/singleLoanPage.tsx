@@ -82,9 +82,9 @@ const SingleLoanPage = () => {
         </div>
       </Card>
 
-      {/* Loan Repayment History */}
+      {/* Loan Repayment History with Math Analysis */}
       <div className="mt-8">
-        <LoanRepaymentHistory loanId={loan.id} />
+        <LoanRepaymentHistory loanId={loan.id} loanAmount={loan.amount} />
       </div>
     </div>
   );

@@ -21,10 +21,12 @@ interface PaymentType {
 
 interface LoanRepaymentHistoryProps {
   loanId: number;
+  loanAmount?: number; // Added prop to receive the total loan amount for math analysis
 }
 
 const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   loanId,
+  loanAmount,
 }) => {
   const { data, isLoading, refetch } = useGetLoanPaymentsByLoanIdQuery(loanId);
   const [createPayment, { isLoading: isCreating }] =
@@ -93,6 +95,13 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
 
   if (isLoading) return <Spin size="large" />;
 
+  // Calculate total payments and remaining amount (if loanAmount is provided)
+  const totalPayments = payments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
+  const remaining = loanAmount !== undefined ? loanAmount - totalPayments : 0;
+
   console.log("the user id is", user?.id);
 
   return (
@@ -130,6 +139,12 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
           )}
         />
       </Table>
+
+      {/* Math Analysis Section */}
+      <div style={{ marginTop: "16px" }}>
+        <p>Total Payments: {totalPayments}</p>
+        {loanAmount !== undefined && <p>Remaining Amount: {remaining}</p>}
+      </div>
 
       <Modal
         title={isEditMode ? "Edit Payment" : "Create Payment"}
