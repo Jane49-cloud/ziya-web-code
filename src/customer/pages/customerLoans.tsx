@@ -113,21 +113,43 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
       </Button>
 
       <Table dataSource={loans} rowKey="id" className="mt-4">
-        <Table.Column title="Loan ID" dataIndex="id" key="id" />
-        <Table.Column title="Amount" dataIndex="amount" key="amount" />
         <Table.Column
-          title="Last update"
-          dataIndex="date_updated"
-          key="creationDate"
+          title="Amount"
+          dataIndex="amount"
+          key="amount"
+          render={(amount: number, record: LoanType) =>
+            `${record.currency} ${amount}`
+          }
+        />
+
+        <Table.Column
+          title="Loan Type"
+          dataIndex="loan_definition_name"
+          key="loanType"
+        />
+
+        <Table.Column
+          title="Business Name"
+          dataIndex="business_id"
+          key="businessName"
+          render={(businessId: number) => {
+            const business = businesses.find((b: any) => b.id === businessId);
+            return business ? business.name : "N/A";
+          }}
+        />
+
+        <Table.Column
+          title="Approval Date"
+          dataIndex="approved_on"
+          key="approvalDate"
           render={(date: string) => formatDate(date)}
         />
+
         <Table.Column
           title="Actions"
           key="actions"
           render={(_, record: LoanType) => (
-            <>
-              <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
-            </>
+            <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
           )}
         />
       </Table>
