@@ -18,35 +18,40 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
 
   const handleViewLoan = (loan: Loan): void => {
     localStorage.setItem("selectedLoan", JSON.stringify(loan));
-    navigate(`/loans/${loan.id}`);
+    navigate(`/loans/${loan?.id}`);
   };
 
-  // Filter loans based on search query (searching in multiple fields)
+  // Filter loans based on search query (searching across multiple fields)
   const filteredLoans = loans.filter((loan) => {
     const search = searchText.toLowerCase();
     return (
-      loan.id.toString().includes(search) ||
-      loan.currency.toLowerCase().includes(search) ||
-      loan.amount.toString().includes(search) ||
-      formatDate(loan.approved_on).toLowerCase().includes(search) ||
-      loan.loan_definition_name.toLowerCase().includes(search) ||
-      loan.customer_name.toLowerCase().includes(search) ||
-      loan.business_name.toLowerCase().includes(search)
+      loan?.id?.toString().includes(search) ||
+      loan?.currency?.toLowerCase().includes(search) ||
+      loan?.amount?.toString().includes(search) ||
+      formatDate(loan?.approved_on || "")
+        .toLowerCase()
+        .includes(search) ||
+      loan?.loan_definition_name?.toLowerCase().includes(search) ||
+      loan?.customer_name?.toLowerCase().includes(search) ||
+      loan?.business_name?.toLowerCase().includes(search)
     );
   });
 
-  // Calculate total loan amount
-  const totalLoanAmount = loans.reduce((total, loan) => total + loan.amount, 0);
+  // Calculate total loan amount (handling missing amounts gracefully)
+  const totalLoanAmount = loans.reduce(
+    (total, loan) => total + (loan?.amount || 0),
+    0
+  );
 
   const columns: ColumnsType<Loan> = [
     {
       title: "Loan ID",
       dataIndex: "id",
       key: "id",
-      sorter: (a: Loan, b: Loan) => a.id - b.id,
-      render: (id: number) => (
+      sorter: (a, b) => (a?.id || 0) - (b?.id || 0),
+      render: (id?: number) => (
         <span className="font-medium text-gray-900">
-          #{id.toString().padStart(4, "0")}
+          #{id?.toString().padStart(4, "0") || "N/A"}
         </span>
       ),
     },
@@ -54,27 +59,33 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       title: "Customer Name",
       dataIndex: "customer_name",
       key: "customer_name",
-      sorter: (a: Loan, b: Loan) =>
-        a.customer_name.localeCompare(b.customer_name),
-      render: (name: string) => <span className="text-gray-700">{name}</span>,
+      sorter: (a, b) =>
+        (a?.customer_name || "").localeCompare(b?.customer_name || ""),
+      render: (name?: string) => (
+        <span className="text-gray-700">{name || "N/A"}</span>
+      ),
     },
     {
       title: "Business Name",
       dataIndex: "business_name",
       key: "business_name",
-      sorter: (a: Loan, b: Loan) =>
-        a.business_name.localeCompare(b.business_name),
-      render: (name: string) => <span className="text-gray-700">{name}</span>,
+      sorter: (a, b) =>
+        (a?.business_name || "").localeCompare(b?.business_name || ""),
+      render: (name?: string) => (
+        <span className="text-gray-700">{name || "N/A"}</span>
+      ),
     },
     {
       title: "Loan Type",
       dataIndex: "loan_definition_name",
       key: "loan_definition_name",
-      sorter: (a: Loan, b: Loan) =>
-        a.loan_definition_name.localeCompare(b.loan_definition_name),
-      render: (name: string) => (
+      sorter: (a, b) =>
+        (a?.loan_definition_name || "").localeCompare(
+          b?.loan_definition_name || ""
+        ),
+      render: (name?: string) => (
         <Tag color="blue" className="px-3 py-1 text-sm">
-          {name}
+          {name || "N/A"}
         </Tag>
       ),
     },
@@ -82,10 +93,10 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       title: "Amount",
       dataIndex: "amount",
       key: "amount",
-      sorter: (a: Loan, b: Loan) => a.amount - b.amount,
-      render: (amount: number, record: Loan) => (
+      sorter: (a, b) => (a?.amount || 0) - (b?.amount || 0),
+      render: (amount?: number, record?: Loan) => (
         <span className="font-medium">
-          {record.currency} {amount.toLocaleString()}
+          {record?.currency || "N/A"} {amount?.toLocaleString() || "0"}
         </span>
       ),
       align: "right",
@@ -94,7 +105,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       title: "Status",
       dataIndex: "loan_definition_status",
       key: "loan_definition_status",
-      render: (status: number) => (
+      render: (status?: number) => (
         <Tag color={status === 1 ? "green" : "red"} className="px-3 py-1">
           {status === 1 ? "Active" : "Inactive"}
         </Tag>
@@ -104,29 +115,32 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       title: "Approved On",
       dataIndex: "approved_on",
       key: "approved_on",
-      render: (date: string) => (
-        <span className="text-gray-600">{formatDate(date)}</span>
+      sorter: (a, b) =>
+        new Date(a?.approved_on || "").getTime() -
+        new Date(b?.approved_on || "").getTime(),
+      render: (date?: string) => (
+        <span className="text-gray-600">{formatDate(date || "") || "N/A"}</span>
       ),
-      sorter: (a: Loan, b: Loan) =>
-        new Date(a.approved_on).getTime() - new Date(b.approved_on).getTime(),
     },
     {
       title: "Created On",
       dataIndex: "date_created",
       key: "date_created",
-      render: (date: string) => (
-        <span className="text-gray-600">{formatDate(date)}</span>
+      sorter: (a, b) =>
+        new Date(a?.date_created || "").getTime() -
+        new Date(b?.date_created || "").getTime(),
+      render: (date?: string) => (
+        <span className="text-gray-600">{formatDate(date || "") || "N/A"}</span>
       ),
-      sorter: (a: Loan, b: Loan) =>
-        new Date(a.date_created).getTime() - new Date(b.date_created).getTime(),
     },
+
     {
       title: "Actions",
       key: "actions",
-      render: (_: unknown, record: Loan) => (
+      render: (_: unknown, record?: Loan) => (
         <Space size="small">
           <button
-            onClick={() => handleViewLoan(record)}
+            onClick={() => handleViewLoan(record!)}
             className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
           >
             View Details
@@ -184,7 +198,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
                 <span className="font-semibold text-blue-600">
                   KSh{" "}
                   {filteredLoans
-                    .reduce((total, loan) => total + loan.amount, 0)
+                    .reduce((total, loan) => total + (loan?.amount || 0), 0)
                     .toLocaleString()}
                 </span>
               </Table.Summary.Cell>

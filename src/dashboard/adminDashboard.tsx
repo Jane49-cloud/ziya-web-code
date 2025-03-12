@@ -32,22 +32,6 @@ const businessColumns = [
     dataIndex: "business_type",
     key: "business_type",
   },
-  {
-    title: "Registration No.",
-    dataIndex: "registration_number",
-    key: "registration_number",
-  },
-  {
-    title: "Sector",
-    dataIndex: "sector",
-    key: "sector",
-  },
-  {
-    title: "Monthly Revenue",
-    dataIndex: "monthly_revenue",
-    key: "monthly_revenue",
-    render: (revenue: string) => `Ksh ${revenue}`,
-  },
 ];
 
 // Customer Table Columns
@@ -207,6 +191,7 @@ const AdminDashboard: React.FC = () => {
             dataSource={businesses.slice(0, 5)}
             columns={businessColumns}
             pagination={false}
+            bordered
           />
         )}
       </Card>
@@ -226,6 +211,7 @@ const AdminDashboard: React.FC = () => {
             dataSource={customerData}
             columns={customerColumns}
             pagination={false}
+            bordered
           />
         )}
       </Card>
