@@ -152,7 +152,12 @@ export function AddUser({ onUserCreated }: AddUserProps) {
             <FormField id="firstname" label="First Name" formik={formik} />
 
             {/* Middle Name */}
-            <FormField id="middlename" label="Middle Name" formik={formik} />
+            <FormField
+              id="middlename"
+              label="Middle Name"
+              formik={formik}
+              placeholder="Optional"
+            />
 
             {/* Last Name */}
             <FormField id="lastname" label="Last Name" formik={formik} />
@@ -163,7 +168,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               label="Email"
               type="email"
               formik={formik}
-              placeholder="e.g. john.doe@example.com"
+              placeholder="e.g. john.doe@ziya.co.ke"
             />
 
             {/* Country Code */}
@@ -171,7 +176,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               id="country_code"
               label="Country Code"
               formik={formik}
-              placeholder="e.g. +1"
+              placeholder="e.g. +254"
             />
 
             {/* Phone Number */}
@@ -179,7 +184,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               id="phone_number"
               label="Phone Number"
               formik={formik}
-              placeholder="e.g. 9876543210"
+              placeholder="e.g. 07123456789"
             />
 
             {/* Password Field */}

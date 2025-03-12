@@ -56,7 +56,7 @@ const CustomerBusinessForm = ({
       confirmLoading={creating || updating}
     >
       <Form form={form} layout="vertical">
-        {/* Business Name */}
+        {/* Business Name (Required) */}
         <Form.Item
           label="Business Name"
           name="name"
@@ -65,7 +65,7 @@ const CustomerBusinessForm = ({
           <Input />
         </Form.Item>
 
-        {/* Business Type */}
+        {/* Business Type (Required) */}
         <Form.Item
           label="Business Type"
           name="business_type"
@@ -78,48 +78,23 @@ const CustomerBusinessForm = ({
           </Select>
         </Form.Item>
 
-        {/* Registration Number */}
-        <Form.Item
-          label="Registration Number"
-          name="registration_number"
-          rules={[
-            { required: true, message: "Registration number is required" },
-          ]}
-        >
+        {/* Registration Number (Optional) */}
+        <Form.Item label="Registration Number" name="registration_number">
           <Input />
         </Form.Item>
 
-        {/* PIN Number */}
-        <Form.Item
-          label="PIN Number"
-          name="pin_number"
-          rules={[{ required: true, message: "PIN number is required" }]}
-        >
+        {/* PIN Number (Optional) */}
+        <Form.Item label="PIN Number" name="pin_number">
           <Input />
         </Form.Item>
 
-        {/* Sector */}
-        <Form.Item
-          label="Sector"
-          name="sector"
-          rules={[{ required: true, message: "Sector is required" }]}
-        >
+        {/* Sector (Optional) */}
+        <Form.Item label="Sector" name="sector">
           <Input />
         </Form.Item>
 
-        {/* Monthly Revenue */}
-        <Form.Item
-          label="Monthly Revenue"
-          name="monthly_revenue"
-          rules={[
-            { required: true, message: "Monthly revenue is required" },
-            {
-              type: "number",
-              min: 1,
-              message: "Revenue must be greater than 0",
-            },
-          ]}
-        >
+        {/* Monthly Revenue (Optional) */}
+        <Form.Item label="Monthly Revenue" name="monthly_revenue">
           <Input type="number" />
         </Form.Item>
       </Form>

@@ -1,59 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Table, Spin, Card } from "antd";
 import { useGetAllBusinessesQuery } from "./features/businessSlice";
 
 const BusinessList = () => {
   const { data, isLoading } = useGetAllBusinessesQuery({});
-  const businesses = data?.customerBusinesses;
-  //   const [deleteBusiness] = useDeleteBusinessMutation();
-  //   const [editBusiness] = useState(null);
-  //   const [ setIsModalOpen] = useState(false);
+  const businesses = data?.customerBusinesses || [];
 
-  //   const handleDelete = async (id) => {
-  //     try {
-  //       await deleteBusiness(id).unwrap();
-  //       message.success("Business deleted successfully!");
-  //     } catch (error) {
-  //       message.error("Failed to delete business.");
-  //     }
-  //   };
+  const renderWithFallback = (text: any) => (text ? text : "N/A");
 
   if (isLoading) return <Spin />;
 
   return (
     <Card className="mt-10 py-5" title="All Businesses Registered">
-      {/* <Button
-        type="primary"
-        className="mb-4"
-        onClick={() => setIsModalOpen(true)}
-      >
-        Add Business
-      </Button> */}
-
       <Table dataSource={businesses} rowKey="id" bordered>
-        <Table.Column title="Business Name" dataIndex="name" />
-        <Table.Column title="Type" dataIndex="business_type" />
-        <Table.Column title="Sector" dataIndex="sector" />
-        <Table.Column title="Monthly Revenue" dataIndex="monthly_revenue" />
-        {/* <Table.Column
-          title="Actions"
-          render={(business) => (
-            <div className="flex gap-2">
-              <Button type="link" onClick={() => { setEditBusiness(business); setIsModalOpen(true); }}>
-                Edit
-              </Button>
-              <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(business.id)}>
-                <Button type="link" danger>Delete</Button>
-              </Popconfirm>
-            </div>
-          )}
-        /> */}
+        <Table.Column
+          title="Business Name"
+          dataIndex="name"
+          render={renderWithFallback}
+        />
+        <Table.Column
+          title="Type"
+          dataIndex="business_type"
+          render={renderWithFallback}
+        />
+        <Table.Column
+          title="Sector"
+          dataIndex="sector"
+          render={renderWithFallback}
+        />
+        <Table.Column
+          title="Monthly Revenue"
+          dataIndex="monthly_revenue"
+          render={renderWithFallback}
+        />
       </Table>
-
-      {/* <BusinessForm
-        visible={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setEditBusiness(null); }}
-        business={editBusiness}
-      /> */}
     </Card>
   );
 };
