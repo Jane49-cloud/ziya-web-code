@@ -13,6 +13,8 @@ export interface Loan {
   deleted_at: string | null;
   loan_definition_description: string;
   loan_definition_status: number;
+  customer_name: string;
+  business_name: string;
 }
 
 export interface CreateLoanRequest {

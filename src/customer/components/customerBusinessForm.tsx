@@ -56,6 +56,7 @@ const CustomerBusinessForm = ({
       confirmLoading={creating || updating}
     >
       <Form form={form} layout="vertical">
+        {/* Business Name */}
         <Form.Item
           label="Business Name"
           name="name"
@@ -63,27 +64,62 @@ const CustomerBusinessForm = ({
         >
           <Input />
         </Form.Item>
+
+        {/* Business Type */}
         <Form.Item
           label="Business Type"
           name="business_type"
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: "Business type is required" }]}
         >
-          <Select>
+          <Select placeholder="Select Business Type">
             <Option value="Retail">Retail</Option>
             <Option value="Wholesale">Wholesale</Option>
             <Option value="Service">Service</Option>
           </Select>
         </Form.Item>
-        <Form.Item label="Registration Number" name="registration_number">
+
+        {/* Registration Number */}
+        <Form.Item
+          label="Registration Number"
+          name="registration_number"
+          rules={[
+            { required: true, message: "Registration number is required" },
+          ]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="PIN Number" name="pin_number">
+
+        {/* PIN Number */}
+        <Form.Item
+          label="PIN Number"
+          name="pin_number"
+          rules={[{ required: true, message: "PIN number is required" }]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="Sector" name="sector">
+
+        {/* Sector */}
+        <Form.Item
+          label="Sector"
+          name="sector"
+          rules={[{ required: true, message: "Sector is required" }]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="Monthly Revenue" name="monthly_revenue">
+
+        {/* Monthly Revenue */}
+        <Form.Item
+          label="Monthly Revenue"
+          name="monthly_revenue"
+          rules={[
+            { required: true, message: "Monthly revenue is required" },
+            {
+              type: "number",
+              min: 1,
+              message: "Revenue must be greater than 0",
+            },
+          ]}
+        >
           <Input type="number" />
         </Form.Item>
       </Form>

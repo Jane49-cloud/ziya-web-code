@@ -21,20 +21,17 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
     navigate(`/loans/${loan.id}`);
   };
 
-  // Filter loans based on search query (searching in id, amount, currency, approved date, or loan type)
+  // Filter loans based on search query (searching in multiple fields)
   const filteredLoans = loans.filter((loan) => {
     const search = searchText.toLowerCase();
-    const id = loan.id.toString().toLowerCase();
-    const currency = loan.currency.toLowerCase();
-    const amount = loan.amount.toString();
-    const approvedOn = formatDate(loan.approved_on).toLowerCase();
-    const loanType = loan.loan_definition_name.toLowerCase();
     return (
-      id.includes(search) ||
-      currency.includes(search) ||
-      amount.includes(search) ||
-      approvedOn.includes(search) ||
-      loanType.includes(search)
+      loan.id.toString().includes(search) ||
+      loan.currency.toLowerCase().includes(search) ||
+      loan.amount.toString().includes(search) ||
+      formatDate(loan.approved_on).toLowerCase().includes(search) ||
+      loan.loan_definition_name.toLowerCase().includes(search) ||
+      loan.customer_name.toLowerCase().includes(search) ||
+      loan.business_name.toLowerCase().includes(search)
     );
   });
 
@@ -52,6 +49,22 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
           #{id.toString().padStart(4, "0")}
         </span>
       ),
+    },
+    {
+      title: "Customer Name",
+      dataIndex: "customer_name",
+      key: "customer_name",
+      sorter: (a: Loan, b: Loan) =>
+        a.customer_name.localeCompare(b.customer_name),
+      render: (name: string) => <span className="text-gray-700">{name}</span>,
+    },
+    {
+      title: "Business Name",
+      dataIndex: "business_name",
+      key: "business_name",
+      sorter: (a: Loan, b: Loan) =>
+        a.business_name.localeCompare(b.business_name),
+      render: (name: string) => <span className="text-gray-700">{name}</span>,
     },
     {
       title: "Loan Type",
@@ -164,10 +177,10 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
         summary={() => (
           <Table.Summary fixed>
             <Table.Summary.Row>
-              <Table.Summary.Cell index={0} colSpan={2}>
+              <Table.Summary.Cell index={0} colSpan={3}>
                 <strong>Page Total</strong>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={2} align="right">
+              <Table.Summary.Cell index={3} align="right">
                 <span className="font-semibold text-blue-600">
                   KSh{" "}
                   {filteredLoans
@@ -175,7 +188,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
                     .toLocaleString()}
                 </span>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={3} colSpan={4} />
+              <Table.Summary.Cell index={4} colSpan={5} />
             </Table.Summary.Row>
           </Table.Summary>
         )}
