@@ -32,10 +32,9 @@ const baseQueryWithAuth = async (
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
     localStorage.clear();
-
-    // if (window.location.pathname !== "/auth/login") {
-    //   window.location.href = "/auth/login";
-    // }
+    if (window.location.pathname !== "/auth/login") {
+      window.location.href = "/auth/login";
+    }
   }
 
   return result;

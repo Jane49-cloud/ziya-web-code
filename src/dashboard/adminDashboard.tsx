@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 import { useGetAllLoanPaymentsQuery } from "../Loans/features/loanRepaymnetSlice";
 import { useGetAllLoansQuery } from "../Loans/features/loanSlice";
@@ -89,10 +90,13 @@ const AdminDashboard: React.FC = () => {
   );
   const outstandingBalance = totalLoanedAmount - totalRepaid;
 
-  // Chart Data
+  // Corrected Chart Data (Only Repaid vs Outstanding Balance)
   const repaymentData = [
-    { name: "Repaid", amount: totalRepaid },
-    { name: "Outstanding", amount: outstandingBalance },
+    {
+      name: "Loan Repayments",
+      totalRepaid: totalRepaid,
+      outstandingBalance: outstandingBalance,
+    },
   ];
 
   // Process Customers for Table
@@ -155,13 +159,13 @@ const AdminDashboard: React.FC = () => {
         )}
       </Card>
 
-      {/* Bar Chart */}
+      {/* Corrected Bar Chart (Repaid vs Outstanding Balance) */}
       <Card className="col-span-1 md:col-span-2 lg:col-span-4 shadow-md p-4">
-        <Title level={4}>Loan Repayment Breakdown</Title>
+        <Title level={4}>Loan Repayment Analysis</Title>
         {loansLoading || paymentsLoading ? (
           <Skeleton active />
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <BarChart
               data={repaymentData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -170,7 +174,13 @@ const AdminDashboard: React.FC = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="amount" fill="#8884d8" />
+              <Legend />
+              <Bar dataKey="totalRepaid" fill="#4CAF50" name="Total Repaid" />
+              <Bar
+                dataKey="outstandingBalance"
+                fill="#E53935"
+                name="Outstanding Balance"
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

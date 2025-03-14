@@ -1,0 +1,26 @@
+stages:
+  - build_and_push
+
+variables:
+  DOCKER_IMAGE_NAME: ziyait/ziyaweb
+  DOCKER_TAG: latest
+
+image: docker:20.10.16
+services:
+  - docker:20.10.16-dind
+
+build:
+  stage: build_and_push
+  only:
+    - dev
+  script:
+    - echo "Building Docker image for frontend..."
+    - docker build --no-cache -t ${DOCKER_IMAGE_NAME}:${DOCKER_TAG} .
+    - echo "Image built successfully"
+    - echo "Logging in to DockerHub..."
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - echo "Tagging Docker image..."
+    - docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_TAG} ${DOCKER_IMAGE_NAME}:${DOCKER_TAG}
+    - echo "Pushing image to DockerHub..."
+    - docker push ${DOCKER_IMAGE_NAME}:${DOCKER_TAG}
+    - echo "Image pushed successfully"

@@ -30,7 +30,7 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
       return;
     }
 
-    const fetchRole = async () => {
+    const fetchRole = () => {
       const role = getRole();
       if (role?.name) {
         setUserRole(role.name);
@@ -38,7 +38,7 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
       setIsLoading(false);
     };
 
-    fetchRole();
+    setTimeout(fetchRole, 500);
   }, [token]);
 
   if (!token) {
@@ -54,7 +54,7 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   }
 
   if (userRole && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Unauthorized />;
   }
 
   return <Outlet />;
