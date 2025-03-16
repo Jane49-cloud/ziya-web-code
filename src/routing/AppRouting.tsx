@@ -22,6 +22,7 @@ import { getRole } from "../utils";
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const user = localStorage.getItem("ziya-profile");
   const token = localStorage.getItem("ziya-access");
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
     setTimeout(fetchRole, 500);
   }, [token]);
 
-  if (!token) {
+  if (!user || !token) {
     return <Navigate to="/auth/login" replace />;
   }
 
