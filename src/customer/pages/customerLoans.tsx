@@ -53,7 +53,11 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const navigate = useNavigate();
 
   const loans: LoanType[] = data?.loans || [];
-  const loanDefinitions = loanDefinitionsData?.loanDefinitions || [];
+
+  const loanDefinitions =
+    loanDefinitionsData?.loanDefinitions?.filter(
+      (loanDef: any) => loanDef.status === 1
+    ) || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
