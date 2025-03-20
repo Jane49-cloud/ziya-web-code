@@ -9,9 +9,11 @@ import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { styles } from "../../styles";
 import { useUpdatePasswordMutation } from "../../auth/features/authApi";
 import { getUser } from "../../utils";
+import { notification } from "antd";
 
 const user = getUser();
 const userId = user?.id;
+console.log("User ID:", userId);
 
 const passwordSchema = Yup.object().shape({
   currentPassword: Yup.string()
@@ -49,10 +51,22 @@ function UpdatePassword() {
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         }).unwrap();
+
+        console.log("API Request Payload:", {
+          userId,
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        });
+
         setHasErrors(false);
-        await setStatus(
-          response.message || "Password has been successfully updated!"
-        );
+        const successMessage =
+          response.message || "Password has been successfully updated!";
+
+        // setStatus(successMessage);
+        notification.success({
+          message: "Success",
+          description: successMessage,
+        });
 
         resetForm();
       } catch (error: any) {
