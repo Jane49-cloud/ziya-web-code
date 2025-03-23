@@ -9,7 +9,6 @@ import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { styles } from "../../styles";
 import { useUpdatePasswordMutation } from "../../auth/features/authApi";
 import { getUser } from "../../utils";
-import { notification } from "antd";
 
 const user = getUser();
 const userId = user?.id;
@@ -34,6 +33,7 @@ function UpdatePassword() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatePassword] = useUpdatePasswordMutation();
+  const [message, setMessage] = useState<string | undefined>(undefined);
 
   const formik = useFormik({
     initialValues: {
@@ -62,12 +62,7 @@ function UpdatePassword() {
         const successMessage =
           response.message || "Password has been successfully updated!";
 
-        // setStatus(successMessage);
-        notification.success({
-          message: "Success",
-          description: successMessage,
-        });
-
+        setMessage(successMessage);
         resetForm();
       } catch (error: any) {
         if (error?.data?.error) {
@@ -110,7 +105,7 @@ function UpdatePassword() {
           </div>
           {hasErrors !== undefined && (
             <Alert variant={hasErrors ? "danger" : "success"} className="mb-4">
-              {formik.status}
+              {hasErrors ? formik.status : message}
             </Alert>
           )}
           <form onSubmit={formik.handleSubmit} className="space-y-6">
