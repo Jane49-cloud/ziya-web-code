@@ -222,6 +222,7 @@ const AdminDashboard: React.FC = () => {
             columns={customerColumns}
             pagination={false}
             bordered
+            className="overflow-x-auto"
           />
         )}
       </Card>

@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
-      <header className="sticky top-0 z-30 bg-white shadow-sm py-2">
+      <header className="sticky top-0 z-30 bg-white shadow-sm py-2 max-w-[100vw]">
         <div className="container mx-auto flex items-center justify-between h-[3.75rem]">
           {/* Sidebar Toggle */}
           <button
