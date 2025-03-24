@@ -11,8 +11,6 @@ import { useUpdatePasswordMutation } from "../../auth/features/authApi";
 import { getUser } from "../../utils";
 
 const user = getUser();
-const userId = user?.id;
-console.log("User ID:", userId);
 
 const passwordSchema = Yup.object().shape({
   currentPassword: Yup.string()
@@ -47,22 +45,17 @@ function UpdatePassword() {
       setHasErrors(undefined);
       try {
         const response = await updatePassword({
-          userId,
+          id: user?.id,
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         }).unwrap();
-
-        console.log("API Request Payload:", {
-          userId,
-          currentPassword: values.currentPassword,
-          newPassword: values.newPassword,
-        });
 
         setHasErrors(false);
         const successMessage =
           response.message || "Password has been successfully updated!";
 
         setMessage(successMessage);
+        setStatus(successMessage);
         resetForm();
       } catch (error: any) {
         if (error?.data?.error) {

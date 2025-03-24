@@ -28,7 +28,7 @@ const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
   const handleSaveChanges = async (values: any) => {
     try {
       const payload = {
-        id: user.id,
+        id: user?.id,
         userData: {
           ...values,
         },
