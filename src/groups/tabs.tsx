@@ -59,6 +59,7 @@ const GroupTabs = () => {
     if (searchParams.value) refetchSearch();
   };
 
+  console.log(searchResults)
   interface Group {
     id: string;
     [key: string]: any;
@@ -120,7 +121,7 @@ const GroupTabs = () => {
   return (
     <div className="p-4">
       <Title level={3}>Group Management</Title>
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 flex-wrap hidden">
         <Input
           placeholder="Search group by name"
           value={searchParams.value}
@@ -164,15 +165,7 @@ const GroupTabs = () => {
             onDelete={onDelete}
           />
         </TabPane>
-        <TabPane tab="Search Results" key="search">
-          <GroupTable
-            data={searchResults?.groups || []}
-            onEdit={onEdit}
-            onChangeManager={onChangeManager}
-            onChangeMembers={onChangeMembers}
-            onDelete={onDelete}
-          />
-        </TabPane>
+      
       </Tabs>
 
       {/* Modals */}

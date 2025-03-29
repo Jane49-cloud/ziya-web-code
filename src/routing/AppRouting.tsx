@@ -20,6 +20,7 @@ import SingleLoanPage from "../Loans/pages/singleLoanPage";
 import { getRole } from "../utils";
 import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
+import SingleGroupPage from "../groups/pages/singleGroup";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,7 @@ const AppRouting = (): ReactElement => {
         <Route element={<Layout children={undefined} />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/groups/:id" element={<SingleGroupPage />} />
           <Route path="/create-group" element={<CreateGroupPage />} />
 
           <Route path="/profile" element={<UserProfilePage />} />

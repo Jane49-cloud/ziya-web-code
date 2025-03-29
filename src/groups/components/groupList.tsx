@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Table, Button, Space, Card } from "antd";
+import { FiEdit, FiTrash2, FiUserCheck, FiUsers, FiEye } from "react-icons/fi";
 
 interface GroupTableProps {
   data: Array<{
@@ -29,15 +30,27 @@ const GroupTable: React.FC<GroupTableProps> = ({
     {
       title: "Actions",
       render: (_: any, record: { id: string }) => (
-        <Space>
-          <Button onClick={() => onEdit(record)}>Edit</Button>
-          <Button onClick={() => onChangeManager(record)}>
-            Change Manager
+        <Space wrap>
+          <Button icon={<FiEye />} href={`/groups/${record.id}`}>
+            View
           </Button>
-          <Button onClick={() => onChangeMembers(record)}>
-            Update Members
+          <Button icon={<FiEdit />} onClick={() => onEdit(record)}>
+            Edit
           </Button>
-          <Button danger onClick={() => onDelete(record.id)}>
+          <Button
+            icon={<FiUserCheck />}
+            onClick={() => onChangeManager(record)}
+          >
+            Manager
+          </Button>
+          <Button icon={<FiUsers />} onClick={() => onChangeMembers(record)}>
+            Members
+          </Button>
+          <Button
+            danger
+            icon={<FiTrash2 />}
+            onClick={() => onDelete(record.id)}
+          >
             Delete
           </Button>
         </Space>

@@ -49,7 +49,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
     deleteGroup: builder.mutation({
       query: (id: number) => ({
-        url: `/groups/delete${id}`,
+        url: `/groups/delete/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Groups" }],
