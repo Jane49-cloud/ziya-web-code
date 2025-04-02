@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Table, Spin, Button, Modal, Form, Input, Select, Card } from "antd";
+import {
+  Table,
+  Spin,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Card,
+  DatePicker,
+} from "antd";
 import {
   useGetLoanPaymentsByLoanIdQuery,
   useCreateLoanPaymentMutation,
@@ -21,7 +31,7 @@ interface PaymentType {
 
 interface LoanRepaymentHistoryProps {
   loanId: number;
-  loanAmount?: number; // Added prop to receive the total loan amount for math analysis
+  loanAmount?: number;
 }
 
 const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
@@ -114,8 +124,8 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
         <Table.Column title="Amount" dataIndex="amount" key="amount" />
         <Table.Column title="Currency" dataIndex="currency" key="currency" />
         <Table.Column
-          title="Last update"
-          dataIndex="date_updated"
+          title="Date Created"
+          dataIndex="date_created"
           key="creationDate"
           render={(date: string) => formatDate(date)}
         />
@@ -167,13 +177,13 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
             </Select>
           </Form.Item>
 
-          {/* <Form.Item
-            name="updated_by"
-            initialValue={user?.id || 0}
-            //    className='hidden'
+          <Form.Item
+            name="date_created"
+            label="Date created"
+            rules={[{ required: true }]}
           >
-            <Input />
-          </Form.Item> */}
+            <DatePicker className="w-full" />
+          </Form.Item>
 
           <Button
             type="primary"

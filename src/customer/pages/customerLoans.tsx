@@ -143,9 +143,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
         />
 
         <Table.Column
-          title="Approval Date"
-          dataIndex="approved_on"
-          key="approvalDate"
+          title=" Date Created"
+          dataIndex="date_created"
+          key="creationDate"
           render={(date: string) => formatDate(date)}
         />
 
@@ -192,9 +192,17 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="approved_on"
             label="Approved On"
+            rules={[{ required: true }]}
+          >
+            <DatePicker className="w-full" />
+          </Form.Item> */}
+
+          <Form.Item
+            name="date_created"
+            label="Date created"
             rules={[{ required: true }]}
           >
             <DatePicker className="w-full" />

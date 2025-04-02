@@ -93,11 +93,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       label: "Customers",
       allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
-    {
-      to: "/groups",
-      label: "Groups",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
+    // {
+    //   to: "/groups",
+    //   label: "Groups",
+    //   allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+    // },
   ].filter((link) => link.allowedRoles.includes(userRole));
 
   return (
