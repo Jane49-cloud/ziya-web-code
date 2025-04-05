@@ -6,9 +6,9 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "https://betaapi.ziya.co.ke/api/v1",
+  baseUrl: "https://api.ziya.co.ke/api/v1",
   // baseUrl: "http://localhost:4000/api/v1",
-  baseUrl: "https://stagingapi.ziya.co.ke/api/v1",
+  // baseUrl: "https://stagingapi.ziya.co.ke/api/v1",
   prepareHeaders: (headers) => {
     const accessToken = localStorage.getItem("ziya-access");
     if (accessToken) {

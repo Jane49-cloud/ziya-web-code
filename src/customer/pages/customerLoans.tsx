@@ -118,6 +118,11 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
 
       <Table dataSource={loans} rowKey="id" className="mt-4">
         <Table.Column
+          title="Cycle"
+          key="cycle"
+          render={(_, __, index) => index + 1}
+        />
+        <Table.Column
           title="Amount"
           dataIndex="amount"
           key="amount"

@@ -111,17 +111,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
         </Tag>
       ),
     },
-    {
-      title: "Approved On",
-      dataIndex: "approved_on",
-      key: "approved_on",
-      sorter: (a, b) =>
-        new Date(a?.approved_on || "").getTime() -
-        new Date(b?.approved_on || "").getTime(),
-      render: (date?: string) => (
-        <span className="text-gray-600">{formatDate(date || "") || "N/A"}</span>
-      ),
-    },
+
     {
       title: "Created On",
       dataIndex: "date_created",

@@ -50,11 +50,7 @@ const customerColumns = [
     dataIndex: "fullName",
     key: "fullName",
   },
-  {
-    title: "Email",
-    dataIndex: "email",
-    key: "email",
-  },
+
   {
     title: "Phone",
     dataIndex: "phone_number",
@@ -218,7 +214,7 @@ const AdminDashboard: React.FC = () => {
           <Skeleton active />
         ) : (
           <Table
-            dataSource={customerData}
+            dataSource={customerData.slice(0, 5)}
             columns={customerColumns}
             pagination={false}
             bordered
