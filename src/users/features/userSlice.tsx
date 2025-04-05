@@ -18,6 +18,13 @@ export const UserSlice = apiSlice.injectEndpoints({
       }),
       providesTags: (_result, _error, id) => [{ type: "Users", id }],
     }),
+    resetPassword: builder.mutation({
+      query: ({ id, newPassword }) => ({
+        url: `/staff/password/reset`,
+        method: "POST",
+        body: { id, newPassword },
+      }),
+    }),
 
     updateUser: builder.mutation({
       query: ({ id, userData }) => ({
@@ -34,4 +41,5 @@ export const {
   useGetAllUsersQuery,
   useUpdateUserMutation,
   useGetUserByIdQuery,
+  useResetPasswordMutation,
 } = UserSlice;
