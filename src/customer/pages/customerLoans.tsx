@@ -21,6 +21,7 @@ import {
 import { useGetLoanDefinitionsQuery } from "../../Loans/features/loanDefinationsSlice";
 import { formatDate, getUser } from "../../utils";
 import { useGetBusinessesByCustomerQuery } from "../features/customerSlice";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 
@@ -42,6 +43,7 @@ interface CustomerLoansListProps {
 const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   customerId,
 }) => {
+  const [form] = Form.useForm();
   const { data, isLoading, refetch } = useGetLoansByCustomerIdQuery(customerId);
   const { data: loanDefinitionsData } = useGetLoanDefinitionsQuery({});
   const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
@@ -70,37 +72,76 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
       );
       return;
     }
+
     setSelectedLoan(loan);
     setIsEditMode(!!loan);
     setIsModalOpen(true);
+
+    if (loan) {
+      form.setFieldsValue({
+        amount: loan.amount,
+        currency: loan.currency,
+        date_created: loan.approved_on ? dayjs(loan.approved_on) : null,
+        loan_definition_id: loan.loan_definition_id,
+        business_id: loan.customer_business_id,
+        updated_by: user?.id || 0,
+      });
+    } else {
+      form.resetFields();
+      form.setFieldsValue({
+        currency: "KSh",
+      });
+    }
   };
 
   const closeModal = () => {
+    form.resetFields();
     setSelectedLoan(null);
     setIsEditMode(false);
     setIsModalOpen(false);
   };
 
-  const handleSubmitLoan = async (values: {
-    amount: number;
-    currency: string;
-    approved_on: string;
-    loan_definition_id: number;
-    customer_business_id: number;
-  }) => {
+  const handleSubmitLoan = async (values: any) => {
     const payload = {
-      ...values,
+      amount: values.amount,
+      currency: values.currency,
+      approved_on: values.date_created,
+      loan_definition_id: values.loan_definition_id,
+      customer_business_id: values.business_id,
       approved_by: user?.id || 0,
       customer_id: customerId,
     };
 
+    // Only include the allowed fields in the payload when updating
     if (isEditMode && selectedLoan) {
-      await updateLoan({ loanId: selectedLoan.id, ...payload });
+      const updatePayload = {
+        id: selectedLoan.id,
+        loan_definition_id: values.loan_definition_id,
+        currency: values.currency,
+        amount: values.amount,
+      };
+
+      try {
+        await updateLoan(updatePayload).unwrap();
+        refetch();
+        closeModal();
+        message.success("Loan updated successfully.");
+      } catch (error) {
+        message.error("Something went wrong. Please try again.");
+        console.error("Loan error:", error);
+      }
     } else {
-      await createLoan(payload);
+      // Handle creation of new loan
+      try {
+        await createLoan(payload).unwrap();
+        message.success("Loan created successfully.");
+        refetch();
+        closeModal();
+      } catch (error) {
+        message.error("Something went wrong. Please try again.");
+        console.error("Loan error:", error);
+      }
     }
-    refetch();
-    closeModal();
   };
 
   const handleViewLoan = (loan: LoanType) => {
@@ -130,13 +171,11 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             `${record.currency} ${amount}`
           }
         />
-
         <Table.Column
           title="Loan Type"
           dataIndex="loan_definition_name"
           key="loanType"
         />
-
         <Table.Column
           title="Business Name"
           dataIndex="business_id"
@@ -146,19 +185,22 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             return business ? business.name : "N/A";
           }}
         />
-
         <Table.Column
           title=" Date Created"
           dataIndex="date_created"
           key="creationDate"
           render={(date: string) => formatDate(date)}
         />
-
         <Table.Column
           title="Actions"
           key="actions"
           render={(_, record: LoanType) => (
-            <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
+              <Button type="default" onClick={() => showModal(record)}>
+                Edit
+              </Button>
+            </div>
           )}
         />
       </Table>
@@ -170,19 +212,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
         onCancel={closeModal}
         footer={null}
       >
-        <Form
-          onFinish={handleSubmitLoan}
-          layout="vertical"
-          initialValues={
-            selectedLoan || {
-              amount: "",
-              currency: "KSH",
-              approved_on: "",
-              loan_definition_id: null,
-              customer_business_id: null,
-            }
-          }
-        >
+        <Form form={form} onFinish={handleSubmitLoan} layout="vertical">
           <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
             <Input type="number" />
           </Form.Item>
@@ -196,14 +226,6 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
               <Option value="KSh">KSh</Option>
             </Select>
           </Form.Item>
-
-          {/* <Form.Item
-            name="approved_on"
-            label="Approved On"
-            rules={[{ required: true }]}
-          >
-            <DatePicker className="w-full" />
-          </Form.Item> */}
 
           <Form.Item
             name="date_created"

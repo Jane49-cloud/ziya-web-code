@@ -32,8 +32,8 @@ export const loansSlice = apiSlice.injectEndpoints({
     }),
 
     updateLoan: builder.mutation({
-      query: ({ loanId, ...loanData }) => ({
-        url: `/customer-loans/update/${loanId}`,
+      query: ({ ...loanData }) => ({
+        url: `/customer-loans/update/`,
         method: "PUT",
         body: loanData,
       }),
