@@ -1,22 +1,32 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
 
-export const CustomerForm: FC<{
-  onSubmit: (values: any) => void;
+type CustomerFormProps = {
+  onSubmit: (values: Record<string, FormDataEntryValue>) => void;
   isLoading: boolean;
-}> = ({ onSubmit, isLoading }) => {
+};
+
+export const CustomerForm: FC<CustomerFormProps> = ({
+  onSubmit,
+  isLoading,
+}) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const values = Object.fromEntries(formData.entries());
+
+    formData.set("date_created", new Date().toISOString());
+
+    const entries = Array.from(formData.entries()).filter(
+      (entry): entry is [string, FormDataEntryValue] => entry[1] !== null
+    );
+    const values = Object.fromEntries(entries);
     onSubmit(values);
   };
 
   const renderInput = (
     name: string,
     label: string,
-    type: "text" | "password" = "text",
+    type: "text" | "password" | "date" = "text",
     required = true
   ) => (
     <div className="flex flex-col">
@@ -34,7 +44,7 @@ export const CustomerForm: FC<{
   );
 
   return (
-    <div className=" bg-white p-6 shadow-lg rounded-lg">
+    <div className="bg-white p-6 shadow-lg rounded-lg">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Customer Form
       </h2>
@@ -57,8 +67,6 @@ export const CustomerForm: FC<{
               required
               className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
             >
-              <option value="+1">+1 (USA)</option>
-              <option value="+44">+44 (UK)</option>
               <option value="+254">+254 (Kenya)</option>
             </select>
           </div>

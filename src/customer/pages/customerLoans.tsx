@@ -89,7 +89,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
     } else {
       form.resetFields();
       form.setFieldsValue({
-        currency: "KSh",
+        currency: "KSH",
       });
     }
   };
@@ -105,9 +105,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
     const payload = {
       amount: values.amount,
       currency: values.currency,
-      approved_on: values.date_created,
+      date_created: values.date_created,
       loan_definition_id: values.loan_definition_id,
-      customer_business_id: values.business_id,
+      business_id: values.business_id,
       approved_by: user?.id || 0,
       customer_id: customerId,
     };
@@ -223,7 +223,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             rules={[{ required: true }]}
           >
             <Select>
-              <Option value="KSh">KSh</Option>
+              <Option value="KSH">KSH</Option>
             </Select>
           </Form.Item>
 

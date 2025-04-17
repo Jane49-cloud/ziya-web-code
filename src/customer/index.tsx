@@ -39,7 +39,6 @@ const CustomerManagement: FC = () => {
   const handleTabChange = (key: string) => {
     setActiveTab(key);
   };
-
   const handleSaveCustomer = async (values: any) => {
     try {
       await createCustomer(values).unwrap();
@@ -47,9 +46,11 @@ const CustomerManagement: FC = () => {
       setAlertType("success");
       refetchCustomer();
       setActiveTab("1");
+      return true;
     } catch (err: any) {
       setAlertMessage(err?.data?.error || "Failed to create customer.");
       setAlertType("danger");
+      return false;
     }
   };
 
@@ -60,7 +61,7 @@ const CustomerManagement: FC = () => {
       setAlertType("success");
       refetchCustomer();
       setSelectedCustomer(null);
-      setActiveTab("1"); // Redirect to the first tab (Customer List)
+      setActiveTab("1");
     } catch (err: any) {
       setAlertMessage(err?.data?.error || "Failed to update customer.");
       setAlertType("danger");
