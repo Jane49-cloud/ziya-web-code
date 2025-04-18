@@ -10,23 +10,24 @@ import {
   Card,
   DatePicker,
 } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import {
   useGetLoanPaymentsByLoanIdQuery,
   useCreateLoanPaymentMutation,
   useUpdateLoanPaymentMutation,
-  useDeleteLoanPaymentMutation,
+  // useDeleteLoanPaymentMutation,
 } from "../../Loans/features/loanRepaymnetSlice";
 import { formatDate, getUser } from "../../utils";
 
 const { Option } = Select;
 
-// ✅ Define Payment Type
 interface PaymentType {
   id: number;
   amount: number;
   currency: string;
   updated_by: number;
   customer_loan_id: number;
+  date_created?: string;
 }
 
 interface LoanRepaymentHistoryProps {
@@ -43,8 +44,8 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
     useCreateLoanPaymentMutation();
   const [updatePayment, { isLoading: isUpdating }] =
     useUpdateLoanPaymentMutation();
-  const [deletePayment, { isLoading: isDeleting }] =
-    useDeleteLoanPaymentMutation();
+  // const [deletePayment, { isLoading: isDeleting }] =
+  //   useDeleteLoanPaymentMutation();
 
   const payments: PaymentType[] = Array.isArray(data?.payments)
     ? data.payments
@@ -66,10 +67,18 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   };
 
   useEffect(() => {
-    if (isModalOpen) {
-      form.setFieldsValue(
-        selectedPayment || { amount: "", currency: "KSH", updated_by: null }
-      );
+    if (isModalOpen && selectedPayment) {
+      form.setFieldsValue({
+        ...selectedPayment,
+        date_created: selectedPayment.date_created
+          ? dayjs(selectedPayment.date_created)
+          : undefined,
+      });
+    } else if (isModalOpen) {
+      form.resetFields();
+      form.setFieldsValue({
+        currency: "KSh",
+      });
     }
   }, [selectedPayment, isModalOpen, form]);
 
@@ -83,9 +92,11 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   const handleSubmitPayment = async (values: {
     amount: number;
     currency: string;
+    date_created: Dayjs;
   }) => {
     const payload = {
       ...values,
+      date_created: values.date_created?.toISOString(),
       updated_by: user?.id || 0,
       customer_loan_id: loanId,
     };
@@ -99,23 +110,21 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
     closeModal();
   };
 
-  const handleDeletePayment = async (paymentId: number) => {
-    await deletePayment(paymentId);
-  };
+  // const handleDeletePayment = async (paymentId: number) => {
+  //   await deletePayment(paymentId);
+  //   refetch();
+  // };
 
   if (isLoading) return <Spin size="large" />;
 
-  // Calculate total payments and remaining amount (if loanAmount is provided)
   const totalPayments = payments.reduce(
     (sum, payment) => sum + payment.amount,
     0
   );
   const remaining = loanAmount !== undefined ? loanAmount - totalPayments : 0;
 
-  console.log("the user id is", user?.id);
-
   return (
-    <Card className="">
+    <Card>
       <Button type="primary" onClick={() => showModal()} disabled={isCreating}>
         {isCreating ? <Spin size="small" /> : "Add Payment"}
       </Button>
@@ -137,20 +146,19 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
               <Button onClick={() => showModal(record)} disabled={isUpdating}>
                 {isUpdating ? <Spin size="small" /> : "Edit"}
               </Button>
-              <Button
+              {/* <Button
                 danger
                 onClick={() => handleDeletePayment(record.id)}
                 disabled={isDeleting}
-                hidden
+                className="hidden"
               >
                 {isDeleting ? <Spin size="small" /> : "Delete"}
-              </Button>
+              </Button> */}
             </div>
           )}
         />
       </Table>
 
-      {/* Math Analysis Section */}
       <div style={{ marginTop: "16px" }}>
         <p>Total Payments: {totalPayments}</p>
         {loanAmount !== undefined && <p>Remaining Amount: {remaining}</p>}
@@ -179,7 +187,7 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
 
           <Form.Item
             name="date_created"
-            label="Date created"
+            label="Date Created"
             rules={[{ required: true }]}
           >
             <DatePicker className="w-full" />
