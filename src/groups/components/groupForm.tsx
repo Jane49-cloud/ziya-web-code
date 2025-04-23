@@ -9,7 +9,7 @@ import {
   Select,
   Spin,
 } from "antd";
-import { Alert } from "../../components/Alert"; // Import Alert component
+import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
@@ -25,7 +25,11 @@ interface GroupFormValues {
   total_members: number;
 }
 
-const CreateGroupForm: React.FC = () => {
+interface CreateGroupFormProps {
+  onSuccess?: () => void;
+}
+
+const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
   const [form] = Form.useForm<GroupFormValues>();
   const [createGroup, { isLoading: creating }] = useCreateGroupMutation();
 
@@ -36,14 +40,14 @@ const CreateGroupForm: React.FC = () => {
     useGetAllCustomersQuery({});
   const customers = customerData?.customers || [];
 
-  // 🔴 Alert State
   const [status, setStatus] = useState<string | null>(null);
 
   const onFinish = async (values: GroupFormValues) => {
     try {
       await createGroup(values).unwrap();
       form.resetFields();
-      setStatus(null); // Clear previous error
+      setStatus(null);
+      if (onSuccess) onSuccess(); // 👈 redirect to All Groups
     } catch (err: any) {
       setStatus(err?.data?.error || "Failed to create group.");
     }
@@ -53,7 +57,6 @@ const CreateGroupForm: React.FC = () => {
     <div className="bg-white p-6 rounded-md shadow max-w-2xl mx-auto">
       <Title level={4}>Create New Group</Title>
 
-      {/* 🔴 Alert for errors */}
       {status && (
         <Alert variant="danger" className="mb-4">
           {status}

@@ -35,14 +35,14 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
 
   const {
-    data: userData,
+    data,
     refetch: refetchUserDetails,
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
   const [user, setUser] = useState(getUser());
   const [role, setRole] = useState(getRole());
   // console.log(role.name);
-
+  const userData = data?.staff;
   useEffect(() => {
     if (userData && !isLoading) {
       setUser(userData?.staffData);
@@ -53,6 +53,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       // console.log(user);
     }
   }, [userData, isLoading, user]);
+
+  // console.log(user, "from header");
+  // console.log(userData, "userData");
 
   useEffect(() => {
     if (token) {
@@ -93,11 +96,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       label: "Customers",
       allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
-    // {
-    //   to: "/groups",
-    //   label: "Groups",
-    //   allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    // },
+    {
+      to: "/groups",
+      label: "Groups",
+      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+    },
   ].filter((link) => link.allowedRoles.includes(userRole));
 
   return (

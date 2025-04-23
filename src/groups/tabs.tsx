@@ -36,6 +36,8 @@ const GroupTabs = () => {
     member: false,
   });
 
+  const [activeTab, setActiveTab] = useState("all"); // 👈 added this line
+
   const {
     data: allGroups,
     refetch: refetchAll,
@@ -59,7 +61,7 @@ const GroupTabs = () => {
     if (searchParams.value) refetchSearch();
   };
 
-  console.log(searchResults)
+  console.log(searchResults);
   interface Group {
     id: string;
     [key: string]: any;
@@ -134,7 +136,7 @@ const GroupTabs = () => {
         </Button>
       </div>
 
-      <Tabs defaultActiveKey="all">
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)}>
         <TabPane tab="All Groups" key="all">
           <GroupTable
             data={allGroups?.groups || []}
@@ -145,7 +147,8 @@ const GroupTabs = () => {
           />
         </TabPane>
         <TabPane tab="Create Group" key="create">
-          <CreateGroupForm />
+          <CreateGroupForm onSuccess={() => setActiveTab("all")} />{" "}
+          {/* 👈 pass prop */}
         </TabPane>
         <TabPane tab="My Created" key="created">
           <GroupTable
@@ -165,7 +168,6 @@ const GroupTabs = () => {
             onDelete={onDelete}
           />
         </TabPane>
-      
       </Tabs>
 
       {/* Modals */}

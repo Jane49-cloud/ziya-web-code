@@ -68,7 +68,7 @@ export const UserProfilePage: React.FC = () => {
             </h1>
             <p className="text-sm text-gray-500">{user?.email}</p>
             <p className="text-sm text-green-500 capitalize">
-              ({data?.userRole?.name || "Ziya staff"})
+              ({data?.staff?.userRole?.name || "Ziya staff"})
             </p>
           </div>
         </div>

@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Card, Spin, Typography, Table } from "antd";
-import { useParams } from "react-router-dom";
+import { Card, Spin, Typography, Table, Button } from "antd";
+import { FiArrowLeft } from "react-icons/fi";
+import { useNavigate, useParams } from "react-router-dom";
 import { useGetGroupByIdQuery } from "../features";
 
 const { Title } = Typography;
 
 const SingleGroupPage: React.FC = () => {
-  //   const navigate = useNavigate();
+  const navigate = useNavigate(); // Move useNavigate inside the component
   const { id } = useParams();
   const groupId = id ? Number(id) : undefined;
 
@@ -72,16 +73,31 @@ const SingleGroupPage: React.FC = () => {
         <Spin />
       ) : (
         <Card>
-          <Title level={4} className="mb-4">
+          <Title level={3} className="mb-4">
             Group Details
           </Title>
-          <Table
-            columns={columns}
-            dataSource={groupDetails}
-            pagination={false}
-            bordered
-            rowKey="key"
-          />
+          <div className="mb-4">
+            <Button
+              icon={<FiArrowLeft />}
+              onClick={() => navigate("/groups")}
+              type="link"
+              className="p-0 text-indigo-600"
+            >
+              Back to Groups
+            </Button>
+          </div>
+          <Card>
+            <Title level={4} className="mb-4">
+              Group Details
+            </Title>
+            <Table
+              columns={columns}
+              dataSource={groupDetails}
+              pagination={false}
+              bordered
+              rowKey="key"
+            />
+          </Card>
         </Card>
       )}
     </div>
