@@ -30,12 +30,12 @@ const baseQueryWithAuth = async (
     console.warn("Token expired. Logging out...");
     // console.log("status", result.error.status);
 
-    localStorage.removeItem("ziya-access");
-    localStorage.removeItem("ziya-profile");
-    localStorage.clear();
-    if (window.location.pathname !== "/auth/login") {
-      window.location.href = "/auth/login";
-    }
+    // localStorage.removeItem("ziya-access");
+    // localStorage.removeItem("ziya-profile");
+    // localStorage.clear();
+    // if (window.location.pathname !== "/auth/login") {
+    //   window.location.href = "/auth/login";
+    // }
   }
 
   return result;

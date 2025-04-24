@@ -81,7 +81,16 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: [{ type: "Groups" }],
     }),
 
-    // ✅ Get groups created by logged-in staff
+    getGroupMembers: builder.query({
+      query: (groupId: number) => ({
+        url: `/groups/members/${groupId}`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, groupId) => [
+        { type: "Groups", id: groupId },
+      ],
+    }),
+
     getMyCreatedGroups: builder.query({
       query: () => ({
         url: "/groups/get/my-created",
@@ -91,5 +100,3 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
   }),
 });
-
-// Export hooks in a separate file to enable Fast Refresh

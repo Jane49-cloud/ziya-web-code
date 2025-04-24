@@ -11,4 +11,5 @@ export const {
   useUpdateGroupMemberCountMutation,
   useGetMyManagedGroupsQuery,
   useGetMyCreatedGroupsQuery,
+  useGetGroupMembersQuery,
 } = GroupSlice;

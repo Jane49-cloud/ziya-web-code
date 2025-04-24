@@ -13,6 +13,7 @@ import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
+import { getUser } from "../../utils";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -32,6 +33,7 @@ interface CreateGroupFormProps {
 const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
   const [form] = Form.useForm<GroupFormValues>();
   const [createGroup, { isLoading: creating }] = useCreateGroupMutation();
+  const user = getUser();
 
   const { data: userData, isLoading: loadingUsers } = useGetAllUsersQuery({});
   const staffList = userData?.staffs || [];
@@ -44,10 +46,15 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
 
   const onFinish = async (values: GroupFormValues) => {
     try {
-      await createGroup(values).unwrap();
+      const payload = {
+        ...values,
+        created_by: user?.id,
+      };
+
+      await createGroup(payload).unwrap();
       form.resetFields();
       setStatus(null);
-      if (onSuccess) onSuccess(); // 👈 redirect to All Groups
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setStatus(err?.data?.error || "Failed to create group.");
     }

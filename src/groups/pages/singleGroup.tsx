@@ -1,15 +1,17 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Card, Spin, Typography, Table, Button } from "antd";
+import { Card, Spin, Typography, Table, Button, Tabs } from "antd";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetGroupByIdQuery } from "../features";
+import GroupMembersTab from "../components/groupMembersTab";
 
 const { Title } = Typography;
+const { TabPane } = Tabs;
 
 const SingleGroupPage: React.FC = () => {
-  const navigate = useNavigate(); // Move useNavigate inside the component
+  const navigate = useNavigate();
   const { id } = useParams();
   const groupId = id ? Number(id) : undefined;
 
@@ -72,7 +74,7 @@ const SingleGroupPage: React.FC = () => {
       {isLoading || !group ? (
         <Spin />
       ) : (
-        <Card>
+        <div>
           <Title level={3} className="mb-4">
             Group Details
           </Title>
@@ -86,19 +88,26 @@ const SingleGroupPage: React.FC = () => {
               Back to Groups
             </Button>
           </div>
-          <Card>
-            <Title level={4} className="mb-4">
-              Group Details
-            </Title>
-            <Table
-              columns={columns}
-              dataSource={groupDetails}
-              pagination={false}
-              bordered
-              rowKey="key"
-            />
-          </Card>
-        </Card>
+          <Tabs defaultActiveKey="1">
+            <TabPane tab="Details" key="1">
+              <Card>
+                <Title level={4} className="mb-4">
+                  Group Details
+                </Title>
+                <Table
+                  columns={columns}
+                  dataSource={groupDetails}
+                  pagination={false}
+                  bordered
+                  rowKey="key"
+                />
+              </Card>
+            </TabPane>
+            <TabPane tab="Members" key="2">
+              {groupId && <GroupMembersTab groupId={groupId} />}
+            </TabPane>
+          </Tabs>
+        </div>
       )}
     </div>
   );
