@@ -10,8 +10,8 @@ import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { icons } from "../../media";
 import { useLoginMutation } from "../features/authApi";
 import { styles } from "../../styles";
-import { store } from "../../redux/store";
-import { apiSlice } from "../../redux/api";
+// import { store } from "../../redux/store";
+// import { apiSlice } from "../../redux/api";
 import { initializeUser } from "../../utils/initializeUser";
 
 const loginSchema = Yup.object().shape({
