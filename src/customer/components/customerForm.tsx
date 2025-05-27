@@ -74,7 +74,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         <Form.Item
           label="Last Name"
           name="lastname"
-          rules={[{ required: true, message: "Last name is required" }]}
+          rules={[{ message: "Last name is required" }]}
         >
           <Input />
         </Form.Item>
@@ -82,9 +82,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         <Form.Item
           label="Email"
           name="email"
-          rules={[
-            { required: true, type: "email", message: "Enter a valid email" },
-          ]}
+          rules={[{ type: "email", message: "Enter a valid email" }]}
         >
           <Input />
         </Form.Item>
@@ -109,13 +107,13 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
           <Input />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label="Date Created"
           name="date_created"
-          rules={[{ required: true, message: "Date created is required" }]}
+          rules={[{  message: "Date created is required" }]}
         >
           <Input />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );
