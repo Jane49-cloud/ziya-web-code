@@ -47,7 +47,6 @@ export function UsersTable({ users }: UsersTableProps) {
       dataIndex: "index",
       key: "index",
       render: (_: any, __: UserData, index: number) => index + 1,
-      width: 60,
       align: "center",
     },
     {
@@ -115,6 +114,7 @@ export function UsersTable({ users }: UsersTableProps) {
         pagination={{ pageSize: 10 }}
         bordered
         size="small"
+        className="overflow-x-auto lg:overflow-x-auto"
       />
     </Card>
   );

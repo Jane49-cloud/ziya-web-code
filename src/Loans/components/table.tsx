@@ -56,6 +56,8 @@ const LoanDefinitionTable: FC<LoanDefinitionTableProps> = ({
         loading={isLoading}
         pagination={{ pageSize: 10 }}
         bordered
+        size="small"
+        className="overflow-x-auto lg:overflow-x-auto"
       />
     </Card>
   );

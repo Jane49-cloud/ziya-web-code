@@ -129,7 +129,13 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
         {isCreating ? <Spin size="small" /> : "Add Payment"}
       </Button>
 
-      <Table dataSource={payments} rowKey="id" className="mt-4" bordered>
+      <Table
+        dataSource={payments}
+        rowKey="id"
+        className="overflow-x-auto lg:overflow-x-auto mt-4"
+        size="small"
+        bordered
+      >
         <Table.Column title="Amount" dataIndex="amount" key="amount" />
         <Table.Column title="Currency" dataIndex="currency" key="currency" />
         <Table.Column

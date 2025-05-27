@@ -166,6 +166,9 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       bordered={false}
     >
       <Table
+        bordered
+        size="small"
+        className="overflow-x-auto lg:overflow-x-auto"
         dataSource={filteredLoans}
         columns={columns}
         rowKey="id"
@@ -176,7 +179,6 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
           showTotal: (total) => `Total ${total} loans`,
           className: "px-4",
         }}
-        bordered={false}
         rowClassName="hover:bg-gray-50 transition-colors"
         summary={() => (
           <Table.Summary fixed>

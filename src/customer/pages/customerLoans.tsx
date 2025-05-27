@@ -157,7 +157,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
         {isCreating ? <Spin size="small" /> : "Add Loan"}
       </Button>
 
-      <Table dataSource={loans} rowKey="id" className="mt-4">
+      <Table dataSource={loans} rowKey="id"         className="overflow-x-auto lg:overflow-x-auto mt-4 " size="small" bordered>
         <Table.Column
           title="Cycle"
           key="cycle"

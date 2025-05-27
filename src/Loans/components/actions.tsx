@@ -19,7 +19,7 @@ const LoanDefinitionActions: FC<LoanDefinitionActionsProps> = ({
   };
 
   return (
-    <div>
+    <div className="space-x-2 space-y-2">
       <Button
         onClick={() => onEdit(loan)}
         type="primary"
