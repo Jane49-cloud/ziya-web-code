@@ -11,7 +11,7 @@ interface LoanType {
   id: number;
   amount: number;
   currency: string;
-  approved_on?: string;
+  date_created?: string;
   approved_by?: number;
 }
 
@@ -64,8 +64,8 @@ const SingleLoanPage = () => {
           <p className="flex items-center gap-2">
             <FaCalendarCheck className="text-gray-600" />
             <span className="font-semibold">Approved On:</span>{" "}
-            {loan.approved_on
-              ? new Date(loan.approved_on).toLocaleDateString()
+            {loan?.date_created
+              ? new Date(loan?.date_created).toLocaleDateString()
               : "N/A"}
           </p>
           <p className="flex items-center gap-2">

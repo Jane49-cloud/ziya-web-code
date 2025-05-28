@@ -5,13 +5,19 @@ import { customAvatar } from "../../utils";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import { Tabs, Card, Empty, Spin, Table } from "antd";
 import { useGetUserByIdQuery } from "../../users/features/userSlice";
+import ResetPasswordForm from "../../users/staff/components/resetPassword";
+import { useLoadUserQuery } from "../../redux/api";
 
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useGetUserByIdQuery(id);
+  const { data: userData } = useLoadUserQuery({});
   const user = data?.staff.staffData;
   // const role = data?.staff.userRole;
   // console.log(user);
+
+  console.log(userData?.staff.staffData, "from redux");
+  console.log(userData?.staff.userRole, "from redux role");
 
   if (isLoading) {
     return (
@@ -135,6 +141,11 @@ const PublicProfile: React.FC = () => {
           ) : (
             <Empty description="No customers assigned yet" />
           )}
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Reset Password" key="3">
+          <Card bordered={false} className="shadow-sm">
+            <ResetPasswordForm id={user.id} />
+          </Card>
         </Tabs.TabPane>
       </Tabs>
     </div>

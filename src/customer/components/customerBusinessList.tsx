@@ -41,7 +41,13 @@ const CustomerBusinessList = ({ customerId }: any) => {
         Add Business
       </Button>
 
-      <Table dataSource={businesses} rowKey="id" bordered>
+      <Table
+        dataSource={businesses}
+        rowKey="id"
+        bordered
+        size="small"
+        className="overflow-x-auto lg:overflow-x-auto"
+      >
         <Table.Column
           title="Business Name"
           dataIndex="name"

@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = () => {
           <Header toggleSidebar={toggleSidebar} />
 
           {/* Main content */}
-          <main className="flex-1 p-4 overflow-auto">
+          <main className="flex-1 py-4 px-2 overflow-auto max-w-screen">
             <div className="container mx-auto">
               <Outlet />
             </div>

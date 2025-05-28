@@ -10,8 +10,9 @@ import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { icons } from "../../media";
 import { useLoginMutation } from "../features/authApi";
 import { styles } from "../../styles";
-import { store } from "../../redux/store";
-import { apiSlice } from "../../redux/api";
+// import { store } from "../../redux/store";
+// import { apiSlice } from "../../redux/api";
+import { initializeUser } from "../../utils/initializeUser";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -59,20 +60,21 @@ export function Login() {
         localStorage.setItem("ziya-access", response.token);
 
         // Fetch user details immediately after login
-        const userResponse = await store.dispatch(
-          apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
-        );
+        // const userResponse = await store.dispatch(
+        //   apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
+        // );
 
-        if (userResponse?.data) {
-          localStorage.setItem(
-            "ziya-profile",
-            JSON.stringify(userResponse?.data?.staffData)
-          );
-          localStorage.setItem(
-            "ziya-role",
-            JSON.stringify(userResponse?.data?.userRole)
-          );
-        }
+        // if (userResponse?.data) {
+        //   localStorage.setItem(
+        //     "ziya-profile",
+        //     JSON.stringify(userResponse?.data?.staffData)
+        //   );
+        //   localStorage.setItem(
+        //     "ziya-role",
+        //     JSON.stringify(userResponse?.data?.userRole)
+        //   );
+        // }
+        initializeUser();
 
         setTimeout(() => {
           navigate("/");

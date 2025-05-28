@@ -12,7 +12,12 @@ const BusinessList = () => {
 
   return (
     <Card className="mt-10 py-5" title="All Businesses Registered">
-      <Table dataSource={businesses} rowKey="id" bordered>
+      <Table
+        dataSource={businesses}
+        rowKey="id"
+        bordered
+        className="overflow-x-auto lg:overflow-x-auto"
+      >
         <Table.Column
           title="Business Name"
           dataIndex="name"

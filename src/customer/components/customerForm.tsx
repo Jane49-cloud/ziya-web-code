@@ -18,6 +18,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         country_code: customer.country_code,
         identification_type: customer.identification_type,
         identification_number: customer.identification_number,
+        date_created: customer.date_created,
       });
     } else {
       form.resetFields();
@@ -38,6 +39,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         country_code: values.country_code,
         identification_type: values.identification_type,
         identification_number: values.identification_number,
+        date_created: values.date_created, // included in update
       }).unwrap();
 
       message.success("Customer updated successfully!");
@@ -64,25 +66,27 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         >
           <Input />
         </Form.Item>
+
         <Form.Item label="Middle Name" name="middlename">
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Last Name"
           name="lastname"
-          rules={[{ required: true, message: "Last name is required" }]}
+          rules={[{ message: "Last name is required" }]}
         >
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Email"
           name="email"
-          rules={[
-            { required: true, type: "email", message: "Enter a valid email" },
-          ]}
+          rules={[{ type: "email", message: "Enter a valid email" }]}
         >
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Phone Number"
           name="phone_number"
@@ -90,15 +94,26 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
         >
           <Input />
         </Form.Item>
+
         <Form.Item label="Country Code" name="country_code">
           <Input />
         </Form.Item>
+
         <Form.Item label="Identification Type" name="identification_type">
           <Input />
         </Form.Item>
+
         <Form.Item label="Identification Number" name="identification_number">
           <Input />
         </Form.Item>
+
+        {/* <Form.Item
+          label="Date Created"
+          name="date_created"
+          rules={[{  message: "Date created is required" }]}
+        >
+          <Input />
+        </Form.Item> */}
       </Form>
     </Modal>
   );
