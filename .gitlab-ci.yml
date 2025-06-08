@@ -29,9 +29,10 @@ build_image:
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh ubuntu@$TARGET_HOST << 'EOF'
+    - |
+      ssh ubuntu@$TARGET_HOST << 'EOF'
       docker stop $CONTAINER_NAME  || true
       docker rm   $CONTAINER_NAME  || true
       docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
@@ -41,7 +42,7 @@ build_image:
 deploy_dev:
   <<: *deploy_template
   variables:
-    SSH_KEY: $STAGING_KEY
+    SSH_KEY: $STAGING_KEY # make sure this CI variable is the full private key
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
