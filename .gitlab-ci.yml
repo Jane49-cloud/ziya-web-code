@@ -9,16 +9,17 @@ stages:
   - deploy
 
 variables:
-  # GitLab’s Container Registry
+  # Use GitLab’s built-in Container Registry
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # login to GitLab Container Registry
+  # Log in to GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
   stage: build
   script:
+    # Build & push image tagged with the branch name
     - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
     - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
   only:
@@ -26,15 +27,17 @@ build_image:
     - staging
     - live
 
+# Template for deploy jobs
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # prepare SSH
+    # Prepare SSH directory & key
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
   script:
+    # SSH in, stop/remove old container, pull & run new one
     - ssh ubuntu@$TARGET_HOST "
       docker stop $CONTAINER_NAME || true &&
       docker rm $CONTAINER_NAME || true &&
