@@ -27,7 +27,7 @@ build_image:
   stage: deploy
   before_script:
     - mkdir -p ~/.ssh
-    # fix line endings and make sure the key is valid
+    # fix line endings and make sure the key is valid , okay
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
