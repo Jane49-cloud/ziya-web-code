@@ -1,65 +1,68 @@
+# .gitlab-ci.yml
+image: docker:20.10.16
+
+services:
+  - docker:20.10.16-dind
+
 stages:
   - build
   - deploy
 
 variables:
-  DOCKER_IMAGE_NAME: ziyait/ziyaweb
-
-image: docker:20.10.16
-services:
-  - docker:20.10.16-dind
+  # use GitLab’s built-in registry URL
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  # login to GitLab Container Registry
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
   stage: build
   script:
-    - docker build --no-cache -t $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME .
-    - docker push $DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME
+    # build & push the image tagged as the branch name
+    - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
+    - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
   only:
     - dev
     - staging
     - live
+
+.deploy_template: &deploy_template
+  stage: deploy
+  before_script:
+    - echo "$SSH_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh ubuntu@$TARGET_HOST "
+      docker stop $CONTAINER_NAME || true &&
+      docker rm $CONTAINER_NAME || true &&
+      docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME &&
+      docker run --name $CONTAINER_NAME -d -p $PORT:$PORT $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      "
+  only:
+    - $CI_COMMIT_REF_NAME
 
 deploy_dev:
-  stage: deploy
-  only:
-    - dev
-  script:
-    - echo "$STAGING_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan 34.211.227.206 >> ~/.ssh/known_hosts
-    - ssh ubuntu@34.211.227.206 "
-      docker stop ziyaweb-dev || true &&
-      docker rm ziyaweb-dev || true &&
-      docker pull $DOCKER_IMAGE_NAME:dev &&
-      docker run --name ziyaweb-dev -d -p 5000:5000 $DOCKER_IMAGE_NAME:dev
-      "
+  <<: *deploy_template
+  variables:
+    SSH_KEY: $DEV_SSH_KEY
+    TARGET_HOST: 34.211.227.206
+    CONTAINER_NAME: ziyaweb-dev
+    PORT: 5000
 
 deploy_staging:
-  stage: deploy
-  only:
-    - staging
-  script:
-    - echo "$STAGING_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan 34.211.227.206 >> ~/.ssh/known_hosts
-    - ssh ubuntu@34.211.227.206 "
-      docker stop ziyaweb-staging || true &&
-      docker rm ziyaweb-staging || true &&
-      docker pull $DOCKER_IMAGE_NAME:staging &&
-      docker run --name ziyaweb-staging -d -p 3000:3000 $DOCKER_IMAGE_NAME:staging
-      "
+  <<: *deploy_template
+  variables:
+    SSH_KEY: $STAGING_SSH_KEY
+    TARGET_HOST: 34.211.227.206
+    CONTAINER_NAME: ziyaweb-staging
+    PORT: 3000
 
 deploy_live:
-  stage: deploy
-  only:
-    - live
-  script:
-    - echo "$LIVE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan 35.163.73.204 >> ~/.ssh/known_hosts
-    - ssh ubuntu@35.163.73.204 "
-      docker stop ziyaweb || true &&
-      docker rm ziyaweb || true &&
-      docker pull $DOCKER_IMAGE_NAME:live &&
-      docker run --name ziyaweb -d -p 3000:3000 $DOCKER_IMAGE_NAME:live
-      "
+  <<: *deploy_template
+  variables:
+    SSH_KEY: $LIVE_SSH_KEY
+    TARGET_HOST: 35.163.73.204
+    CONTAINER_NAME: ziyaweb
+    PORT: 3000

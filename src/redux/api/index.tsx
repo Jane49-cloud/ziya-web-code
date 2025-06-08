@@ -6,9 +6,9 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "https://api.ziya.co.ke/api/v1",
+  baseUrl: "https://betaapi.ziya.co.ke/api/v1",
   // baseUrl: "http://localhost:4000/api/v1",
-  baseUrl: "https://stagingapi.ziya.co.ke/api/v1",
+  // baseUrl: "https://stagingapi.ziya.co.ke/api/v1",
   prepareHeaders: (headers) => {
     const accessToken = localStorage.getItem("ziya-access");
     if (accessToken) {
@@ -28,14 +28,14 @@ const baseQueryWithAuth = async (
 
   if (result.error && result.error.status === 401) {
     console.warn("Token expired. Logging out...");
-    // console.log("status", result.error.status);
+    console.log("status", result.error.status);
 
-    // localStorage.removeItem("ziya-access");
-    // localStorage.removeItem("ziya-profile");
-    // localStorage.clear();
-    // if (window.location.pathname !== "/auth/login") {
-    //   window.location.href = "/auth/login";
-    // }
+    localStorage.removeItem("ziya-access");
+    localStorage.removeItem("ziya-profile");
+    localStorage.clear();
+    if (window.location.pathname !== "/auth/login") {
+      window.location.href = "/auth/login";
+    }
   }
 
   return result;
