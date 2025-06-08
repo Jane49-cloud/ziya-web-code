@@ -12,7 +12,7 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # 1) log in to GitLab Container Registry
+  # log in to GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
@@ -28,13 +28,13 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # install ssh client
-    - apt-get update && apt-get install -y openssh-client
-    # start the ssh-agent
-    - eval $(ssh-agent -s)
-    # add the SSH key from CI variable (must be multiline in the UI)
-    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
-    # trust the target host
+    # install ssh client via apk
+    - apk update && apk add --no-cache openssh-client
+    # prepare SSH
+    - mkdir -p ~/.ssh
+    # write your CI variable ($SSH_KEY) *exactly* (preserves newlines)
+    - printf "%s" "$SSH_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
   script:
     - ssh ubuntu@$TARGET_HOST "
@@ -47,7 +47,7 @@ build_image:
 deploy_dev:
   <<: *deploy_template
   variables:
-    SSH_KEY: $DEV_SSH_KEY
+    SSH_KEY: $DEV_SSH_KEY # your raw multiline private key here
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
