@@ -27,18 +27,18 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # Prepare SSH key
+    # Install your SSH key on the runner
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
   script:
     - |
-      ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << 'EOF'
-      docker stop  "$CONTAINER_NAME"  || true
-      docker rm    "$CONTAINER_NAME"  || true
-      docker pull  "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
-      docker run --name "$CONTAINER_NAME" -d -p "$PORT":3000 "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+      ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << EOF
+      docker stop  $CONTAINER_NAME  || true
+      docker rm    $CONTAINER_NAME  || true
+      docker pull  $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       EOF
   only:
     - dev
