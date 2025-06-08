@@ -11,7 +11,7 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # Log in to the GitLab Container Registry
+  # 1) Log in to the GitLab Container Registry on the CI runner
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
@@ -27,7 +27,7 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # Install your SSH key on the runner
+    # 2) Install your SSH key on the runner
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
@@ -35,6 +35,10 @@ build_image:
   script:
     - |
       ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << EOF
+      # 3) Log in to the GitLab registry on the remote host
+      echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+
+      # 4) Stop, remove, pull, and run your container
       docker stop  $CONTAINER_NAME  || true
       docker rm    $CONTAINER_NAME  || true
       docker pull  $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
