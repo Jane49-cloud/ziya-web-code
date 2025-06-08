@@ -11,13 +11,14 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
+  # Log in to the GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
   stage: build
   script:
-    - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
-    - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+    - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
+    - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
   only:
     - dev
     - staging
@@ -26,18 +27,19 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
+    # Prepare SSH key
     - mkdir -p ~/.ssh
-    # fix line endings and make sure the key is valid , okay
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
   script:
-    - ssh -o StrictHostKeyChecking=no ubuntu@$TARGET_HOST "
-      docker stop $CONTAINER_NAME || true &&
-      docker rm $CONTAINER_NAME || true &&
-      docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME &&
-      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      "
+    - |
+      ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << 'EOF'
+      docker stop  "$CONTAINER_NAME"  || true
+      docker rm    "$CONTAINER_NAME"  || true
+      docker pull  "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+      docker run --name "$CONTAINER_NAME" -d -p "$PORT":3000 "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+      EOF
   only:
     - dev
     - staging
