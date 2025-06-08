@@ -26,19 +26,22 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # ensure SSH dir exists, write SSH key, set perms, add host
     - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" > ~/.ssh/id_rsa
+    # fix line endings and make sure the key is valid
+    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
   script:
-    - ssh ubuntu@$TARGET_HOST "
+    - ssh -o StrictHostKeyChecking=no ubuntu@$TARGET_HOST "
       docker stop $CONTAINER_NAME || true &&
-      docker rm $CONTAINER_NAME  || true &&
+      docker rm $CONTAINER_NAME || true &&
       docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME &&
-      docker run --name $CONTAINER_NAME -d \
-      -p $PORT:3000 \
-      $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      "
+  only:
+    - dev
+    - staging
+    - live
 
 deploy_dev:
   <<: *deploy_template
