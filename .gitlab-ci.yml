@@ -8,17 +8,14 @@ stages:
   - deploy
 
 variables:
-  # use GitLab’s built-in registry URL
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # login to GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
   stage: build
   script:
-    # build & push the image tagged as the branch name
     - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
     - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
   only:
@@ -29,7 +26,6 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    # write SSH key from CI variable and configure known_hosts
     - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
@@ -43,7 +39,9 @@ build_image:
       $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       "
   only:
-    - $CI_COMMIT_REF_NAME
+    - dev
+    - staging
+    - live
 
 deploy_dev:
   <<: *deploy_template
