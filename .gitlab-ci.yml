@@ -9,12 +9,16 @@ stages:
 
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
-  # Store your PEM key as base64 in CI/CD → Variables under the name SSH_KEY_B64
-  SSH_KEY_B64: $SSH_KEY_B64
+  SSH_KEY_B64: $SSH_KEY_B64 # store your PEM key base64-encoded in CI/CD → Variables
 
 before_script:
-  # Log in to the GitLab registry
-  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin
+  # 1) Log in to YOUR GitLab registry (not Docker Hub)
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  # 2) Install SSH key for deployment
+  - mkdir -p ~/.ssh
+  - echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
 
 build_image:
   stage: build
@@ -28,18 +32,12 @@ build_image:
 
 .deploy_template: &deploy_template
   stage: deploy
-  before_script:
-    # Decode and install SSH key
-    - mkdir -p ~/.ssh
-    - echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
   script:
     - |
       ssh ubuntu@$TARGET_HOST << 'EOF'
-      docker stop $CONTAINER_NAME  || true
-      docker rm   $CONTAINER_NAME  || true
-      docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      docker stop  $CONTAINER_NAME || true
+      docker rm    $CONTAINER_NAME || true
+      docker pull  $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       EOF
 
