@@ -12,6 +12,7 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
+  # 1) log in to GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
@@ -27,9 +28,13 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    - mkdir -p ~/.ssh
-    - echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
+    # install ssh client
+    - apt-get update && apt-get install -y openssh-client
+    # start the ssh-agent
+    - eval $(ssh-agent -s)
+    # add the SSH key from CI variable (must be multiline in the UI)
+    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
+    # trust the target host
     - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
   script:
     - ssh ubuntu@$TARGET_HOST "
@@ -42,7 +47,7 @@ build_image:
 deploy_dev:
   <<: *deploy_template
   variables:
-    SSH_KEY_B64: $DEV_SSH_KEY_B64
+    SSH_KEY: $DEV_SSH_KEY
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
@@ -52,7 +57,7 @@ deploy_dev:
 deploy_staging:
   <<: *deploy_template
   variables:
-    SSH_KEY_B64: $STAGING_SSH_KEY_B64
+    SSH_KEY: $STAGING_SSH_KEY
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
@@ -62,7 +67,7 @@ deploy_staging:
 deploy_live:
   <<: *deploy_template
   variables:
-    SSH_KEY_B64: $LIVE_SSH_KEY_B64
+    SSH_KEY: $LIVE_SSH_KEY
     TARGET_HOST: 35.163.73.204
     CONTAINER_NAME: ziyaweb
     PORT: 3000
