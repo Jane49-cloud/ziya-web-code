@@ -8,41 +8,42 @@ stages:
   - deploy
 
 variables:
+  # use GitLab’s built-in registry URL
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
-  DOCKER_DRIVER: overlay2
 
 before_script:
+  # login to GitLab Container Registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 build_image:
   stage: build
   script:
+    # build & push the image tagged as the branch name
     - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
     - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev"'
-    - if: '$CI_COMMIT_REF_NAME == "staging"'
-    - if: '$CI_COMMIT_REF_NAME == "live"'
+  only:
+    - dev
+    - staging
+    - live
 
 .deploy_template: &deploy_template
   stage: deploy
   before_script:
-    - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    # write SSH key from CI variable and configure known_hosts
+    - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H $TARGET_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan $TARGET_HOST >> ~/.ssh/known_hosts
   script:
-    - |
-      ssh ubuntu@$TARGET_HOST <<EOF
-        docker stop $CONTAINER_NAME || true
-        docker rm $CONTAINER_NAME || true
-        docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-        docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      EOF
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev"'
-    - if: '$CI_COMMIT_REF_NAME == "staging"'
-    - if: '$CI_COMMIT_REF_NAME == "live"'
+    - ssh ubuntu@$TARGET_HOST "
+      docker stop $CONTAINER_NAME || true &&
+      docker rm $CONTAINER_NAME || true &&
+      docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME &&
+      docker run --name $CONTAINER_NAME -d \
+      -p $PORT:3000 \
+      $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+      "
+  only:
+    - dev
 
 deploy_dev:
   <<: *deploy_template
