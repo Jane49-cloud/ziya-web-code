@@ -9,44 +9,41 @@ stages:
 
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+  SSH_KEY_B64: $SSH_KEY_B64
 
 before_script:
-  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  # 1. Log in to the GitLab Container Registry
+  - docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
+  # 2. Decode & install SSH key for deployment
+  - mkdir -p ~/.ssh
+  - echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
 
-build_image:
+build:
   stage: build
   script:
-    - docker build --no-cache -t $DOCKER_IMAGE:$CI_COMMIT_REF_NAME .
-    - docker push $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
+    - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
+    - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
   only:
     - dev
     - staging
     - live
 
-.deploy_template: &deploy_template
+.deploy: &deploy
   stage: deploy
-  before_script:
-    - mkdir -p ~/.ssh
-    # fix line endings and make sure the key is valid
-    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
   script:
-    - ssh -o StrictHostKeyChecking=no ubuntu@$TARGET_HOST "
-      docker stop $CONTAINER_NAME || true &&
-      docker rm $CONTAINER_NAME || true &&
-      docker pull $DOCKER_IMAGE:$CI_COMMIT_REF_NAME &&
-      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      "
-  only:
-    - dev
-    - staging
-    - live
+    - |
+      ssh ubuntu@"$TARGET_HOST" << 'EOF'
+      docker stop  "$CONTAINER_NAME"  || true
+      docker rm    "$CONTAINER_NAME"  || true
+      docker pull  "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+      docker run --name "$CONTAINER_NAME" -d -p "$PORT":3000 "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+      EOF
 
 deploy_dev:
-  <<: *deploy_template
+  <<: *deploy
   variables:
-    SSH_KEY: $STAGING_KEY
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
@@ -54,9 +51,8 @@ deploy_dev:
     - dev
 
 deploy_staging:
-  <<: *deploy_template
+  <<: *deploy
   variables:
-    SSH_KEY: $STAGING_KEY
     TARGET_HOST: 34.211.227.206
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
@@ -64,9 +60,8 @@ deploy_staging:
     - staging
 
 deploy_live:
-  <<: *deploy_template
+  <<: *deploy
   variables:
-    SSH_KEY: $LIVE_KEY
     TARGET_HOST: 35.163.73.204
     CONTAINER_NAME: ziyaweb
     PORT: 3000
