@@ -1,57 +1,64 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useFormik } from "formik";
 import clsx from "clsx";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Alert } from "../../../components/Alert";
 import { KeenIcon } from "../../../components/keenIcons/KeenIcon";
 import { styles } from "../../../styles";
+import { useForgotPasswordMutation } from "../../features/authApi";
 
-// 1) Define initial form values
+// Form initial state
 const initialValues = {
-  email: "",
+  phone: "",
 };
 
-// 2) Define Yup validation schema
+// Validation schema
 const forgotPasswordSchema = Yup.object().shape({
-  email: Yup.string()
-    .email("Wrong email format")
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("Email is required"),
+  phone: Yup.string()
+    .required("Phone number is required")
+    .matches(/^\d{9,15}$/, "Enter a valid phone number"),
 });
 
 function ResetPassword() {
+  const [forgotPassword] = useForgotPasswordMutation();
   const [loading, setLoading] = useState(false);
   const [hasErrors, setHasErrors] = useState<boolean | undefined>(undefined);
+  const navigate = useNavigate();
 
-  // 3) Formik setup
   const formik = useFormik({
     initialValues,
     validationSchema: forgotPasswordSchema,
-    onSubmit: (values, { setStatus, setSubmitting }) => {
+    onSubmit: async (values, { setStatus, setSubmitting }) => {
       setLoading(true);
       setHasErrors(undefined);
 
-      // Simulate API call
-      setTimeout(() => {
-        if (values.email === "demo@keenthemes.com") {
-          setHasErrors(false);
-          setStatus(
-            "Password reset link sent. Please check your email to proceed."
-          );
-        } else {
-          setHasErrors(true);
-          setStatus("Password reset failed. Please try again.");
-        }
-        setLoading(false);
+      try {
+        const res = await forgotPassword({
+          username: values.phone,
+        }).unwrap();
+
+        localStorage.setItem("ziya-reset-phone", values.phone);
+        localStorage.setItem("ziya-access", res?.token);
+
+        setHasErrors(false);
+        setStatus(res?.message || "Password reset link sent successfully.");
+        navigate("/auth/reset-password/check-sms");
+      } catch (err: any) {
+        setHasErrors(true);
+        setStatus(
+          err?.data?.error || "Password reset failed. Please try again."
+        );
+      } finally {
         setSubmitting(false);
-      }, 1500);
+        setLoading(false);
+      }
     },
   });
 
   return (
-    <div className="flex min-h-screen flex-col justify-center  py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mb-8 text-center">
           <img
@@ -63,11 +70,11 @@ function ResetPassword() {
         <div className="rounded-md bg-white p-8 shadow sm:p-10">
           <div className="mb-6 text-center">
             <h3 className="text-xl font-semibold text-gray-900">
-              Reset Your Password
+              Forgot Password
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Enter your email address below, and we'll send you a link to reset
-              your password.
+              Enter your phone number and we’ll send you a code to reset your
+              password.
             </p>
           </div>
 
@@ -80,45 +87,43 @@ function ResetPassword() {
           <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="phone"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Email Address
+                Phone Number
               </label>
               <input
-                id="email"
-                type="email"
+                id="phone"
+                type="tel"
                 autoComplete="off"
-                placeholder="email@domain.com"
-                {...formik.getFieldProps("email")}
+                placeholder="0712345678"
+                {...formik.getFieldProps("phone")}
                 className={clsx(
                   "form-control block w-full rounded-md border px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
                   {
                     "border-red-500 focus:ring-red-200":
-                      formik.touched.email && formik.errors.email,
+                      formik.touched.phone && formik.errors.phone,
                     "border-gray-300 focus:ring-indigo-200":
-                      !formik.errors.email,
+                      !formik.errors.phone,
                   }
                 )}
               />
-              {formik.touched.email && formik.errors.email && (
+              {formik.touched.phone && formik.errors.phone && (
                 <div className="mt-1 text-xs text-red-500">
-                  {formik.errors.email}
+                  {formik.errors.phone}
                 </div>
               )}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className={styles.btn}
-                disabled={loading || formik.isSubmitting}
-              >
-                {loading || formik.isSubmitting
-                  ? "Please wait..."
-                  : "Send Reset Link"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className={styles.btn}
+              disabled={loading || formik.isSubmitting}
+            >
+              {loading || formik.isSubmitting
+                ? "Please wait..."
+                : "Request Reset Code"}
+            </button>
           </form>
 
           <div className="mt-6 flex items-center justify-center gap-1 text-sm text-gray-600">

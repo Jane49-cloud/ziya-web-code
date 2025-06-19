@@ -112,7 +112,7 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
         bordered
         rowClassName="hover:bg-gray-50"
       />
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end hidden">
         <Button type="primary" onClick={() => setEditVisible(true)}>
           Edit Customer
         </Button>

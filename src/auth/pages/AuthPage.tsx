@@ -9,8 +9,10 @@ import {
   ResetPasswordChange,
   ResetPasswordChanged,
 } from "./reset-password";
-import { CheckEmail } from "./CheckEmail";
+
 import { AuthLayout } from "./AuthLayout";
+import { CheckSMS } from "./CheckEmail";
+import { ValidateCode } from "./reset-password/validateCode";
 
 const AuthPage = () => (
   <Routes>
@@ -18,7 +20,7 @@ const AuthPage = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       {/* <Route path="/2fa" element={<TwoFactorAuth />} /> */}
-      <Route path="/check-email" element={<CheckEmail />} />
+      <Route path="/reset-password/check-sms" element={<CheckSMS />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/reset-password/enter-email"
@@ -29,6 +31,8 @@ const AuthPage = () => (
         element={<ResetPasswordCheckEmail />}
       />
       <Route path="/reset-password/change" element={<ResetPasswordChange />} />
+      <Route path="/reset-password/confirm-code" element={<ValidateCode />} />
+
       <Route
         path="/reset-password/changed"
         element={<ResetPasswordChanged />}

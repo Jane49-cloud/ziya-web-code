@@ -12,7 +12,7 @@ export const initializeUser = async () => {
     const { data, error } = result;
 
     if (error) {
-      console.error("API error:", error);
+      console.warn("API error:", error);
     }
 
     if (!data || !data.staff) {
@@ -24,6 +24,6 @@ export const initializeUser = async () => {
 
     return data;
   } catch (err) {
-    console.error("Unexpected error during initializeUser:", err);
+    console.warn("Unexpected error during initializeUser:", err);
   }
 };

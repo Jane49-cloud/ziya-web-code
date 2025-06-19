@@ -62,9 +62,11 @@ const CustomerManagement: FC = () => {
       refetchCustomer();
       setSelectedCustomer(null);
       setActiveTab("1");
+      return true;
     } catch (err: any) {
       setAlertMessage(err?.data?.error || "Failed to update customer.");
       setAlertType("danger");
+      return false;
     }
   };
 

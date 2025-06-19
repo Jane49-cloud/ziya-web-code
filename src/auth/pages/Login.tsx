@@ -56,24 +56,9 @@ export function Login() {
         setColor("success");
         setStatus(response.message || "Login successful!");
 
-        console.log(response.token);
+        // console.log(response.token);
         localStorage.setItem("ziya-access", response.token);
 
-        // Fetch user details immediately after login
-        // const userResponse = await store.dispatch(
-        //   apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
-        // );
-
-        // if (userResponse?.data) {
-        //   localStorage.setItem(
-        //     "ziya-profile",
-        //     JSON.stringify(userResponse?.data?.staffData)
-        //   );
-        //   localStorage.setItem(
-        //     "ziya-role",
-        //     JSON.stringify(userResponse?.data?.userRole)
-        //   );
-        // }
         initializeUser();
 
         setTimeout(() => {

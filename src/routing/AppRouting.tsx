@@ -38,6 +38,7 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
       const role = getRole();
       if (role?.name) {
         setUserRole(role.name);
+        console.log("User role fetched:", role.name);
       }
       setIsLoading(false);
     };
@@ -116,7 +117,7 @@ const AppRouting = (): ReactElement => {
       <Route
         element={
           <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager"]}
+            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
           />
         }
       >

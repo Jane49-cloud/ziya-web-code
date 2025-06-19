@@ -42,7 +42,6 @@ const SingleLoanPage = () => {
 
   return (
     <div className="">
-      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center text-blue-600 hover:text-blue-800 transition mb-4"
@@ -50,7 +49,6 @@ const SingleLoanPage = () => {
         <ArrowLeftOutlined className="mr-2" /> Back
       </button>
 
-      {/* Loan Details Card */}
       <Card title="Loan Details" className="shadow-md rounded-lg">
         <div className="space-y-4 text-gray-700 text-lg">
           <p>
@@ -70,7 +68,7 @@ const SingleLoanPage = () => {
           </p>
           <p className="flex items-center gap-2">
             <FaUserCheck className="text-gray-600" />
-            <span className="font-semibold">Approved By:</span>{" "}
+            <span className="font-semibold hidden">Approved By:</span>{" "}
             {isUserLoading ? (
               <Spin size="small" />
             ) : approvingUser ? (

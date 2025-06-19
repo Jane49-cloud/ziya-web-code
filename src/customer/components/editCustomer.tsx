@@ -1,25 +1,42 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import { Form, Input, Button, Select, Row, Col } from "antd";
+import { Alert } from "../../components/Alert";
 
 const { Option } = Select;
 
 export const EditCustomerForm: FC<{
   customer: any;
-  onSubmit: (values: any) => void;
+  onSubmit: (values: any) => Promise<boolean>; // expects a boolean result
   isLoading: boolean;
 }> = ({ customer, onSubmit, isLoading }) => {
   const [form] = Form.useForm();
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "danger" | null>(null);
 
   useEffect(() => {
-    // Update form fields when customer data changes
     form.setFieldsValue(customer);
   }, [customer, form]);
 
-  const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      onSubmit({ ...customer, ...values });
-    });
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const success = await onSubmit({ ...customer, ...values });
+
+      if (success) {
+        setAlertType("success");
+        setStatusMessage("Customer details updated successfully!");
+      } else {
+        setAlertType("danger");
+        setStatusMessage("Failed to update customer.");
+      }
+    } catch (error: any) {
+      // Form validation or submission error
+      setAlertType("danger");
+      setStatusMessage(
+        error?.message || "Failed to update customer. Please try again."
+      );
+    }
   };
 
   const renderInput = (
@@ -35,9 +52,12 @@ export const EditCustomerForm: FC<{
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 hidden">
-        Edit Customer
-      </h2>
+      {statusMessage && (
+        <Alert variant={alertType || "info"} className="mb-4">
+          {statusMessage}
+        </Alert>
+      )}
+
       <Form layout="vertical" form={form} onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col xs={24} sm={12}>
@@ -65,9 +85,9 @@ export const EditCustomerForm: FC<{
               rules={[{ required: true }]}
             >
               <Select placeholder="Select country code">
-                <Option value="+1">+1 (USA)</Option>
-                <Option value="+44">+44 (UK)</Option>
                 <Option value="+254">+254 (Kenya)</Option>
+                {/* <Option value="+1">+1 (USA)</Option>
+                <Option value="+44">+44 (UK)</Option> */}
               </Select>
             </Form.Item>
           </Col>
