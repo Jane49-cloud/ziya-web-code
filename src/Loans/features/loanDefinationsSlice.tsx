@@ -18,6 +18,12 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    getLoanDefinitionsByPlatform: builder.query({
+      query: (platform: string) => ({
+        url: `/loan-definitions/get/all/${platform}`,
+        method: "GET",
+      }),
+    }),
 
     // Update a loan definition
     updateLoanDefinition: builder.mutation({
@@ -52,4 +58,5 @@ export const {
   useUpdateLoanDefinitionMutation,
   useToggleLoanDefinitionStatusMutation,
   useGetLoansByLoanDefinitionIdQuery,
+  useGetLoanDefinitionsByPlatformQuery,
 } = loanDefinitionsSlice;

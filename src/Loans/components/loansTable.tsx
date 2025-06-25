@@ -101,16 +101,16 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
       ),
       align: "right",
     },
-    {
-      title: "Status",
-      dataIndex: "loan_definition_status",
-      key: "loan_definition_status",
-      render: (status?: number) => (
-        <Tag color={status === 1 ? "green" : "red"} className="px-3 py-1">
-          {status === 1 ? "Active" : "Inactive"}
-        </Tag>
-      ),
-    },
+    // {
+    //   title: "Status",
+    //   dataIndex: "loan_definition_status",
+    //   key: "loan_definition_status",
+    //   render: (status?: number) => (
+    //     <Tag color={status === 1 ? "green" : "red"} className="px-3 py-1">
+    //       {status === 1 ? "Active" : "Inactive"}
+    //     </Tag>
+    //   ),
+    // },
 
     {
       title: "Created On",
@@ -184,7 +184,7 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
           <Table.Summary fixed>
             <Table.Summary.Row>
               <Table.Summary.Cell index={0} colSpan={3}>
-                <strong>Page Total</strong>
+                <strong>Total</strong>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={3} align="right">
                 <span className="font-semibold text-blue-600">
