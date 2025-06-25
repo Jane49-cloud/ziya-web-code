@@ -5,7 +5,6 @@ import { Tabs } from "antd";
 import LoanDefinitionForm from "./components/form";
 import LoanDefinitionTable from "./components/table";
 import {
-  useGetLoanDefinitionsQuery,
   useCreateLoanDefinitionMutation,
   useUpdateLoanDefinitionMutation,
   useToggleLoanDefinitionStatusMutation,
@@ -14,8 +13,6 @@ import LoanDefinitionModal from "./components/LoanDefinationModal";
 import { useRefetchLoanDefinations } from "./utils";
 
 const LoanCategories: FC = () => {
-  const { data, isLoading } = useGetLoanDefinitionsQuery({});
-  const loanDefinitions = data?.loanDefinitions;
   const [createLoanDefinition, { isLoading: creating }] =
     useCreateLoanDefinitionMutation();
   const [updateLoanDefinition, { isLoading: updating }] =
@@ -70,10 +67,10 @@ const LoanCategories: FC = () => {
         {/* Tab 1: Loan Definitions List */}
         <Tabs.TabPane tab="Loan Definitions" key="1">
           <LoanDefinitionTable
-            loanDefinitions={loanDefinitions}
-            isLoading={isLoading}
-            onEdit={setSelectedLoan}
             onToggleStatus={handleToggleLoanStatus}
+            // isLoading={isLoading}
+            onEdit={setSelectedLoan}
+            // onToggleStatus={handleToggleLoanStatus}
           />
         </Tabs.TabPane>
 

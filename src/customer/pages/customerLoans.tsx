@@ -14,14 +14,15 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
-  useGetLoansByCustomerIdQuery,
   useCreateLoanMutation,
   useUpdateLoanMutation,
+  useGetLoansByCustomerIdQuery,
 } from "../../Loans/features/loanSlice";
-import { useGetLoanDefinitionsQuery } from "../../Loans/features/loanDefinationsSlice";
+
 import { formatDate, getUser } from "../../utils";
 import { useGetBusinessesByCustomerQuery } from "../features/customerSlice";
 import dayjs from "dayjs";
+import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
 
 const { Option } = Select;
 
@@ -45,7 +46,8 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
 }) => {
   const [form] = Form.useForm();
   const { data, isLoading, refetch } = useGetLoansByCustomerIdQuery(customerId);
-  const { data: loanDefinitionsData } = useGetLoanDefinitionsQuery({});
+  const { data: loanDefinitionsData } =
+    useGetLoanDefinitionsByPlatformQuery("web");
   const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
   const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
   const { data: businessData } = useGetBusinessesByCustomerQuery(customerId);
@@ -55,7 +57,6 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const navigate = useNavigate();
 
   const loans: LoanType[] = data?.loans || [];
-
   const loanDefinitions =
     loanDefinitionsData?.loanDefinitions?.filter(
       (loanDef: any) => loanDef.status === 1
@@ -157,7 +158,13 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
         {isCreating ? <Spin size="small" /> : "Add Loan"}
       </Button>
 
-      <Table dataSource={loans} rowKey="id"         className="overflow-x-auto lg:overflow-x-auto mt-4 " size="small" bordered>
+      <Table
+        dataSource={loans}
+        rowKey="id"
+        className="overflow-x-auto lg:overflow-x-auto mt-4 "
+        size="small"
+        bordered
+      >
         <Table.Column
           title="Cycle"
           key="cycle"

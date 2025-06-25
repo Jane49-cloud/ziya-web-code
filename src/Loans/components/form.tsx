@@ -50,6 +50,18 @@ const LoanDefinitionForm: FC<LoanDefinitionFormProps> = ({
           </Select>
         </Form.Item>
 
+        {/* Platform */}
+        <Form.Item
+          label="Platform"
+          name="platform"
+          rules={[{ required: true, message: "Platform is required" }]}
+        >
+          <Select placeholder="Select platform">
+            <Select.Option value="mobile"> Mobile</Select.Option>
+            <Select.Option value="web"> Web</Select.Option>
+          </Select>
+        </Form.Item>
+
         {/* Submit Button */}
         <Form.Item className="text-right">
           <Button type="primary" htmlType="submit" loading={isLoading}>
