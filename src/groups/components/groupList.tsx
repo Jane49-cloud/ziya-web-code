@@ -38,7 +38,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   const columns = [
     { title: "Name", dataIndex: "name" },
     { title: "Bio", dataIndex: "bio" },
-    { title: "Members", dataIndex: "total_members" },
+    // { title: "Members", dataIndex: "total_members" },
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
