@@ -1,14 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import {
-  Form,
-  Input,
-  InputNumber,
-  Button,
-  Typography,
-  Select,
-  Spin,
-} from "antd";
+import { Form, Input, Button, Typography, Select, Spin } from "antd";
 import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
@@ -133,13 +125,13 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
             </Select>
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             label="Total Members"
             name="total_members"
             rules={[{ required: true }]}
           >
             <InputNumber className="w-full" min={1} />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={creating} block>
