@@ -5,7 +5,7 @@ import {
   FiEdit,
   // FiTrash2,
   FiUserCheck,
-  FiUsers,
+  // FiUsers,
   FiEye,
   FiMoreVertical,
 } from "react-icons/fi";
@@ -29,7 +29,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   data,
   onEdit,
   onChangeManager,
-  onChangeMembers,
+  // onChangeMembers,
   // onDelete,
 }) => {
   const { data: userData, isLoading } = useGetAllUsersQuery(undefined);
@@ -38,7 +38,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   const columns = [
     { title: "Name", dataIndex: "name" },
     { title: "Bio", dataIndex: "bio" },
-    { title: "Members", dataIndex: "total_members" },
+    // { title: "Members", dataIndex: "total_members" },
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
@@ -75,13 +75,13 @@ const GroupTable: React.FC<GroupTableProps> = ({
             >
               Change Manager
             </Menu.Item>
-            <Menu.Item
+            {/* <Menu.Item
               key="members"
               icon={<FiUsers />}
               onClick={() => onChangeMembers(record)}
             >
               Edit Members count
-            </Menu.Item>
+            </Menu.Item> */}
             {/* <Menu.Item
               key="delete"
               icon={<FiTrash2 />}

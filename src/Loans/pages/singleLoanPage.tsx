@@ -13,11 +13,13 @@ interface LoanType {
   currency: string;
   date_created?: string;
   approved_by?: number;
+  customer_id?: number;
 }
 
 const SingleLoanPage = () => {
   const navigate = useNavigate();
   const [loan, setLoan] = useState<LoanType | null>(null);
+  console.log("SingleLoanPage loaded", loan);
 
   useEffect(() => {
     const storedLoan = localStorage.getItem("selectedLoan");
@@ -74,7 +76,7 @@ const SingleLoanPage = () => {
             ) : approvingUser ? (
               `${approvingUser.firstname} ${approvingUser.lastname}`
             ) : (
-              "Unknown"
+              "Group Admin"
             )}
           </p>
         </div>
@@ -82,7 +84,11 @@ const SingleLoanPage = () => {
 
       {/* Loan Repayment History with Math Analysis */}
       <div className="mt-8">
-        <LoanRepaymentHistory loanId={loan.id} loanAmount={loan.amount} />
+        <LoanRepaymentHistory
+          loanId={loan.id}
+          loanAmount={loan.amount}
+          customerId={loan.customer_id ?? 0}
+        />
       </div>
     </div>
   );

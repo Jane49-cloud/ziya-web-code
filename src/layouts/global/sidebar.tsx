@@ -99,6 +99,12 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
       path: "/groups",
       allowedRoles: ["admin", "dev", "relationship manager", "staff"],
     },
+    {
+      title: "Wallets",
+      icon: "wallet",
+      path: "/wallets",
+      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
+    },
   ];
 
   return (

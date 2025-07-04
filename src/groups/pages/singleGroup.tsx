@@ -1,11 +1,16 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
-import { Card, Spin, Typography, Table, Button, Tabs } from "antd";
+import React, { useState } from "react";
+import { Card, Spin, Typography, Table, Button, Tabs, message } from "antd";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetGroupByIdQuery } from "../features";
+import {
+  useGetGroupByIdQuery,
+  useUpdateGroupWalletMutation,
+} from "../features";
 import GroupMembersTab from "../components/groupMembersTab";
+import GroupWalletTab from "../components/wallet";
+import EditWalletModal from "../components/editWalletModel";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -14,6 +19,8 @@ const SingleGroupPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const groupId = id ? Number(id) : undefined;
+  const [walletModalVisible, setWalletModalVisible] = useState(false);
+  const [updateWallet] = useUpdateGroupWalletMutation();
 
   const { data, isLoading } = groupId
     ? useGetGroupByIdQuery(groupId)
@@ -106,7 +113,42 @@ const SingleGroupPage: React.FC = () => {
             <TabPane tab="Members" key="2">
               {groupId && <GroupMembersTab groupId={groupId} />}
             </TabPane>
+            <TabPane tab="Wallet" key="3">
+              {groupId && (
+                <>
+                  <GroupWalletTab groupId={groupId} />
+                  <Button
+                    onClick={() => setWalletModalVisible(true)}
+                    type="primary"
+                    className="mt-4"
+                  >
+                    Edit Wallet
+                  </Button>
+                </>
+              )}
+            </TabPane>
           </Tabs>
+
+          <EditWalletModal
+            visible={walletModalVisible}
+            onCancel={() => setWalletModalVisible(false)}
+            initialValues={{
+              balance: group?.wallet?.balance || 0,
+              loans_out_value: group?.wallet?.loans_out_value || 0,
+              total_loans_counts: group?.wallet?.total_loans_counts || 0,
+            }}
+            onUpdate={async (values) => {
+              if (!groupId) return;
+              try {
+                await updateWallet({ id: groupId, ...values }).unwrap();
+                message.success("Wallet updated successfully");
+                setWalletModalVisible(false);
+              } catch (err) {
+                console.error(err);
+                message.error("Update failed");
+              }
+            }}
+          />
         </div>
       )}
     </div>

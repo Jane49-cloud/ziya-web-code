@@ -98,5 +98,29 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }),
       providesTags: [{ type: "Groups" }],
     }),
+    getGroupWallet: builder.query({
+      query: (id: number) => ({
+        url: `/groups/wallet/${id}`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, id) => [{ type: "Groups", id }],
+    }),
+
+    getAllGroupWallets: builder.query({
+      query: () => ({
+        url: `/groups/wallet/all`,
+        method: "GET",
+      }),
+      providesTags: [{ type: "Groups" }],
+    }),
+
+    updateGroupWallet: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/groups/wallet/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
+    }),
   }),
 });

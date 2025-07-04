@@ -12,4 +12,7 @@ export const {
   useGetMyManagedGroupsQuery,
   useGetMyCreatedGroupsQuery,
   useGetGroupMembersQuery,
+  useGetGroupWalletQuery,
+  useGetAllGroupWalletsQuery,
+  useUpdateGroupWalletMutation,
 } = GroupSlice;

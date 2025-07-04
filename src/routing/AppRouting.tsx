@@ -21,6 +21,7 @@ import { getRole } from "../utils";
 import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
 import SingleGroupPage from "../groups/pages/singleGroup";
+import AllGroupWalletsPage from "../wallets";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +139,7 @@ const AppRouting = (): ReactElement => {
         <Route element={<Layout children={undefined} />}>
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
+          <Route path="/wallets" element={<AllGroupWalletsPage />} />
         </Route>
       </Route>
     </Routes>
