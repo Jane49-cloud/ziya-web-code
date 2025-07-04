@@ -32,12 +32,15 @@ interface PaymentType {
 
 interface LoanRepaymentHistoryProps {
   loanId: number;
+  customerId: number;
+
   loanAmount?: number;
 }
 
 const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   loanId,
   loanAmount,
+  customerId,
 }) => {
   const { data, isLoading, refetch } = useGetLoanPaymentsByLoanIdQuery(loanId);
   const [createPayment, { isLoading: isCreating }] =
@@ -98,7 +101,7 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
       ...values,
       date_created: values.date_created?.toISOString(),
       updated_by: user?.id || 0,
-      customer_loan_id: loanId,
+      customer_id: customerId,
     };
 
     if (isEditMode && selectedPayment) {
