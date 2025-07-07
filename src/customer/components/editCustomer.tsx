@@ -21,7 +21,7 @@ export const EditCustomerForm: FC<{
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const success = await onSubmit({ ...customer, ...values });
+      const success = await onSubmit(values);
 
       if (success) {
         setAlertType("success");
@@ -31,7 +31,6 @@ export const EditCustomerForm: FC<{
         setStatusMessage("Failed to update customer.");
       }
     } catch (error: any) {
-      // Form validation or submission error
       setAlertType("danger");
       setStatusMessage(
         error?.message || "Failed to update customer. Please try again."
@@ -92,7 +91,7 @@ export const EditCustomerForm: FC<{
             </Form.Item>
           </Col>
           <Col xs={24} sm={12}>
-            <Form.Item
+            {/* <Form.Item
               name="identification_type"
               label="ID Type"
               rules={[{ required: true }]}
@@ -102,15 +101,15 @@ export const EditCustomerForm: FC<{
                 <Option value="Passport">Passport</Option>
                 <Option value="Driver’s License">Driver’s License</Option>
               </Select>
-            </Form.Item>
+            </Form.Item> */}
           </Col>
         </Row>
 
-        <Row gutter={16}>
+        {/* <Row gutter={16}>
           <Col xs={24} sm={12}>
             {renderInput("identification_number", "ID Number")}
           </Col>
-        </Row>
+        </Row> */}
 
         <Form.Item className="text-right">
           <Button type="primary" htmlType="submit" loading={isLoading}>
