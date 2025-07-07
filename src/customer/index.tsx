@@ -55,8 +55,11 @@ const CustomerManagement: FC = () => {
   };
 
   const handleUpdateCustomer = async (values: any) => {
+    const id = selectedCustomer?.id;
+    if (!id) return false;
+
     try {
-      await updateCustomer(values).unwrap();
+      await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
       setAlertType("success");
       refetchCustomer();
