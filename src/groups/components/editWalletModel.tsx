@@ -37,7 +37,7 @@ const EditWalletModal = ({
         >
           <InputNumber min={0} className="w-full" />
         </Form.Item>
-        <Form.Item
+        {/* <Form.Item
           label="Loans Out Value (KES)"
           name="loans_out_value"
           rules={[{ required: true, message: "Loans out value is required" }]}
@@ -50,7 +50,7 @@ const EditWalletModal = ({
           rules={[{ required: true, message: "Loans count is required" }]}
         >
           <InputNumber min={0} className="w-full" />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );
