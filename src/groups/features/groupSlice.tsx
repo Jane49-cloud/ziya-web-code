@@ -106,6 +106,25 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
+    getGroupPayments: builder.query({
+      query: (groupId: number) => ({
+        url: `/group-loan-payments/group/${groupId}`,
+        method: "GET",
+      }),
+      // providesTags: (_res, _err, groupId) => [
+      //   { type: "GroupLoanPayments", id: groupId },
+      // ],
+    }),
+    getGroupLoans: builder.query({
+      query: (groupId: number) => ({
+        url: `/group-loans/group/${groupId}`,
+        method: "GET",
+      }),
+      // providesTags: (_res, _err, groupId) => [
+      //   { type: "GroupLoans", id: groupId },
+      // ],
+    }),
+
     getAllGroupWallets: builder.query({
       query: () => ({
         url: `/groups/wallet/all`,

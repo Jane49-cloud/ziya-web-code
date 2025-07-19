@@ -15,4 +15,6 @@ export const {
   useGetGroupWalletQuery,
   useGetAllGroupWalletsQuery,
   useUpdateGroupWalletMutation,
+  useGetGroupLoansQuery,
+  useGetGroupPaymentsQuery,
 } = GroupSlice;

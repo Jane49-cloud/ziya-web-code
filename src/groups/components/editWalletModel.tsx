@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Modal, Form, InputNumber } from "antd";
 
 interface Props {
   visible: boolean;
   onCancel: () => void;
-  onUpdate: (values: any) => void;
-  initialValues: any;
+  onUpdate: (values: { amount: number }) => void;
+  initialValues: { amount: number };
 }
 
 const EditWalletModal = ({
@@ -31,26 +30,12 @@ const EditWalletModal = ({
         initialValues={initialValues}
       >
         <Form.Item
-          label="Balance (KES)"
-          name="balance"
-          rules={[{ required: true, message: "Balance is required" }]}
+          label="Amount (KES)"
+          name="amount"
+          rules={[{ required: true, message: "Amount is required" }]}
         >
           <InputNumber min={0} className="w-full" />
         </Form.Item>
-        {/* <Form.Item
-          label="Loans Out Value (KES)"
-          name="loans_out_value"
-          rules={[{ required: true, message: "Loans out value is required" }]}
-        >
-          <InputNumber min={0} className="w-full" />
-        </Form.Item>
-        <Form.Item
-          label="Total Loans Count"
-          name="total_loans_counts"
-          rules={[{ required: true, message: "Loans count is required" }]}
-        >
-          <InputNumber min={0} className="w-full" />
-        </Form.Item> */}
       </Form>
     </Modal>
   );

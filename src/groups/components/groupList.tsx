@@ -37,8 +37,13 @@ const GroupTable: React.FC<GroupTableProps> = ({
 
   const columns = [
     { title: "Name", dataIndex: "name" },
-    { title: "Bio", dataIndex: "bio" },
-    // { title: "Members", dataIndex: "total_members" },
+    {
+      title: "Bio",
+      dataIndex: "bio",
+      render: (bio: string | undefined) =>
+        bio ? bio : <em className="text-gray-400">No bio available</em>,
+    },
+
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
@@ -102,7 +107,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   ];
 
   return (
-    <Card>
+    <Card bordered={false} className="mt-4">
       <Table
         dataSource={data}
         columns={columns}

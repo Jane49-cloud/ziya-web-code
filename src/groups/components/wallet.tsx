@@ -1,13 +1,19 @@
-import { useGetGroupWalletQuery } from "../features";
-import { Card, Table, Typography, Spin } from "antd";
+import { useState } from "react";
+import {
+  useGetGroupWalletQuery,
+  useUpdateGroupWalletMutation,
+} from "../features";
+import { Card, Table, Typography, Spin, Button, message } from "antd";
+import EditWalletModal from "./editWalletModel";
 
 const { Title } = Typography;
 
 const GroupWalletTab = ({ groupId }: { groupId: number }) => {
-  const { data, isLoading } = useGetGroupWalletQuery(groupId);
+  const { data, isLoading, refetch } = useGetGroupWalletQuery(groupId);
+  const [walletModalVisible, setWalletModalVisible] = useState(false);
+  const [updateWallet] = useUpdateGroupWalletMutation();
 
   const wallet = data?.wallet;
-  console.log("Group Wallet Data:", data);
 
   const walletData = wallet
     ? [
@@ -30,18 +36,50 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
     { title: "Value", dataIndex: "value", key: "value" },
   ];
 
+  const handleUpdate = async (values: { amount: number }) => {
+    try {
+      await updateWallet({ id: groupId, ...values }).unwrap();
+      message.success("Wallet updated successfully");
+      setWalletModalVisible(false);
+      refetch(); // Refresh after update
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to update wallet");
+    }
+  };
+
   return (
     <Card>
       <Title level={4}>Wallet Details</Title>
+
       {isLoading ? (
         <Spin />
       ) : (
-        <Table
-          columns={columns}
-          dataSource={walletData}
-          pagination={false}
-          bordered
-        />
+        <>
+          <Table
+            columns={columns}
+            dataSource={walletData}
+            pagination={false}
+            bordered
+          />
+
+          <Button
+            onClick={() => setWalletModalVisible(true)}
+            type="primary"
+            className="mt-4"
+          >
+            Edit Wallet
+          </Button>
+
+          {wallet && (
+            <EditWalletModal
+              visible={walletModalVisible}
+              onCancel={() => setWalletModalVisible(false)}
+              initialValues={{ amount: wallet.balance }}
+              onUpdate={handleUpdate}
+            />
+          )}
+        </>
       )}
     </Card>
   );
