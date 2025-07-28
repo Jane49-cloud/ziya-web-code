@@ -66,12 +66,12 @@ const AllGroupActivities: React.FC = () => {
           >
             View Group
           </Button>
-          <Button
+          {/* <Button
             type="link"
             onClick={() => navigate(`/activities/user/${record.customer_id}`)}
           >
             View User
-          </Button>
+          </Button> */}
         </div>
       ),
     },

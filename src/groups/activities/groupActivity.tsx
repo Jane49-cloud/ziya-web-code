@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { useParams } from "react-router-dom";
-
-import { Card, Table, Typography } from "antd";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, Table, Typography, Button, Space } from "antd";
 import moment from "moment";
 import { useGetGroupActivitiesByGroupQuery } from "../features";
 
@@ -10,8 +9,11 @@ const { Title } = Typography;
 
 const GroupActivitiesByGroup: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const groupId = parseInt(id || "0");
   const { data, isLoading } = useGetGroupActivitiesByGroupQuery(groupId);
+
+  const groupName = data?.data?.[0]?.group_name || "Group Activity";
 
   const columns = [
     {
@@ -36,15 +38,23 @@ const GroupActivitiesByGroup: React.FC = () => {
       dataIndex: "activity_amount",
       render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
     },
-    // {
-    //   title: "Status",
-    //   dataIndex: "activity_status",
-    // },
   ];
 
   return (
     <div className="p-4">
-      <Title level={3}>Group Activity</Title>
+      <Space
+        direction="horizontal"
+        style={{ display: "flex", justifyContent: "space-between" }}
+        className="mb-4 "
+      >
+        <Title level={3} className="capitalize">
+          {groupName}
+        </Title>
+        <Button type="link" onClick={() => navigate("/activities/all")}>
+          Back to All Activities
+        </Button>
+      </Space>
+
       <Card>
         <Table
           columns={columns}
