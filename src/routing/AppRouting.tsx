@@ -22,6 +22,9 @@ import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
 import SingleGroupPage from "../groups/pages/singleGroup";
 import AllGroupWalletsPage from "../wallets";
+import GroupActivitiesByGroup from "../groups/activities/groupActivity";
+import AllGroupActivities from "../groups/activities/groupsActivities";
+import UserGroupActivities from "../groups/activities/userGroupActivities";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -140,6 +143,27 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
           <Route path="/wallets" element={<AllGroupWalletsPage />} />
+        </Route>
+      </Route>
+
+      {/* groups activities */}
+      <Route
+        element={
+          <PrivateRoutes
+            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
+          />
+        }
+      >
+        <Route element={<Layout children={undefined} />}>
+          <Route path="/activities/all" element={<AllGroupActivities />} />
+          <Route
+            path="/activities/user/:id"
+            element={<UserGroupActivities />}
+          />
+          <Route
+            path="/activities/group/:id"
+            element={<GroupActivitiesByGroup />}
+          />
         </Route>
       </Route>
     </Routes>

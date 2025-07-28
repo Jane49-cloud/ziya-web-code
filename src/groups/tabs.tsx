@@ -16,6 +16,7 @@ import {
   useUpdateGroupMemberCountMutation,
 } from "./features";
 import CreateGroupForm from "./components/groupForm";
+import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -51,6 +52,8 @@ const GroupTabs = () => {
       skip: !searchParams.value,
     }
   );
+
+  const navigate = useNavigate();
 
   const [deleteGroup] = useDeleteGroupMutation();
   const [updateGroup] = useUpdateGroupMutation();
@@ -122,7 +125,13 @@ const GroupTabs = () => {
 
   return (
     <div className="p-4">
-      <Title level={3}>Group Management</Title>
+      <div className="mb-4 flex gap-2 flex-wrap ">
+        <Title level={3}>Group Management</Title>
+
+        <Button type="link" onClick={() => navigate("/activities/all")}>
+          Explore groups history
+        </Button>
+      </div>
       <div className="mb-4 flex gap-2 flex-wrap hidden">
         <Input
           placeholder="Search group by name"

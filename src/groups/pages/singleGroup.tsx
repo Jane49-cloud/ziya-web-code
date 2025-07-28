@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Card, Spin, Typography, Table, Button, Tabs } from "antd";
 import { FiArrowLeft } from "react-icons/fi";
@@ -7,23 +5,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGetGroupByIdQuery } from "../features";
 import GroupMembersTab from "../components/groupMembersTab";
 import GroupWalletTab from "../components/wallet";
-// import GroupLoanHistoryTab from "../components/groupLoanHistoryTab";
-// import GroupPaymentHistoryTab from "../components/groupPaymentHistoryTab";
+import GroupLoanHistoryTab from "../components/groupLoanHistoryTab";
+import GroupPaymentHistoryTab from "../components/groupPaymentHistoryTab";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const SingleGroupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const groupId = id ? Number(id) : undefined;
 
-  const { data, isLoading } = groupId
-    ? useGetGroupByIdQuery(groupId)
-    : { data: undefined, isLoading: false };
+  const { data, isLoading } = useGetGroupByIdQuery(groupId!, {
+    skip: !groupId,
+  });
 
   const group = data?.group;
-  console.log(group?.wallet, "Group Wallet Data:");
 
   const groupDetails = group
     ? [
@@ -37,21 +34,17 @@ const SingleGroupPage: React.FC = () => {
           label: "Bio",
           value: group.bio || "No bio available",
         },
-
-        // {
-        //   key: "4",
-        //   label: "Created By",
-        //   value: `${group.creator?.firstname} ${group.creator?.lastname}`,
-        // },
         {
           key: "5",
           label: "Relationship Manager",
-          value: `${group.manager?.firstname} ${group.manager?.lastname}`,
+          value: `${group.manager?.firstname ?? ""} ${
+            group.manager?.lastname ?? ""
+          }`.trim(),
         },
         {
           key: "6",
           label: "Admin",
-          value: group.adminUser?.name,
+          value: group.adminUser?.name || "N/A",
         },
       ]
     : [];
@@ -69,11 +62,23 @@ const SingleGroupPage: React.FC = () => {
     },
   ];
 
+  if (!groupId) {
+    return (
+      <div className="p-4">
+        <Title level={4}>Invalid group ID</Title>
+        <Button icon={<FiArrowLeft />} onClick={() => navigate("/groups")}>
+          Back to Groups
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
-      <Title level={3} className="mb-4">
-        Group Details
+      <Title level={3} className="mb-4 capitalize">
+        {group ? group.name : "Loading Group..."}
       </Title>
+
       <div className="mb-4">
         <Button
           icon={<FiArrowLeft />}
@@ -110,7 +115,7 @@ const SingleGroupPage: React.FC = () => {
               <Spin />
             </div>
           ) : (
-            groupId && <GroupMembersTab groupId={groupId} />
+            <GroupMembersTab groupId={groupId} />
           )}
         </TabPane>
 
@@ -120,28 +125,16 @@ const SingleGroupPage: React.FC = () => {
               <Spin />
             </div>
           ) : (
-            groupId && <GroupWalletTab groupId={groupId} />
+            <GroupWalletTab groupId={groupId} />
           )}
         </TabPane>
 
         <TabPane tab="Loan History" key="4">
-          <Card>
-            <Typography.Title level={5}>Loan History</Typography.Title>
-            <Typography.Text type="secondary">
-              This feature is coming soon. You currently don't have necessary
-              permission to access this resource.
-            </Typography.Text>
-          </Card>
+          <GroupLoanHistoryTab groupId={groupId} />
         </TabPane>
 
         <TabPane tab="Payment History" key="5">
-          <Card>
-            <Typography.Title level={5}>Payment History</Typography.Title>
-            <Typography.Text type="secondary">
-              This feature is coming soon. You currently don't have necessary
-              permission to access this resource.
-            </Typography.Text>
-          </Card>
+          <GroupPaymentHistoryTab groupId={groupId} />
         </TabPane>
       </Tabs>
     </div>
