@@ -8,7 +8,6 @@ import {
   // FiUsers,
   FiEye,
   FiMoreVertical,
-  FiTrash2,
 } from "react-icons/fi";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
 
@@ -31,7 +30,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   onEdit,
   onChangeManager,
   // onChangeMembers,
-  onDelete,
+  // onDelete,
 }) => {
   const { data: userData, isLoading } = useGetAllUsersQuery(undefined);
   const staffList = userData?.staffs || [];
@@ -88,13 +87,13 @@ const GroupTable: React.FC<GroupTableProps> = ({
             >
               Edit Members count
             </Menu.Item> */}
-            <Menu.Item
+            {/* <Menu.Item
               key="delete"
               icon={<FiTrash2 />}
               onClick={() => onDelete(record.id)}
             >
               <span className="text-red-500">Delete</span>
-            </Menu.Item>
+            </Menu.Item> */}
           </Menu>
         );
 
