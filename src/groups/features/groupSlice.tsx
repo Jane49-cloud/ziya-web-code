@@ -141,5 +141,14 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
     }),
+    getAllGroupActivities: builder.query({
+      query: () => "/group-activities/all",
+    }),
+    getGroupActivitiesByUser: builder.query({
+      query: (userId) => `/group-activities/user/${userId}`,
+    }),
+    getGroupActivitiesByGroup: builder.query({
+      query: (groupId) => `/group-activities/group/${groupId}`,
+    }),
   }),
 });

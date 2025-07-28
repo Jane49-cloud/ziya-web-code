@@ -13,7 +13,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-
     formData.set("date_created", new Date().toISOString());
 
     const entries = Array.from(formData.entries()).filter(
@@ -48,16 +47,12 @@ export const CustomerForm: FC<CustomerFormProps> = ({
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Customer Form
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {renderInput("firstname", "First Name")}
-          {renderInput("middlename", "Middle Name", "text", false)}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {renderInput("lastname", "Last Name")}
           {renderInput("phone_number", "Phone Number")}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">
               Country Code
@@ -70,6 +65,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               <option value="+254">+254 (Kenya)</option>
             </select>
           </div>
+
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">ID Type</label>
             <select
@@ -82,8 +78,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               <option value="Driver’s License">Driver’s License</option>
             </select>
           </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
           {renderInput("identification_number", "ID Number")}
         </div>
 
