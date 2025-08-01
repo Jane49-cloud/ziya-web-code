@@ -16,6 +16,12 @@ export const loansSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    getAllGroupLoans: builder.query({
+      query: () => ({
+        url: "/group-loans/all",
+        method: "GET",
+      }),
+    }),
 
     getLoansByCustomerId: builder.query({
       query: (customerId) => ({
@@ -55,4 +61,5 @@ export const {
   useUpdateLoanMutation,
   useDeleteLoanMutation,
   useGetLoanByIdQuery,
+  useGetAllGroupLoansQuery,
 } = loansSlice;

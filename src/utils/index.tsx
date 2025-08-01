@@ -43,7 +43,7 @@ export const getInitials = (name: string) => {
 };
 
 export const customAvatar = (name: string) => (
-  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
     {getInitials(name)}
   </div>
 );

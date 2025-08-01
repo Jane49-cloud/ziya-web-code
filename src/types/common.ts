@@ -23,3 +23,5 @@ export interface Loan {
   loan_definition_status: number;
   // ... other fields ...
 }
+// If you need to use 'file-saver' without types, you can declare a minimal module as follows:
+// declare module "file-saver";

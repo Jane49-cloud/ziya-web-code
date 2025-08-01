@@ -4,13 +4,13 @@
 import { FC, useState } from "react";
 import { Tabs, Pagination } from "antd";
 import LoanCard from "../components/loanCard";
-import LoanTable from "../components/loansTable";
-import { useGetAllLoansQuery } from "../features/loanSlice";
-import { Loan } from "../@types/common";
+import LoanTable, { GroupLoan } from "../components/loansTable";
+import { useGetAllGroupLoansQuery } from "../features/loanSlice";
 
 const LoanManagementPage: FC = () => {
-  const { data, isLoading } = useGetAllLoansQuery({});
+  const { data, isLoading } = useGetAllGroupLoansQuery({});
   const loans = data?.loans || [];
+  console.log(loans, "loans data from query");
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -35,14 +35,14 @@ const LoanManagementPage: FC = () => {
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         {/* Table View Tab */}
         <Tabs.TabPane tab="Loans" key="1">
-          <LoanTable loans={loans} isLoading={isLoading} />
+          <LoanTable data={data?.loans || []} isLoading={isLoading} />
         </Tabs.TabPane>
 
         {/* Card View Tab with Pagination */}
         <Tabs.TabPane tab="Card View" key="2">
           <div style={{ marginTop: 16 }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 ">
-              {paginatedLoans.map((loan: Loan) => (
+              {paginatedLoans.map((loan: GroupLoan) => (
                 <LoanCard key={loan.id} loan={loan} />
               ))}
             </div>
@@ -65,3 +65,4 @@ const LoanManagementPage: FC = () => {
 };
 
 export default LoanManagementPage;
+                                                                                                                                                                                                                                                
