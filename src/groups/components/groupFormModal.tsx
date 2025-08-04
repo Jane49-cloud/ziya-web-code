@@ -115,7 +115,7 @@ const GroupLoanFormModal = ({
             <Select showSearch placeholder="Select member">
               {members.map((m: any) => (
                 <Select.Option key={m.id} value={m.id}>
-                  {m.firstname} {m.lastname} ({m.email})
+                  {m.firstname} {m.lastname}
                 </Select.Option>
               ))}
             </Select>
