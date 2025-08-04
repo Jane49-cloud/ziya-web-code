@@ -150,5 +150,105 @@ export const GroupSlice = apiSlice.injectEndpoints({
     getGroupActivitiesByGroup: builder.query({
       query: (groupId) => `/group-activities/group/${groupId}`,
     }),
+
+    // group loans
+    createGroupLoan: builder.mutation({
+      query: (loanData) => ({
+        url: `/group-loans/create`,
+        method: "POST",
+        body: loanData,
+      }),
+      invalidatesTags: [{ type: "GroupLoans" }],
+    }),
+
+    updateGroupLoan: builder.mutation({
+      query: ({ loanId, updatedData }) => ({
+        url: `/group-loans/${loanId}`,
+        method: "PUT",
+        body: updatedData,
+      }),
+      invalidatesTags: [{ type: "GroupLoans" }],
+    }),
+
+    deleteGroupLoan: builder.mutation({
+      query: (loanId: number) => ({
+        url: `/group-loans/${loanId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "GroupLoans" }],
+    }),
+
+    // group payments
+
+    createGroupLoanPayment: builder.mutation({
+      query: ({
+        group_id,
+        loan_id,
+        amount,
+        customer_id,
+        cycle,
+      }: {
+        group_id: number;
+        loan_id: number;
+        amount: number;
+        customer_id: number;
+        cycle: number;
+      }) => ({
+        url: "/group-loan-payments/create",
+        method: "POST",
+        body: { group_id, loan_id, amount, customer_id, cycle },
+      }),
+      invalidatesTags: [{ type: "GroupLoanPayments" }],
+    }),
+
+    updateGroupLoanPayment: builder.mutation({
+      query: ({
+        paymentId,
+        updatedData,
+      }: {
+        paymentId: number;
+        updatedData: {
+          group_id: number;
+          loan_id: number;
+          amount: number;
+          customer_id: number;
+          cycle: number;
+        };
+      }) => ({
+        url: `/group-loan-payments/${paymentId}`,
+        method: "PUT",
+        body: updatedData,
+      }),
+      invalidatesTags: [{ type: "GroupLoanPayments" }],
+    }),
+
+    deleteGroupLoanPayment: builder.mutation({
+      query: (paymentId: number) => ({
+        url: `/group-loan-payments/${paymentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "GroupLoanPayments" }],
+    }),
+    // group members
+    addGroupMember: builder.mutation({
+      query: ({ groupId, memberData }) => ({
+        url: `/groups/members/${groupId}/add`,
+        method: "POST",
+        body: memberData,
+      }),
+      invalidatesTags: (_res, _err, { groupId }) => [
+        { type: "GroupMembers", id: groupId },
+      ],
+    }),
+
+    removeGroupMember: builder.mutation({
+      query: ({ groupId, memberId }) => ({
+        url: `/groups/members/${groupId}/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_res, _err, { groupId }) => [
+        { type: "GroupMembers", id: groupId },
+      ],
+    }),
   }),
 });
