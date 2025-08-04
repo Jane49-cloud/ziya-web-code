@@ -30,7 +30,7 @@ interface Props {
   isAdmin?: boolean;
 }
 
-const GroupMembersTab: React.FC<Props> = ({ groupId, isAdmin = false }) => {
+const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const { data, isLoading, refetch } = useGetGroupMembersQuery(groupId);
   const { data: allCustomersData, isLoading: customersLoading } =
     useGetAllCustomersQuery({});
