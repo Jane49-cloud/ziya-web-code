@@ -1,6 +1,9 @@
-import { Card, Table, Button, Input } from "antd";
-import { useState } from "react";
-import CustomerForm from "../components/customerForm";
+import { FC, useState } from "react";
+import { Card, Input, Typography } from "antd";
+import { formatDate } from "../../utils";
+
+const { Search } = Input;
+const { Text } = Typography;
 
 interface Customer {
   firstname: string;
@@ -17,12 +20,20 @@ interface Customer {
   date_updated: string;
 }
 
-interface CustomerTabsProps {
-  customer: Customer;
+interface Loan {
+  id: number;
+  amount: number;
+  balance: number;
+  currency: string;
+  date_created: string;
 }
 
-const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
-  const [editVisible, setEditVisible] = useState(false);
+interface CustomerTabsProps {
+  customer: Customer;
+  recentLoans: Loan[];
+}
+
+const CustomerTabs: FC<CustomerTabsProps> = ({ customer, recentLoans }) => {
   const [searchText, setSearchText] = useState("");
 
   const customerData = [
@@ -31,98 +42,127 @@ const CustomerTabs: React.FC<CustomerTabsProps> = ({ customer }) => {
       label: "Full Name",
       value: `${customer.firstname} ${customer.middlename || ""} ${
         customer.lastname
-      }`,
+      }`.trim(),
     },
     {
-      key: "3",
+      key: "2",
       label: "Phone",
       value: `${customer.country_code} ${customer.phone_number}`,
     },
     {
-      key: "4",
+      key: "3",
       label: "Status",
       value: customer.status === 1 ? "Active" : "Inactive",
     },
     {
-      key: "5",
+      key: "4",
       label: "Identification Type",
       value: customer.identification_type,
     },
     {
-      key: "6",
+      key: "5",
       label: "Identification Number",
       value: customer.identification_number,
     },
     {
-      key: "7",
+      key: "6",
       label: "Last Login",
       value: new Date(customer.last_login).toLocaleString(),
     },
     {
-      key: "8",
+      key: "7",
       label: "Date Created",
       value: new Date(customer.date_created).toLocaleDateString(),
     },
     {
-      key: "9",
+      key: "8",
       label: "Last Updated",
       value: new Date(customer.date_updated).toLocaleString(),
     },
   ];
 
-  // Filter data based on the search query (searching both labels and details)
   const filteredData = customerData.filter(
     (item) =>
       item.label.toLowerCase().includes(searchText.toLowerCase()) ||
       item.value.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const columns = [
-    {
-      title: "Field",
-      dataIndex: "label",
-      key: "label",
-      className: "font-semibold text-gray-700",
-      width: "40%",
-    },
-    {
-      title: "Details",
-      dataIndex: "value",
-      key: "value",
-      className: "text-gray-600",
-      width: "60%",
-    },
-  ];
-
   return (
-    <Card className="p-6 shadow-sm rounded-lg">
-      <div className="mb-4 flex justify-end">
-        <Input.Search
-          placeholder="Search details"
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 200 }}
-          allowClear
-        />
+    <div className="w-full flex flex-col lg:flex-row gap-6 mt-10">
+      {/* Customer Info Card */}
+      <div className="w-full lg:w-1/2">
+        <Card className="shadow-sm rounded-lg">
+          <div className="flex justify-end mb-4">
+            <Search
+              placeholder="Search details"
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 200 }}
+              allowClear
+            />
+          </div>
+
+          <div className="">
+            {filteredData.map((item) => (
+              <div
+                key={item.key}
+                className="flex justify-between py-3 items-center  mb-2 rounded  p-2  border border-gray-50 hover:bg-gray-50 transition"
+              >
+                <span className="text-sm text-gray-600 font-medium">
+                  {item.label}
+                </span>
+                <span className="text-sm text-gray-800">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
-      <Table
-        dataSource={filteredData}
-        columns={columns}
-        size="middle"
-        pagination={false}
-        bordered
-        rowClassName="hover:bg-gray-50"
-      />
-      <div className="mt-4 flex justify-end hidden">
-        <Button type="primary" onClick={() => setEditVisible(true)}>
-          Edit Customer
-        </Button>
+
+      {/* Recent Loans */}
+      <div className="w-full lg:w-1/2">
+        <Card
+          title="Recent Loans"
+          className="shadow-sm rounded-lg bg-amber-300"
+        >
+          {recentLoans.length === 0 ? (
+            <Text type="secondary">No recent loans found.</Text>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {recentLoans.map((loan) => {
+                const paid = loan.amount - loan.balance;
+                return (
+                  <div
+                    key={loan.id}
+                    className="w-full bg-[whitesmoke] border border-gray-200 rounded-md p-3 hover:shadow-sm transition"
+                  >
+                    <p className="text-xs text-gray-500 mb-3">
+                      {formatDate(loan.date_created)}
+                    </p>
+
+                    <div className="flex flex-wrap text-sm text-gray-700 gap-x-6 gap-y-2">
+                      <span>
+                        <strong>ID:</strong> #{loan?.id}
+                      </span>
+                      <span>
+                        <strong>Amount:</strong> {loan.currency}{" "}
+                        {loan.amount.toLocaleString()}
+                      </span>
+                      <span>
+                        <strong>Balance:</strong> {loan.currency}{" "}
+                        {loan.balance.toLocaleString()}
+                      </span>
+                      <span>
+                        <strong>Paid:</strong> {loan.currency}{" "}
+                        {paid.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
       </div>
-      <CustomerForm
-        visible={editVisible}
-        onClose={() => setEditVisible(false)}
-        customer={customer}
-      />
-    </Card>
+    </div>
   );
 };
 

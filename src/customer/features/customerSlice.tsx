@@ -39,7 +39,6 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // ✅ Get Businesses for a Customer
     getBusinessesByCustomer: builder.query({
       query: (customerId) => ({
         url: `/customer-business/get-by-customer/${customerId}`,
@@ -47,7 +46,6 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // ✅ Create Business for Customer
     createBusiness: builder.mutation({
       query: (businessData) => ({
         url: "/customer-business/create",
@@ -56,7 +54,6 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // ✅ Update Business
     updateBusiness: builder.mutation({
       query: ({ id, ...businessData }) => ({
         url: `/customer-business/update/${id}`,
@@ -65,7 +62,6 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // ✅ Delete Business
     deleteBusiness: builder.mutation({
       query: (id) => ({
         url: `/customer-business/delete/${id}`,

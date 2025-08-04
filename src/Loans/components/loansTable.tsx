@@ -1,140 +1,225 @@
-import React, { FC, useState } from "react";
-import { Table, Space, Card, Input, Tag } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { Loan } from "../@types/common";
-import { formatDate } from "../../utils";
+import { FC, useState } from "react";
+import { Table, Tag, Button, Card, Space, Tooltip, Input, message } from "antd";
+import {
+  EyeOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { saveAs } from "file-saver";
+import type { ColumnsType } from "antd/es/table";
+import { formatDate, customAvatar } from "../../utils";
 
 const { Search } = Input;
 
-interface LoanTableProps {
-  loans: Loan[];
+export interface GroupLoan {
+  id: number;
+  amount: string;
+  balance: string;
+  group_id: number;
+  group_name: string;
+  recipient_id: number;
+  recipient_firstname: string;
+  recipient_lastname: string;
+  date_issued: string;
+  cycle?: number;
+}
+
+interface Props {
+  data: GroupLoan[];
   isLoading: boolean;
 }
 
-const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
+const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const navigate = useNavigate();
-  const [searchText, setSearchText] = useState<string>("");
+  const [searchText, setSearchText] = useState("");
 
-  const handleViewLoan = (loan: Loan): void => {
-    localStorage.setItem("selectedLoan", JSON.stringify(loan));
-    navigate(`/loans/${loan?.id}`);
-  };
-
-  // Filter loans based on search query (searching across multiple fields)
-  const filteredLoans = loans.filter((loan) => {
+  const filteredData = data.filter((item) => {
     const search = searchText.toLowerCase();
+    const fullName = `${item.recipient_firstname} ${item.recipient_lastname}`;
     return (
-      loan?.id?.toString().includes(search) ||
-      loan?.currency?.toLowerCase().includes(search) ||
-      loan?.amount?.toString().includes(search) ||
-      formatDate(loan?.approved_on || "")
-        .toLowerCase()
-        .includes(search) ||
-      loan?.loan_definition_name?.toLowerCase().includes(search) ||
-      loan?.customer_name?.toLowerCase().includes(search) ||
-      loan?.business_name?.toLowerCase().includes(search)
+      item.id.toString().includes(search) ||
+      item.group_name?.toLowerCase().includes(search) ||
+      fullName.toLowerCase().includes(search) ||
+      item.amount?.toString().includes(search) ||
+      item.balance?.toString().includes(search) ||
+      formatDate(item.date_issued)?.toLowerCase().includes(search)
     );
   });
 
-  // Calculate total loan amount (handling missing amounts gracefully)
-  const totalLoanAmount = loans.reduce(
-    (total, loan) => total + (loan?.amount || 0),
+  const totalAmount = filteredData.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+  );
+  const totalBalance = filteredData.reduce(
+    (sum, item) => sum + Number(item.balance || 0),
     0
   );
 
-  const columns: ColumnsType<Loan> = [
+  const handleExportCSV = () => {
+    const headers = [
+      "Loan ID",
+      "Group",
+      "Recipient",
+      "Loan Amount",
+      "Balance",
+      "Status",
+      "Cycle",
+      "Issued On",
+    ];
+
+    const rows = filteredData.map((item) => {
+      const recipient = `${item.recipient_firstname} ${item.recipient_lastname}`;
+      const status =
+        Number(item.amount) === Number(item.balance) ? "Paid" : "Active";
+      return [
+        `#${item.id.toString().padStart(4, "0")}`,
+        item.group_name,
+        recipient,
+        item.amount,
+        item.balance,
+        status,
+        item.cycle ?? "N/A",
+        formatDate(item.date_issued),
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `group-loan-payments-${Date.now()}.csv`);
+  };
+
+  const handleView = (loan: GroupLoan) => {
+    localStorage.setItem("selectedLoan", JSON.stringify(loan));
+    navigate(`/loans/${loan.id}`);
+  };
+
+  const handleDelete = (loan: GroupLoan) => {
+    // Replace with actual delete logic or modal
+    message.warning(`Loan #${loan.id} deleted (mock action)`);
+  };
+
+  const columns: ColumnsType<GroupLoan> = [
     {
       title: "Loan ID",
       dataIndex: "id",
       key: "id",
-      sorter: (a, b) => (a?.id || 0) - (b?.id || 0),
-      render: (id?: number) => (
-        <span className="font-medium text-gray-900">
-          #{id?.toString().padStart(4, "0") || "N/A"}
-        </span>
+      render: (id) => <span>#{id.toString().padStart(4, "0")}</span>,
+      sorter: (a, b) => a.id - b.id,
+    },
+    {
+      title: "Date Issued",
+      dataIndex: "date_issued",
+      key: "date_issued",
+      render: (date) => <span>{formatDate(date)}</span>,
+      sorter: (a, b) =>
+        new Date(a.date_issued).getTime() - new Date(b.date_issued).getTime(),
+    },
+    {
+      title: "Recipient",
+      key: "recipient",
+      render: (_, record) => {
+        const fullName = `${record.recipient_firstname} ${record.recipient_lastname}`;
+        return (
+          <div
+            className="flex items-center gap-2 cursor-pointer "
+            onClick={() => navigate(`/customer/${record.recipient_id}`)}
+          >
+            {customAvatar(fullName)}
+            <span className="capitalize font-semibold hover:underline">
+              {fullName}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Group",
+      key: "group",
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div className="font-medium text-gray-800 line-clamp-1">
+            {record.group_name}
+          </div>
+          <div className="text-xs text-gray-500">ID: {record.group_id}</div>
+        </div>
       ),
     },
     {
-      title: "Customer Name",
-      dataIndex: "customer_name",
-      key: "customer_name",
-      sorter: (a, b) =>
-        (a?.customer_name || "").localeCompare(b?.customer_name || ""),
-      render: (name?: string) => (
-        <span className="text-gray-700">{name || "N/A"}</span>
-      ),
+      title: "Status",
+      key: "status",
+      render: (_, record) => {
+        const isPaid = Number(record.balance) === Number(record.amount);
+        return (
+          <span
+            className={`text-xs px-2 py-0.5 rounded font-medium ${
+              isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            }`}
+          >
+            {isPaid ? "Paid" : "Active"}
+          </span>
+        );
+      },
     },
     {
-      title: "Business Name",
-      dataIndex: "business_name",
-      key: "business_name",
-      sorter: (a, b) =>
-        (a?.business_name || "").localeCompare(b?.business_name || ""),
-      render: (name?: string) => (
-        <span className="text-gray-700">{name || "N/A"}</span>
-      ),
-    },
-    {
-      title: "Loan Type",
-      dataIndex: "loan_definition_name",
-      key: "loan_definition_name",
-      sorter: (a, b) =>
-        (a?.loan_definition_name || "").localeCompare(
-          b?.loan_definition_name || ""
+      title: "Cycle",
+      dataIndex: "cycle",
+      key: "cycle",
+      render: (cycle) =>
+        cycle ? (
+          <Tag color="purple" className="text-xs px-2">
+            Cycle {cycle}
+          </Tag>
+        ) : (
+          <span className="text-gray-400 text-xs">N/A</span>
         ),
-      render: (name?: string) => (
-        <Tag color="blue" className="px-3 py-1 text-sm">
-          {name || "N/A"}
-        </Tag>
-      ),
     },
     {
-      title: "Amount",
+      title: "Loan Amount",
       dataIndex: "amount",
       key: "amount",
-      sorter: (a, b) => (a?.amount || 0) - (b?.amount || 0),
-      render: (amount?: number, record?: Loan) => (
-        <span className="font-medium">
-          {record?.currency || "N/A"} {amount?.toLocaleString() || "0"}
+      align: "right",
+      render: (amount) => (
+        <span className="text-green-700 font-semibold">
+          KSH {Number(amount).toLocaleString()}
         </span>
       ),
-      align: "right",
+      sorter: (a, b) => Number(a.amount) - Number(b.amount),
     },
-    // {
-    //   title: "Status",
-    //   dataIndex: "loan_definition_status",
-    //   key: "loan_definition_status",
-    //   render: (status?: number) => (
-    //     <Tag color={status === 1 ? "green" : "red"} className="px-3 py-1">
-    //       {status === 1 ? "Active" : "Inactive"}
-    //     </Tag>
-    //   ),
-    // },
-
     {
-      title: "Created On",
-      dataIndex: "date_created",
-      key: "date_created",
-      sorter: (a, b) =>
-        new Date(a?.date_created || "").getTime() -
-        new Date(b?.date_created || "").getTime(),
-      render: (date?: string) => (
-        <span className="text-gray-600">{formatDate(date || "") || "N/A"}</span>
+      title: "Balance",
+      dataIndex: "balance",
+      key: "balance",
+      align: "right",
+      render: (balance) => (
+        <span className="text-blue-600 font-medium">
+          KSH {Number(balance).toLocaleString()}
+        </span>
       ),
+      sorter: (a, b) => Number(a.balance) - Number(b.balance),
     },
-
     {
       title: "Actions",
       key: "actions",
-      render: (_: unknown, record?: Loan) => (
-        <Space size="small">
-          <button
-            onClick={() => handleViewLoan(record!)}
-            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-          >
-            View Details
-          </button>
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="View">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+              type="link"
+            />
+          </Tooltip>
+          <div className="hidden">
+            <Button
+              icon={<DeleteOutlined />}
+              danger
+              size="small"
+              onClick={() => handleDelete(record)}
+            />
+          </div>
         </Space>
       ),
     },
@@ -144,57 +229,52 @@ const LoanTable: FC<LoanTableProps> = ({ loans, isLoading }) => {
     <Card
       title={
         <div className="flex justify-between items-center">
-          <span className="text-xl font-semibold">View all customer loans</span>
+          <span className="text-lg font-semibold">Loans Issued</span>
           <div className="flex items-center gap-4">
-            <div className="text-right flex justify-center items-center gap-5">
-              <p className="text-sm text-gray-600">Total Loan Amount</p>
-              <p className="text-lg font-semibold text-amber-300">
-                KSh {totalLoanAmount.toLocaleString()}
-              </p>
-            </div>
             <Search
-              placeholder="Search loans..."
+              placeholder="Search group, recipient, amount..."
               allowClear
+              onChange={(e) => setSearchText(e.target.value)}
               className="w-64"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setSearchText(e.target.value)
-              }
             />
+            <Button
+              icon={<DownloadOutlined />}
+              type="default"
+              onClick={handleExportCSV}
+            >
+              Export CSV
+            </Button>
           </div>
         </div>
       }
-      bordered={false}
     >
       <Table
-        bordered
-        size="small"
-        className="overflow-x-auto lg:overflow-x-auto"
-        dataSource={filteredLoans}
         columns={columns}
-        rowKey="id"
+        dataSource={filteredData}
         loading={isLoading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} loans`,
-          className: "px-4",
-        }}
+        rowKey="id"
+        size="middle"
+        bordered
+        scroll={{ x: "max-content" }}
+        pagination={{ pageSize: 10, showSizeChanger: true }}
         rowClassName="hover:bg-gray-50 transition-colors"
         summary={() => (
           <Table.Summary fixed>
             <Table.Summary.Row>
-              <Table.Summary.Cell index={0} colSpan={3}>
-                <strong>Total</strong>
+              <Table.Summary.Cell index={0} colSpan={6}>
+                <strong>Totals</strong>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={3} align="right">
-                <span className="font-semibold text-blue-600">
-                  KSh{" "}
-                  {filteredLoans
-                    .reduce((total, loan) => total + (loan?.amount || 0), 0)
-                    .toLocaleString()}
-                </span>
+              <Table.Summary.Cell index={6} align="right">
+                <strong className="text-green-700">
+                  KSH {totalAmount.toLocaleString()}
+                </strong>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} colSpan={5} />
+              <Table.Summary.Cell index={7} align="right">
+                <strong className="text-blue-600">
+                  KSH {totalBalance.toLocaleString()}
+                </strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={8} />
             </Table.Summary.Row>
           </Table.Summary>
         )}
