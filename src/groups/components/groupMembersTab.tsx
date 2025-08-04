@@ -37,8 +37,11 @@ const GroupMembersTab: React.FC<Props> = ({ groupId, isAdmin = false }) => {
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
 
-  const members = data?.members || [];
-  const customers = allCustomersData?.customers || [];
+  const members = useMemo(() => data?.members || [], [data]);
+  const customers = useMemo(
+    () => allCustomersData?.customers || [],
+    [allCustomersData]
+  );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
