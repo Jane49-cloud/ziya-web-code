@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Button } from "antd";
 import { FC } from "react";
 
@@ -7,14 +8,21 @@ export const CustomerTableActions: FC<{
   onEdit: () => void;
   handleView: (id: any) => void;
   onStatusChange: (id: string, status: number) => void;
-}> = ({ customer, onEdit, onStatusChange, handleView }) => {
+  onCreateSubscription: () => void;
+}> = ({
+  customer,
+  onEdit,
+  onStatusChange,
+  handleView,
+  onCreateSubscription,
+}) => {
   const handleActivateDeactivate = () => {
     const newStatus = customer.status === 1 ? 0 : 1;
     onStatusChange(customer.id, newStatus);
   };
 
   return (
-    <div className="flex gap-2 space-x-10">
+    <div className="flex gap-2 space-x-2">
       <Button onClick={onEdit} type="primary" size="small">
         Edit
       </Button>
@@ -32,11 +40,14 @@ export const CustomerTableActions: FC<{
         {customer?.status === 1 ? "Deactivate" : "Activate"}
       </Button>
       <button
-        onClick={() => handleView(customer.id)} // ✅ Now passing the correct ID
+        onClick={() => handleView(customer.id)}
         className="bg-amber-200 text-amber-500 px-4 rounded"
       >
         View
       </button>
+      <Button onClick={onCreateSubscription} size="small" type="dashed">
+        + Subscription
+      </Button>
     </div>
   );
 };

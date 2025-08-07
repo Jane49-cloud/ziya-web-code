@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Spin, Empty, Tabs, Card, Row, Col } from "antd";
+import { Spin, Empty, Tabs, Card, Row, Col, Tag } from "antd";
 import { FaPhoneAlt, FaIdBadge } from "react-icons/fa";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
@@ -67,6 +67,14 @@ const CustomerPage = () => {
               <FaIdBadge className="mr-2 text-gray-400" />
               {customer.identification_number}
             </p>
+            <Tag
+              className="mt-2"
+              color={customer.subscription_status === 1 ? "green" : "red"}
+            >
+              {customer.subscription_status === 1
+                ? "Subscribed "
+                : "Unsubscribed"}
+            </Tag>
           </div>
         </div>
       </div>
@@ -102,7 +110,7 @@ const CustomerPage = () => {
             <Col span={6}>
               <p className="text-gray-500 text-sm mb-1">Issued On</p>
               <h3 className="text-base text-gray-700">
-                {formatDate(latestLoan.date_created)}
+                {formatDate(latestLoan.date_issued)}
               </h3>
             </Col>
           </Row>

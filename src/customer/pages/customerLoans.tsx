@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import {
@@ -154,9 +155,9 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
 
   return (
     <Card>
-      <Button type="primary" onClick={() => showModal()} disabled={isCreating}>
+      {/* <Button type="primary" onClick={() => showModal()} disabled={isCreating}>
         {isCreating ? <Spin size="small" /> : "Add Loan"}
-      </Button>
+      </Button> */}
 
       <Table
         dataSource={loans}
@@ -174,27 +175,17 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
           title="Amount"
           dataIndex="amount"
           key="amount"
-          render={(amount: number, record: LoanType) =>
-            `${record.currency} ${amount}`
-          }
+          render={(amount: number, _record) => `Ksh ${amount}`}
         />
         <Table.Column
           title="Loan Type"
           dataIndex="loan_definition_name"
           key="loanType"
         />
-        <Table.Column
-          title="Business Name"
-          dataIndex="business_id"
-          key="businessName"
-          render={(businessId: number) => {
-            const business = businesses.find((b: any) => b.id === businessId);
-            return business ? business.name : "N/A";
-          }}
-        />
+        <Table.Column title="Group" dataIndex="group_name" key="group_name" />
         <Table.Column
           title=" Date Created"
-          dataIndex="date_created"
+          dataIndex="date_issued"
           key="creationDate"
           render={(date: string) => formatDate(date)}
         />
@@ -204,9 +195,13 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
           render={(_, record: LoanType) => (
             <div className="flex gap-2">
               <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
-              <Button type="default" onClick={() => showModal(record)}>
+              <button
+                // type="default"
+                onClick={() => showModal(record)}
+                className="hidden"
+              >
                 Edit
-              </Button>
+              </button>
             </div>
           )}
         />

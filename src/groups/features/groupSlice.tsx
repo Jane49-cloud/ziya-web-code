@@ -181,22 +181,17 @@ export const GroupSlice = apiSlice.injectEndpoints({
     // group payments
 
     createGroupLoanPayment: builder.mutation({
-      query: ({
-        group_id,
-        loan_id,
-        amount,
-        customer_id,
-        cycle,
-      }: {
+      query: (payload: {
         group_id: number;
         loan_id: number;
         amount: number;
         customer_id: number;
         cycle: number;
+        approved_by?: number | null;
       }) => ({
         url: "/group-loan-payments/create",
         method: "POST",
-        body: { group_id, loan_id, amount, customer_id, cycle },
+        body: payload,
       }),
       invalidatesTags: [{ type: "GroupLoanPayments" }],
     }),

@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState } from "react";
-import { Tabs, Table, Modal, Space, Avatar, Card, Input } from "antd";
+import {
+  Tabs,
+  Table,
+  Modal,
+  Space,
+  Avatar,
+  Card,
+  Input,
+  Tag,
+  Tooltip,
+} from "antd";
 import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
@@ -10,12 +20,15 @@ import {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
+  useCreateSubscriptionMutation,
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../utils";
 import { Alert } from "../components/Alert";
 import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
+import { SubscriptionModal } from "./components/subscriptionModal";
+import moment from "moment";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -31,6 +44,12 @@ const CustomerManagement: FC = () => {
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
+  const [selectedForSubscription, setSelectedForSubscription] =
+    useState<any>(null);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [createSubscription, { isLoading: creatingSubscription }] =
+    useCreateSubscriptionMutation();
+
   const navigate = useNavigate();
 
   // NEW: Search state for filtering customers
@@ -91,7 +110,25 @@ const CustomerManagement: FC = () => {
     navigate(`/customer/${id}`);
   };
 
-  // Table Columns
+  const handleCreateSubscription = async (dates: {
+    start_date: string;
+    end_date: string;
+  }) => {
+    try {
+      await createSubscription({
+        customer_id: selectedForSubscription.id,
+        ...dates,
+      }).unwrap();
+      setAlertMessage("Subscription created successfully!");
+      setAlertType("success");
+      setSubscriptionModalOpen(false);
+      setSelectedForSubscription(null);
+    } catch (err: any) {
+      setAlertMessage(err?.data?.error || "Failed to create subscription.");
+      setAlertType("danger");
+    }
+  };
+
   const columns: ColumnsType<any> = [
     {
       title: "#",
@@ -121,6 +158,41 @@ const CustomerManagement: FC = () => {
       key: "phone",
     },
     {
+      title: "ID Info",
+      key: "identification",
+      render: (_: any, record: any) => (
+        <div>
+          <div>{record.identification_type}</div>
+          <div className="text-gray-500 text-xs">
+            {record.identification_number}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Subscription",
+      dataIndex: "subscription_status",
+      key: "subscription_status",
+      render: (status: number) => (
+        <Tag color={status === 1 ? "green" : "red"}>
+          {status === 1 ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Last Login",
+      dataIndex: "last_login",
+      key: "last_login",
+      render: (value: string) =>
+        value ? (
+          <Tooltip title={moment(value).format("YYYY-MM-DD HH:mm:ss")}>
+            {moment(value).fromNow()}
+          </Tooltip>
+        ) : (
+          "Never"
+        ),
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_: any, customer: any) => (
@@ -129,11 +201,14 @@ const CustomerManagement: FC = () => {
           onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
           handleView={handleView}
+          onCreateSubscription={() => {
+            setSelectedForSubscription(customer);
+            setSubscriptionModalOpen(true);
+          }}
         />
       ),
     },
   ];
-
   const handleCloseModal = () => {
     setSelectedCustomer(null);
   };
@@ -209,6 +284,13 @@ const CustomerManagement: FC = () => {
           />
         )}
       </Modal>
+
+      <SubscriptionModal
+        open={subscriptionModalOpen}
+        onCancel={() => setSubscriptionModalOpen(false)}
+        onSubmit={handleCreateSubscription}
+        loading={creatingSubscription}
+      />
     </div>
   );
 };

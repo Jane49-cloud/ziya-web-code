@@ -15,6 +15,7 @@ const GroupLoanFormModal = ({
   loan,
   refetch,
   onWalletRefresh,
+  issuedBy,
 }: any) => {
   const [form] = Form.useForm();
   const isEditing = !!loan;
@@ -49,7 +50,7 @@ const GroupLoanFormModal = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const payload = { ...values, group_id: groupId };
+      const payload = { ...values, group_id: groupId, issued_by: issuedBy };
 
       if (isEditing) {
         await updateLoan({ loanId: loan.id, updatedData: payload }).unwrap();
