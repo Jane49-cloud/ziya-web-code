@@ -2,40 +2,50 @@
 import React from "react";
 import { Card, Statistic, Skeleton, Table, Avatar, Typography } from "antd";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import { BsGraphUp, BsBank } from "react-icons/bs";
+import { BsGraphUp, BsBank, BsPeople } from "react-icons/bs";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
+  Tooltip as ChartTooltip,
   ResponsiveContainer,
   CartesianGrid,
   Legend,
 } from "recharts";
-import { useGetAllLoanPaymentsQuery } from "../Loans/features/loanRepaymnetSlice";
-import { useGetAllLoansQuery } from "../Loans/features/loanSlice";
 import { Link } from "react-router-dom";
-import { useGetAllBusinessesQuery } from "../Business/features/businessSlice";
+import { useGetAllGroupLoansQuery } from "../Loans/features/loanSlice";
 import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
 
 const { Title } = Typography;
 
-// Business Table Columns
-const businessColumns = [
+const loanColumns = [
   {
-    title: "Business Name",
-    dataIndex: "name",
-    key: "name",
+    title: "Recipient",
+    dataIndex: "recipient",
+    key: "recipient",
+    render: (_: any, record: any) =>
+      `${record.recipient_firstname} ${record.recipient_lastname}`,
   },
   {
-    title: "Type",
-    dataIndex: "business_type",
-    key: "business_type",
+    title: "Group",
+    dataIndex: "group_name",
+    key: "group_name",
+  },
+  {
+    title: "Amount",
+    dataIndex: "amount",
+    key: "amount",
+    render: (amount: string) => `Ksh ${parseFloat(amount).toLocaleString()}`,
+  },
+  {
+    title: "Balance",
+    dataIndex: "balance",
+    key: "balance",
+    render: (balance: string) => `Ksh ${parseFloat(balance).toLocaleString()}`,
   },
 ];
 
-// Customer Table Columns
 const customerColumns = [
   {
     title: "Avatar",
@@ -50,7 +60,6 @@ const customerColumns = [
     dataIndex: "fullName",
     key: "fullName",
   },
-
   {
     title: "Phone",
     dataIndex: "phone_number",
@@ -59,109 +68,105 @@ const customerColumns = [
 ];
 
 const AdminDashboard: React.FC = () => {
-  // Queries
-  const { data: loansData, isLoading: loansLoading } = useGetAllLoansQuery({});
-  const { data: paymentsData, isLoading: paymentsLoading } =
-    useGetAllLoanPaymentsQuery({});
-  const { data: businessesData, isLoading: businessesLoading } =
-    useGetAllBusinessesQuery({});
+  const { data: groupLoansData, isLoading: loansLoading } =
+    useGetAllGroupLoansQuery({});
   const { data: customersData, isLoading: customersLoading } =
     useGetAllCustomersQuery({});
 
-  // Data extraction
-  const loans = loansData?.loans || [];
-  const payments = paymentsData?.payments || [];
-  const businesses = businessesData?.customerBusinesses || [];
+  const groupLoans = groupLoansData?.loans || [];
   const customers = customersData?.customers || [];
 
-  // Calculations
-  const totalLoansIssued = loans.length;
-  const totalLoanedAmount = loans.reduce(
-    (sum: number, loan: { amount: number }) => sum + loan.amount,
+  // Accurate calculations
+  const totalIssuedAmount = groupLoans.reduce(
+    (sum: number, loan: any) => sum + parseFloat(loan.amount),
     0
   );
-  const totalRepaid = payments.reduce(
-    (sum: number, payment: { amount: number }) => sum + payment.amount,
-    0
-  );
-  const outstandingBalance = totalLoanedAmount - totalRepaid;
 
-  // Corrected Chart Data (Only Repaid vs Outstanding Balance)
+  const totalOutstanding = groupLoans.reduce(
+    (sum: number, loan: any) => sum + parseFloat(loan.balance),
+    0
+  );
+
+  const totalRepaid = totalIssuedAmount - totalOutstanding;
+
   const repaymentData = [
     {
-      name: "Loan Repayments",
-      totalRepaid: totalRepaid,
-      outstandingBalance: outstandingBalance,
+      name: "Business Loans",
+      totalRepaid,
+      outstandingBalance: totalOutstanding,
     },
   ];
 
-  // Process Customers for Table
   const customerData = customers.map((customer: any) => ({
     key: customer.id,
     avatar: customer.avatar,
-    fullName: `${customer.firstname} ${customer.middlename} ${customer.lastname}`,
-    email: customer.email,
+    fullName: `${customer.firstname} ${customer.middlename || ""} ${
+      customer.lastname
+    }`,
     phone_number: customer.phone_number,
   }));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      {/* Metrics */}
-      <Card className="shadow-md">
+      {/* Total Business Loans Issued */}
+      <Card className="shadow-md border-t-4 border-blue-400">
         {loansLoading ? (
           <Skeleton active />
         ) : (
           <Statistic
-            title="Total Loans Issued"
-            value={totalLoansIssued}
+            title="Business Loans Issued"
+            value={groupLoans.length}
             prefix={<BsGraphUp className="text-blue-500" />}
           />
         )}
       </Card>
 
-      <Card className="shadow-md">
+      {/* Total Amount Loaned */}
+      <Card className="shadow-md border-t-4 border-green-400">
         {loansLoading ? (
           <Skeleton active />
         ) : (
           <Statistic
-            title="Total Amount Loaned"
-            value={`Ksh ${totalLoanedAmount.toFixed(2)}`}
+            title="Amount Disbursed"
+            value={`Ksh ${totalIssuedAmount.toLocaleString()}`}
             prefix={<RiMoneyDollarCircleLine className="text-green-500" />}
           />
         )}
       </Card>
 
-      <Card className="shadow-md">
-        {paymentsLoading ? (
+      {/* Total Repaid */}
+      <Card className="shadow-md border-t-4 border-purple-400">
+        {loansLoading ? (
           <Skeleton active />
         ) : (
           <Statistic
-            title="Total Amount Repaid"
-            value={`Ksh ${totalRepaid.toFixed(2)}`}
+            title="Repaid Amount"
+            value={`Ksh ${totalRepaid.toLocaleString()}`}
             prefix={<BsBank className="text-purple-500" />}
           />
         )}
       </Card>
 
-      <Card className="shadow-md">
-        {loansLoading || paymentsLoading ? (
+      {/* Outstanding */}
+      <Card className="shadow-md border-t-4 border-red-400">
+        {loansLoading ? (
           <Skeleton active />
         ) : (
           <Statistic
             title="Outstanding Balance"
-            value={`Ksh ${outstandingBalance.toFixed(2)}`}
+            value={`Ksh ${totalOutstanding.toLocaleString()}`}
             prefix={<RiMoneyDollarCircleLine className="text-red-500" />}
           />
         )}
       </Card>
 
-      {/* Corrected Bar Chart (Repaid vs Outstanding Balance) */}
+      {/* Repayment Bar Chart */}
       <Card className="col-span-1 md:col-span-2 lg:col-span-4 shadow-md p-4">
-        <Title level={4}>Loan Repayment Analysis</Title>
-        {loansLoading || paymentsLoading ? (
+        <Title level={4}>Business Loan Repayment Overview</Title>
+        {loansLoading ? (
           <Skeleton active />
         ) : (
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={repaymentData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -169,44 +174,53 @@ const AdminDashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip />
+              <ChartTooltip />
               <Legend />
-              <Bar dataKey="totalRepaid" fill="#4CAF50" name="Total Repaid" />
+              <Bar dataKey="totalRepaid" fill="#4CAF50" name="Repaid" />
               <Bar
                 dataKey="outstandingBalance"
                 fill="#E53935"
-                name="Outstanding Balance"
+                name="Outstanding"
               />
             </BarChart>
           </ResponsiveContainer>
         )}
       </Card>
 
-      {/* Business Table */}
+      {/* Recent Loans Table */}
       <Card className="shadow-md col-span-1 md:col-span-2">
         <div className="flex justify-between items-center mb-4">
-          <Title level={4}>Recent Businesses</Title>
-          <Link to="/businesses" className="text-blue-500">
+          <Title level={4}>Recent Loans</Title>
+          <Link
+            to="/loans"
+            className="text-blue-600 font-medium hover:underline"
+          >
             See All
           </Link>
         </div>
-        {businessesLoading ? (
+        {loansLoading ? (
           <Skeleton active />
         ) : (
           <Table
-            dataSource={businesses.slice(0, 5)}
-            columns={businessColumns}
+            dataSource={groupLoans.slice(0, 5)}
+            columns={loanColumns}
             pagination={false}
             bordered
           />
         )}
       </Card>
 
-      {/* Customer Table */}
+      {/* Recent Customers Table */}
       <Card className="shadow-md col-span-1 md:col-span-2">
         <div className="flex justify-between items-center mb-4">
-          <Title level={4}>Recent Customers</Title>
-          <Link to="/customers" className="text-blue-500">
+          <Title level={4}>
+            <BsPeople className="inline mr-2 text-green-500" />
+            Recent Customers
+          </Title>
+          <Link
+            to="/customers"
+            className="text-green-600 font-medium hover:underline"
+          >
             See All
           </Link>
         </div>

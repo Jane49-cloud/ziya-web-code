@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState } from "react";
-import { Tabs, Table, Modal, Space, Avatar, Card, Input } from "antd";
+import {
+  Tabs,
+  Table,
+  Modal,
+  Space,
+  Avatar,
+  Card,
+  Input,
+  Tag,
+  Tooltip,
+} from "antd";
 import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
@@ -18,6 +28,7 @@ import { Alert } from "../components/Alert";
 import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
+import moment from "moment";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -118,7 +129,6 @@ const CustomerManagement: FC = () => {
     }
   };
 
-  // Table Columns
   const columns: ColumnsType<any> = [
     {
       title: "#",
@@ -148,6 +158,41 @@ const CustomerManagement: FC = () => {
       key: "phone",
     },
     {
+      title: "ID Info",
+      key: "identification",
+      render: (_: any, record: any) => (
+        <div>
+          <div>{record.identification_type}</div>
+          <div className="text-gray-500 text-xs">
+            {record.identification_number}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Subscription",
+      dataIndex: "subscription_status",
+      key: "subscription_status",
+      render: (status: number) => (
+        <Tag color={status === 1 ? "green" : "red"}>
+          {status === 1 ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Last Login",
+      dataIndex: "last_login",
+      key: "last_login",
+      render: (value: string) =>
+        value ? (
+          <Tooltip title={moment(value).format("YYYY-MM-DD HH:mm:ss")}>
+            {moment(value).fromNow()}
+          </Tooltip>
+        ) : (
+          "Never"
+        ),
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_: any, customer: any) => (
@@ -164,7 +209,6 @@ const CustomerManagement: FC = () => {
       ),
     },
   ];
-
   const handleCloseModal = () => {
     setSelectedCustomer(null);
   };

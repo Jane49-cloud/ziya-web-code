@@ -17,6 +17,7 @@ const GroupPaymentFormModal = ({
   approved_by,
 }: any) => {
   const [form] = Form.useForm();
+  console.log("GroupPaymentFormModal", approved_by);
   const isEditing = !!payment;
 
   const [createPayment, { isLoading: creating }] =
@@ -33,7 +34,7 @@ const GroupPaymentFormModal = ({
         loan_id: loan.id,
         customer_id: loan.issued_to,
         group_id: groupId,
-        approved_by: approved_by,
+        approved_by: approved_by ?? null,
       };
 
       if (isEditing) {
