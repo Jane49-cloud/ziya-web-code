@@ -10,7 +10,15 @@ import GroupPaymentFormModal from "./groupPaymentFormModal";
 
 const { Title, Text } = Typography;
 
-const GroupLoanHistoryTab = ({ groupId }: { groupId: number }) => {
+interface GroupLoanHistoryTabProps {
+  groupId: number;
+  groupAdminId: number;
+}
+
+const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
+  groupId,
+  groupAdminId,
+}) => {
   const { data, isLoading, refetch } = useGetGroupLoansQuery(groupId);
   const loans = data?.loans || [];
 
@@ -151,6 +159,7 @@ const GroupLoanHistoryTab = ({ groupId }: { groupId: number }) => {
           groupId={groupId}
           loan={editLoan}
           refetch={refetch}
+          issuedBy={groupAdminId}
         />
       )}
 
@@ -162,6 +171,7 @@ const GroupLoanHistoryTab = ({ groupId }: { groupId: number }) => {
           groupId={groupId}
           loan={selectedLoan}
           refetch={refetch}
+          approved_by={groupAdminId}
         />
       )}
     </Card>

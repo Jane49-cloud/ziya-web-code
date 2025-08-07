@@ -65,4 +65,3 @@ const LoanManagementPage: FC = () => {
 };
 
 export default LoanManagementPage;
-                                                                                                                                                                                                                                                
