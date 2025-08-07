@@ -68,6 +68,13 @@ export const customerSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    createSubscription: builder.mutation({
+      query: (subscriptionData) => ({
+        url: "/subscriptions/create",
+        method: "POST",
+        body: subscriptionData,
+      }),
+    }),
   }),
 });
 
@@ -81,4 +88,5 @@ export const {
   useCreateBusinessMutation,
   useUpdateBusinessMutation,
   useDeleteBusinessMutation,
+  useCreateSubscriptionMutation,
 } = customerSlice;

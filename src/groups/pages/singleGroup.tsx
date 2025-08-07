@@ -130,7 +130,7 @@ const SingleGroupPage: React.FC = () => {
         </TabPane>
 
         <TabPane tab="Loan History" key="4">
-          <GroupLoanHistoryTab groupId={groupId} />
+          <GroupLoanHistoryTab groupId={groupId} groupAdminId={group.admin} />
         </TabPane>
 
         <TabPane tab="Payment History" key="5">

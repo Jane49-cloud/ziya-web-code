@@ -14,6 +14,7 @@ const GroupPaymentFormModal = ({
   payment,
   refetch,
   onWalletRefresh,
+  approved_by,
 }: any) => {
   const [form] = Form.useForm();
   const isEditing = !!payment;
@@ -32,6 +33,7 @@ const GroupPaymentFormModal = ({
         loan_id: loan.id,
         customer_id: loan.issued_to,
         group_id: groupId,
+        approved_by: approved_by,
       };
 
       if (isEditing) {

@@ -10,12 +10,14 @@ import {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
+  useCreateSubscriptionMutation,
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
 import { customAvatar } from "../utils";
 import { Alert } from "../components/Alert";
 import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
+import { SubscriptionModal } from "./components/subscriptionModal";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -31,6 +33,12 @@ const CustomerManagement: FC = () => {
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
+  const [selectedForSubscription, setSelectedForSubscription] =
+    useState<any>(null);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [createSubscription, { isLoading: creatingSubscription }] =
+    useCreateSubscriptionMutation();
+
   const navigate = useNavigate();
 
   // NEW: Search state for filtering customers
@@ -91,6 +99,25 @@ const CustomerManagement: FC = () => {
     navigate(`/customer/${id}`);
   };
 
+  const handleCreateSubscription = async (dates: {
+    start_date: string;
+    end_date: string;
+  }) => {
+    try {
+      await createSubscription({
+        customer_id: selectedForSubscription.id,
+        ...dates,
+      }).unwrap();
+      setAlertMessage("Subscription created successfully!");
+      setAlertType("success");
+      setSubscriptionModalOpen(false);
+      setSelectedForSubscription(null);
+    } catch (err: any) {
+      setAlertMessage(err?.data?.error || "Failed to create subscription.");
+      setAlertType("danger");
+    }
+  };
+
   // Table Columns
   const columns: ColumnsType<any> = [
     {
@@ -129,6 +156,10 @@ const CustomerManagement: FC = () => {
           onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
           handleView={handleView}
+          onCreateSubscription={() => {
+            setSelectedForSubscription(customer);
+            setSubscriptionModalOpen(true);
+          }}
         />
       ),
     },
@@ -209,6 +240,13 @@ const CustomerManagement: FC = () => {
           />
         )}
       </Modal>
+
+      <SubscriptionModal
+        open={subscriptionModalOpen}
+        onCancel={() => setSubscriptionModalOpen(false)}
+        onSubmit={handleCreateSubscription}
+        loading={creatingSubscription}
+      />
     </div>
   );
 };
