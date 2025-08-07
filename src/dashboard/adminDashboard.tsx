@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Card, Statistic, Skeleton, Table, Avatar, Typography } from "antd";
-import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import { BsGraphUp, BsBank, BsPeople } from "react-icons/bs";
+import { Card, Skeleton, Table, Avatar, Typography, Progress } from "antd";
+import { BsGraphUp, BsBank } from "react-icons/bs";
+import { FaMoneyBillWave, FaExclamationTriangle } from "react-icons/fa";
 import {
   BarChart,
   Bar,
@@ -19,81 +19,113 @@ import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
 
 const { Title } = Typography;
 
-const loanColumns = [
-  {
-    title: "Recipient",
-    dataIndex: "recipient",
-    key: "recipient",
-    render: (_: any, record: any) =>
-      `${record.recipient_firstname} ${record.recipient_lastname}`,
-  },
-  {
-    title: "Group",
-    dataIndex: "group_name",
-    key: "group_name",
-  },
-  {
-    title: "Amount",
-    dataIndex: "amount",
-    key: "amount",
-    render: (amount: string) => `Ksh ${parseFloat(amount).toLocaleString()}`,
-  },
-  {
-    title: "Balance",
-    dataIndex: "balance",
-    key: "balance",
-    render: (balance: string) => `Ksh ${parseFloat(balance).toLocaleString()}`,
-  },
-];
-
-const customerColumns = [
-  {
-    title: "Avatar",
-    dataIndex: "avatar",
-    key: "avatar",
-    render: (avatar: string) => (
-      <Avatar src={avatar || "https://via.placeholder.com/40"} />
-    ),
-  },
-  {
-    title: "Full Name",
-    dataIndex: "fullName",
-    key: "fullName",
-  },
-  {
-    title: "Phone",
-    dataIndex: "phone_number",
-    key: "phone_number",
-  },
-];
+const COLORS = ["#3B82F6", "green"];
 
 const AdminDashboard: React.FC = () => {
   const { data: groupLoansData, isLoading: loansLoading } =
     useGetAllGroupLoansQuery({});
-  const { data: customersData, isLoading: customersLoading } =
-    useGetAllCustomersQuery({});
+  const { data: customersData } = useGetAllCustomersQuery({});
 
   const groupLoans = groupLoansData?.loans || [];
   const customers = customersData?.customers || [];
 
-  // Accurate calculations
   const totalIssuedAmount = groupLoans.reduce(
     (sum: number, loan: any) => sum + parseFloat(loan.amount),
     0
   );
-
   const totalOutstanding = groupLoans.reduce(
     (sum: number, loan: any) => sum + parseFloat(loan.balance),
     0
   );
-
   const totalRepaid = totalIssuedAmount - totalOutstanding;
+  const repaymentRate =
+    totalIssuedAmount > 0 ? (totalRepaid / totalIssuedAmount) * 100 : 0;
 
   const repaymentData = [
     {
-      name: "Business Loans",
+      name: "Group Loans",
       totalRepaid,
       outstandingBalance: totalOutstanding,
+    },
+  ];
+
+  const loanColumns = [
+    {
+      title: "Recipient",
+      dataIndex: "recipient",
+      key: "recipient",
+      render: (_: any, record: any) => (
+        <div className="flex items-center gap-2">
+          <Avatar size="small" style={{ backgroundColor: "#3B82F6" }}>
+            {record.recipient_firstname?.[0]?.toUpperCase()}
+          </Avatar>
+          <span className="font-medium text-gray-800">
+            {`${record.recipient_firstname} ${record.recipient_lastname}`}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Group",
+      dataIndex: "group_name",
+      key: "group_name",
+      render: (group: string) => (
+        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+          {group}
+        </span>
+      ),
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      render: (amount: string) => (
+        <span className="font-semibold text-green-600">
+          KES {parseFloat(amount).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      title: "Balance",
+      dataIndex: "balance",
+      key: "balance",
+      render: (balance: string) => {
+        const balanceAmount = parseFloat(balance);
+        return (
+          <span
+            className={`font-semibold ${
+              balanceAmount > 0 ? "text-red-500" : "text-green-600"
+            }`}
+          >
+            KES {balanceAmount.toLocaleString()}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const customerColumns = [
+    {
+      title: "Customer",
+      dataIndex: "customer",
+      key: "customer",
+      render: (_: any, record: any) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={record.avatar || "https://via.placeholder.com/40"}
+            size="large"
+            style={{
+              backgroundColor: record.avatar ? "transparent" : "#94A3B8",
+            }}
+          >
+            {!record.avatar && record.fullName?.[0]?.toUpperCase()}
+          </Avatar>
+          <div>
+            <div className="font-medium text-gray-900">{record.fullName}</div>
+            <div className="text-sm text-gray-500">{record.phone_number}</div>
+          </div>
+        </div>
+      ),
     },
   ];
 
@@ -102,140 +134,160 @@ const AdminDashboard: React.FC = () => {
     avatar: customer.avatar,
     fullName: `${customer.firstname} ${customer.middlename || ""} ${
       customer.lastname
-    }`,
+    }`.trim(),
     phone_number: customer.phone_number,
   }));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      {/* Total Business Loans Issued */}
-      <Card className="shadow-md border-t-4 border-blue-400">
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
-          <Statistic
-            title="Business Loans Issued"
-            value={groupLoans.length}
-            prefix={<BsGraphUp className="text-blue-500" />}
-          />
-        )}
-      </Card>
+    <div className="min-h-screen bg-white px-4 py-6 sm:px-6 md:px-10 lg:px-16 xl:px-20">
+      <Title level={2} className="mb-8 text-slate-800 text-center sm:text-left">
+        🧾 Admin Dashboard
+      </Title>
 
-      {/* Total Amount Loaned */}
-      <Card className="shadow-md border-t-4 border-green-400">
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
-          <Statistic
-            title="Amount Disbursed"
-            value={`Ksh ${totalIssuedAmount.toLocaleString()}`}
-            prefix={<RiMoneyDollarCircleLine className="text-green-500" />}
-          />
-        )}
-      </Card>
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <Card className="rounded-xl border border-gray-200 shadow-md p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-2xl font-semibold text-slate-700">
+                {loansLoading ? <Skeleton.Input active /> : groupLoans.length}
+              </div>
+              <div className="text-sm text-gray-500">Total Loans</div>
+            </div>
+            <BsGraphUp className="text-xl text-blue-500" />
+          </div>
+        </Card>
 
-      {/* Total Repaid */}
-      <Card className="shadow-md border-t-4 border-purple-400">
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
-          <Statistic
-            title="Repaid Amount"
-            value={`Ksh ${totalRepaid.toLocaleString()}`}
-            prefix={<BsBank className="text-purple-500" />}
-          />
-        )}
-      </Card>
+        <Card className="rounded-xl border border-gray-200 shadow-md p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-2xl font-semibold text-slate-700">
+                {loansLoading ? (
+                  <Skeleton.Input active />
+                ) : (
+                  `KES ${totalIssuedAmount.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-sm text-gray-500">Amount Disbursed</div>
+            </div>
+            <FaMoneyBillWave className="text-xl text-green-600" />
+          </div>
+        </Card>
 
-      {/* Outstanding */}
-      <Card className="shadow-md border-t-4 border-red-400">
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
-          <Statistic
-            title="Outstanding Balance"
-            value={`Ksh ${totalOutstanding.toLocaleString()}`}
-            prefix={<RiMoneyDollarCircleLine className="text-red-500" />}
-          />
-        )}
-      </Card>
+        <Card className="rounded-xl border border-gray-200 shadow-md p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-2xl font-semibold text-slate-700">
+                {loansLoading ? (
+                  <Skeleton.Input active />
+                ) : (
+                  `KES ${totalRepaid.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-sm text-gray-500">Repaid Amount</div>
+            </div>
+            <BsBank className="text-xl text-purple-500" />
+          </div>
+        </Card>
 
-      {/* Repayment Bar Chart */}
-      <Card className="col-span-1 md:col-span-2 lg:col-span-4 shadow-md p-4">
-        <Title level={4}>Business Loan Repayment Overview</Title>
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
+        <Card className="rounded-xl border border-gray-200 shadow-md p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-2xl font-semibold text-slate-700">
+                {loansLoading ? (
+                  <Skeleton.Input active />
+                ) : (
+                  `KES ${totalOutstanding.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-sm text-gray-500">Outstanding</div>
+            </div>
+            <FaExclamationTriangle className="text-xl text-red-500" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 gap-6 mb-10">
+        <Card className="col-span-1 lg:col-span-2 p-6 border border-gray-200 shadow-md rounded-xl">
+          <Title level={4} className="mb-4 text-slate-700">
+            Repayment Overview
+          </Title>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={repaymentData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
+            <BarChart data={repaymentData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
               <ChartTooltip />
               <Legend />
-              <Bar dataKey="totalRepaid" fill="#4CAF50" name="Repaid" />
+              <Bar dataKey="totalRepaid" fill={COLORS[0]} name="Repaid" />
               <Bar
                 dataKey="outstandingBalance"
-                fill="#E53935"
+                fill={COLORS[1]}
                 name="Outstanding"
               />
             </BarChart>
           </ResponsiveContainer>
-        )}
+        </Card>
+      </div>
+
+      {/* Recovery Progress */}
+      <Card className="p-6 mb-10 border border-gray-200 shadow-md rounded-xl" style={{ marginTop: 5 ,  marginBottom:10 }}>
+        <div className="flex justify-between items-center mb-4">
+          <Title level={4} className="mb-0 text-slate-700">
+            Overall Recovery
+          </Title>
+          <span className="text-xl font-semibold text-green-600">
+            {repaymentRate.toFixed(1)}%
+          </span>
+        </div>
+        <Progress
+          percent={repaymentRate}
+          strokeColor="#22c55e"
+          strokeWidth={12}
+        />
+        <div className="flex justify-between text-sm text-gray-500 mt-2">
+          <span>Recovered: KES {totalRepaid.toLocaleString()}</span>
+          <span>Remaining: KES {totalOutstanding.toLocaleString()}</span>
+        </div>
       </Card>
 
-      {/* Recent Loans Table */}
-      <Card className="shadow-md col-span-1 md:col-span-2">
-        <div className="flex justify-between items-center mb-4">
-          <Title level={4}>Recent Loans</Title>
-          <Link
-            to="/loans"
-            className="text-blue-600 font-medium hover:underline"
-          >
-            See All
-          </Link>
-        </div>
-        {loansLoading ? (
-          <Skeleton active />
-        ) : (
+      {/* Tables */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Card className="p-6 border border-gray-200 shadow-md rounded-xl">
+          <div className="flex justify-between items-center mb-4">
+            <Title level={4} className="mb-0 text-slate-700">
+              Recent Loans
+            </Title>
+            <Link to="/loans" className="text-blue-600 hover:underline">
+              View All
+            </Link>
+          </div>
           <Table
             dataSource={groupLoans.slice(0, 5)}
             columns={loanColumns}
             pagination={false}
-            bordered
+            size="small"
           />
-        )}
-      </Card>
+        </Card>
 
-      {/* Recent Customers Table */}
-      <Card className="shadow-md col-span-1 md:col-span-2">
-        <div className="flex justify-between items-center mb-4">
-          <Title level={4}>
-            <BsPeople className="inline mr-2 text-green-500" />
-            Recent Customers
-          </Title>
-          <Link
-            to="/customers"
-            className="text-green-600 font-medium hover:underline"
-          >
-            See All
-          </Link>
-        </div>
-        {customersLoading ? (
-          <Skeleton active />
-        ) : (
+        <Card className="p-6 border border-gray-200 shadow-md rounded-xl">
+          <div className="flex justify-between items-center mb-4">
+            <Title level={4} className="mb-0 text-slate-700">
+              Recent Customers
+            </Title>
+            <Link to="/customers" className="text-blue-600 hover:underline">
+              View All
+            </Link>
+          </div>
           <Table
             dataSource={customerData.slice(0, 5)}
             columns={customerColumns}
             pagination={false}
-            bordered
-            className="overflow-x-auto"
+            size="small"
           />
-        )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

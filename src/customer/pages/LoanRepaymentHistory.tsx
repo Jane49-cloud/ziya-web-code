@@ -31,7 +31,7 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
   if (isLoading) return <Spin size="large" />;
 
   return (
-    <Card title="Loan Repayment History">
+    <Card title="Loan Repayment History" style={{ marginTop: 10 }}>
       <Table
         dataSource={payments}
         rowKey="id"
