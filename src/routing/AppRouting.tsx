@@ -26,6 +26,7 @@ import GroupActivitiesByGroup from "../groups/activities/groupActivity";
 import AllGroupActivities from "../groups/activities/groupsActivities";
 import UserGroupActivities from "../groups/activities/userGroupActivities";
 import ZiyaPrivacyPolicy from "../privacy/privacyPolicy";
+import AccountDeletion from "../privacy/delete-account";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +76,9 @@ const AppRouting = (): ReactElement => {
     <Routes>
       <Route path="auth/*" element={<AuthPage />} />
       <Route path="/privacy-policy" element={<ZiyaPrivacyPolicy />} />
+      <Route path="/delete-account" element={<AccountDeletion />} />
+
+      {/* Public Routes */}
 
       <Route path="*" element={<NotFound />} />
       <Route path="/unauthorized" element={<Unauthorized />} />

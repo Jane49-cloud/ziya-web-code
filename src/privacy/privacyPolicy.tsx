@@ -130,7 +130,12 @@ const ZiyaPrivacyPolicy: React.FC = () => {
         </Card>
 
         {/* Quick Navigation */}
-        <Card className="mb-8 shadow-md" style={{ marginBottom: "1rem" }}>
+        <Card
+          className="mb-8 shadow-md z-20"
+          styles={{
+            body: { position: "relative", zIndex: 50, background: "#fff" },
+          }}
+        >
           <Title level={4} className="mb-4">
             Quick Navigation
           </Title>
@@ -142,7 +147,8 @@ const ZiyaPrivacyPolicy: React.FC = () => {
               { key: "3", href: "#your-rights", title: "Your Rights" },
               { key: "4", href: "#contact", title: "Contact" },
             ]}
-            className="flex flex-wrap"
+            className="flex flex-wrap z-20"
+            style={{ zIndex: 20 }}
           />
         </Card>
 
