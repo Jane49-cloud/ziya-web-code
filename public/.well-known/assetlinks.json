@@ -8,5 +8,18 @@
         "91:BB:EB:33:0B:D4:E0:C9:85:94:E8:3D:69:1D:12:14:4 F:94:83:53:7A:29:F8:2E:A2:4B:DE:DE:64:59:E0:A9"
       ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ziya.app",
+      "sha256_cert_fingerprints": [
+        "59:28:F9:3D:1F:02:E3:25:B7:A6:B5:C6:08:3A:80:9D:18:3F:7F:74:33:8C:D1:9E:C8:44:98:6C:4E:BE:58:45"
+      ]
+    }
   }
 ]
