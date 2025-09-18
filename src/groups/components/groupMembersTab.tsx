@@ -50,13 +50,13 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const handleAddMember = async (cust: any) => {
     try {
       setLoadingId(cust.id);
-      await addMember({ groupId, memberData: { memberId: cust.id } });
+      await addMember({ groupId, memberData: { memberId: cust.id } }).unwrap();
       message.success("Member added successfully");
       await refetch();
       setSearch("");
       setModalOpen(false);
-    } catch (err) {
-      message.error("Failed to add member");
+    } catch (err: any) {
+      message.error(err?.data?.error || "Failed to add member");
     } finally {
       setLoadingId(null);
     }
@@ -65,11 +65,12 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const handleRemoveMember = async (id: number) => {
     try {
       setLoadingId(id);
-      await removeMember({ groupId, memberId: id });
+      await removeMember({ groupId, memberId: id }).unwrap();
+
       message.success("Member removed");
       await refetch();
-    } catch (err) {
-      message.error("Failed to remove member");
+    } catch (err: any) {
+      message.error(err?.data?.error || "Failed to remove member");
     } finally {
       setLoadingId(null);
     }
