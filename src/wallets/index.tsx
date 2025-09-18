@@ -8,7 +8,7 @@ const AllGroupWalletsPage = () => {
 
   console.log("All Group Wallets Data:", data);
   const columns = [
-    { title: "Group ID", dataIndex: "group_id", key: "group_id" },
+    { title: "Group Name", dataIndex: "group_name", key: "group_name" },
     { title: "Balance", dataIndex: "balance", key: "balance" },
     {
       title: "Loans Out Value",

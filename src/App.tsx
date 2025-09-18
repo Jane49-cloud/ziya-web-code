@@ -5,9 +5,14 @@ import { useEffect } from "react";
 import { initializeUser } from "./utils/initializeUser";
 
 const App = () => {
-  useEffect(() => {
+  
+useEffect(() => {
+  const token = localStorage.getItem('ziya-access');
+  if (token) {
     initializeUser();
-  }, []);
+  }
+}, []);
+
   return (
     <BrowserRouter>
       <AppRouting />
