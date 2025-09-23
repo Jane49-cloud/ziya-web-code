@@ -24,6 +24,7 @@ import { formatDate, getUser } from "../../utils";
 import { useGetBusinessesByCustomerQuery } from "../features/customerSlice";
 import dayjs from "dayjs";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
+import { Business } from "../../types/common";
 
 const { Option } = Select;
 
@@ -53,7 +54,14 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
   const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
   const { data: businessData } = useGetBusinessesByCustomerQuery(customerId);
 
-  const businesses = businessData?.customerBusinesses || [];
+  const rawBusinesses = businessData?.customerBusinesses;
+
+  const businesses: Business[] = Array.isArray(rawBusinesses)
+    ? rawBusinesses
+    : rawBusinesses
+    ? [rawBusinesses]
+    : [];
+
   const user = getUser();
   const navigate = useNavigate();
 
@@ -257,7 +265,7 @@ const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
             rules={[{ required: true, message: "Please select a business" }]}
           >
             <Select placeholder="Select Customer Business">
-              {businesses.map((business: any) => (
+              {businesses?.map((business: any) => (
                 <Option key={business.id} value={business.id}>
                   {business.name}
                 </Option>

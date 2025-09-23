@@ -8,10 +8,19 @@ import {
 } from "../features/customerSlice";
 import CustomerBusinessForm from "./customerBusinessForm";
 import { refetchCustomerBusiness } from "../util";
+import { Business } from "../../types/common";
 
 const CustomerBusinessList = ({ customerId }: any) => {
   const { data, isLoading } = useGetBusinessesByCustomerQuery(customerId);
-  const businesses = data?.customerBusinesses || [];
+  const rawBusinesses = data?.customerBusinesses;
+
+  const businesses: Business[] = Array.isArray(rawBusinesses)
+    ? rawBusinesses
+    : rawBusinesses
+    ? [rawBusinesses]
+    : [];
+
+  // console.log(businesses, "businesses data from query");
   const [deleteBusiness] = useDeleteBusinessMutation();
   const [editBusiness, setEditBusiness] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

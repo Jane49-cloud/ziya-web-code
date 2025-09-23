@@ -10,7 +10,7 @@ import { useGetAllGroupLoansQuery } from "../features/loanSlice";
 const LoanManagementPage: FC = () => {
   const { data, isLoading } = useGetAllGroupLoansQuery({});
   const loans = data?.loans || [];
-  console.log(loans, "loans data from query");
+  // console.log(loans, "loans data from query");
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
