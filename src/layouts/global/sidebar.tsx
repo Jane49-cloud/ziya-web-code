@@ -4,17 +4,10 @@ import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
 import clsx from "clsx";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { getRole } from "../../utils";
+import { sidebarItems } from "../../routing/routes";
 
 interface SidebarProps {
   closeSidebar: () => void;
-}
-
-interface SidebarItem {
-  title: string;
-  icon: string;
-  path?: string;
-  allowedRoles?: string[];
-  dropdown?: { title: string; path: string; allowedRoles?: string[] }[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
@@ -45,67 +38,6 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     localStorage.clear();
     navigate("/auth/login");
   };
-
-  const sidebarItems: SidebarItem[] = [
-    {
-      title: "Dashboard",
-      icon: "chart-line-star",
-      path: "/",
-      // allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    {
-      title: "Roles",
-      icon: "profile-circle",
-      path: "/roles",
-      allowedRoles: ["admin", "dev"],
-    },
-    {
-      title: "Users",
-      icon: "users",
-      dropdown: [
-        { title: "Staff", path: "/staff", allowedRoles: ["admin", "dev"] },
-        {
-          title: "Customers",
-          path: "/customers",
-          // allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-        },
-      ],
-    },
-    {
-      title: "Businesses",
-      icon: "shop",
-      path: "/businesses",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    {
-      title: "Loans",
-      icon: "bank",
-      dropdown: [
-        {
-          title: "Categories",
-          path: "/loan-categories",
-          allowedRoles: ["admin", "dev"],
-        },
-        {
-          title: "Loans List",
-          path: "/loans",
-          // allowedRoles: ["admin", "dev", "relationship manager"],
-        },
-      ],
-    },
-    {
-      title: "Groups",
-      icon: "users",
-      path: "/groups",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    {
-      title: "Wallets",
-      icon: "wallet",
-      path: "/wallets",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-  ];
 
   return (
     <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300 z-50">

@@ -131,10 +131,9 @@ const CustomerManagement: FC = () => {
 
   const columns: ColumnsType<any> = [
     {
-      title: "#",
-      dataIndex: "index",
-      key: "index",
-      render: (_: any, __: any, index: number) => index + 1,
+      title: "# id",
+      dataIndex: "id",
+      key: "id",
       width: 60,
       align: "center" as const,
     },

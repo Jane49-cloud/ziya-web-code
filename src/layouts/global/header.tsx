@@ -4,6 +4,7 @@ import { IconContext } from "react-icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
 import { customAvatar, getRole, getUser } from "../../utils";
+import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
   ref: React.RefObject<HTMLElement>,
@@ -77,32 +78,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     : "Ziya";
   const userRole = role?.name;
 
-  // Define role-based navigation links
-  const navLinks = [
-    {
-      to: "/",
-      label: "Home",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    {
-      to: "/profile",
-      label: "Profile",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    { to: "/staff", label: "Staff", allowedRoles: ["admin", "dev"] },
-    { to: "/roles", label: "Roles", allowedRoles: ["admin", "dev"] },
-    {
-      to: "/customers",
-      label: "Customers",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-    {
-      to: "/groups",
-      label: "Groups",
-      allowedRoles: ["admin", "dev", "relationship manager", "staff"],
-    },
-  ].filter((link) => link.allowedRoles.includes(userRole));
-
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
       <header className="sticky top-0 z-30 bg-white shadow-sm py-2 max-w-[100vw] px-4">
@@ -118,19 +93,21 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
           {/* Navigation Links */}
           <nav className="hidden lg:flex space-x-4">
-            {navLinks.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-[#ecbe1d] font-bold"
-                    : "text-gray-700 hover:text-gray-900"
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
+            {navLinks
+              .filter((link) => link.allowedRoles.includes(userRole))
+              .map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-[#ecbe1d] font-bold"
+                      : "text-gray-700 hover:text-gray-900"
+                  }
+                >
+                  {label}
+                </NavLink>
+              ))}
           </nav>
 
           {/* Profile Dropdown */}

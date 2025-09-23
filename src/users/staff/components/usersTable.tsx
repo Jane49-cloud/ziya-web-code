@@ -44,9 +44,8 @@ export function UsersTable({ users }: UsersTableProps) {
   const columns: ColumnsType<UserData> = [
     {
       title: "#",
-      dataIndex: "index",
-      key: "index",
-      render: (_: any, __: UserData, index: number) => index + 1,
+      dataIndex: "id",
+      key: "id",
       align: "center",
     },
     {
@@ -73,8 +72,7 @@ export function UsersTable({ users }: UsersTableProps) {
     {
       title: "Phone",
       key: "phone",
-      render: (_: any, record: UserData) =>
-        `${record.country_code} ${record.phone_number}`,
+      render: (_: any, record: UserData) => ` ${record.phone_number}`,
     },
     {
       title: "Actions",

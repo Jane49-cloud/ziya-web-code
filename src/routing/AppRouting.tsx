@@ -28,6 +28,9 @@ import UserGroupActivities from "../groups/activities/userGroupActivities";
 import ZiyaPrivacyPolicy from "../privacy/privacyPolicy";
 import AccountDeletion from "../privacy/delete-account";
 
+// role groups
+import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
+
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -74,35 +77,27 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
 const AppRouting = (): ReactElement => {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="auth/*" element={<AuthPage />} />
       <Route path="/privacy-policy" element={<ZiyaPrivacyPolicy />} />
       <Route path="/delete-account" element={<AccountDeletion />} />
-
-      {/* Public Routes */}
-
       <Route path="*" element={<NotFound />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      <Route
-        element={
-          <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
-          />
-        }
-      >
+      {/* All roles */}
+      <Route element={<PrivateRoutes allowedRoles={ALL_ROLES} />}>
         <Route element={<Layout children={undefined} />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/groups/:id" element={<SingleGroupPage />} />
           <Route path="/create-group" element={<CreateGroupPage />} />
-
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-user" element={<AddUser />} />
         </Route>
       </Route>
 
-      {/* Admin & Dev Only */}
-      <Route element={<PrivateRoutes allowedRoles={["admin", "dev"]} />}>
+      {/* Admin & Dev only */}
+      <Route element={<PrivateRoutes allowedRoles={ADMIN_DEV} />}>
         <Route element={<Layout children={undefined} />}>
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
@@ -110,58 +105,16 @@ const AppRouting = (): ReactElement => {
         </Route>
       </Route>
 
-      {/* Relationship Manager & Staff Can See Customers & Businesses */}
-      <Route
-        element={
-          <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
-          />
-        }
-      >
+      {/* Staff roles (admin, dev, relationship-manager) */}
+      <Route element={<PrivateRoutes allowedRoles={STAFF_ROLES} />}>
         <Route element={<Layout children={undefined} />}>
           <Route path="/customers" element={<CustomerManagement />} />
           <Route path="/businesses" element={<BusinessList />} />
-        </Route>
-      </Route>
-
-      {/* Loans - Admin & Dev Only */}
-      <Route
-        element={
-          <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
-          />
-        }
-      >
-        <Route element={<Layout children={undefined} />}>
           <Route path="/loans" element={<LoanManagementPage />} />
           <Route path="/loans/:loanId" element={<SingleLoanPage />} />
-        </Route>
-      </Route>
-
-      {/* Public Profile & Customer Details */}
-      <Route
-        element={
-          <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
-          />
-        }
-      >
-        <Route element={<Layout children={undefined} />}>
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
           <Route path="/wallets" element={<AllGroupWalletsPage />} />
-        </Route>
-      </Route>
-
-      {/* groups activities */}
-      <Route
-        element={
-          <PrivateRoutes
-            allowedRoles={["admin", "dev", "relationship manager", "staff"]}
-          />
-        }
-      >
-        <Route element={<Layout children={undefined} />}>
           <Route path="/activities/all" element={<AllGroupActivities />} />
           <Route
             path="/activities/user/:id"
