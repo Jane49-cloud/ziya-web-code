@@ -19,7 +19,6 @@ import {
   useRemoveGroupMemberMutation,
   useAddGroupMemberMutation,
 } from "../features";
-
 import { UserAddOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
 
@@ -44,7 +43,8 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   );
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const [searchMembers, setSearchMembers] = useState("");
+  const [searchCustomers, setSearchCustomers] = useState("");
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const handleAddMember = async (cust: any) => {
@@ -53,7 +53,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       await addMember({ groupId, memberData: { memberId: cust.id } }).unwrap();
       message.success("Member added successfully");
       await refetch();
-      setSearch("");
+      setSearchCustomers("");
       setModalOpen(false);
     } catch (err: any) {
       message.error(err?.data?.error || "Failed to add member");
@@ -66,7 +66,6 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     try {
       setLoadingId(id);
       await removeMember({ groupId, memberId: id }).unwrap();
-
       message.success("Member removed");
       await refetch();
     } catch (err: any) {
@@ -76,29 +75,43 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
   };
 
-  const filteredResults = useMemo(() => {
-    return customers.filter((cust: any) => {
-      const fullName = `${cust.firstname} ${cust.lastname}`.toLowerCase();
+  const filteredMembers = useMemo(() => {
+    return members.filter((m: any) => {
+      const fullName = `${m.firstname} ${m.lastname}`.toLowerCase();
       return (
-        fullName.includes(search.toLowerCase()) &&
-        !members.some((m: any) => m.id === cust.id)
+        fullName.includes(searchMembers.toLowerCase()) ||
+        (m.phone_number || "")
+          .toLowerCase()
+          .includes(searchMembers.toLowerCase())
       );
     });
-  }, [search, customers, members]);
+  }, [members, searchMembers]);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((cust: any) => {
+      const fullName = `${cust.firstname} ${cust.lastname}`.toLowerCase();
+      return fullName.includes(searchCustomers.toLowerCase());
+    });
+  }, [customers, searchCustomers]);
 
   const columns = [
     {
       title: "Full Name",
       dataIndex: "fullname",
       key: "fullname",
+      sorter: (a: any, b: any) =>
+        `${a.firstname} ${a.lastname}`.localeCompare(
+          `${b.firstname} ${b.lastname}`
+        ),
       render: (_: any, record: any) => `${record.firstname} ${record.lastname}`,
     },
     {
       title: "Phone Number",
       dataIndex: "phone_number",
       key: "phone_number",
+      sorter: (a: any, b: any) =>
+        (a.phone_number || "").localeCompare(b.phone_number || ""),
     },
-
     {
       title: "Action",
       key: "action",
@@ -126,13 +139,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       <div className="flex justify-between items-center mb-4">
         <Title level={4}>Group Members</Title>
 
-        <Button
-          type="primary"
-          icon={<UserAddOutlined />}
-          onClick={() => setModalOpen(true)}
-        >
-          Add Member
-        </Button>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search members..."
+            value={searchMembers}
+            onChange={(e) => setSearchMembers(e.target.value)}
+            style={{ width: 250 }}
+          />
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={() => setModalOpen(true)}
+          >
+            Add Member
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -140,9 +161,9 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       ) : (
         <Table
           columns={columns}
-          dataSource={members}
+          dataSource={filteredMembers}
           rowKey={(record) => record.id}
-          pagination={{ pageSize: 5 }}
+          pagination={{ pageSize: 10 }}
           bordered
         />
       )}
@@ -155,34 +176,47 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       >
         <Input
           placeholder="Search customer by name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchCustomers}
+          onChange={(e) => setSearchCustomers(e.target.value)}
           className="mb-4"
         />
+
         {customersLoading ? (
           <Spin />
         ) : (
           <List
-            dataSource={filteredResults}
-            renderItem={(cust: any) => (
-              <List.Item
-                actions={[
-                  <Button
-                    type="link"
-                    loading={loadingId === cust.id}
-                    onClick={() => handleAddMember(cust)}
-                  >
-                    Add
-                  </Button>,
-                ]}
-              >
-                <List.Item.Meta
-                  avatar={<Avatar>{cust.firstname[0]}</Avatar>}
-                  title={`${cust.firstname} ${cust.lastname}`}
-                  description={cust.email}
-                />
-              </List.Item>
-            )}
+            dataSource={filteredCustomers}
+            renderItem={(cust: any) => {
+              const isAlreadyMember = members.some(
+                (m: any) => m.id === cust.id
+              );
+
+              return (
+                <List.Item
+                  actions={[
+                    isAlreadyMember ? (
+                      <Button type="default" disabled>
+                        Already Added
+                      </Button>
+                    ) : (
+                      <Button
+                        type="link"
+                        loading={loadingId === cust.id}
+                        onClick={() => handleAddMember(cust)}
+                      >
+                        Add
+                      </Button>
+                    ),
+                  ]}
+                >
+                  <List.Item.Meta
+                    avatar={<Avatar>{cust.firstname[0]}</Avatar>}
+                    title={`${cust.firstname} ${cust.lastname}`}
+                    description={cust.email}
+                  />
+                </List.Item>
+              );
+            }}
           />
         )}
       </Modal>

@@ -84,8 +84,8 @@ export const EditCustomerForm: FC<{
 
         {/* Optional fields you can uncomment if needed later */}
         {/* {renderInput("middlename", "Middle Name", [{ required: false }])} */}
-        {/* {renderInput("identification_number", "ID Number")} */}
-        {/* <Form.Item
+        {renderInput("identification_number", "ID Number")}
+        <Form.Item
           name="identification_type"
           label="ID Type"
           rules={[{ required: true }]}
@@ -95,7 +95,7 @@ export const EditCustomerForm: FC<{
             <Option value="Passport">Passport</Option>
             <Option value="Driver’s License">Driver’s License</Option>
           </Select>
-        </Form.Item> */}
+        </Form.Item>
 
         <div className="text-right">
           <Button type="primary" htmlType="submit" loading={isLoading}>

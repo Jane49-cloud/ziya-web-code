@@ -1,49 +1,56 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
-import { Table, Button, Card, Dropdown, Menu } from "antd";
-import {
-  FiEdit,
-  // FiTrash2,
-  FiUserCheck,
-  // FiUsers,
-  FiEye,
-  FiMoreVertical,
-} from "react-icons/fi";
+import React, { useMemo, useState } from "react";
+import { Table, Button, Card, Dropdown, Menu, Input } from "antd";
+import { FiEdit, FiUserCheck, FiEye, FiMoreVertical } from "react-icons/fi";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
+// import { useNavigate } from "react-router-dom";
 
 interface GroupTableProps {
   data: Array<{
-    id: string;
+    id: string | number;
     name: string;
-    bio?: string;
-    total_members: number;
     relationship_manager?: number;
   }>;
   onEdit: (record: any) => void;
   onChangeManager: (record: any) => void;
-  onChangeMembers: (record: any) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string | number) => void;
 }
 
 const GroupTable: React.FC<GroupTableProps> = ({
   data,
   onEdit,
   onChangeManager,
-  // onChangeMembers,
-  // onDelete,
 }) => {
   const { data: userData, isLoading } = useGetAllUsersQuery(undefined);
-  const staffList = userData?.staffs || [];
+  const staffList = useMemo(() => userData?.staffs || [], [userData]);
+  // const navigate = useNavigate();
+
+  const [search, setSearch] = useState("");
+
+  const filteredData = useMemo(() => {
+    const searchText = search.toLowerCase();
+    return data.filter((g) => {
+      const manager = staffList.find(
+        (s: any) => s.id === g.relationship_manager
+      );
+      const managerName = manager
+        ? `${manager.firstname} ${manager.lastname}`
+        : "Unassigned";
+
+      return (
+        String(g?.name || "")
+          .toLowerCase()
+          .includes(searchText) ||
+        managerName.toLowerCase().includes(searchText)
+      );
+    });
+  }, [data, search, staffList]);
 
   const columns = [
-    { title: "Name", dataIndex: "name" },
     {
-      title: "Bio",
-      dataIndex: "bio",
-      render: (bio: string | undefined) =>
-        bio ? bio : <em className="text-gray-400">No bio available</em>,
+      title: "Name",
+      dataIndex: "name",
     },
-
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
@@ -60,7 +67,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
     },
     {
       title: "Actions",
-      render: (_: any, record: { id: string }) => {
+      render: (_: any, record: { id: string | number }) => {
         const menu = (
           <Menu>
             <Menu.Item key="view" icon={<FiEye />}>
@@ -80,20 +87,6 @@ const GroupTable: React.FC<GroupTableProps> = ({
             >
               Change Manager
             </Menu.Item>
-            {/* <Menu.Item
-              key="members"
-              icon={<FiUsers />}
-              onClick={() => onChangeMembers(record)}
-            >
-              Edit Members count
-            </Menu.Item> */}
-            {/* <Menu.Item
-              key="delete"
-              icon={<FiTrash2 />}
-              onClick={() => onDelete(record.id)}
-            >
-              <span className="text-red-500">Delete</span>
-            </Menu.Item> */}
           </Menu>
         );
 
@@ -108,13 +101,30 @@ const GroupTable: React.FC<GroupTableProps> = ({
 
   return (
     <Card bordered={false} className="mt-4">
+      <div className="flex justify-between mb-4">
+        <Input
+          placeholder="Search groups..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: 250 }}
+        />
+      </div>
+
       <Table
-        dataSource={data}
+        dataSource={filteredData}
         columns={columns}
-        rowKey="id"
+        rowKey={(record) => String(record.id)}
         scroll={{ x: true }}
         bordered
         loading={isLoading}
+        pagination={{ pageSize: 10 }}
+        onRow={() => ({
+          // onClick: (e) => {
+          //   if ((e.target as HTMLElement).closest("button")) return;
+          //   navigate(`/groups/${record.id}`);
+          // },
+          style: { cursor: "pointer" },
+        })}
       />
     </Card>
   );
