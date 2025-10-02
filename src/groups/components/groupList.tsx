@@ -13,6 +13,7 @@ interface GroupTableProps {
   }>;
   onEdit: (record: any) => void;
   onChangeManager: (record: any) => void;
+  onChangeMembers?: (record: any) => void;
   onDelete?: (id: string | number) => void;
 }
 
