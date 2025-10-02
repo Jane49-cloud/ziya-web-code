@@ -9,7 +9,11 @@ import { useNavigate } from "react-router-dom";
 const { Title, Text } = Typography;
 
 const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
-  const { data, isLoading } = useGetGroupPaymentsQuery(groupId);
+  const { data, isLoading, refetch } = useGetGroupPaymentsQuery(groupId, {
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+  });
+
   const payments = data?.payments || [];
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   Typography,
@@ -32,20 +32,20 @@ interface Props {
 const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const { data, isLoading, refetch } = useGetGroupMembersQuery(groupId);
   const { data: allCustomersData, isLoading: customersLoading } =
-    useGetAllCustomersQuery({});
+    useGetAllCustomersQuery({}, { refetchOnFocus: false });
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
 
   const members = useMemo(() => data?.members || [], [data]);
-  const customers = useMemo(
-    () => allCustomersData?.customers || [],
-    [allCustomersData]
-  );
+  const customers = useMemo(() => allCustomersData?.customers || [], [allCustomersData]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [searchMembers, setSearchMembers] = useState("");
   const [searchCustomers, setSearchCustomers] = useState("");
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [customerPage, setCustomerPage] = useState(1);
+
+  const pageSize = 20;
 
   const handleAddMember = async (cust: any) => {
     try {
@@ -88,11 +88,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   }, [members, searchMembers]);
 
   const filteredCustomers = useMemo(() => {
+    if (!modalOpen) {
+      return [];
+    }
+    const searchText = searchCustomers.trim().toLowerCase();
     return customers.filter((cust: any) => {
-      const fullName = `${cust.firstname} ${cust.lastname}`.toLowerCase();
-      return fullName.includes(searchCustomers.toLowerCase());
+      const fullName = `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+        .trim()
+        .toLowerCase();
+      return fullName.includes(searchText);
     });
-  }, [customers, searchCustomers]);
+  }, [customers, modalOpen, searchCustomers]);
+
+  const pagedCustomers = useMemo(() => {
+    return filteredCustomers.slice(0, customerPage * pageSize);
+  }, [filteredCustomers, customerPage]);
 
   const columns = [
     {
@@ -171,13 +181,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       <Modal
         title="Add Member"
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => {
+          setModalOpen(false);
+          setSearchCustomers("");
+          setCustomerPage(1);
+        }}
         footer={null}
+        destroyOnClose
       >
         <Input
           placeholder="Search customer by name"
           value={searchCustomers}
-          onChange={(e) => setSearchCustomers(e.target.value)}
+          onChange={(e) => {
+            setCustomerPage(1);
+            setSearchCustomers(e.target.value);
+          }}
           className="mb-4"
         />
 
@@ -185,7 +203,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
           <Spin />
         ) : (
           <List
-            dataSource={filteredCustomers}
+            dataSource={pagedCustomers}
             renderItem={(cust: any) => {
               const isAlreadyMember = members.some(
                 (m: any) => m.id === cust.id
@@ -218,6 +236,14 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
               );
             }}
           />
+        )}
+
+        {pagedCustomers.length < filteredCustomers.length && (
+          <div className="mt-4 flex justify-center">
+            <Button onClick={() => setCustomerPage((page) => page + 1)}>
+              Load More
+            </Button>
+          </div>
         )}
       </Modal>
     </Card>

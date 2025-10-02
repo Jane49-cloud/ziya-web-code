@@ -1,20 +1,7 @@
-import React from "react";
-import AdminDashboard from "./adminDashboard";
-import StaffDashboard from "./staffDashboard";
-import { getRole } from "../utils";
-const Dashboard: React.FC = () => {
-  const role = getRole();
-  const userRole = role?.name || "guest";
+import DashboardOverview from "./adminDashboard";
 
-  return (
-    <div>
-      {userRole === "admin" || userRole === "dev" ? (
-        <AdminDashboard />
-      ) : (
-        <StaffDashboard />
-      )}
-    </div>
-  );
+const Dashboard = () => {
+  return <DashboardOverview />;
 };
 
 export default Dashboard;

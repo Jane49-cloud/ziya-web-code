@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
   Tabs,
   Table,
@@ -11,6 +11,13 @@ import {
   Input,
   Tag,
   Tooltip,
+  Row,
+  Col,
+  Statistic,
+  Segmented,
+  Button,
+  Typography,
+  Empty,
 } from "antd";
 import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
@@ -29,6 +36,11 @@ import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
+import {
+  SearchOutlined,
+  UserAddOutlined,
+  ThunderboltFilled,
+} from "@ant-design/icons";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading } = useGetAllCustomersQuery({});
@@ -51,9 +63,18 @@ const CustomerManagement: FC = () => {
     useCreateSubscriptionMutation();
 
   const navigate = useNavigate();
+  const { Text } = Typography;
 
-  // NEW: Search state for filtering customers
+  type SubscriptionFilter = "all" | "active" | "inactive";
+
+  // Filter state for enhanced table controls
   const [searchText, setSearchText] = useState("");
+  const [subscriptionFilter, setSubscriptionFilter] =
+    useState<SubscriptionFilter>("all");
+  const [tablePagination, setTablePagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -129,43 +150,126 @@ const CustomerManagement: FC = () => {
     }
   };
 
+  const normalizedCustomers = useMemo(
+    () => (customers ? [...customers] : []),
+    [customers]
+  );
+
+  const customerMetrics = useMemo(() => {
+    const total = normalizedCustomers.length;
+    const active = normalizedCustomers.filter(
+      (customer: any) => customer.subscription_status === 1
+    ).length;
+    const inactive = total - active;
+
+    return { total, active, inactive };
+  }, [normalizedCustomers]);
+
+  const filteredCustomers = useMemo(() => {
+    const search = searchText.trim().toLowerCase();
+
+    return normalizedCustomers.filter((customer: any) => {
+      const firstName = customer.firstname ?? "";
+      const lastName = customer.lastname ?? "";
+      const fullName = `${firstName} ${lastName}`.trim().toLowerCase();
+      const phone = (customer.phone_number ?? "").toLowerCase();
+
+      const matchesSearch =
+        !search ||
+        fullName.includes(search) ||
+        phone.includes(search) ||
+        (customer.identification_number ?? "")
+          .toLowerCase()
+          .includes(search);
+
+      const matchesStatus =
+        subscriptionFilter === "all" ||
+        (subscriptionFilter === "active" &&
+          customer.subscription_status === 1) ||
+        (subscriptionFilter === "inactive" &&
+          customer.subscription_status !== 1);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [normalizedCustomers, searchText, subscriptionFilter]);
+
+  useEffect(() => {
+    setTablePagination((current) => ({
+      ...current,
+      current: 1,
+    }));
+  }, [searchText, subscriptionFilter]);
+
+  useEffect(() => {
+    setTablePagination((current) => {
+      const pageSize = current.pageSize ?? 10;
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredCustomers.length / pageSize)
+      );
+      const nextCurrent = Math.min(current.current ?? 1, totalPages);
+      if (nextCurrent === current.current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        current: nextCurrent,
+      };
+    });
+  }, [filteredCustomers.length]);
+
   const columns: ColumnsType<any> = [
     {
-      title: "# id",
+      title: "#",
       dataIndex: "id",
       key: "id",
-      width: 60,
+      width: 70,
       align: "center" as const,
+      render: (value: string | number) => (
+        <Tag color="default" bordered={false} className="!m-0 !px-3">
+          #{value}
+        </Tag>
+      ),
     },
     {
-      title: "Name",
+      title: "Customer",
       dataIndex: "name",
       key: "name",
       render: (_: any, record: any) => {
-        const fullName = `${record.firstname} ${record.lastname}`;
+        const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`
+          .trim()
+          .replace(/\s+/g, " ");
+        const fallbackName = record.name ?? "Unnamed Customer";
+        const displayName = fullName || fallbackName;
+        const initial = displayName.charAt(0).toUpperCase() || "?";
         return (
-          <Space>
-            <Avatar src={customAvatar(fullName)}>{fullName[0]}</Avatar>
-            <span>{fullName}</span>
+          <Space align="start">
+            <Avatar src={customAvatar(displayName)} size={44}>
+              {initial}
+            </Avatar>
+            <div className="flex flex-col">
+              <Text strong>{displayName}</Text>
+              <Text type="secondary" className="text-xs">
+                {record.phone_number || "No phone on file"}
+              </Text>
+            </div>
           </Space>
         );
       },
     },
     {
-      title: "Phone",
-      dataIndex: "phone_number",
-      key: "phone",
-    },
-    {
-      title: "ID Info",
+      title: "Identification",
       key: "identification",
       render: (_: any, record: any) => (
-        <div>
-          <div>{record.identification_type}</div>
-          <div className="text-gray-500 text-xs">
-            {record.identification_number}
-          </div>
-        </div>
+        <Space direction="vertical" size={0}>
+          <Tag color="blue" bordered={false} className="!px-2">
+            {record.identification_type || "Not provided"}
+          </Tag>
+          <Text type="secondary" className="text-xs">
+            {record.identification_number || "—"}
+          </Text>
+        </Space>
       ),
     },
     {
@@ -212,19 +316,6 @@ const CustomerManagement: FC = () => {
     setSelectedCustomer(null);
   };
 
-  // NEW: Filter customers based on search text (searching name and phone)
-  const filteredCustomers = customers
-    ? customers.filter((customer: any) => {
-        const fullName =
-          `${customer.firstname} ${customer.lastname}`.toLowerCase();
-        const phone = customer.phone_number.toLowerCase();
-        return (
-          fullName.includes(searchText.toLowerCase()) ||
-          phone.includes(searchText.toLowerCase())
-        );
-      })
-    : [];
-
   return (
     <div className="customer-management">
       {/* Show status alert */}
@@ -234,28 +325,107 @@ const CustomerManagement: FC = () => {
         </Alert>
       )}
 
+      <Card className="mb-4 shadow-sm" bodyStyle={{ padding: 20 }}>
+        <Row gutter={[24, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Total Customers"
+              value={customerMetrics.total}
+              loading={isLoading}
+              prefix={<ThunderboltFilled className="text-yellow-500" />}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Active Subscriptions"
+              value={customerMetrics.active}
+              loading={isLoading}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Inactive Subscriptions"
+              value={customerMetrics.inactive}
+              loading={isLoading}
+            />
+          </Col>
+        </Row>
+      </Card>
+
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         {/* Tab 1: Customer List */}
         <Tabs.TabPane tab="Customer List" key="1">
-          <Card
-            title="Manage Ziya Customers"
-            extra={
-              <Input.Search
-                placeholder="Search customers"
-                allowClear
-                style={{ width: 200 }}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-            }
-          >
+          <Card className="shadow-sm" bodyStyle={{ padding: 20 }}>
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Manage Ziya Customers</h3>
+                <Text type="secondary">
+                  Explore customer subscriptions and account activity at a
+                  glance.
+                </Text>
+              </div>
+              <Space wrap>
+                <Input
+                  allowClear
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  prefix={<SearchOutlined className="text-gray-400" />}
+                  placeholder="Search by name, phone, or ID"
+                  className="w-full md:w-64"
+                />
+                <Segmented
+                  value={subscriptionFilter}
+                  options={[
+                    { label: "All", value: "all" },
+                    { label: "Active", value: "active" },
+                    { label: "Inactive", value: "inactive" },
+                  ]}
+                  onChange={(value) =>
+                    setSubscriptionFilter(value as SubscriptionFilter)
+                  }
+                />
+                <Button
+                  type="primary"
+                  icon={<UserAddOutlined />}
+                  onClick={() => setActiveTab("2")}
+                >
+                  New Customer
+                </Button>
+              </Space>
+            </div>
             <Table
               dataSource={filteredCustomers}
               columns={columns}
               rowKey="id"
               loading={isLoading}
-              pagination={{ pageSize: 10 }}
-              scroll={{ x: true }}
+              size="middle"
+              pagination={{
+                ...tablePagination,
+                showSizeChanger: true,
+                pageSizeOptions: [10, 20, 50],
+                total: filteredCustomers.length,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} customers`,
+              }}
+              onChange={(paginationConfig) =>
+                setTablePagination({
+                  current: paginationConfig.current ?? 1,
+                  pageSize: paginationConfig.pageSize ?? 10,
+                })
+              }
+              scroll={{ x: 900 }}
               bordered
+              locale={{
+                emptyText: (
+                  <Empty
+                    description={
+                      searchText || subscriptionFilter !== "all"
+                        ? "No customers match your filters"
+                        : "No customers found yet"
+                    }
+                  />
+                ),
+              }}
             />
           </Card>
         </Tabs.TabPane>

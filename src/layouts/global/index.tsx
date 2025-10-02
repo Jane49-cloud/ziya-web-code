@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = () => {
 
   return (
     <Fragment>
-      <div className="flex h-screen">
+      <div className="flex h-screen  bg-slate-50">
         {/* Sidebar */}
         <div
           className={`fixed inset-y-0 left-0 transform ${

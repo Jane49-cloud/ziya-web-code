@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import { Input, Button, Tabs, Typography, message, Form } from "antd";
+import { useMemo, useState } from "react";
+import { Button, Tabs, Typography, message, Form, Card, Badge, Space } from "antd";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
@@ -9,7 +9,6 @@ import {
   useGetAllGroupsQuery,
   useGetMyCreatedGroupsQuery,
   useGetMyManagedGroupsQuery,
-  useSearchGroupsQuery,
   useDeleteGroupMutation,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
@@ -18,8 +17,7 @@ import {
 import CreateGroupForm from "./components/groupForm";
 import { useNavigate } from "react-router-dom";
 
-const { Title } = Typography;
-const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 const GroupTabs = () => {
   const [form] = Form.useForm();
@@ -27,31 +25,20 @@ const GroupTabs = () => {
   const [memberForm] = Form.useForm();
 
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [searchParams, setSearchParams] = useState({
-    field: "name",
-    value: "",
-  });
   const [modals, setModals] = useState({
     edit: false,
     manager: false,
     member: false,
   });
 
-  const [activeTab, setActiveTab] = useState("all"); // 👈 added this line
+  const [activeTab, setActiveTab] = useState("all");
 
   const {
     data: allGroups,
     refetch: refetchAll,
-    // isLoading,
   } = useGetAllGroupsQuery({});
   const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
   const { data: managedGroups } = useGetMyManagedGroupsQuery({});
-  const { data: searchResults, refetch: refetchSearch } = useSearchGroupsQuery(
-    searchParams,
-    {
-      skip: !searchParams.value,
-    }
-  );
 
   const navigate = useNavigate();
 
@@ -60,11 +47,6 @@ const GroupTabs = () => {
   const [changeManager] = useChangeRelationshipManagerMutation();
   const [updateMemberCount] = useUpdateGroupMemberCountMutation();
 
-  const handleSearch = () => {
-    if (searchParams.value) refetchSearch();
-  };
-
-  console.log(searchResults);
   interface Group {
     id: string;
     [key: string]: any;
@@ -123,61 +105,113 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  return (
-    <div className="p-4">
-      <div className="mb-4 flex gap-2 flex-wrap ">
-        <Title level={3}>Group Management</Title>
+  const summary = useMemo(() => {
+    const total = allGroups?.groups?.length ?? 0;
+    const created = createdGroups?.groups?.length ?? 0;
+    const managed = managedGroups?.groups?.length ?? 0;
+    return { total, created, managed };
+  }, [allGroups?.groups, createdGroups?.groups, managedGroups?.groups]);
 
-        <Button type="link" onClick={() => navigate("/activities/all")}>
-          Explore groups history
-        </Button>
-      </div>
-      <div className="mb-4 flex gap-2 flex-wrap hidden">
-        <Input
-          placeholder="Search group by name"
-          value={searchParams.value}
-          onChange={(e) =>
-            setSearchParams({ ...searchParams, value: e.target.value })
-          }
+  const tabItems = [
+    {
+      key: "all",
+      label: "All Groups",
+      children: (
+        <GroupTable
+          data={allGroups?.groups || []}
+          onEdit={onEdit}
+          onChangeManager={onChangeManager}
+          onChangeMembers={onChangeMembers}
+          onDelete={onDelete}
         />
-        <Button type="primary" onClick={handleSearch}>
-          Search
-        </Button>
+      ),
+    },
+    {
+      key: "create",
+      label: "Create Group",
+      children: <CreateGroupForm onSuccess={() => setActiveTab("all")} />,
+    },
+    {
+      key: "created",
+      label: (
+        <Space size={6}>
+          My Created
+          <Badge count={summary.created} overflowCount={999} showZero color="#2563eb" />
+        </Space>
+      ),
+      children: (
+        <GroupTable
+          data={createdGroups?.groups || []}
+          onEdit={onEdit}
+          onChangeManager={onChangeManager}
+          onChangeMembers={onChangeMembers}
+          onDelete={onDelete}
+        />
+      ),
+    },
+    {
+      key: "managed",
+      label: (
+        <Space size={6}>
+          My Managed
+          <Badge count={summary.managed} overflowCount={999} showZero color="#10b981" />
+        </Space>
+      ),
+      children: (
+        <GroupTable
+          data={managedGroups?.groups || []}
+          onEdit={onEdit}
+          onChangeManager={onChangeManager}
+          onChangeMembers={onChangeMembers}
+          onDelete={onDelete}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Title level={3} className="!mb-1">
+            Group Management
+          </Title>
+          <Text type="secondary">
+            Manage group ownership, relationship managers, and membership at a glance.
+          </Text>
+        </div>
+        <Space wrap>
+          <Button onClick={() => navigate("/activities/all")}>
+            View Group Activity
+          </Button>
+          <Button type="primary" onClick={() => setActiveTab("create")}>
+            Create Group
+          </Button>
+        </Space>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)}>
-        <TabPane tab="All Groups" key="all">
-          <GroupTable
-            data={allGroups?.groups || []}
-            onEdit={onEdit}
-            onChangeManager={onChangeManager}
-            onChangeMembers={onChangeMembers}
-            onDelete={onDelete}
-          />
-        </TabPane>
-        <TabPane tab="Create Group" key="create">
-          <CreateGroupForm onSuccess={() => setActiveTab("all")} />{" "}
-          {/* 👈 pass prop */}
-        </TabPane>
-        <TabPane tab="My Created" key="created">
-          <GroupTable
-            data={createdGroups?.groups || []}
-            onEdit={onEdit}
-            onChangeManager={onChangeManager}
-            onChangeMembers={onChangeMembers}
-            onDelete={onDelete}
-          />
-        </TabPane>
-        <TabPane tab="My Managed" key="managed">
-          <GroupTable
-            data={managedGroups?.groups || []}
-            onEdit={onEdit}
-            onChangeManager={onChangeManager}
-            onChangeMembers={onChangeMembers}
-            onDelete={onDelete}
-          />
-        </TabPane>
-      </Tabs>
+      <Card bordered={false} className="shadow-sm">
+        <Space size={32} wrap>
+          <div>
+            <Text type="secondary">Total Groups</Text>
+            <div className="text-2xl font-semibold">{summary.total}</div>
+          </div>
+          <div>
+            <Text type="secondary">Created by Me</Text>
+            <div className="text-2xl font-semibold">{summary.created}</div>
+          </div>
+          <div>
+            <Text type="secondary">Managed by Me</Text>
+            <div className="text-2xl font-semibold">{summary.managed}</div>
+          </div>
+        </Space>
+      </Card>
+
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key)}
+        items={tabItems}
+      />
 
       {/* Modals */}
       <EditGroupModal
