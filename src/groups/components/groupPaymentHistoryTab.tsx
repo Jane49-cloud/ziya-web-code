@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 const { Title, Text } = Typography;
 
 const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
-  const { data, isLoading, refetch } = useGetGroupPaymentsQuery(groupId, {
+  const { data, isLoading } = useGetGroupPaymentsQuery(groupId, {
     refetchOnFocus: true,
     refetchOnMountOrArgChange: true,
   });
