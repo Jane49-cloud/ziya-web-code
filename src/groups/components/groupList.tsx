@@ -1,27 +1,17 @@
 import { useMemo, useState } from "react";
 import type { FC } from "react";
-import {
-  Table,
-  Button,
-  Card,
-  Dropdown,
-  Input,
-  Tag,
-  Typography,
-  Modal,
-} from "antd";
-import {
-  FiEdit,
-  FiUserCheck,
-  FiEye,
-  FiMoreVertical,
-  FiUsers,
-  FiTrash2,
-} from "react-icons/fi";
+import { Table, Button, Card, Dropdown, Input, Tag, Typography } from "antd";
+import { FiEdit, FiUserCheck, FiEye, FiMoreVertical } from "react-icons/fi";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
+
+type Staff = {
+  id: number;
+  firstname?: string;
+  lastname?: string;
+};
 
 type GroupRecord = {
   id: string | number;
@@ -33,39 +23,31 @@ type GroupTableProps = {
   data: GroupRecord[];
   onEdit: (record: GroupRecord) => void;
   onChangeManager: (record: GroupRecord) => void;
-  onChangeMembers?: (record: GroupRecord) => void;
-  onDelete?: (id: string | number) => void;
 };
 
-const GroupTable: FC<GroupTableProps> = ({
-  data,
-  onEdit,
-  onChangeManager,
-  onChangeMembers,
-  onDelete,
-}) => {
+const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
   const { data: userData, isLoading } = useGetAllUsersQuery(undefined);
-  const staffList = useMemo(() => userData?.staffs ?? [], [userData]);
+  const staffList: Staff[] = useMemo(() => userData?.staffs ?? [], [userData]);
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filteredData = useMemo(() => {
     const searchText = search.trim().toLowerCase();
-    if (!searchText) {
-      return data;
-    }
+    if (!searchText) return data;
 
     return data.filter((group) => {
-      const manager = staffList.find((staff) => staff.id === group.relationship_manager);
+      const manager = staffList.find(
+        (staff) => staff.id === group.relationship_manager
+      );
       const managerName = manager
-        ? `${manager.firstname ?? ""} ${manager.lastname ?? ""}`.trim().toLowerCase()
+        ? `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
+            .trim()
+            .toLowerCase()
         : "unassigned";
 
       return (
-        (group.name ?? "")
-          .toString()
-          .toLowerCase()
-          .includes(searchText) || managerName.includes(searchText)
+        (group.name ?? "").toString().toLowerCase().includes(searchText) ||
+        managerName.includes(searchText)
       );
     });
   }, [data, search, staffList]);
@@ -76,7 +58,9 @@ const GroupTable: FC<GroupTableProps> = ({
       return <Tag color="default">Unassigned</Tag>;
     }
 
-    const fullName = `${manager.firstname ?? ""} ${manager.lastname ?? ""}`.trim();
+    const fullName = `${manager.firstname ?? ""} ${
+      manager.lastname ?? ""
+    }`.trim();
     return <Text>{fullName || "Unassigned"}</Text>;
   };
 
@@ -90,18 +74,6 @@ const GroupTable: FC<GroupTableProps> = ({
         break;
       case "manager":
         onChangeManager(record);
-        break;
-      case "members":
-        onChangeMembers?.(record);
-        break;
-      case "delete":
-        if (!onDelete) break;
-        Modal.confirm({
-          title: "Delete group",
-          content: "This action cannot be undone. Continue?",
-          okType: "danger",
-          onOk: () => onDelete(record.id),
-        });
         break;
       default:
         break;
@@ -142,22 +114,6 @@ const GroupTable: FC<GroupTableProps> = ({
           },
         ];
 
-        if (onChangeMembers) {
-          items.push({
-            key: "members",
-            label: "Update Members",
-            icon: <FiUsers />,
-          });
-        }
-
-        if (onDelete) {
-          items.push({
-            key: "delete",
-            label: <Text type="danger">Delete</Text>,
-            icon: <FiTrash2 />,
-          });
-        }
-
         return (
           <Dropdown
             trigger={["click"]}
@@ -179,7 +135,9 @@ const GroupTable: FC<GroupTableProps> = ({
         <div>
           <Text className="text-lg font-medium">Group Directory</Text>
           <br />
-          <Text type="secondary">Search, inspect, and manage existing groups.</Text>
+          <Text type="secondary">
+            Search, inspect, and manage existing groups.
+          </Text>
         </div>
         <Input
           allowClear

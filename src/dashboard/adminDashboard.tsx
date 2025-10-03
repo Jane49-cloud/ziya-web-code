@@ -29,7 +29,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGetAllGroupLoansQuery } from "../Loans/features/loanSlice";
 import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
 import { useGetAllGroupWalletsQuery } from "../groups/features";
@@ -167,6 +167,8 @@ const DashboardOverview = () => {
 
     return chartData;
   }, [groupLoans]);
+
+  const navigate = useNavigate();
 
   const recentCustomers = useMemo(() => customers.slice(0, 6), [customers]);
 
@@ -315,7 +317,14 @@ const DashboardOverview = () => {
           </Text>
         </div>
         <Space wrap>
-          <Button type="primary" size="large" icon={<LineChartOutlined />}>
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => {
+              navigate("/analysis");
+            }}
+            icon={<LineChartOutlined />}
+          >
             View Reports
           </Button>
         </Space>

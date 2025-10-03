@@ -1,6 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
-import { Button, Tabs, Typography, message, Form, Card, Badge, Space } from "antd";
+import {
+  Button,
+  Tabs,
+  Typography,
+  message,
+  Form,
+  Card,
+  Badge,
+  Space,
+} from "antd";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
@@ -9,7 +18,7 @@ import {
   useGetAllGroupsQuery,
   useGetMyCreatedGroupsQuery,
   useGetMyManagedGroupsQuery,
-  useDeleteGroupMutation,
+  // useDeleteGroupMutation,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
@@ -33,22 +42,19 @@ const GroupTabs = () => {
 
   const [activeTab, setActiveTab] = useState("all");
 
-  const {
-    data: allGroups,
-    refetch: refetchAll,
-  } = useGetAllGroupsQuery({});
+  const { data: allGroups, refetch: refetchAll } = useGetAllGroupsQuery({});
   const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
   const { data: managedGroups } = useGetMyManagedGroupsQuery({});
 
   const navigate = useNavigate();
 
-  const [deleteGroup] = useDeleteGroupMutation();
+  // const [deleteGroup] = useDeleteGroupMutation();
   const [updateGroup] = useUpdateGroupMutation();
   const [changeManager] = useChangeRelationshipManagerMutation();
   const [updateMemberCount] = useUpdateGroupMemberCountMutation();
 
   interface Group {
-    id: string;
+    id: string | number;
     [key: string]: any;
   }
 
@@ -83,10 +89,10 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  const onChangeMembers = (group: any) => {
-    setSelectedGroup(group);
-    setModals((prev) => ({ ...prev, member: true }));
-  };
+  // const onChangeMembers = (group: any) => {
+  //   setSelectedGroup(group);
+  //   setModals((prev) => ({ ...prev, member: true }));
+  // };
 
   const onMemberSubmit = async () => {
     const values = await memberForm.validateFields();
@@ -99,11 +105,11 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  const onDelete = async (id: any) => {
-    await deleteGroup(id);
-    message.success("Group deleted");
-    refetchAll();
-  };
+  // const onDelete = async (id: any) => {
+  //   await deleteGroup(id);
+  //   message.success("Group deleted");
+  //   refetchAll();
+  // };
 
   const summary = useMemo(() => {
     const total = allGroups?.groups?.length ?? 0;
@@ -121,8 +127,8 @@ const GroupTabs = () => {
           data={allGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          onChangeMembers={onChangeMembers}
-          onDelete={onDelete}
+          // onChangeMembers={onChangeMembers}
+          // onDelete={onDelete}
         />
       ),
     },
@@ -136,7 +142,12 @@ const GroupTabs = () => {
       label: (
         <Space size={6}>
           My Created
-          <Badge count={summary.created} overflowCount={999} showZero color="#2563eb" />
+          <Badge
+            count={summary.created}
+            overflowCount={999}
+            showZero
+            color="#2563eb"
+          />
         </Space>
       ),
       children: (
@@ -144,8 +155,8 @@ const GroupTabs = () => {
           data={createdGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          onChangeMembers={onChangeMembers}
-          onDelete={onDelete}
+          // onChangeMembers={onChangeMembers}
+          // onDelete={onDelete}
         />
       ),
     },
@@ -154,7 +165,12 @@ const GroupTabs = () => {
       label: (
         <Space size={6}>
           My Managed
-          <Badge count={summary.managed} overflowCount={999} showZero color="#10b981" />
+          <Badge
+            count={summary.managed}
+            overflowCount={999}
+            showZero
+            color="#10b981"
+          />
         </Space>
       ),
       children: (
@@ -162,8 +178,8 @@ const GroupTabs = () => {
           data={managedGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          onChangeMembers={onChangeMembers}
-          onDelete={onDelete}
+          // onChangeMembers={onChangeMembers}
+          // onDelete={onDelete}
         />
       ),
     },
@@ -177,7 +193,8 @@ const GroupTabs = () => {
             Group Management
           </Title>
           <Text type="secondary">
-            Manage group ownership, relationship managers, and membership at a glance.
+            Manage group ownership, relationship managers, and membership at a
+            glance.
           </Text>
         </div>
         <Space wrap>

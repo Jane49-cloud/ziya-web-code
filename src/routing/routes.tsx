@@ -45,7 +45,7 @@ interface SidebarItem {
 export const sidebarItems: SidebarItem[] = [
   {
     title: "Dashboard",
-    icon: "chart-line-star",
+    icon: "graph-up",
     path: "/",
     allowedRoles: ALL_ROLES,
   },
@@ -99,6 +99,12 @@ export const sidebarItems: SidebarItem[] = [
     title: "Wallets",
     icon: "wallet",
     path: "/wallets",
+    allowedRoles: STAFF_ROLES,
+  },
+  {
+    title: "Analysis",
+    icon: "chart-simple-2",
+    path: "/analysis",
     allowedRoles: STAFF_ROLES,
   },
 ];

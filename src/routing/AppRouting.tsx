@@ -30,6 +30,7 @@ import AccountDeletion from "../privacy/delete-account";
 
 // role groups
 import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
+import AnalysisModule from "../analysis";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +117,8 @@ const AppRouting = (): ReactElement => {
           <Route path="/customer/:id" element={<CustomerPage />} />
           <Route path="/wallets" element={<AllGroupWalletsPage />} />
           <Route path="/activities/all" element={<AllGroupActivities />} />
+          <Route path="/analysis" element={<AnalysisModule />} />
+
           <Route
             path="/activities/user/:id"
             element={<UserGroupActivities />}
