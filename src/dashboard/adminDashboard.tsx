@@ -370,8 +370,8 @@ const DashboardOverview = () => {
         ))}
       </Row>
 
-      <Row gutter={[20, 20]} className="mt-2" align="stretch">
-        <Col xs={24} xl={12} className="flex">
+      <Row gutter={[20, 20]} className="mt-2 h-auto" align="stretch">
+        <Col xs={24} xl={12} className="flex h-full">
           <Card
             className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm"
             bodyStyle={{
@@ -425,7 +425,7 @@ const DashboardOverview = () => {
               )}
             </div>
             <div className="mt-2 space-y-2">
-              {disbursementShare.map((item, index) => (
+              {disbursementShare.slice(0, 4).map((item, index) => (
                 <div
                   key={item.name}
                   className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
@@ -479,7 +479,7 @@ const DashboardOverview = () => {
                 <Skeleton active paragraph={{ rows: 8 }} />
               ) : outstandingTable.length ? (
                 <Table
-                  dataSource={outstandingTable}
+                  dataSource={outstandingTable.slice(0, 3)}
                   columns={outstandingColumns}
                   pagination={false}
                   rowKey="key"
