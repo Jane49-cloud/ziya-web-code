@@ -40,21 +40,21 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
   };
 
   return (
-    <div className="relative flex flex-col h-full w-72 bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0b1120] text-slate-100 shadow-2xl border-r border-white/10 transition-transform duration-500 z-50 overflow-hidden">
+    <div className="relative flex h-full w-full max-w-xs flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-[#0c1828] via-[#132a44] to-[#091423] text-slate-100 shadow-2xl transition-transform duration-500 sm:max-w-sm lg:w-72">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 -left-16 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="absolute top-1/3 -right-24 h-64 w-64 rounded-full bg-cyan-500/10 blur-[120px]" />
-        <div className="absolute -bottom-32 right-0 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute -top-24 -left-16 h-48 w-48 rounded-full bg-[#32c5f4] opacity-25 blur-3xl" />
+        <div className="absolute top-1/3 -right-24 h-64 w-64 rounded-full bg-[#28466a] opacity-30 blur-[120px]" />
+        <div className="absolute -bottom-32 right-0 h-56 w-56 rounded-full bg-[#ecbe1d] opacity-20 blur-3xl" />
       </div>
 
-      <div className="relative z-10 p-5 border-b border-white/10 flex justify-between items-center">
+      <div className="relative z-10 flex items-center justify-between border-b border-white/10 px-4 py-5 sm:px-5">
         <img
           src="/media/logos/Ziya_logo_transparent_bg.png"
-          className="w-40 h-16 object-contain"
+          className="h-16 w-40 max-w-full object-contain"
           alt="Ziya Logo"
         />
         <button
-          className="lg:hidden text-slate-300 hover:text-white focus:outline-none"
+          className="ml-2 flex-shrink-0 lg:hidden text-slate-300 hover:text-white focus:outline-none"
           onClick={closeSidebar}
           aria-label="Close Sidebar"
         >
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         </button>
       </div>
 
-      <nav className="relative z-10 flex-1 pb-6 px-3 overflow-y-auto space-y-2">
+      <nav className="relative z-10 mt-6 flex-1 overflow-y-auto px-2 pb-6 space-y-2 sm:px-3">
         {sidebarItems.map((item, index) => {
           if (item.allowedRoles && !item.allowedRoles.includes(userRole ?? ""))
             return null;
@@ -78,17 +78,17 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                   onClick={() => handleDropdownToggle(item.title)}
                   className={clsx(
                     "group flex justify-between items-center w-full gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-300",
-                    "bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
+                    "bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
                     {
-                      "bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10": isOpen,
+                      "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_24px_48px_rgba(50,197,244,0.16)]": isOpen,
                     }
                   )}
                   aria-expanded={isOpen}
                   aria-controls={`${item.title}-dropdown`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-emerald-300 transition-colors duration-300 group-hover:bg-emerald-400/20">
-                      <KeenIcon icon={item.icon} className="text-base" />
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.18)]">
+                      <KeenIcon icon={item.icon} className="text-base text-primary" />
                     </span>
                     <span className="font-semibold tracking-wide">{item.title}</span>
                   </div>
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     className={clsx(
                       "text-slate-300 transition-transform duration-300",
                       {
-                        "rotate-180 text-emerald-200": isOpen,
+                        "rotate-180 text-primary": isOpen,
                       }
                     )}
                   />
@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 <div
                   id={`${item.title}-dropdown`}
                   className={clsx(
-                    "ml-12 mt-2 space-y-1 overflow-hidden transition-all duration-300",
+                    "ml-8 mt-2 space-y-1 overflow-hidden transition-all duration-300 sm:ml-12",
                     {
                       "max-h-72 opacity-100": isOpen,
                       "max-h-0 opacity-0": !isOpen,
@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                           className={clsx(
                             "block rounded-xl px-4 py-2 text-sm font-medium text-slate-300 transition-all duration-300",
                             {
-                              "bg-white/15 text-white shadow-inner shadow-emerald-500/20": isSubActive,
+                              "bg-[rgba(50,197,244,0.18)] text-white shadow-inner shadow-[rgba(50,197,244,0.25)]": isSubActive,
                               "hover:bg-white/10 hover:text-white": !isSubActive,
                             }
                           )}
@@ -150,16 +150,16 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
               onClick={closeSidebar}
               className={clsx(
                 "group flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-300",
-                "text-slate-200 bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
+                "text-slate-200 bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
                 {
-                  "bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10": isActive,
+                  "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_24px_48px_rgba(50,197,244,0.16)]": isActive,
                 }
               )}
               aria-current={isActive ? "page" : undefined}
             >
               <span className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-emerald-300 transition-colors duration-300 group-hover:bg-emerald-400/20">
-                  <KeenIcon icon={item.icon} className="text-base" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.18)]">
+                  <KeenIcon icon={item.icon} className="text-base text-primary" />
                 </span>
                 <span className="font-semibold tracking-wide">{item.title}</span>
               </span>
@@ -167,7 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 className={clsx(
                   "h-2 w-2 rounded-full transition-opacity duration-300",
                   {
-                    "bg-emerald-300 opacity-100": isActive,
+                    "bg-[#32c5f4] opacity-100": isActive,
                     "bg-white/30 opacity-0 group-hover:opacity-80": !isActive,
                   }
                 )}
@@ -180,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
       <div className="relative z-10 border-t border-white/10 p-5">
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center w-full gap-3 rounded-full bg-gradient-to-r from-rose-500/90 via-amber-500/80 to-emerald-500/80 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition-transform duration-300 hover:translate-y-[1px] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-rose-400/40"
+          className="flex items-center justify-center w-full gap-3 rounded-full bg-gradient-to-r from-[#32c5f4] via-[#28466a] to-[#ecbe1d] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[0_18px_42px_rgba(40,70,106,0.32)] transition-transform duration-300 hover:translate-y-[1px] hover:shadow-[0_24px_58px_rgba(40,70,106,0.38)] focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-30"
           aria-label="Logout"
         >
           <FaSignOutAlt className="text-base" />
