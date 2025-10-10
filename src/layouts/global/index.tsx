@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps> = () => {
         <div
           className={`fixed inset-y-0 left-0 transform ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 bg-white shadow-md w-64`}
+          } z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 bg-white shadow-md w-full max-w-xs sm:max-w-sm lg:w-72`}
         >
           {/* Sidebar content */}
           <Sidebar closeSidebar={closeSidebar} />

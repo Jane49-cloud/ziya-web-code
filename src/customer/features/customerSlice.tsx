@@ -32,6 +32,14 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    updateCustomerPassword: builder.mutation({
+      query: ({ id, ...passwordPayload }) => ({
+        url: `/customers/password/update/${id}`,
+        method: "PUT",
+        body: passwordPayload,
+      }),
+    }),
+
     toggleCustomerStatus: builder.mutation({
       query: ({ id, status }) => ({
         url: `/customers/status/${id}/${status}`,
@@ -83,6 +91,7 @@ export const {
   useGetAllCustomersQuery,
   useGetCustomerByIdQuery,
   useUpdateCustomerMutation,
+  useUpdateCustomerPasswordMutation,
   useToggleCustomerStatusMutation,
   useGetBusinessesByCustomerQuery,
   useCreateBusinessMutation,

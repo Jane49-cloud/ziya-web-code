@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaPlus, FaMinus, FaTimes, FaSignOutAlt } from "react-icons/fa";
+import { FaTimes, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import clsx from "clsx";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
 import { getRole } from "../../utils";
@@ -40,15 +40,21 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
   };
 
   return (
-    <div className="flex flex-col bg-white shadow-lg w-64 h-full transition-transform duration-300 z-50">
-      <div className="p-4 border-gray-200 flex justify-between items-center">
+    <div className="relative flex h-full w-full max-w-xs flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-[#070f1d] via-[#0f2039] to-[#050a16] text-slate-100 shadow-2xl transition-transform duration-500 sm:max-w-sm lg:w-72">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 -left-16 h-48 w-48 rounded-full bg-[#1c5f81] opacity-30 blur-3xl" />
+        <div className="absolute top-1/3 -right-24 h-64 w-64 rounded-full bg-[#1d2f4a] opacity-50 blur-[120px]" />
+        <div className="absolute -bottom-32 right-0 h-56 w-56 rounded-full bg-[#f7b500] opacity-20 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between border-b border-white/10 px-4 py-5 sm:px-5">
         <img
           src="/media/logos/Ziya_logo_transparent_bg.png"
-          className="w-full h-16 object-contain"
+          className="h-16 w-40 max-w-full object-contain"
           alt="Ziya Logo"
         />
         <button
-          className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
+          className="ml-2 flex-shrink-0 text-slate-300 hover:text-white focus:outline-none lg:hidden"
           onClick={closeSidebar}
           aria-label="Close Sidebar"
         >
@@ -56,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         </button>
       </div>
 
-      <nav className="flex-1 py-4 px-2 overflow-y-auto">
+      <nav className="relative z-10 mt-6 flex-1 space-y-2 overflow-y-auto px-2 pb-6 sm:px-3">
         {sidebarItems.map((item, index) => {
           if (item.allowedRoles && !item.allowedRoles.includes(userRole ?? ""))
             return null;
@@ -67,28 +73,41 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
             const isOpen = openDropdowns[item.title];
 
             return (
-              <div key={index} className="mb-2">
+              <div key={index} className="px-2">
                 <button
                   onClick={() => handleDropdownToggle(item.title)}
-                  className="flex justify-between items-center w-full px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-500 focus:outline-none transition-colors duration-200"
+                  className={clsx(
+                    "group flex w-full items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-300",
+                    "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
+                    {
+                      "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]": isOpen,
+                    }
+                  )}
                   aria-expanded={isOpen}
                   aria-controls={`${item.title}-dropdown`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="menu-icon">
-                      <KeenIcon icon={item.icon} className="text-lg" />
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.25)]">
+                      <KeenIcon icon={item.icon} className="text-base text-primary" />
                     </span>
-                    <span className="font-medium">{item.title}</span>
+                    <span className="font-semibold tracking-wide">{item.title}</span>
                   </div>
-                  {isOpen ? <FaMinus /> : <FaPlus />}
+                  <FaChevronDown
+                    className={clsx(
+                      "text-slate-300 transition-transform duration-300",
+                      {
+                        "rotate-180 text-primary": isOpen,
+                      }
+                    )}
+                  />
                 </button>
 
                 <div
                   id={`${item.title}-dropdown`}
                   className={clsx(
-                    "ml-6 mt-1 space-y-1 overflow-hidden transition-all duration-300",
+                    "ml-8 mt-2 space-y-1 overflow-hidden transition-all duration-300 sm:ml-12",
                     {
-                      "max-h-60 opacity-100 border-l border-gray-200": isOpen,
+                      "max-h-72 opacity-100": isOpen,
                       "max-h-0 opacity-0": !isOpen,
                     }
                   )}
@@ -107,10 +126,10 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                           to={subItem?.path}
                           onClick={closeSidebar}
                           className={clsx(
-                            "block px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors duration-200",
+                            "block rounded-xl px-4 py-2 text-sm font-medium text-slate-200 transition-all duration-300",
                             {
-                              "bg-gray-200 text-gray-900": isSubActive,
-                              "text-gray-600": !isSubActive,
+                              "bg-[rgba(50,197,244,0.18)] text-white shadow-inner shadow-[rgba(50,197,244,0.25)]": isSubActive,
+                              "hover:bg-white/10 hover:text-white": !isSubActive,
                             }
                           )}
                           aria-current={isSubActive ? "page" : undefined}
@@ -130,32 +149,42 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
               to={item?.path || "#"}
               onClick={closeSidebar}
               className={clsx(
-                "flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-500 focus:outline-none transition-colors duration-200",
+                "group flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-300",
+                "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
                 {
-                  "bg-gray-200 text-gray-900": isActive,
+                  "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]": isActive,
                 }
               )}
               aria-current={isActive ? "page" : undefined}
             >
               <span className="flex items-center gap-3">
-                <span className="menu-icon">
-                  <KeenIcon icon={item.icon} className="text-lg" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.25)]">
+                  <KeenIcon icon={item.icon} className="text-base text-primary" />
                 </span>
-                <span className="font-medium">{item.title}</span>
+                <span className="font-semibold tracking-wide">{item.title}</span>
               </span>
+              <span
+                className={clsx(
+                  "h-2 w-2 rounded-full transition-opacity duration-300",
+                  {
+                    "bg-[#32c5f4] opacity-100": isActive,
+                    "bg-white/30 opacity-0 group-hover:opacity-80": !isActive,
+                  }
+                )}
+              />
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-gray-200 p-4">
+      <div className="relative z-10 border-t border-white/10 p-5">
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:bg-blue-100 rounded-lg text-base font-bold transition-colors duration-200"
+          className="flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#1f7dc8] via-[#32c5f4] to-[#8ad7ff] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[0_18px_42px_rgba(20,86,132,0.45)] transition-transform duration-300 hover:translate-y-[1px] hover:shadow-[0_24px_58px_rgba(21,110,168,0.5)] focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-30"
           aria-label="Logout"
         >
-          <FaSignOutAlt className="mr-2" />
-          Logout
+          <FaSignOutAlt className="text-base" />
+          <span>Logout</span>
         </button>
       </div>
     </div>
