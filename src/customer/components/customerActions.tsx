@@ -35,6 +35,7 @@ export const CustomerTableActions: FC<{
           color: customer?.status === 1 ? "#991b1b" : "#166534",
           borderColor: customer?.status === 1 ? "#dc2626" : "#22c55e",
           width: "70px",
+          display: "none",
         }}
       >
         {customer?.status === 1 ? "Deactivate" : "Activate"}
