@@ -11,9 +11,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
     if (visible && customer) {
       form.setFieldsValue({
         firstname: customer.firstname,
-        middlename: customer.middlename,
         lastname: customer.lastname,
-        email: customer.email,
         phone_number: customer.phone_number,
         country_code: customer.country_code,
         identification_type: customer.identification_type,
@@ -32,9 +30,7 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
       await updateCustomer({
         id: customer.id,
         firstname: values.firstname,
-        middlename: values.middlename,
         lastname: values.lastname,
-        email: values.email,
         phone_number: values.phone_number,
         country_code: values.country_code,
         identification_type: values.identification_type,
@@ -67,22 +63,10 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
           <Input />
         </Form.Item>
 
-        <Form.Item label="Middle Name" name="middlename">
-          <Input />
-        </Form.Item>
-
         <Form.Item
           label="Last Name"
           name="lastname"
           rules={[{ message: "Last name is required" }]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[{ type: "email", message: "Enter a valid email" }]}
         >
           <Input />
         </Form.Item>

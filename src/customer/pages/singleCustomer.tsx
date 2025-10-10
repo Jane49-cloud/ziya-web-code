@@ -6,7 +6,8 @@ import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
 import CustomerTabs from "../tabs/customerTabs";
 import CustomerBusinessList from "../components/customerBusinessList";
 import CustomerLoansList from "./customerLoans";
-import { customAvatar, formatDate } from "../../utils";
+import { formatDate, getInitials } from "../../utils";
+import CustomerPasswordReset from "../components/customerPasswordReset";
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,16 @@ const CustomerPage = () => {
 
   const customer = customerData?.customer;
   const loans = loanData?.loans || [];
+
+  const fullName = `${customer?.firstname} ${customer?.middlename || ""} ${
+    customer?.lastname
+  }`
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const lastLoginDisplay = customer?.last_login
+    ? new Date(customer.last_login)?.toLocaleString()
+    : "No login recorded";
 
   const latestLoan = loans.length
     ? [...loans].sort(
@@ -44,37 +55,49 @@ const CustomerPage = () => {
   return (
     <div className="p-6">
       {/* Customer Header */}
-      <div className=" mb-8 border border-gray-100 rounded p-8">
-        <div className="flex items-center space-x-6 ">
-          <div className="w-24 h-24 flex justify-center items-center rounded-full bg-gray-200">
-            {customAvatar(
-              `${customer.firstname} ${customer.middlename || ""} ${
-                customer.lastname
-              }`
-            )}
+      <div className="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-white/60 via-slate-50/50 to-white/10 p-8 shadow-sm backdrop-blur">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-[#32c5f4] via-[#1c5f81] to-[#091423] text-2xl font-semibold text-white shadow-md">
+              {getInitials(fullName)}
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900 md:text-3xl">
+                {fullName}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {customer.email || "No email on file"}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 backdrop-blur-sm">
+                  <FaPhoneAlt className="text-primary" />
+                  {customer.country_code} {customer.phone_number || "N/A"}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 backdrop-blur-sm">
+                  <FaIdBadge className="text-primary" />
+                  {customer.identification_number || "Not provided"}
+                </span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-semibold text-gray-900">
-              {`${customer.firstname} ${customer.middlename || ""} ${
-                customer.lastname
-              }`}
-            </h2>
-            <p className="flex items-center text-gray-600 mt-2">
-              <FaPhoneAlt className="mr-2 text-gray-400" />
-              {customer.country_code} {customer.phone_number}
-            </p>
-            <p className="flex items-center text-gray-600 mt-1">
-              <FaIdBadge className="mr-2 text-gray-400" />
-              {customer.identification_number}
-            </p>
+          <div className="flex flex-col items-start gap-4 text-sm text-slate-600 md:items-end md:text-right">
             <Tag
-              className="mt-2"
               color={customer.subscription_status === 1 ? "green" : "red"}
+              className="self-start rounded-full px-4 py-1 text-sm md:self-end"
             >
-              {customer.subscription_status === 1
-                ? "Subscribed "
-                : "Unsubscribed"}
+              {customer.subscription_status === 1 ? "Subscribed" : "Unsubscribed"}
             </Tag>
+            <div className="space-y-1">
+              <div>
+                <strong className="text-slate-500">Customer ID:</strong> #{customer.id}
+              </div>
+              <div>
+                <strong className="text-slate-500">Joined:</strong> {formatDate(customer.date_created)}
+              </div>
+              <div>
+                <strong className="text-slate-500">Last Login:</strong> {lastLoginDisplay}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -127,6 +150,9 @@ const CustomerPage = () => {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Reset Password" key="4">
+          <CustomerPasswordReset customerId={customer.id} />
         </Tabs.TabPane>
       </Tabs>
     </div>
