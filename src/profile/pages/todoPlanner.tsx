@@ -25,6 +25,8 @@ import {
   ClipboardList,
   Flag,
 } from "lucide-react";
+import { getTaskConsent, setTaskConsent } from "../utils/taskConsentStorage";
+import TaskConsentModal from "../components/taskConsentModal";
 
 interface TodoPlannerProps {
   userId?: string;
@@ -69,6 +71,18 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
   );
   const [tasks, setTasks] = useState<PlannerTask[]>([]);
   const [filter, setFilter] = useState<TaskFilter>("all");
+  const [consent, setConsent] = useState(getTaskConsent());
+  const [showConsentModal, setShowConsentModal] = useState(
+    getTaskConsent() === "unset"
+  );
+
+  useEffect(() => {
+    if (consent === "unset") {
+      setShowConsentModal(true);
+    } else {
+      setShowConsentModal(false);
+    }
+  }, [consent]);
 
   useEffect(() => {
     try {
@@ -85,12 +99,14 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
   }, [storageKey]);
 
   useEffect(() => {
+    if (consent !== "granted") return;
+
     try {
       localStorage.setItem(storageKey, JSON.stringify(tasks));
     } catch (error) {
       console.error("Failed to persist planner tasks", error);
     }
-  }, [storageKey, tasks]);
+  }, [storageKey, tasks, consent]);
 
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
@@ -410,8 +426,31 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
           </Space>
         )}
       </Card>
+
+      <TaskConsentModal
+        open={showConsentModal}
+        onAccept={handleAcceptConsent}
+        onDecline={handleDeclineConsent}
+        onClose={() => setShowConsentModal(false)}
+      />
     </div>
   );
 };
 
 export default TodoPlanner;
+  const handleAcceptConsent = () => {
+    setConsent("granted");
+    setTaskConsent("granted");
+    setShowConsentModal(false);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Failed to persist planner tasks", error);
+    }
+  };
+
+  const handleDeclineConsent = () => {
+    setConsent("denied");
+    setTaskConsent("denied");
+    setShowConsentModal(false);
+  };
