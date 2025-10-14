@@ -43,7 +43,7 @@ import {
 } from "@ant-design/icons";
 
 const CustomerManagement: FC = () => {
-  const { data, isLoading } = useGetAllCustomersQuery({});
+  const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
   const customers = data?.customers;
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
@@ -135,11 +135,20 @@ const CustomerManagement: FC = () => {
     start_date: string;
     end_date: string;
   }) => {
+    const customerId = selectedForSubscription?.id;
+
+    if (!customerId) {
+      setAlertMessage("No customer selected for subscription.");
+      setAlertType("danger");
+      return;
+    }
+
     try {
       await createSubscription({
-        customer_id: selectedForSubscription.id,
+        customer_id: customerId,
         ...dates,
       }).unwrap();
+      await refetchCustomer();
       setAlertMessage("Subscription created successfully!");
       setAlertType("success");
       setSubscriptionModalOpen(false);
@@ -331,7 +340,7 @@ const CustomerManagement: FC = () => {
             <Statistic
               title="Total Customers"
               value={customerMetrics.total}
-              loading={isLoading}
+              loading={isLoading || isFetching}
               prefix={<ThunderboltFilled className="text-yellow-500" />}
             />
           </Col>
@@ -339,14 +348,14 @@ const CustomerManagement: FC = () => {
             <Statistic
               title="Active Subscriptions"
               value={customerMetrics.active}
-              loading={isLoading}
+              loading={isLoading || isFetching}
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
             <Statistic
               title="Inactive Subscriptions"
               value={customerMetrics.inactive}
-              loading={isLoading}
+              loading={isLoading || isFetching}
             />
           </Col>
         </Row>
@@ -397,7 +406,7 @@ const CustomerManagement: FC = () => {
               dataSource={filteredCustomers}
               columns={columns}
               rowKey="id"
-              loading={isLoading}
+              loading={isLoading || isFetching}
               size="middle"
               pagination={{
                 ...tablePagination,
