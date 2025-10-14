@@ -69,7 +69,10 @@ const SingleGroupPage: React.FC = () => {
 
   const membersLabel = useMemo(() => {
     const total =
-      group?.members_count ?? group?.total_members ?? group?.member_count ?? null;
+      group?.members_count ??
+      group?.total_members ??
+      group?.member_count ??
+      null;
     if (typeof total === "number") {
       return `${total} total`;
     }
@@ -199,7 +202,8 @@ const SingleGroupPage: React.FC = () => {
             {group ? group.name : "Loading Group..."}
           </Title>
           <Typography.Text type="secondary">
-            Navigate through members, wallets, and loan activity without leaving the page.
+            Navigate through members, wallets, and loan activity without leaving
+            the page.
           </Typography.Text>
         </div>
         <Button

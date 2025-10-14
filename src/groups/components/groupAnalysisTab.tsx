@@ -2,11 +2,7 @@ import { Card, Tabs, Spin, Space, Typography, Row, Col, Statistic, Empty } from 
 import { Area, Column } from "@ant-design/plots";
 import dayjs from "dayjs";
 import React, { useMemo } from "react";
-import {
-  useGetGroupLoansQuery,
-  useGetGroupPaymentsQuery,
-  useGetGroupMembersQuery,
-} from "../features";
+import { useGetGroupLoansQuery, useGetGroupPaymentsQuery } from "../features";
 
 interface GroupAnalysisTabProps {
   groupId: number;
@@ -58,11 +54,6 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     refetchOnReconnect: true,
   });
 
-  const membersQuery = useGetGroupMembersQuery(groupId, {
-    skip: !groupId,
-    refetchOnReconnect: true,
-  });
-
   const loanTrend = useMemo(
     () => buildMonthlySeries(loansQuery.data?.loans, "date_issued", "amount"),
     [loansQuery.data?.loans]
@@ -73,25 +64,6 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     [paymentsQuery.data?.payments]
   );
 
-  type GroupMemberRecord = {
-    subscription_status?: number;
-  };
-
-  const subscriptionBreakdown = useMemo(() => {
-    const members =
-      (membersQuery.data?.members as GroupMemberRecord[] | undefined) ?? [];
-    const active = members.filter((member) => member.subscription_status === 1).length;
-    const inactive = members.length - active;
-    return {
-      active,
-      inactive,
-      chartData: [
-        { status: "Active", value: active },
-        { status: "Inactive", value: inactive },
-      ],
-    };
-  }, [membersQuery.data?.members]);
-
   const totalLoaned = useMemo(() => {
     return (loansQuery.data?.loans ?? []).reduce((sum: number, loan: GenericRecord) => {
       const amount = Number(loan?.amount ?? 0);
@@ -99,22 +71,24 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     }, 0);
   }, [loansQuery.data?.loans]);
 
-  const totalPayments = useMemo(() => {
-    return (paymentsQuery.data?.payments ?? []).reduce(
-      (sum: number, payment: GenericRecord) => {
-        const amount = Number(payment?.amount ?? 0);
-        return sum + (Number.isNaN(amount) ? 0 : amount);
-      },
-      0
-    );
-  }, [paymentsQuery.data?.payments]);
+  const payments =
+    (paymentsQuery.data?.payments as GenericRecord[] | undefined) ?? [];
 
-  const totalMembers = subscriptionBreakdown.active + subscriptionBreakdown.inactive;
+  const totalPayments = useMemo(() => {
+    return payments.reduce((sum: number, payment: GenericRecord) => {
+      const amount = Number(payment?.amount ?? 0);
+      return sum + (Number.isNaN(amount) ? 0 : amount);
+    }, 0);
+  }, [payments]);
+
+  const netPosition = useMemo(() => totalLoaned - totalPayments, [
+    totalLoaned,
+    totalPayments,
+  ]);
 
   const isInitialLoading =
     (loansQuery.isLoading && !loansQuery.data) ||
-    (paymentsQuery.isLoading && !paymentsQuery.data) ||
-    (membersQuery.isLoading && !membersQuery.data);
+    (paymentsQuery.isLoading && !paymentsQuery.data);
 
   const analysisTabs = [
     {
@@ -166,29 +140,6 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
           />
         ),
     },
-    {
-      key: "subscriptions",
-      label: "Subscription Mix",
-      children:
-        totalMembers === 0 ? (
-          <Empty description="No members added yet" />
-        ) : (
-          <Column
-            data={subscriptionBreakdown.chartData}
-            xField="status"
-            yField="value"
-            columnStyle={{ radius: [6, 6, 0, 0] }}
-            color={(datum) => (datum.status === "Active" ? "#22a06b" : "#f25f3a")}
-            padding={[20, 24, 40, 24]}
-            tooltip={{
-              formatter: (datum: { status: string; value: number }) => ({
-                name: datum.status,
-                value: `${datum.value} members`,
-              }),
-            }}
-          />
-        ),
-    },
   ];
 
   return (
@@ -221,9 +172,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
             </Col>
             <Col xs={24} sm={12} md={8}>
               <Statistic
-                title="Active Members"
-                value={subscriptionBreakdown.active}
-                suffix={`/ ${totalMembers}`}
+                title="Net Position"
+                value={netPosition}
+                formatter={(value) =>
+                  `KES ${(value as number).toLocaleString()}`
+                }
               />
             </Col>
           </Row>

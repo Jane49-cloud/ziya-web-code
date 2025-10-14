@@ -1,4 +1,4 @@
-import { Card, Tabs, Row, Col, Statistic, Empty, Space, Typography } from "antd";
+import { Card, Tabs, Row, Col, Empty, Space, Typography } from "antd";
 import { Area, Column, Pie } from "@ant-design/plots";
 import dayjs from "dayjs";
 import { HiOutlineTrendingUp, HiOutlineClock } from "react-icons/hi";
@@ -107,7 +107,7 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
   }, [loans]);
 
   const netTrend = useMemo<TrendDatum[]>(() => {
-    if (!loanTrend.length && !paymentTrend.length) return [];
+    if (!loanTrend.length) return [];
     const merged = new Map<string, { loans: number; payments: number }>();
 
     loanTrend.forEach((item) => {
