@@ -16,7 +16,6 @@ export const customerSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
-
     getCustomerById: builder.query({
       query: (id) => ({
         url: `/customers/get/single/${id}`,
@@ -83,6 +82,13 @@ export const customerSlice = apiSlice.injectEndpoints({
         body: subscriptionData,
       }),
     }),
+
+    getCustomerSubscriptionHistory: builder.query({
+      query: (customerId: number) => ({
+        url: `/subscriptions/history/${customerId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -98,4 +104,5 @@ export const {
   useUpdateBusinessMutation,
   useDeleteBusinessMutation,
   useCreateSubscriptionMutation,
+  useGetCustomerSubscriptionHistoryQuery,
 } = customerSlice;

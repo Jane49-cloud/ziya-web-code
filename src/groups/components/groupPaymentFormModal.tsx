@@ -1,10 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Modal, Form, InputNumber, message } from "antd";
+import { useEffect } from "react";
+import {
+  Modal,
+  Form,
+  InputNumber,
+  message,
+  DatePicker,
+  Row,
+  Col,
+  Typography,
+  Space,
+  Card,
+} from "antd";
 import {
   useCreateGroupLoanPaymentMutation,
   useUpdateGroupLoanPaymentMutation,
 } from "../features";
+import dayjs from "dayjs";
+
+const { Text } = Typography;
 
 const GroupPaymentFormModal = ({
   visible,
@@ -17,13 +32,24 @@ const GroupPaymentFormModal = ({
   approved_by,
 }: any) => {
   const [form] = Form.useForm();
-  console.log("GroupPaymentFormModal", approved_by);
   const isEditing = !!payment;
 
   const [createPayment, { isLoading: creating }] =
     useCreateGroupLoanPaymentMutation();
   const [updatePayment, { isLoading: updating }] =
     useUpdateGroupLoanPaymentMutation();
+
+  useEffect(() => {
+    if (payment) {
+      form.setFieldsValue({
+        amount: payment.amount,
+        date_paid: payment.date_paid ? dayjs(payment.date_paid) : undefined,
+      });
+    } else {
+      form.resetFields();
+      form.setFieldsValue({ date_paid: dayjs() });
+    }
+  }, [payment, form]);
 
   const handleSubmit = async () => {
     try {
@@ -35,6 +61,9 @@ const GroupPaymentFormModal = ({
         customer_id: loan.issued_to,
         group_id: groupId,
         approved_by: approved_by ?? null,
+        date_paid: values.date_paid
+          ? values.date_paid.format("YYYY-MM-DD")
+          : undefined,
       };
 
       if (isEditing) {
@@ -64,18 +93,53 @@ const GroupPaymentFormModal = ({
       onOk={handleSubmit}
       confirmLoading={creating || updating}
     >
-      <Form
-        layout="vertical"
-        form={form}
-        initialValues={{ amount: payment?.amount }}
-      >
-        <Form.Item
-          label="Amount (KES)"
-          name="amount"
-          rules={[{ required: true }]}
-        >
-          <InputNumber min={1} className="w-full" />
-        </Form.Item>
+      <Form layout="vertical" form={form} className="pt-2">
+        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Typography.Title level={5} className="!mb-1">
+            Payment Details
+          </Typography.Title>
+          <Text type="secondary">
+            Record the repayment captured for this loan cycle.
+          </Text>
+        </Space>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Amount"
+              name="amount"
+              rules={[{ required: true, message: "Enter payment amount" }]}
+            >
+              <InputNumber
+                min={1}
+                className="w-full"
+                addonBefore="KES"
+                placeholder="Amount"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Payment Date"
+              name="date_paid"
+              rules={[{ required: true, message: "Select payment date" }]}
+            >
+              <DatePicker className="w-full" format="YYYY-MM-DD" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Card bordered className="bg-slate-50">
+          <Space direction="vertical" size={4}>
+            <Text strong className="text-slate-700">
+              Tip
+            </Text>
+            <Text type="secondary" className="text-xs">
+              A payment should mirror the collection date and amount received.
+              Updating this will refresh both loan balances and wallet totals.
+            </Text>
+          </Space>
+        </Card>
       </Form>
     </Modal>
   );

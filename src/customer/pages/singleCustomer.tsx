@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Spin, Empty, Tabs, Card, Row, Col, Tag } from "antd";
+import { Spin, Empty, Tabs, Card, Row, Col, Tag, Button, message } from "antd";
 import { FaPhoneAlt, FaIdBadge } from "react-icons/fa";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
@@ -8,11 +8,19 @@ import CustomerBusinessList from "../components/customerBusinessList";
 import CustomerLoansList from "./customerLoans";
 import { formatDate, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
+import { SubscriptionModal } from "../components/subscriptionModal";
+import { useCreateSubscriptionMutation } from "../features/customerSlice";
+import { useState } from "react";
+import CustomerPerformanceTab from "../components/performance/customerPerformanceTab";
+import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: customerData, isLoading: customerLoading } =
+  const { data: customerData, isLoading: customerLoading, refetch } =
     useGetCustomerByIdQuery(id);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [createSubscription, { isLoading: creatingSubscription }] =
+    useCreateSubscriptionMutation();
   const { data: loanData } = useGetLoansByCustomerIdQuery(Number(id), {
     skip: !id,
   });
@@ -41,6 +49,29 @@ const CustomerPage = () => {
   const balance = latestLoan ? latestLoan.balance : 0;
   const amount = latestLoan ? latestLoan.amount : 0;
   const totalPaid = amount && balance ? amount - balance : 0;
+
+  const handleCreateSubscription = async ({
+    start_date,
+    end_date,
+  }: {
+    start_date: string;
+    end_date: string;
+  }) => {
+    if (!customer) return;
+    try {
+      await createSubscription({
+        customer_id: customer.id,
+        start_date,
+        end_date,
+      }).unwrap();
+      message.success("Subscription activated successfully");
+      setSubscriptionModalOpen(false);
+      await refetch();
+    } catch (err: unknown) {
+      const apiError = (err as { data?: { error?: string } })?.data?.error;
+      message.error(apiError || "Failed to create subscription");
+    }
+  };
 
   if (customerLoading) {
     return (
@@ -87,6 +118,15 @@ const CustomerPage = () => {
             >
               {customer.subscription_status === 1 ? "Subscribed" : "Unsubscribed"}
             </Tag>
+            {customer.subscription_status !== 1 && (
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => setSubscriptionModalOpen(true)}
+              >
+                Activate Subscription
+              </Button>
+            )}
             <div className="space-y-1">
               <div>
                 <strong className="text-slate-500">Customer ID:</strong> #{customer.id}
@@ -151,10 +191,28 @@ const CustomerPage = () => {
         <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Reset Password" key="4">
+        <Tabs.TabPane tab="Performance" key="4">
+          <CustomerPerformanceTab
+            loans={loans}
+            customerName={fullName}
+            subscriptionStatus={customer.subscription_status}
+            lastLogin={customer.last_login ?? null}
+          />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Subscription History" key="5">
+          <CustomerSubscriptionHistoryTab customerId={customer.id} />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Reset Password" key="6">
           <CustomerPasswordReset customerId={customer.id} />
         </Tabs.TabPane>
       </Tabs>
+
+      <SubscriptionModal
+        open={subscriptionModalOpen}
+        onCancel={() => setSubscriptionModalOpen(false)}
+        onSubmit={handleCreateSubscription}
+        loading={creatingSubscription}
+      />
     </div>
   );
 };
