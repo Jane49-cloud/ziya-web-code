@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { Card, Tag } from "antd";
+import { Card, Tag, Row, Col, Typography, Space, Button } from "antd";
 import { HiOutlineCurrencyDollar, HiOutlineUsers } from "react-icons/hi";
 import {
   FaCalendarCheck,
@@ -44,6 +44,56 @@ const SingleLoanPage = () => {
   );
 
   const approvingUser = data?.staff?.staffData;
+  // Math & Formatting
+  const amount = Number(loan?.amount ?? 0);
+  const balance = Number(loan?.balance ?? 0);
+  const repaid = amount - balance;
+
+  const formattedAmount = amount.toLocaleString();
+  const formattedRepaid = repaid.toLocaleString();
+  const formattedBalance = balance.toLocaleString();
+  const formattedDate = formatDate(loan?.date_issued ?? "");
+
+  const repaymentPercentage = amount > 0 ? (repaid / amount) * 100 : 0;
+  const isFullyPaid = repaymentPercentage >= 100;
+
+  const fullName =
+    loan?.recipient_firstname || loan?.recipient_lastname
+      ? `${loan?.recipient_firstname ?? ""} ${loan?.recipient_lastname ?? ""}`
+      : "N/A";
+
+  const summaryCards = summaryCardsFactory(
+    formattedAmount,
+    formattedRepaid,
+    formattedBalance
+  );
+
+  const infoCards = [
+    {
+      title: "Recipient",
+      value: fullName,
+      icon: <FaUser className="text-lg" />,
+    },
+    {
+      title: "Group",
+      value: loan?.group_name ?? "N/A",
+      icon: <HiOutlineUsers className="text-lg" />,
+    },
+    {
+      title: "Approved On",
+      value: formattedDate,
+      icon: <FaCalendarCheck className="text-lg" />,
+    },
+    {
+      title: "Approved By",
+      value: isUserLoading
+        ? "Loading..."
+        : approvingUser
+        ? `${approvingUser.firstname} ${approvingUser.lastname}`
+        : "Group Admin",
+      icon: <FaUserCheck className="text-lg" />,
+    },
+  ];
 
   if (!loan) {
     return (
@@ -59,149 +109,108 @@ const SingleLoanPage = () => {
     );
   }
 
-  // Math & Formatting
-  const amount = Number(loan.amount ?? 0);
-  const balance = Number(loan.balance ?? 0);
-  const repaid = amount - balance;
-
-  const formattedAmount = amount.toLocaleString();
-  const formattedRepaid = repaid.toLocaleString();
-  const formattedBalance = balance.toLocaleString();
-  const formattedDate = formatDate(loan.date_issued ?? "");
-
-  const repaymentPercentage = amount > 0 ? (repaid / amount) * 100 : 0;
-  const isFullyPaid = repaymentPercentage >= 100;
-
-  const fullName =
-    loan.recipient_firstname || loan.recipient_lastname
-      ? `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
-      : "N/A";
-
   return (
-    <div className=" py-2 md:py-6 min-h-screen">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-blue-600 hover:text-blue-800 transition mb-6 font-medium"
-      >
-        <ArrowLeftOutlined className="mr-2" /> Back to Loans
-      </button>
+    <div className="min-h-screen bg-slate-50 px-4 py-6 md:px-8">
+      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate(-1)}
+          className="!px-0 text-primary"
+        >
+          Back to Loans
+        </Button>
 
-      {/* Loan Details Card */}
-      <Card
-        className="shadow-lg rounded-xl border-0 overflow-hidden mb-8"
-        bodyStyle={{ padding: 0 }}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">Loan #{loan.id}</h2>
-              <p className="text-blue-100 text-sm">Loan Details Overview</p>
+        <Card
+          bordered={false}
+          className="shadow-lg rounded-2xl overflow-hidden"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-r from-[#1f7dc8] via-[#32c5f4] to-[#8ad7ff] px-6 py-6">
+            <div className="absolute inset-y-0 right-0 opacity-30">
+              <div className="h-full w-40 rounded-full bg-white blur-3xl" />
             </div>
-            <Tag
-              color={
-                isFullyPaid
-                  ? "green"
-                  : repaymentPercentage > 50
-                  ? "orange"
-                  : "red"
-              }
-              className="text-sm font-medium px-3 py-1"
-            >
-              {isFullyPaid
-                ? "Fully Paid"
-                : `${repaymentPercentage.toFixed(1)}% Paid`}
-            </Tag>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <SummaryCard
-              icon={<HiOutlineCurrencyDollar className="text-white text-xl" />}
-              title="Loan Amount"
-              color="blue"
-              value={`KES ${formattedAmount}`}
-            />
-            <SummaryCard
-              icon={<FaMoneyBillWave className="text-white text-xl" />}
-              title="Amount Repaid"
-              color="green"
-              value={`KES ${formattedRepaid}`}
-            />
-            <SummaryCard
-              icon={<FaCoins className="text-white text-xl" />}
-              title="Outstanding"
-              color="red"
-              value={`KES ${formattedBalance}`}
-            />
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600">
-                Repayment Progress
-              </span>
-              <span className="text-sm font-medium text-gray-900">
-                {repaymentPercentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className={`h-3 rounded-full transition-all duration-500 ${
+            <div className="relative flex items-center justify-between">
+              <div>
+                <Typography.Title level={3} className="!text-white !mb-1">
+                  Loan #{loan.id}
+                </Typography.Title>
+                <Typography.Text className="text-slate-100/80">
+                  Portfolio overview and repayment summary
+                </Typography.Text>
+              </div>
+              <Tag
+                color={
                   isFullyPaid
-                    ? "bg-green-500"
+                    ? "green"
                     : repaymentPercentage > 50
-                    ? "bg-orange-500"
-                    : "bg-red-500"
-                }`}
-                style={{ width: `${Math.min(repaymentPercentage, 100)}%` }}
-              ></div>
+                    ? "orange"
+                    : "red"
+                }
+                className="rounded-full px-4 py-1 text-sm shadow-sm"
+              >
+                {isFullyPaid
+                  ? "Fully Paid"
+                  : `${repaymentPercentage.toFixed(1)}% Paid`}
+              </Tag>
             </div>
           </div>
 
-          {/* Loan Information Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <LoanInfoCard
-              icon={<FaUser className="text-white text-sm" />}
-              title="Recipient"
-              value={fullName}
-            />
-            <LoanInfoCard
-              icon={<HiOutlineUsers className="text-white text-sm" />}
-              title="Group"
-              value={loan.group_name ?? "N/A"}
-            />
-            <LoanInfoCard
-              icon={<FaCalendarCheck className="text-white text-sm" />}
-              title="Approved On"
-              value={formattedDate}
-            />
-            <LoanInfoCard
-              icon={<FaUserCheck className="text-white text-sm" />}
-              title="Approved By"
-              value={
-                isUserLoading
-                  ? "Loading..."
-                  : approvingUser
-                  ? `${approvingUser.firstname} ${approvingUser.lastname}`
-                  : "Group Admin"
-              }
-            />
-          </div>
-        </div>
-      </Card>
+          <div className="px-6 pb-6 pt-4">
+            <Row gutter={[16, 16]} className="mb-6">
+              {summaryCards.map((card) => (
+                <Col xs={24} md={8} key={card.title}>
+                  <SummaryCard
+                    icon={card.icon}
+                    title={card.title}
+                    value={card.value}
+                    palette={card.palette}
+                  />
+                </Col>
+              ))}
+            </Row>
 
-      {/* Repayment History */}
-      <LoanRepaymentHistory
-        loanId={loan.id}
-        loanAmount={amount}
-        customerId={loan.customer_id ?? 0}
-      />
+            <div className="loan-progress mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <Typography.Text className="text-sm text-slate-500">
+                  Repayment Progress
+                </Typography.Text>
+                <Typography.Text className="text-sm font-semibold text-slate-700">
+                  {repaymentPercentage.toFixed(1)}%
+                </Typography.Text>
+              </div>
+              <div className="h-3 w-full rounded-full bg-slate-200">
+                <div
+                  className="h-3 rounded-full bg-gradient-to-r from-[#1f7dc8] via-[#32c5f4] to-[#8ad7ff] transition-all duration-500"
+                  style={{ width: `${Math.min(repaymentPercentage, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <Row gutter={[16, 16]}>
+              {infoCards.map((info) => (
+                <Col xs={24} md={12} key={info.title}>
+                  <LoanInfoCard
+                    icon={info.icon}
+                    title={info.title}
+                    value={info.value}
+                  />
+                </Col>
+              ))}
+            </Row>
+          </div>
+        </Card>
+
+        <Card bordered={false} className="shadow-sm rounded-2xl">
+          <Typography.Title level={4} className="!mb-4">
+            Repayment History
+          </Typography.Title>
+          <LoanRepaymentHistory
+            loanId={loan.id}
+            loanAmount={amount}
+            customerId={loan.customer_id ?? 0}
+          />
+        </Card>
+      </Space>
     </div>
   );
 };
@@ -209,24 +218,60 @@ const SingleLoanPage = () => {
 export default SingleLoanPage;
 
 // Reusable card components
+type SummaryPalette = {
+  container: string;
+  icon: string;
+  title: string;
+  value: string;
+};
+
+const summaryPalettes: Record<string, SummaryPalette> = {
+  amount: {
+    container: "bg-[#f0f7ff] border border-[#c9e1ff]",
+    icon: "bg-[#1f7dc8]",
+    title: "text-[#1f7dc8]",
+    value: "text-[#0f3e63]",
+  },
+  repaid: {
+    container: "bg-[#f2fbf5] border border-[#cfeedd]",
+    icon: "bg-[#22a06b]",
+    title: "text-[#1b7e52]",
+    value: "text-[#114a32]",
+  },
+  outstanding: {
+    container: "bg-[#fff6f3] border border-[#ffd9cc]",
+    icon: "bg-[#f25f3a]",
+    title: "text-[#c74829]",
+    value: "text-[#7d2a14]",
+  },
+};
+
 const SummaryCard = ({
   icon,
   title,
-  color,
   value,
+  palette,
 }: {
   icon: React.ReactNode;
   title: string;
-  color: "blue" | "green" | "red";
   value: string;
+  palette: SummaryPalette;
 }) => (
   <div
-    className={`bg-${color}-50 border border-${color}-100 rounded-lg p-4 flex items-center gap-3`}
+    className={`rounded-xl px-4 py-5 shadow-sm flex items-center gap-4 ${palette.container}`}
   >
-    <div className={`p-2 bg-${color}-600 rounded-lg`}>{icon}</div>
+    <div className={`rounded-lg p-3 text-white shadow ${palette.icon}`}>
+      {icon}
+    </div>
     <div>
-      <p className={`text-${color}-600 text-sm font-medium`}>{title}</p>
-      <p className={`text-2xl font-bold text-${color}-900`}>{value}</p>
+      <Typography.Text
+        className={`block text-xs font-semibold uppercase tracking-wide ${palette.title}`}
+      >
+        {title}
+      </Typography.Text>
+      <Typography.Text className={`block text-2xl font-bold ${palette.value}`}>
+        {value}
+      </Typography.Text>
     </div>
   </div>
 );
@@ -240,11 +285,42 @@ const LoanInfoCard = ({
   title: string;
   value: string;
 }) => (
-  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-    <div className="p-2 bg-gray-600 rounded-full">{icon}</div>
+  <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+    <div className="rounded-full bg-slate-900 p-3 text-white shadow-md">
+      {icon}
+    </div>
     <div>
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="font-medium text-gray-900">{value}</p>
+      <Typography.Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {title}
+      </Typography.Text>
+      <Typography.Paragraph className="!mb-0 text-base font-medium text-slate-900">
+        {value}
+      </Typography.Paragraph>
     </div>
   </div>
 );
+
+const summaryCardsFactory = (
+  formattedAmount: string,
+  formattedRepaid: string,
+  formattedBalance: string
+) => [
+  {
+    title: "Loan Amount",
+    value: `KES ${formattedAmount}`,
+    icon: <HiOutlineCurrencyDollar className="text-xl" />,
+    palette: summaryPalettes.amount,
+  },
+  {
+    title: "Amount Repaid",
+    value: `KES ${formattedRepaid}`,
+    icon: <FaMoneyBillWave className="text-xl" />,
+    palette: summaryPalettes.repaid,
+  },
+  {
+    title: "Outstanding",
+    value: `KES ${formattedBalance}`,
+    icon: <FaCoins className="text-xl" />,
+    palette: summaryPalettes.outstanding,
+  },
+];

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useGetGroupPaymentsQuery } from "../features";
-import { Card, Table, Typography, Space, Button } from "antd";
+import { Card, Table, Typography, Space, Button, Statistic, Row, Col } from "antd";
 import { useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 const { Title, Text } = Typography;
 
 const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
-  const { data, isLoading } = useGetGroupPaymentsQuery(groupId, {
+  const { data, isLoading, isFetching } = useGetGroupPaymentsQuery(groupId, {
     refetchOnFocus: true,
-    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
+    pollingInterval: 30000,
   });
 
   const payments = data?.payments || [];
@@ -31,6 +32,8 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
         : payment.amount;
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
+
+  const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
 
   const columns = [
     {
@@ -81,30 +84,67 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
     },
   ];
 
-  return (
-    <Card>
-      <Space className="mb-4" direction="vertical" style={{ width: "100%" }}>
-        <Title level={4}>Payment History</Title>
-        <Text>
-          Total Payments: <strong>KES {totalPaid.toLocaleString()}</strong>
-        </Text>
-        <Button
-          onClick={() =>
-            setSortOrder(sortOrder === "ascend" ? "descend" : "ascend")
-          }
-        >
-          Sort by Date (
-          {sortOrder === "ascend" ? "Oldest First" : "Newest First"})
-        </Button>
-      </Space>
+  const totalTransactions = sortedPayments.length;
+  const averagePayment = totalTransactions
+    ? Math.round(totalPaid / totalTransactions)
+    : 0;
 
-      <Table
-        columns={columns}
-        dataSource={sortedPayments}
-        loading={isLoading}
-        rowKey="id"
-        pagination={{ pageSize: 6 }}
-      />
+  return (
+    <Card bordered={false} className="shadow-sm">
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Title level={4} className="!mb-1">
+              Payment History
+            </Title>
+            <Text type="secondary">
+              Track incoming repayments and keep customer journeys on schedule.
+            </Text>
+          </div>
+          <Button
+            onClick={() =>
+              setSortOrder(sortOrder === "ascend" ? "descend" : "ascend")
+            }
+          >
+            Sort by Date (
+            {sortOrder === "ascend" ? "Oldest First" : "Newest First"})
+          </Button>
+        </div>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Total Received"
+              value={totalPaid}
+              formatter={(value) => formatCurrency(value as number)}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Transactions"
+              value={totalTransactions}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Average Ticket"
+              value={averagePayment}
+              formatter={(value) => formatCurrency(value as number)}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+        </Row>
+
+        <Table
+          columns={columns}
+          dataSource={sortedPayments}
+          loading={isLoading || isFetching}
+          rowKey="id"
+          pagination={{ pageSize: 6, showSizeChanger: true }}
+        />
+      </Space>
     </Card>
   );
 };

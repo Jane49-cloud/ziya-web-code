@@ -145,7 +145,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   ];
 
   return (
-    <Card className="mt-6">
+    <Card className="mt-6" bordered={false} bodyStyle={{ padding: 24 }}>
       <div className="flex justify-between items-center mb-4">
         <Title level={4}>Group Members</Title>
 
@@ -167,14 +167,15 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       </div>
 
       {isLoading ? (
-        <Spin />
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
       ) : (
         <Table
           columns={columns}
           dataSource={filteredMembers}
           rowKey={(record) => record.id}
-          pagination={{ pageSize: 10 }}
-          bordered
+          pagination={{ pageSize: 10, showSizeChanger: true }}
         />
       )}
 

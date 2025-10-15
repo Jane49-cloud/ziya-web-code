@@ -111,18 +111,18 @@ export const GroupSlice = apiSlice.injectEndpoints({
         url: `/group-loan-payments/group/${groupId}`,
         method: "GET",
       }),
-      // providesTags: (_res, _err, groupId) => [
-      //   { type: "GroupLoanPayments", id: groupId },
-      // ],
+      providesTags: (_res, _err, groupId) => [
+        { type: "GroupLoanPayments", id: groupId },
+      ],
     }),
     getGroupLoans: builder.query({
       query: (groupId: number) => ({
         url: `/group-loans/group/${groupId}`,
         method: "GET",
       }),
-      // providesTags: (_res, _err, groupId) => [
-      //   { type: "GroupLoans", id: groupId },
-      // ],
+      providesTags: (_res, _err, groupId) => [
+        { type: "GroupLoans", id: groupId },
+      ],
     }),
 
     getAllGroupWallets: builder.query({
@@ -193,7 +193,10 @@ export const GroupSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: [{ type: "GroupLoanPayments" }],
+      invalidatesTags: (_res, _err, payload) => [
+        { type: "GroupLoanPayments", id: payload.group_id },
+        { type: "GroupLoans", id: payload.group_id },
+      ],
     }),
 
     updateGroupLoanPayment: builder.mutation({
@@ -214,7 +217,10 @@ export const GroupSlice = apiSlice.injectEndpoints({
         method: "PUT",
         body: updatedData,
       }),
-      invalidatesTags: [{ type: "GroupLoanPayments" }],
+      invalidatesTags: (_res, _err, { updatedData }) => [
+        { type: "GroupLoanPayments", id: updatedData.group_id },
+        { type: "GroupLoans", id: updatedData.group_id },
+      ],
     }),
 
     deleteGroupLoanPayment: builder.mutation({
@@ -222,7 +228,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
         url: `/group-loan-payments/${paymentId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: "GroupLoanPayments" }],
+      invalidatesTags: [{ type: "GroupLoanPayments" }, { type: "GroupLoans" }],
     }),
     // group members
     addGroupMember: builder.mutation({

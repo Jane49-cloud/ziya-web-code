@@ -8,6 +8,9 @@ import {
   Space,
   Button,
   Input,
+  Statistic,
+  Row,
+  Col,
 } from "antd";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +29,14 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
   groupId,
   groupAdminId,
 }) => {
-  const { data, isLoading, refetch } = useGetGroupLoansQuery(groupId);
+  const { data, isLoading, isFetching, refetch } = useGetGroupLoansQuery(
+    groupId,
+    {
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      pollingInterval: 30000,
+    }
+  );
   const loans = data?.loans || [];
 
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
@@ -72,6 +82,8 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
 
+  const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+
   const columns = [
     {
       title: "Recipient",
@@ -111,9 +123,12 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     },
     {
       title: "Issued On",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (date: string) => moment(date).format("DD MMM YYYY"),
+      dataIndex: "date_issued",
+      key: "date_issued",
+      render: (_: string, record: any) => {
+        const date = record.date_issued ?? record.created_at;
+        return date ? moment(date).format("DD MMM YYYY") : "—";
+      },
     },
     {
       title: "Actions",
@@ -143,11 +158,23 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     },
   ];
 
+  const activeLoans = sortedLoans.length;
+  const averageAmount = activeLoans
+    ? Math.round(totalLoaned / activeLoans)
+    : 0;
+
   return (
-    <Card>
-      <Space className="mb-4" direction="vertical" style={{ width: "100%" }}>
-        <div className="flex justify-between items-center w-full">
-          <Title level={4}>Loan History</Title>
+    <Card bordered={false} className="shadow-sm">
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Title level={4} className="!mb-1">
+              Group Loan Portfolio
+            </Title>
+            <Text type="secondary">
+              Monitor issued loans, track balances, and capture repayments in real time.
+            </Text>
+          </div>
           <Button
             type="primary"
             onClick={() => {
@@ -159,9 +186,32 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           </Button>
         </div>
 
-        <Text>
-          Total Loaned: <strong>KES {totalLoaned.toLocaleString()}</strong>
-        </Text>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Total Amount Issued"
+              value={totalLoaned}
+              formatter={(value) => formatCurrency(value as number)}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Active Loans"
+              value={activeLoans}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Statistic
+              title="Average Ticket Size"
+              value={averageAmount}
+              formatter={(value) => formatCurrency(value as number)}
+              valueStyle={{ fontSize: 20 }}
+            />
+          </Col>
+        </Row>
+
         <Space wrap>
           <Button
             onClick={() =>
@@ -179,15 +229,15 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
             className="w-64"
           />
         </Space>
-      </Space>
 
-      <Table
-        columns={columns}
-        dataSource={sortedLoans}
-        loading={isLoading}
-        rowKey="id"
-        pagination={{ pageSize: 6 }}
-      />
+        <Table
+          columns={columns}
+          dataSource={sortedLoans}
+          loading={isLoading || isFetching}
+          rowKey="id"
+          pagination={{ pageSize: 6, showSizeChanger: true }}
+        />
+      </Space>
 
       {/* Loan Modal */}
       {showLoanModal && (

@@ -31,6 +31,11 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const toTitleCase = (value: string) =>
+    value
+      ?.toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
+
   const filteredData = useMemo(() => {
     const searchText = search.trim().toLowerCase();
     if (!searchText) return data;
@@ -60,7 +65,9 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
     const fullName = `${manager.firstname ?? ""} ${
       manager.lastname ?? ""
-    }`.trim();
+    }`
+      .trim()
+      .replace(/\s+/g, " ");
     return <Text>{fullName || "Unassigned"}</Text>;
   };
 
@@ -84,7 +91,9 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
     {
       title: "Group",
       dataIndex: "name",
-      render: (value: string) => <Text strong>{value}</Text>,
+      render: (value: string) => (
+        <Text strong>{toTitleCase(value?.trim() ?? "")}</Text>
+      ),
     },
     {
       title: "Relationship Manager",
