@@ -193,6 +193,24 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
 
   const plannerEmpty = visibleTasks.length === 0;
 
+  const handleAcceptConsent = () => {
+    setConsent("granted");
+    setTaskConsent("granted");
+    setShowConsentModal(false);
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Failed to persist planner tasks", error);
+    }
+  };
+
+  const handleDeclineConsent = () => {
+    setConsent("denied");
+    setTaskConsent("denied");
+    setShowConsentModal(false);
+  };
+
   return (
     <div className="mt-6 space-y-6">
       <Card bordered={false} className="shadow-sm overflow-hidden">
@@ -438,19 +456,3 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
 };
 
 export default TodoPlanner;
-  const handleAcceptConsent = () => {
-    setConsent("granted");
-    setTaskConsent("granted");
-    setShowConsentModal(false);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(tasks));
-    } catch (error) {
-      console.error("Failed to persist planner tasks", error);
-    }
-  };
-
-  const handleDeclineConsent = () => {
-    setConsent("denied");
-    setTaskConsent("denied");
-    setShowConsentModal(false);
-  };

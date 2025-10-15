@@ -1,4 +1,14 @@
-import { Card, Tabs, Spin, Space, Typography, Row, Col, Statistic, Empty } from "antd";
+import {
+  Card,
+  Tabs,
+  Spin,
+  Space,
+  Typography,
+  Row,
+  Col,
+  Statistic,
+  Empty,
+} from "antd";
 import { Area, Column } from "@ant-design/plots";
 import dayjs from "dayjs";
 import React, { useMemo } from "react";
@@ -60,15 +70,19 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   );
 
   const paymentTrend = useMemo(
-    () => buildMonthlySeries(paymentsQuery.data?.payments, "date_paid", "amount"),
+    () =>
+      buildMonthlySeries(paymentsQuery.data?.payments, "date_paid", "amount"),
     [paymentsQuery.data?.payments]
   );
 
   const totalLoaned = useMemo(() => {
-    return (loansQuery.data?.loans ?? []).reduce((sum: number, loan: GenericRecord) => {
-      const amount = Number(loan?.amount ?? 0);
-      return sum + (Number.isNaN(amount) ? 0 : amount);
-    }, 0);
+    return (loansQuery.data?.loans ?? []).reduce(
+      (sum: number, loan: GenericRecord) => {
+        const amount = Number(loan?.amount ?? 0);
+        return sum + (Number.isNaN(amount) ? 0 : amount);
+      },
+      0
+    );
   }, [loansQuery.data?.loans]);
 
   const payments =
@@ -81,10 +95,10 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     }, 0);
   }, [payments]);
 
-  const netPosition = useMemo(() => totalLoaned - totalPayments, [
-    totalLoaned,
-    totalPayments,
-  ]);
+  const netPosition = useMemo(
+    () => totalLoaned - totalPayments,
+    [totalLoaned, totalPayments]
+  );
 
   const isInitialLoading =
     (loansQuery.isLoading && !loansQuery.data) ||
@@ -102,11 +116,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
             data={loanTrend}
             xField="month"
             yField="value"
-            smooth
             padding={[20, 24, 40, 50]}
-            color="#1f7dc8"
-            areaStyle={{
-              fill: "l(270) 0:#32c5f4 1:#1f7dc8",
+            area={{
+              style: {
+                fill: "l(270) 0:#32c5f4 1:#1f7dc8",
+              },
             }}
             tooltip={{
               formatter: (datum: MonthlyDatum) => ({
@@ -160,14 +174,18 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               <Statistic
                 title="Total Loaned"
                 value={totalLoaned}
-                formatter={(value) => `KES ${(value as number).toLocaleString()}`}
+                formatter={(value) =>
+                  `KES ${(value as number).toLocaleString()}`
+                }
               />
             </Col>
             <Col xs={24} sm={12} md={8}>
               <Statistic
                 title="Total Payments"
                 value={totalPayments}
-                formatter={(value) => `KES ${(value as number).toLocaleString()}`}
+                formatter={(value) =>
+                  `KES ${(value as number).toLocaleString()}`
+                }
               />
             </Col>
             <Col xs={24} sm={12} md={8}>

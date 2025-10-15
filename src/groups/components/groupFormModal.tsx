@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from "react";
+import { Children, useEffect } from "react";
 import {
   Modal,
   Form,
@@ -14,6 +14,7 @@ import {
   Space,
   Card,
 } from "antd";
+import type { DefaultOptionType } from "antd/es/select";
 import {
   useCreateGroupLoanMutation,
   useGetGroupMembersQuery,
@@ -93,6 +94,23 @@ const GroupLoanFormModal = ({
     }
   };
 
+  const filterOptionsByLabel = (
+    input: string,
+    option?: DefaultOptionType
+  ): boolean => {
+    const optionLabel = Children.toArray(option?.children as React.ReactNode)
+      .map((child) => {
+        if (typeof child === "string" || typeof child === "number") {
+          return String(child);
+        }
+        return "";
+      })
+      .join("")
+      .toLowerCase();
+
+    return optionLabel.includes(input.toLowerCase());
+  };
+
   return (
     <Modal
       open={visible}
@@ -108,8 +126,7 @@ const GroupLoanFormModal = ({
             Loan Details
           </Typography.Title>
           <Text type="secondary">
-            Capture principal, term, and beneficiary details so this loan stays
-            aligned with policy.
+            Capture accurate details so this loan stays aligned with policy.
           </Text>
         </Space>
 
@@ -158,11 +175,7 @@ const GroupLoanFormModal = ({
                   placeholder="Select loan type"
                   showSearch
                   optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children as string)
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  filterOption={filterOptionsByLabel}
                 >
                   {loanDefs.map((ld: any) => (
                     <Select.Option key={ld.id} value={ld.id}>
@@ -197,11 +210,7 @@ const GroupLoanFormModal = ({
               showSearch
               placeholder="Select member"
               optionFilterProp="children"
-              filterOption={(input, option) =>
-                (option?.children as string)
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
+              filterOption={filterOptionsByLabel}
             >
               {members.map((m: any) => (
                 <Select.Option key={m.id} value={m.id}>

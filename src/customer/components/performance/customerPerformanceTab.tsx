@@ -39,7 +39,10 @@ const buildMonthlyTrend = (records: LoanRecord[]): TrendDatum[] => {
     if (!date.isValid()) return;
 
     const monthKey = date.format("YYYY-MM");
-    accumulator.set(monthKey, (accumulator.get(monthKey) ?? 0) + Number(loan.amount ?? 0));
+    accumulator.set(
+      monthKey,
+      (accumulator.get(monthKey) ?? 0) + Number(loan.amount ?? 0)
+    );
   });
 
   return Array.from(accumulator.entries())
@@ -76,7 +79,9 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
 
   const repaymentMix = useMemo<MixDatum[]>(() => {
     if (!loans.length) return [];
-    const settled = loans.filter((loan) => Number(loan.balance ?? 0) <= 0).length;
+    const settled = loans.filter(
+      (loan) => Number(loan.balance ?? 0) <= 0
+    ).length;
     const active = loans.length - settled;
     return [
       { status: "Settled", value: settled },
@@ -121,7 +126,10 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
 
     return Array.from(merged.entries())
       .sort((a, b) => dayjs(a[0]).valueOf() - dayjs(b[0]).valueOf())
-      .map(([month, values]) => ({ month, value: values.loans - values.payments }));
+      .map(([month, values]) => ({
+        month,
+        value: values.loans - values.payments,
+      }));
   }, [loanTrend, paymentTrend]);
 
   const tabs = [
@@ -136,9 +144,9 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
             data={loanTrend}
             xField="month"
             yField="value"
-            smooth
-            areaStyle={{ fill: "l(270) 0:#32c5f4 1:#1f7dc8" }}
-            color="#1f7dc8"
+            area={{
+              style: { fill: "l(270) 0:#32c5f4 1:#1f7dc8" },
+            }}
             tooltip={{
               formatter: (datum: TrendDatum) => ({
                 name: "Amount",
@@ -161,7 +169,9 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
             xField="status"
             yField="value"
             columnStyle={{ radius: [6, 6, 0, 0] }}
-            color={(datum) => (datum.status === "Settled" ? "#22a06b" : "#f25f3a")}
+            color={(datum: { status: string }) =>
+              datum.status === "Settled" ? "#22a06b" : "#f25f3a"
+            }
             padding={[20, 24, 40, 24]}
             tooltip={{
               formatter: (datum: MixDatum) => ({
@@ -186,7 +196,7 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
             radius={0.8}
             label={{
               type: "spider",
-              formatter: ({ status, value }) => `${status}: ${value}`,
+              formatter: ({ status, value }: MixDatum) => `${status}: ${value}`,
             }}
             color={["#22a06b", "#facc15"]}
             padding={[10, 24, 10, 24]}
@@ -205,7 +215,9 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
             xField="month"
             yField="value"
             columnStyle={{ radius: [6, 6, 0, 0] }}
-            color={(datum) => (datum.value >= 0 ? "#1f7dc8" : "#f25f3a")}
+            color={(datum: { value: number }) =>
+              datum.value >= 0 ? "#1f7dc8" : "#f25f3a"
+            }
             padding={[20, 24, 40, 24]}
             tooltip={{
               formatter: (datum: TrendDatum) => ({
