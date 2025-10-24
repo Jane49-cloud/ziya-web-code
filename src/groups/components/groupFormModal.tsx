@@ -47,7 +47,7 @@ const GroupLoanFormModal = ({
 
   const members = membersData?.members || [];
   const loanDefs =
-    loanDefsData?.loanDefinitions?.filter(
+    loanDefsData?.loan_definitions?.filter(
       (loanDef: any) => loanDef.status === 1
     ) || [];
 

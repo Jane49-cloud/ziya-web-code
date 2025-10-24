@@ -38,9 +38,9 @@ export interface GroupLoan {
   balance: string;
   group_id: number;
   group_name: string;
-  recipient_id: number;
-  recipient_firstname: string;
-  recipient_lastname: string;
+  issued_to: number;
+  customer_firstname: string;
+  customer_lastname: string;
   date_issued: string;
   cycle?: number;
 }
@@ -63,7 +63,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
-      const fullName = `${item.recipient_firstname} ${item.recipient_lastname}`;
+      const fullName = `${item?.customer_firstname} ${item?.customer_lastname}`;
       const isPaid = Number(item.balance) === 0;
 
       // Text search
@@ -110,7 +110,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     ];
 
     const rows = filteredData.map((item) => {
-      const recipient = `${item.recipient_firstname} ${item.recipient_lastname}`;
+      const recipient = `${item?.customer_firstname} ${item?.customer_lastname}`;
       const isPaid = Number(item.balance) === 0;
       const repaid = Number(item.amount) - Number(item.balance);
       const repaymentRate =
@@ -199,11 +199,11 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       key: "recipient",
       // width: 150,
       render: (_, record) => {
-        const fullName = `${record.recipient_firstname} ${record.recipient_lastname}`;
+        const fullName = `${record?.customer_firstname} ${record?.customer_lastname}`;
         return (
           <div
             className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors"
-            onClick={() => navigate(`/customer/${record.recipient_id}`)}
+            onClick={() => navigate(`/customer/${record.issued_to}`)}
           >
             <div className="relative">{customAvatar(fullName)}</div>
             <div>
@@ -211,7 +211,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                 {fullName}
               </div>
               <div className="text-xs text-gray-500">
-                ID: {record.recipient_id}
+                ID: {record.issued_to}
               </div>
             </div>
           </div>

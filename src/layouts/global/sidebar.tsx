@@ -22,6 +22,8 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
     const role = getRole();
     if (role?.name) {
       setUserRole(role.name);
+    } else {
+      setUserRole("admin");
     }
   }, [location.pathname]);
 
@@ -80,7 +82,8 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                     "group flex w-full items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-300",
                     "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
                     {
-                      "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]": isOpen,
+                      "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]":
+                        isOpen,
                     }
                   )}
                   aria-expanded={isOpen}
@@ -88,9 +91,14 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.25)]">
-                      <KeenIcon icon={item.icon} className="text-base text-primary" />
+                      <KeenIcon
+                        icon={item.icon}
+                        className="text-base text-primary"
+                      />
                     </span>
-                    <span className="font-semibold tracking-wide">{item.title}</span>
+                    <span className="font-semibold tracking-wide">
+                      {item.title}
+                    </span>
                   </div>
                   <FaChevronDown
                     className={clsx(
@@ -128,8 +136,10 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                           className={clsx(
                             "block rounded-xl px-4 py-2 text-sm font-medium text-slate-200 transition-all duration-300",
                             {
-                              "bg-[rgba(50,197,244,0.18)] text-white shadow-inner shadow-[rgba(50,197,244,0.25)]": isSubActive,
-                              "hover:bg-white/10 hover:text-white": !isSubActive,
+                              "bg-[rgba(50,197,244,0.18)] text-white shadow-inner shadow-[rgba(50,197,244,0.25)]":
+                                isSubActive,
+                              "hover:bg-white/10 hover:text-white":
+                                !isSubActive,
                             }
                           )}
                           aria-current={isSubActive ? "page" : undefined}
@@ -152,16 +162,22 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
                 "group flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-300",
                 "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#32c5f4] focus:ring-opacity-40",
                 {
-                  "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]": isActive,
+                  "bg-[rgba(50,197,244,0.18)] text-white shadow-[0_18px_36px_rgba(17,89,125,0.35)]":
+                    isActive,
                 }
               )}
               aria-current={isActive ? "page" : undefined}
             >
               <span className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-lg text-primary transition-colors duration-300 group-hover:bg-[rgba(50,197,244,0.25)]">
-                  <KeenIcon icon={item.icon} className="text-base text-primary" />
+                  <KeenIcon
+                    icon={item.icon}
+                    className="text-base text-primary"
+                  />
                 </span>
-                <span className="font-semibold tracking-wide">{item.title}</span>
+                <span className="font-semibold tracking-wide">
+                  {item.title}
+                </span>
               </span>
               <span
                 className={clsx(

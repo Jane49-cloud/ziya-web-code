@@ -33,12 +33,12 @@ const LoanDefinitionTable: FC<LoanDefinitionTableProps> = ({
   const loanDefinitions =
     selectedPlatform === "all"
       ? [
-          ...(webData?.loanDefinitions || []),
-          ...(mobileData?.loanDefinitions || []),
+          ...(webData?.loan_definitions || []),
+          ...(mobileData?.loan_definitions || []),
         ].filter((loan: LoanDefinition) => loan.status === 1)
       : (selectedPlatform === "web"
-          ? webData?.loanDefinitions
-          : mobileData?.loanDefinitions
+          ? webData?.loan_definitions
+          : mobileData?.loan_definitions
         )?.filter((loan: LoanDefinition) => loan.status === 1) || [];
 
   const columns = [

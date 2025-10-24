@@ -7,7 +7,7 @@ import {
 
 const baseQuery = fetchBaseQuery({
   // baseUrl: "https://betaapi.ziya.co.ke/api/v1",
-  baseUrl: "https://api.ziya.co.ke/api/v1",
+  baseUrl: "https://api.ziya.co.ke/api/v2",
 
   // baseUrl: "https://stagingapi.ziya.co.ke/api/v1",
   prepareHeaders: (headers) => {
