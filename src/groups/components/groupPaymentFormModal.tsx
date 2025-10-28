@@ -47,7 +47,7 @@ const GroupPaymentFormModal = ({
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ date_paid: dayjs() });
+      form.setFieldsValue({ date_paid: dayjs().startOf("day") });
     }
   }, [payment, form]);
 
@@ -62,7 +62,9 @@ const GroupPaymentFormModal = ({
         group_id: groupId,
         approved_by: approved_by ?? null,
         date_paid: values.date_paid
-          ? values.date_paid.format("YYYY-MM-DD")
+          ? values.date_paid
+              .startOf("day")
+              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
       };
 

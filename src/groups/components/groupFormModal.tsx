@@ -62,7 +62,7 @@ const GroupLoanFormModal = ({
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ date_issued: dayjs() });
+      form.setFieldsValue({ date_issued: dayjs().startOf("day") });
     }
   }, [loan, form]);
 
@@ -72,7 +72,9 @@ const GroupLoanFormModal = ({
       const payload = {
         ...values,
         date_issued: values.date_issued
-          ? values.date_issued.format("YYYY-MM-DD")
+          ? values.date_issued
+              .startOf("day")
+              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
         group_id: groupId,
         issued_by: issuedBy,

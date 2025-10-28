@@ -73,8 +73,8 @@ deploy_live:
   <<: *deploy_template
   variables:
     SSH_KEY: $LIVE_KEY
-    TARGET_HOST: 35.163.73.204
-    CONTAINER_NAME: ziyaweb
-    PORT: 3000
+    TARGET_HOST: 34.211.227.206
+    CONTAINER_NAME: ziyaweb-live
+    PORT: 3001
   only:
     - live
