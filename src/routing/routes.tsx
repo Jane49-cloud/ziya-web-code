@@ -14,6 +14,11 @@ export const navLinks = [
     allowedRoles: ALL_ROLES,
   },
   {
+    to: "/dashboard",
+    label: "Dashboard",
+    allowedRoles: ALL_ROLES,
+  },
+  {
     to: "/profile",
     label: "Profile",
     allowedRoles: ALL_ROLES,
@@ -46,7 +51,7 @@ export const sidebarItems: SidebarItem[] = [
   {
     title: "Dashboard",
     icon: "graph-up",
-    path: "/",
+    path: "/dashboard",
     allowedRoles: ALL_ROLES,
   },
   {

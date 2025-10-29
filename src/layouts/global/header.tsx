@@ -42,14 +42,14 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   } = useLoadUserQuery(null, { skip: !token });
   const [user, setUser] = useState(getUser());
   const [role, setRole] = useState(getRole());
-  // console.log(role.name);
   const userData = data?.staff;
+  console.log(user);
+
   useEffect(() => {
     if (userData && !isLoading) {
       setUser(userData?.staffData);
       setRole(userData?.userRole);
-      // console.log(user, "from header");
-      localStorage.setItem("ziya-profile", JSON.stringify(userData?.staffData));
+      localStorage.setItem("ziya-profile", JSON.stringify(userData));
       localStorage.setItem("ziya-role", JSON.stringify(userData?.userRole));
       // console.log(user);
     }
@@ -73,10 +73,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   };
 
   // console.log(user);
-  const fullName = user
-    ? `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim()
+  const fullName = userData
+    ? `${userData?.firstname ?? ""} ${userData?.lastname ?? ""}`.trim()
     : "Ziya";
-  const userRole = role?.name;
+  const userRole = role?.name || "admin";
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
