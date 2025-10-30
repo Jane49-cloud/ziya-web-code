@@ -41,6 +41,7 @@ import {
   UserAddOutlined,
   ThunderboltFilled,
 } from "@ant-design/icons";
+import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
 const CustomerManagement: FC = () => {
   const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
@@ -187,9 +188,7 @@ const CustomerManagement: FC = () => {
         !search ||
         fullName.includes(search) ||
         phone.includes(search) ||
-        (customer.identification_number ?? "")
-          .toLowerCase()
-          .includes(search);
+        (customer.identification_number ?? "").toLowerCase().includes(search);
 
       const matchesStatus =
         subscriptionFilter === "all" ||
@@ -346,29 +345,66 @@ const CustomerManagement: FC = () => {
         </Alert>
       )}
 
-      <Card className="mb-4 shadow-sm" bodyStyle={{ padding: 20 }}>
-        <Row gutter={[24, 16]}>
+      <Card
+        className="mb-6 shadow-md rounded-xl border border-gray-100 bg-white/90 backdrop-blur-sm"
+        bodyStyle={{ padding: 24 }}
+      >
+        <Row gutter={[24, 24]} justify="space-between" align="middle">
+          {/* Total Customers */}
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Total Customers"
-              value={customerMetrics.total}
-              loading={isLoading || isFetching}
-              prefix={<ThunderboltFilled className="text-yellow-500" />}
-            />
+            <div className="flex items-center gap-4 bg-gradient-to-r from-yellow-50 to-yellow-100/40 rounded-lg p-5 shadow-sm hover:shadow transition-all duration-200">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/10">
+                <FiUsers className="text-yellow-500 text-2xl" />
+              </div>
+              <Statistic
+                title={
+                  <span className="text-gray-600 font-medium">
+                    Total Customers
+                  </span>
+                }
+                value={customerMetrics.total}
+                loading={isLoading || isFetching}
+                valueStyle={{ fontWeight: 700, color: "#78350f" }}
+              />
+            </div>
           </Col>
+
+          {/* Active Subscriptions */}
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Active Subscriptions"
-              value={customerMetrics.active}
-              loading={isLoading || isFetching}
-            />
+            <div className="flex items-center gap-4 bg-gradient-to-r from-green-50 to-green-100/40 rounded-lg p-5 shadow-sm hover:shadow transition-all duration-200">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10">
+                <FiCheckCircle className="text-green-500 text-2xl" />
+              </div>
+              <Statistic
+                title={
+                  <span className="text-gray-600 font-medium">
+                    Active Subscriptions
+                  </span>
+                }
+                value={customerMetrics.active}
+                loading={isLoading || isFetching}
+                valueStyle={{ fontWeight: 700, color: "#065f46" }}
+              />
+            </div>
           </Col>
+
+          {/* Inactive Subscriptions */}
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Inactive Subscriptions"
-              value={customerMetrics.inactive}
-              loading={isLoading || isFetching}
-            />
+            <div className="flex items-center gap-4 bg-gradient-to-r from-red-50 to-red-100/40 rounded-lg p-5 shadow-sm hover:shadow transition-all duration-200">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10">
+                <FiSlash className="text-red-500 text-2xl" />
+              </div>
+              <Statistic
+                title={
+                  <span className="text-gray-600 font-medium">
+                    Inactive Subscriptions
+                  </span>
+                }
+                value={customerMetrics.inactive}
+                loading={isLoading || isFetching}
+                valueStyle={{ fontWeight: 700, color: "#7f1d1d" }}
+              />
+            </div>
           </Col>
         </Row>
       </Card>

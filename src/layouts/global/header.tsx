@@ -73,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       <div className="sticky top-0 z-40">
         <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-amber-400" />
         <header className="backdrop-blur supports-[backdrop-filter]:bg-white/85 bg-white/95 border-b border-gray-200 shadow-[0_1px_0_0_rgba(0,0,0,0.02)]">
-          <div className="mx-auto max-w-7xl px-4">
+          <div className="mx-auto container px-2">
             <div className="flex h-[3.75rem] items-center justify-between gap-3">
               {/* Sidebar Toggle (mobile) */}
               <button
