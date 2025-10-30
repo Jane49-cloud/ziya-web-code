@@ -36,11 +36,7 @@ import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
-import {
-  SearchOutlined,
-  UserAddOutlined,
-  ThunderboltFilled,
-} from "@ant-design/icons";
+import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
 const CustomerManagement: FC = () => {
