@@ -20,7 +20,7 @@ build_image:
     - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
   only:
-    - dev
+    - v2
     - staging
     - live
 
