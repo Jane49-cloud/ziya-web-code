@@ -282,9 +282,20 @@ const CustomerManagement: FC = () => {
       ),
     },
     {
+      title: "Group",
+      dataIndex: "group_name",
+      key: "group_name",
+      render: (value: string) => (
+        <Tag color="gold" bordered={false} className="!m-0 !px-3 capitalize">
+          {value || "Unassigned"}
+        </Tag>
+      ),
+    },
+    {
       title: "Subscription",
       dataIndex: "subscription_status",
       key: "subscription_status",
+      align: "center" as const,
       render: (status: number) => (
         <Tag color={status === 1 ? "green" : "red"}>
           {status === 1 ? "Active" : "Inactive"}
@@ -307,6 +318,7 @@ const CustomerManagement: FC = () => {
     {
       title: "Actions",
       key: "actions",
+      align: "center" as const,
       render: (_: any, customer: any) => (
         <CustomerTableActions
           customer={customer}

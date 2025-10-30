@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Button } from "antd";
+import { Button, Tooltip } from "antd";
+import {
+  EditOutlined,
+  EyeOutlined,
+  PlusCircleOutlined,
+  PoweroffOutlined,
+} from "@ant-design/icons";
 import { FC } from "react";
 
 export const CustomerTableActions: FC<{
@@ -22,10 +28,18 @@ export const CustomerTableActions: FC<{
   };
 
   return (
-    <div className="flex gap-2 space-x-2">
-      <Button onClick={onEdit} type="primary" size="small">
-        Edit
-      </Button>
+    <div className="flex gap-2">
+      <Tooltip title="Edit customer">
+        <Button
+          onClick={onEdit}
+          type="default"
+          size="small"
+          shape="circle"
+          aria-label="Edit customer"
+          className="circle-action-btn circle-action-btn--edit"
+          icon={<EditOutlined />}
+        />
+      </Tooltip>
       <Button
         onClick={handleActivateDeactivate}
         type="default"
@@ -34,21 +48,33 @@ export const CustomerTableActions: FC<{
           backgroundColor: customer?.status === 1 ? "#fca5a5" : "#86efac",
           color: customer?.status === 1 ? "#991b1b" : "#166534",
           borderColor: customer?.status === 1 ? "#dc2626" : "#22c55e",
-          width: "70px",
           display: "none",
         }}
       >
-        {customer?.status === 1 ? "Deactivate" : "Activate"}
+        <PoweroffOutlined />
       </Button>
-      <button
-        onClick={() => handleView(customer.id)}
-        className="bg-amber-200 text-amber-500 px-4 rounded"
-      >
-        View
-      </button>
-      <Button onClick={onCreateSubscription} size="small" type="dashed">
-        + Subscription
-      </Button>
+      <Tooltip title="View details">
+        <Button
+          onClick={() => handleView(customer.id)}
+          type="default"
+          size="small"
+          shape="circle"
+          aria-label="View customer"
+          className="circle-action-btn circle-action-btn--view"
+          icon={<EyeOutlined />}
+        />
+      </Tooltip>
+      <Tooltip title="Create subscription">
+        <Button
+          onClick={onCreateSubscription}
+          type="default"
+          size="small"
+          shape="circle"
+          aria-label="Create subscription"
+          className="circle-action-btn circle-action-btn--subscription"
+          icon={<PlusCircleOutlined />}
+        />
+      </Tooltip>
     </div>
   );
 };

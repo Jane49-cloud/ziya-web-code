@@ -11,7 +11,7 @@ const HomePage: React.FC = () => {
   const role = useMemo(() => getRole(), []);
 
   const firstName = user?.firstname ?? "Ziya";
-  const roleLabel = role?.name ?? null;
+  const roleLabel = role ?? null;
 
   return (
     <div className="relative min-h-screen bg-[#f6fafc]">
