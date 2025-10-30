@@ -47,11 +47,11 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
 
     const fetchRole = () => {
       const role = getRole();
-      if (role?.name) {
-        setUserRole(role.name);
-        console.log("User role fetched:", role.name);
+      if (role) {
+        setUserRole(role);
+        console.log("User role fetched:", role);
       } else {
-        setUserRole("admin");
+        setUserRole(role);
       }
       setIsLoading(false);
     };

@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect } from "react";
 import { FiMenu, FiChevronDown } from "react-icons/fi";
 import { IconContext } from "react-icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
-import { customAvatar, getRole, getUser } from "../../utils";
+import { customAvatar, getUser } from "../../utils";
 import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
@@ -41,22 +42,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
   const [user, setUser] = useState(getUser());
-  const [role, setRole] = useState(getRole());
+  const role = localStorage.getItem("ziya-role") || "";
   const userData = data?.staff;
-  console.log(user);
 
   useEffect(() => {
     if (userData && !isLoading) {
       setUser(userData?.staffData);
-      setRole(userData?.userRole);
+
       localStorage.setItem("ziya-profile", JSON.stringify(userData));
-      localStorage.setItem("ziya-role", JSON.stringify(userData?.userRole));
-      // console.log(user);
     }
   }, [userData, isLoading, user]);
-
-  // console.log(user, "from header");
-  // console.log(userData, "userData");
 
   useEffect(() => {
     if (token) {
@@ -72,11 +67,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     navigate("/auth/login");
   };
 
-  // console.log(user);
   const fullName = userData
     ? `${userData?.firstname ?? ""} ${userData?.lastname ?? ""}`.trim()
     : "Ziya";
-  const userRole = role?.name || "admin";
+  const userRole = role;
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
@@ -94,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           {/* Navigation Links */}
           <nav className="hidden lg:flex space-x-4">
             {navLinks
-              .filter((link) => link.allowedRoles.includes(userRole))
+              .filter((link) => link.allowedRoles.includes(userRole as any))
               .map(({ to, label }) => (
                 <NavLink
                   key={to}

@@ -32,9 +32,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
   const [search, setSearch] = useState("");
 
   const toTitleCase = (value: string) =>
-    value
-      ?.toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
+    value?.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
 
   const filteredData = useMemo(() => {
     const searchText = search.trim().toLowerCase();
@@ -63,12 +61,10 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       return <Tag color="default">Unassigned</Tag>;
     }
 
-    const fullName = `${manager.firstname ?? ""} ${
-      manager.lastname ?? ""
-    }`
+    const fullName = `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
       .trim()
       .replace(/\s+/g, " ");
-    return <Text>{fullName || "Unassigned"}</Text>;
+    return <Text className="capitalize">{fullName || "Unassigned"}</Text>;
   };
 
   const handleMenuClick = (key: string, record: GroupRecord) => {
@@ -99,6 +95,18 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
       render: (managerId: number) => renderManager(managerId),
+    },
+    {
+      title: "Group Leader",
+      dataIndex: "admin_name",
+      render: (value: string) =>
+        value ? (
+          <Tag color="#ffe38f" style={{ color: "#694400" }}>
+            {toTitleCase(value)}
+          </Tag>
+        ) : (
+          <Tag color="default">UNASSIGNED</Tag>
+        ),
     },
     {
       title: "Actions",
@@ -137,7 +145,6 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       },
     },
   ];
-
   return (
     <Card bordered={false} className="shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

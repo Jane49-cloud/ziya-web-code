@@ -20,10 +20,10 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
 
   useEffect(() => {
     const role = getRole();
-    if (role?.name) {
-      setUserRole(role.name);
+    if (role) {
+      setUserRole(role);
     } else {
-      setUserRole("admin");
+      setUserRole(role);
     }
   }, [location.pathname]);
 
@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
         </button>
       </div>
 
-      <nav className="relative z-10 mt-6 flex-1 space-y-2 overflow-y-auto px-2 pb-6 sm:px-3">
+      <nav className="sidebar-scroll relative z-10 mt-6 flex-1 space-y-2 overflow-y-auto px-2 pb-6 sm:px-3">
         {sidebarItems.map((item, index) => {
           if (item.allowedRoles && !item.allowedRoles.includes(userRole ?? ""))
             return null;
