@@ -45,7 +45,7 @@ build_image:
       docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       EOF
   only:
-    - dev
+    - v2
     - staging
     - live
 
