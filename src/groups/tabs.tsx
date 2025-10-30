@@ -9,6 +9,7 @@ import {
   Card,
   Badge,
   Space,
+  Tooltip,
 } from "antd";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
@@ -25,6 +26,13 @@ import {
 } from "./features";
 import CreateGroupForm from "./components/groupForm";
 import { useNavigate } from "react-router-dom";
+import {
+  FiActivity,
+  FiPlusCircle,
+  FiLayers,
+  FiUsers,
+  FiUserCheck,
+} from "react-icons/fi";
 
 const { Title, Text } = Typography;
 
@@ -186,8 +194,8 @@ const GroupTabs = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <Title level={3} className="!mb-1">
             Group Management
@@ -197,40 +205,86 @@ const GroupTabs = () => {
             glance.
           </Text>
         </div>
+
         <Space wrap>
-          <Button onClick={() => navigate("/activities/all")}>
-            View Group Activity
-          </Button>
-          <Button type="primary" onClick={() => setActiveTab("create")}>
+          <Tooltip title="See timeline of actions across all groups">
+            <Button
+              onClick={() => navigate("/activities/all")}
+              icon={<FiActivity />}
+            >
+              View Group Activity
+            </Button>
+          </Tooltip>
+          <Button
+            type="primary"
+            icon={<FiPlusCircle />}
+            onClick={() => setActiveTab("create")}
+          >
             Create Group
           </Button>
         </Space>
       </div>
 
-      <Card bordered={false} className="shadow-sm">
-        <Space size={32} wrap>
-          <div>
-            <Text type="secondary">Total Groups</Text>
-            <div className="text-2xl font-semibold">{summary.total}</div>
+      {/* summary */}
+      <Card bordered={false} className="shadow-sm rounded-xl   mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
+          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
+            <Space align="start" size={12}>
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <FiLayers />
+              </div>
+              <div>
+                <Text type="secondary">Total Groups</Text>
+                <div className="text-2xl font-semibold leading-tight">
+                  {summary.total}
+                </div>
+              </div>
+            </Space>
           </div>
-          <div>
-            <Text type="secondary">Created by Me</Text>
-            <div className="text-2xl font-semibold">{summary.created}</div>
+
+          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
+            <Space align="start" size={12}>
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <FiUsers />
+              </div>
+              <div>
+                <Text type="secondary">Created by Me</Text>
+                <div className="text-2xl font-semibold leading-tight">
+                  {summary.created}
+                </div>
+              </div>
+            </Space>
           </div>
-          <div>
-            <Text type="secondary">Managed by Me</Text>
-            <div className="text-2xl font-semibold">{summary.managed}</div>
+
+          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
+            <Space align="start" size={12}>
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-600">
+                <FiUserCheck />
+              </div>
+              <div>
+                <Text type="secondary">Managed by Me</Text>
+                <div className="text-2xl font-semibold leading-tight">
+                  {summary.managed}
+                </div>
+              </div>
+            </Space>
           </div>
-        </Space>
+        </div>
       </Card>
 
+      {/* ---------- Tabs ---------- */}
       <Tabs
         activeKey={activeTab}
         onChange={(key) => setActiveTab(key)}
         items={tabItems}
+        type="card"
+        size="large"
+        tabBarGutter={12}
+        className="[&_.ant-tabs-tab]:rounded-lg [&_.ant-tabs-tab]:px-4 [&_.ant-tabs-tab]:py-2
+               [&_.ant-tabs-tab-active]:bg-white [&_.ant-tabs-nav]:mb-0"
       />
 
-      {/* Modals */}
+      {/* ---------- Modals (unchanged) ---------- */}
       <EditGroupModal
         visible={modals.edit}
         form={form}

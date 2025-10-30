@@ -34,6 +34,9 @@ body {
     color: #289ac2;
   }
 }
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
 
 .container {
   @apply mx-auto max-w-[1252px]  xl:px-10 lg:px-6 sm:px-4;

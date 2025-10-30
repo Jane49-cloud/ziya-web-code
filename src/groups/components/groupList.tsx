@@ -1,11 +1,28 @@
 import { useMemo, useState } from "react";
 import type { FC } from "react";
-import { Table, Button, Card, Dropdown, Input, Tag, Typography } from "antd";
-import { FiEdit, FiUserCheck, FiEye, FiMoreVertical } from "react-icons/fi";
+import {
+  Table,
+  Button,
+  Card,
+  Dropdown,
+  Input,
+  Tag,
+  Typography,
+  Space,
+  Avatar,
+} from "antd";
+import {
+  FiEdit,
+  FiUserCheck,
+  FiEye,
+  FiMoreVertical,
+  FiSearch,
+  FiUsers,
+} from "react-icons/fi";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { useNavigate } from "react-router-dom";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 type Staff = {
   id: number;
@@ -34,6 +51,12 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
   const toTitleCase = (value: string) =>
     value?.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
 
+  const getInitials = (firstname?: string, lastname?: string) => {
+    const first = firstname?.charAt(0) || "";
+    const last = lastname?.charAt(0) || "";
+    return (first + last).toUpperCase() || "?";
+  };
+
   const filteredData = useMemo(() => {
     const searchText = search.trim().toLowerCase();
     if (!searchText) return data;
@@ -57,14 +80,36 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
   const renderManager = (managerId?: number) => {
     const manager = staffList.find((staff) => staff.id === managerId);
+
     if (!manager) {
-      return <Tag color="default">Unassigned</Tag>;
+      return (
+        <Space size="small">
+          <Avatar
+            size="small"
+            style={{ backgroundColor: "#f0f0f0", color: "#8c8c8c" }}
+          >
+            ?
+          </Avatar>
+          <Text type="secondary">Unassigned</Text>
+        </Space>
+      );
     }
 
     const fullName = `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
       .trim()
       .replace(/\s+/g, " ");
-    return <Text className="capitalize">{fullName || "Unassigned"}</Text>;
+
+    return (
+      <Space size="small">
+        <Avatar
+          size="small"
+          style={{ backgroundColor: "#1890ff", fontSize: "12px" }}
+        >
+          {getInitials(manager.firstname, manager.lastname)}
+        </Avatar>
+        <Text className="capitalize">{fullName || "Unassigned"}</Text>
+      </Space>
+    );
   };
 
   const handleMenuClick = (key: string, record: GroupRecord) => {
@@ -85,43 +130,62 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
   const columns = [
     {
-      title: "Group",
+      title: "Group Name",
       dataIndex: "name",
+      width: "30%",
       render: (value: string) => (
-        <Text strong>{toTitleCase(value?.trim() ?? "")}</Text>
+        <Space size="small">
+          <FiUsers className="text-blue-500" size={16} />
+          <Text strong className="text-base">
+            {toTitleCase(value?.trim() ?? "")}
+          </Text>
+        </Space>
       ),
     },
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager",
+      width: "30%",
       render: (managerId: number) => renderManager(managerId),
     },
     {
       title: "Group Leader",
       dataIndex: "admin_name",
+      width: "25%",
       render: (value: string) =>
         value ? (
-          <Tag color="#ffe38f" style={{ color: "#694400" }}>
+          <Tag
+            color="gold"
+            className="px-3 py-1 text-sm font-medium"
+            style={{ borderRadius: "6px" }}
+          >
             {toTitleCase(value)}
           </Tag>
         ) : (
-          <Tag color="default">UNASSIGNED</Tag>
+          <Tag
+            color="default"
+            className="px-3 py-1 text-sm"
+            style={{ borderRadius: "6px" }}
+          >
+            Unassigned
+          </Tag>
         ),
     },
     {
-      title: "Actions",
+      title: "",
       key: "actions",
+      width: "15%",
       align: "right" as const,
       render: (_: unknown, record: GroupRecord) => {
         const items = [
           {
             key: "view",
-            label: "View",
+            label: "View Details",
             icon: <FiEye />,
           },
           {
             key: "edit",
-            label: "Edit",
+            label: "Edit Group",
             icon: <FiEdit />,
           },
           {
@@ -130,7 +194,6 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
             icon: <FiUserCheck />,
           },
         ];
-
         return (
           <Dropdown
             trigger={["click"]}
@@ -139,28 +202,48 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
               onClick: ({ key }) => handleMenuClick(key as string, record),
             }}
           >
-            <Button icon={<FiMoreVertical />} type="text" />
+            <Button
+              icon={<FiMoreVertical />}
+              type="text"
+              className="hover:bg-gray-100"
+            />
           </Dropdown>
         );
       },
     },
   ];
+
   return (
-    <Card bordered={false} className="shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Text className="text-lg font-medium">Group Directory</Text>
-          <br />
-          <Text type="secondary">
-            Search, inspect, and manage existing groups.
-          </Text>
+    <Card
+      bordered={false}
+      className="shadow-lg rounded-lg"
+      styles={{ body: { padding: "24px" } }}
+    >
+      <div className="mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+          <div>
+            <Title level={4} className="!mb-1">
+              Group Directory
+            </Title>
+            <Text type="secondary" className="text-sm">
+              Search, inspect, and manage existing groups
+            </Text>
+          </div>
+          <Tag color="blue" className="px-3 py-1 text-sm font-medium">
+            {filteredData.length}{" "}
+            {filteredData.length === 1 ? "Group" : "Groups"}
+          </Tag>
         </div>
+
         <Input
           allowClear
-          placeholder="Search groups or managers"
+          prefix={<FiSearch className="text-gray-400" />}
+          placeholder="Search by group name or manager..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="w-full sm:w-72"
+          size="large"
+          className="w-full sm:w-96"
+          style={{ borderRadius: "8px" }}
         />
       </div>
 
@@ -169,13 +252,18 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         columns={columns}
         rowKey={(record) => String(record.id)}
         loading={isLoading}
+        bordered
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50],
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} of ${total} groups`,
         }}
         scroll={{ x: true }}
         tableLayout="auto"
+        className="group-table"
+        rowClassName="hover:bg-blue-50 transition-colors"
       />
     </Card>
   );
