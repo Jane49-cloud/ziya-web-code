@@ -364,7 +364,7 @@ const DashboardOverview = () => {
               <Button
                 type="primary"
                 size="large"
-                onClick={() => navigate("/performance")}
+                onClick={() => navigate("/profile")}
                 icon={<TrophyOutlined />}
                 className="!h-11 !bg-indigo-600 !px-6 hover:!bg-indigo-700 transition-all"
               >
