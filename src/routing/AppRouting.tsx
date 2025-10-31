@@ -32,6 +32,7 @@ import AccountDeletion from "../privacy/delete-account";
 import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
 import AnalysisModule from "../analysis";
 import HomePage from "../home";
+import AdminTasksPage from "../tasks/pages/adminTasks";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -107,6 +108,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/loan-categories" element={<LoanCategories />} />
+          <Route path="/tasks" element={<AdminTasksPage />} />
         </Route>
       </Route>
 

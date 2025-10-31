@@ -12,12 +12,11 @@ const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useGetUserByIdQuery(id);
   const { data: userData } = useLoadUserQuery({});
-  const user = data?.staff.staffData;
-  // const role = data?.staff.userRole;
-  // console.log(user);
+  const user = data?.staff;
+  console.log(user);
 
-  console.log(userData?.staff.staffData, "from redux");
-  console.log(userData?.staff.userRole, "from redux role");
+  console.log(userData, "from redux");
+  console.log(userData, "from redux role");
 
   if (isLoading) {
     return (

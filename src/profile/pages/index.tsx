@@ -121,6 +121,7 @@ export const UserProfilePage: React.FC = () => {
           <TodoPlanner
             userId={String(user?.id ?? staffData?.id ?? "") || undefined}
             displayName={preferredName}
+            role={normalizedRole}
           />
         ),
       },
@@ -180,6 +181,7 @@ export const UserProfilePage: React.FC = () => {
     managedGroups,
     managedGroupsFetching,
     managedGroupsLoading,
+    normalizedRole,
     preferredName,
     roleName,
     staffData?.id,

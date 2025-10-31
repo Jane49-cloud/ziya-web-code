@@ -25,6 +25,7 @@ export const navLinks = [
   },
   { to: "/staff", label: "Staff", allowedRoles: ADMIN_DEV },
   { to: "/roles", label: "Roles", allowedRoles: ADMIN_DEV },
+  { to: "/tasks", label: "Tasks", allowedRoles: ADMIN_DEV },
   {
     to: "/customers",
     label: "Customers",
@@ -58,6 +59,12 @@ export const sidebarItems: SidebarItem[] = [
     title: "Roles",
     icon: "profile-circle",
     path: "/roles",
+    allowedRoles: ADMIN_DEV,
+  },
+  {
+    title: "Tasks",
+    icon: "check-circle",
+    path: "/tasks",
     allowedRoles: ADMIN_DEV,
   },
   {
