@@ -15,8 +15,11 @@ before_script:
   # 1) Log in to the GitLab Container Registry on the CI runner
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
+# 🧱 BUILD STAGE
 build_image:
   stage: build
+  tags:
+    - web
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
@@ -25,8 +28,11 @@ build_image:
     - staging
     - live
 
+# 🚀 DEPLOY TEMPLATE
 .deploy_template: &deploy_template
   stage: deploy
+  tags:
+    - web
   before_script:
     # 2) Install your SSH key on the runner
     - mkdir -p ~/.ssh
@@ -50,6 +56,7 @@ build_image:
     - staging
     - live
 
+# 🧩 DEPLOY JOBS
 deploy_dev:
   <<: *deploy_template
   variables:
