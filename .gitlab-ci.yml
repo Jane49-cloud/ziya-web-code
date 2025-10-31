@@ -1,5 +1,4 @@
-image: docker:20.10.16
-# Use Docker-in-Docker service to enable Docker commands in the CI runner
+image: node:20
 
 services:
   - docker:20.10.16-dind
