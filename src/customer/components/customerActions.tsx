@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { Button, Tooltip } from "antd";
+import { Button, Tooltip, Space } from "antd";
 import {
   EditOutlined,
   EyeOutlined,
@@ -28,18 +27,19 @@ export const CustomerTableActions: FC<{
   };
 
   return (
-    <div className="flex gap-2">
-      <Tooltip title="Edit customer">
+    <Space size={4}>
+      <Tooltip title="Edit customer" placement="top">
         <Button
           onClick={onEdit}
-          type="default"
+          type="text"
           size="small"
           shape="circle"
           aria-label="Edit customer"
-          className="circle-action-btn circle-action-btn--edit"
           icon={<EditOutlined />}
+          className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border-0"
         />
       </Tooltip>
+
       <Button
         onClick={handleActivateDeactivate}
         type="default"
@@ -53,28 +53,30 @@ export const CustomerTableActions: FC<{
       >
         <PoweroffOutlined />
       </Button>
-      <Tooltip title="View details">
+
+      <Tooltip title="View details" placement="top">
         <Button
           onClick={() => handleView(customer.id)}
-          type="default"
+          type="text"
           size="small"
           shape="circle"
           aria-label="View customer"
-          className="circle-action-btn circle-action-btn--view"
           icon={<EyeOutlined />}
+          className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 border-0"
         />
       </Tooltip>
-      <Tooltip title="Create subscription">
+
+      <Tooltip title="Create subscription" placement="top">
         <Button
           onClick={onCreateSubscription}
-          type="default"
+          type="text"
           size="small"
           shape="circle"
           aria-label="Create subscription"
-          className="circle-action-btn circle-action-btn--subscription"
           icon={<PlusCircleOutlined />}
+          className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 border-0"
         />
       </Tooltip>
-    </div>
+    </Space>
   );
 };

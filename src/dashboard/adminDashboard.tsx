@@ -20,6 +20,9 @@ import {
   WalletOutlined,
   LineChartOutlined,
   UserOutlined,
+  ArrowUpOutlined,
+  TrophyOutlined,
+  RiseOutlined,
 } from "@ant-design/icons";
 import {
   ResponsiveContainer,
@@ -36,7 +39,7 @@ import { useGetAllGroupWalletsQuery } from "../groups/features";
 
 const { Title, Text } = Typography;
 
-const palette = ["#2563EB", "#9333EA", "#EC4899", "#F97316", "#22C55E"];
+const palette = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#10b981"];
 
 const toNumber = (value: unknown): number => {
   const parsed = Number(value);
@@ -87,6 +90,7 @@ const DashboardOverview = () => {
       loansCount: loanAggregates.count,
     };
   }, [loanAggregates]);
+
   const repaymentRate =
     totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
@@ -105,7 +109,6 @@ const DashboardOverview = () => {
       string,
       { disbursed: number; outstanding: number }
     >();
-
     groupLoans.forEach((loan) => {
       const groupName = loan.group_name ?? "Unnamed Group";
       const entry = collection.get(groupName) ?? {
@@ -116,7 +119,6 @@ const DashboardOverview = () => {
       entry.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
       collection.set(groupName, entry);
     });
-
     return Array.from(collection.entries())
       .map(([groupName, { disbursed, outstanding }]) => ({
         key: groupName,
@@ -151,7 +153,6 @@ const DashboardOverview = () => {
         currentTotal + toNumber(loan.amount ?? loan.disbursed_amount)
       );
     });
-
     const sorted = Array.from(totalsByGroup.entries()).sort(
       (a, b) => b[1] - a[1]
     );
@@ -159,18 +160,15 @@ const DashboardOverview = () => {
     const othersValue = sorted
       .slice(5)
       .reduce((sum, [, value]) => sum + value, 0);
-
     const chartData = top.map(([name, value]) => ({ name, value }));
     if (othersValue > 0) {
       chartData.push({ name: "Others", value: othersValue });
     }
-
     return chartData;
   }, [groupLoans]);
 
   const navigate = useNavigate();
-
-  const recentCustomers = useMemo(() => customers.slice(0, 6), [customers]);
+  const recentCustomers = useMemo(() => customers.slice(0, 9), [customers]);
 
   const walletSnapshot = useMemo<WalletSnapshotItem[]>(
     () =>
@@ -205,12 +203,13 @@ const DashboardOverview = () => {
         <Space>
           <Avatar
             size="small"
-            className="bg-blue-500 text-white"
-            style={{ verticalAlign: "middle" }}
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
           >
             {value?.charAt(0)?.toUpperCase() ?? "G"}
           </Avatar>
-          <span className="font-medium text-slate-700">{value}</span>
+          <span className="font-semibold text-slate-800">{value}</span>
         </Space>
       ),
     },
@@ -220,7 +219,7 @@ const DashboardOverview = () => {
       key: "disbursed",
       align: "right" as const,
       render: (value: number) => (
-        <span className="font-medium text-slate-600">
+        <span className="font-semibold text-slate-700">
           {formatCurrency(value)}
         </span>
       ),
@@ -232,8 +231,8 @@ const DashboardOverview = () => {
       align: "right" as const,
       render: (value: number) => (
         <Tag
-          color={value > 0 ? "volcano" : "green"}
-          className="!m-0 !px-3 !py-1 font-medium"
+          color={value > 0 ? "error" : "success"}
+          className="!m-0 !px-4 !py-1.5 font-semibold rounded-full"
         >
           {formatCurrency(value)}
         </Tag>
@@ -244,12 +243,21 @@ const DashboardOverview = () => {
       dataIndex: "completion",
       key: "completion",
       render: (value: number) => (
-        <Progress
-          percent={Math.round(value)}
-          size="small"
-          strokeColor="#22C55E"
-          showInfo={false}
-        />
+        <div className="flex items-center gap-2">
+          <Progress
+            percent={Math.round(value)}
+            size="small"
+            strokeColor={{
+              "0%": "#10b981",
+              "100%": "#059669",
+            }}
+            trailColor="#e2e8f0"
+            className="flex-1"
+          />
+          <span className="text-xs font-semibold text-slate-600 min-w-[40px]">
+            {Math.round(value)}%
+          </span>
+        </div>
       ),
     },
   ];
@@ -261,23 +269,19 @@ const DashboardOverview = () => {
       value: activeGroupCount.toLocaleString(),
       helper: "Borrowing collectives",
       icon: <TeamOutlined />,
-      theme: {
-        iconBg: "bg-blue-50",
-        iconColor: "text-blue-600",
-        border: "border-blue-100",
-      },
+      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      trend: "+12%",
+      trendUp: true,
     },
     {
       key: "customers",
-      title: "Customers",
+      title: "Total Customers",
       value: customers.length.toLocaleString(),
       helper: "Registered members",
       icon: <UserOutlined />,
-      theme: {
-        iconBg: "bg-indigo-50",
-        iconColor: "text-indigo-600",
-        border: "border-indigo-100",
-      },
+      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+      trend: "+8%",
+      trendUp: true,
     },
     {
       key: "disbursed",
@@ -285,83 +289,149 @@ const DashboardOverview = () => {
       value: formatCurrency(totals.disbursed),
       helper: `${totals.loansCount.toLocaleString()} active loans`,
       icon: <DollarCircleOutlined />,
-      theme: {
-        iconBg: "bg-emerald-50",
-        iconColor: "text-emerald-600",
-        border: "border-emerald-100",
-      },
+      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      trend: "+24%",
+      trendUp: true,
     },
     {
       key: "outstanding",
-      title: "Outstanding",
+      title: "Outstanding Balance",
       value: formatCurrency(totals.outstanding),
-      helper: `Recovery ${repaymentRate.toFixed(0)}%`,
+      helper: `Recovery ${repaymentRate.toFixed(1)}%`,
       icon: <WalletOutlined />,
-      theme: {
-        iconBg: "bg-orange-50",
-        iconColor: "text-orange-600",
-        border: "border-orange-100",
-      },
+      gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+      trend: "-5%",
+      trendUp: false,
     },
   ];
 
   return (
-    <div className="min-h-screen ">
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <Title level={2} className="!mb-1 text-slate-800">
-            Dashboard Overview
-          </Title>
-          <Text type="secondary">
-            Unified performance snapshot for every team member.
-          </Text>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Hero Header */}
+      <div className="relative mb-10">
+        <div className="dashboard-hero relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-sm">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 opacity-[0.02]">
+            <svg width="100%" height="100%">
+              <pattern
+                id="grid"
+                width="32"
+                height="32"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 32 0 L 0 0 0 32"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+
+          {/* Accent decoration */}
+          <div className="absolute left-0 top-0 h-1 w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
+
+          <div className="relative flex flex-col gap-8 px-8 py-12 md:flex-row md:items-center md:justify-between md:px-12">
+            <div className="relative z-10 max-w-xl space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 border border-indigo-100">
+                <LineChartOutlined className="text-indigo-600" />
+                INSIGHT HUB
+              </div>
+
+              <Title level={1} className="!mb-0 !text-slate-900">
+                Dashboard Overview
+              </Title>
+
+              <Text className="block text-base text-slate-600 leading-relaxed">
+                Surface key trends, monitor performance, and move from insight
+                to action with confidence.
+              </Text>
+            </div>
+
+            <Space size="middle" className="relative z-10">
+              <Button
+                type="default"
+                size="large"
+                onClick={() => navigate("/analysis")}
+                icon={<LineChartOutlined />}
+                className="!h-11 !border-slate-200 !bg-white !px-6 !text-slate-700 hover:!border-indigo-300 hover:!bg-indigo-50 hover:!text-indigo-700 transition-all"
+              >
+                Analytics
+              </Button>
+
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => navigate("/performance")}
+                icon={<TrophyOutlined />}
+                className="!h-11 !bg-indigo-600 !px-6 hover:!bg-indigo-700 transition-all"
+              >
+                Performance
+              </Button>
+            </Space>
+          </div>
         </div>
-        <Space wrap>
-          <Button
-            type="primary"
-            size="large"
-            onClick={() => {
-              navigate("/analysis");
-            }}
-            icon={<LineChartOutlined />}
-          >
-            View Reports
-          </Button>
-        </Space>
       </div>
 
-      <Row gutter={[20, 20]} className="mb-10">
+      {/* Stats Cards */}
+      <Row gutter={[24, 24]} className="mb-8">
         {statCards.map((card) => (
-          <Col key={card.key} xs={24} sm={12} xl={6} className="flex">
+          <Col key={card.key} xs={24} sm={12} xl={6}>
             <Card
-              className="flex-1 rounded-2xl border border-slate-200 shadow-sm bg-white"
-              bodyStyle={{
-                padding: 20,
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-                height: "100%",
+              className="group relative overflow-hidden rounded-2xl border-0 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+              bodyStyle={{ padding: 0 }}
+              style={{
+                background: "white",
               }}
             >
               {statsLoading ? (
-                <Skeleton active paragraph={{ rows: 2 }} />
+                <div className="p-6">
+                  <Skeleton active paragraph={{ rows: 2 }} />
+                </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg text-lg ${card.theme.iconBg} ${card.theme.iconColor}`}
+                  {/* Gradient Background */}
+                  <div
+                    className="absolute inset-0 opacity-5 transition-opacity duration-300 group-hover:opacity-10"
+                    style={{ background: card.gradient }}
+                  />
+
+                  <div className="relative p-6">
+                    {/* Icon */}
+                    <div
+                      className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white shadow-lg"
+                      style={{ background: card.gradient }}
                     >
                       {card.icon}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Text className="text-sm font-medium text-slate-500">
-                      {card.title}
-                    </Text>
-                    <span className="text-2xl font-semibold text-slate-800">
-                      {card.value}
-                    </span>
-                    <Text type="secondary">{card.helper}</Text>
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-2">
+                      <Text className="block text-sm font-medium text-slate-500">
+                        {card.title}
+                      </Text>
+                      <div className="text-3xl font-bold text-slate-800">
+                        {card.value}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Text className="text-xs text-slate-400">
+                          {card.helper}
+                        </Text>
+                        <span
+                          className={`flex items-center gap-1 text-xs font-semibold ${
+                            card.trendUp ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          <ArrowUpOutlined
+                            rotate={card.trendUp ? 0 : 180}
+                            className="text-[10px]"
+                          />
+                          {card.trend}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
@@ -370,254 +440,368 @@ const DashboardOverview = () => {
         ))}
       </Row>
 
-      <Row gutter={[20, 20]} className="mt-2 h-auto" align="stretch">
-        <Col xs={24} xl={12} className="flex h-full">
+      {/* Charts Row */}
+      <Row gutter={[24, 24]} className="mb-8">
+        {/* Disbursement Share */}
+        <Col xs={24} xl={12}>
           <Card
-            className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="rounded-2xl border-0 shadow-lg"
             bodyStyle={{
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
+              padding: 32,
               height: "100%",
+              minHeight: 500,
             }}
-            style={{ minHeight: 360 }}
           >
-            <div>
-              <Title level={4} className="!mb-1 text-slate-800">
-                Disbursement Share
-              </Title>
-              <Text type="secondary">
-                Top groups by disbursed amount across the portfolio
-              </Text>
+            <div className="mb-6 flex items-start justify-between">
+              <div>
+                <Title level={3} className="!mb-2 !text-slate-800">
+                  Disbursement Distribution
+                </Title>
+                <Text className="text-slate-500">
+                  Portfolio allocation across top performing groups
+                </Text>
+              </div>
+              <RiseOutlined className="text-2xl text-indigo-500" />
             </div>
-            <div className="flex-1">
-              {statsLoading ? (
-                <Skeleton active paragraph={{ rows: 6 }} />
-              ) : disbursementShare.some((item) => item.value > 0) ? (
-                <ResponsiveContainer width="100%" height="100%">
+
+            {statsLoading ? (
+              <Skeleton active paragraph={{ rows: 8 }} />
+            ) : disbursementShare.some((item) => item.value > 0) ? (
+              <div className="space-y-6">
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
+                    <defs>
+                      {palette.map((color, i) => (
+                        <linearGradient
+                          key={i}
+                          id={`gradient-${i}`}
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="1"
+                        >
+                          <stop offset="0%" stopColor={color} />
+                          <stop
+                            offset="100%"
+                            stopColor={color}
+                            stopOpacity={0.8}
+                          />
+                        </linearGradient>
+                      ))}
+                    </defs>
                     <Pie
                       data={disbursementShare}
                       dataKey="value"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
+                      innerRadius={70}
+                      outerRadius={110}
+                      paddingAngle={3}
+                      strokeWidth={2}
+                      stroke="#fff"
                     >
                       {disbursementShare.map((entry, index) => (
                         <Cell
                           key={entry.name}
-                          fill={palette[index % palette.length]}
+                          fill={`url(#gradient-${index % palette.length})`}
                         />
                       ))}
                     </Pie>
                     <ChartTooltip
-                      formatter={(value: number, name) => [
-                        formatCurrency(value),
-                        name,
-                      ]}
+                      contentStyle={{
+                        background: "rgba(0,0,0,0.8)",
+                        border: "none",
+                        borderRadius: "12px",
+                        padding: "12px",
+                      }}
+                      itemStyle={{ color: "#fff" }}
+                      formatter={(value: number) => formatCurrency(value)}
                     />
-                    <Legend />
+                    <Legend
+                      wrapperStyle={{ paddingTop: "20px" }}
+                      iconType="circle"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
-              ) : (
-                <Empty description="No loan data available" />
-              )}
-            </div>
-            <div className="mt-2 space-y-2">
-              {disbursementShare.slice(0, 4).map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
-                >
-                  <Space>
-                    <span
-                      className="inline-flex h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor: palette[index % palette.length],
-                      }}
-                    />
-                    <Text className="font-medium text-slate-700">
-                      {item.name}
-                    </Text>
-                  </Space>
-                  <Text className="text-sm font-semibold text-slate-700">
-                    {formatCurrency(item.value)}
-                  </Text>
+
+                {/* Legend Items */}
+                <div className="grid grid-cols-2 gap-3">
+                  {disbursementShare.slice(0, 4).map((item, index) => (
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-4 transition-all hover:shadow-md"
+                    >
+                      <Space>
+                        <span
+                          className="inline-flex h-3 w-3 rounded-full shadow-sm"
+                          style={{
+                            background: palette[index % palette.length],
+                          }}
+                        />
+                        <Text className="font-semibold text-slate-700">
+                          {item.name}
+                        </Text>
+                      </Space>
+                      <Text className="text-sm font-bold text-slate-800">
+                        {formatCurrency(item.value)}
+                      </Text>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <Empty
+                description="No disbursement data available"
+                className="my-20"
+              />
+            )}
           </Card>
         </Col>
-        <Col xs={24} xl={12} className="flex">
+
+        {/* Recovery Pipeline */}
+        <Col xs={24} xl={12}>
           <Card
-            className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="rounded-2xl border-0 shadow-lg"
             bodyStyle={{
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
+              padding: 32,
               height: "100%",
+              minHeight: 500,
             }}
-            style={{ minHeight: 360 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <Title level={4} className="!mb-0 text-slate-800">
+                <Title level={3} className="!mb-2 !text-slate-800">
                   Recovery Pipeline
                 </Title>
-                <Text type="secondary">
-                  Focus areas ordered by outstanding balance
+                <Text className="text-slate-500">
+                  High-priority collection targets
                 </Text>
               </div>
-              <Link to="/loans" className="text-sm text-primary">
-                View loans
+              <Link
+                to="/loans"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                View All →
               </Link>
             </div>
-            <div className="flex-1">
-              {statsLoading ? (
-                <Skeleton active paragraph={{ rows: 8 }} />
-              ) : outstandingTable.length ? (
-                <Table
-                  dataSource={outstandingTable.slice(0, 3)}
-                  columns={outstandingColumns}
-                  pagination={false}
-                  rowKey="key"
-                  scroll={{ x: true }}
-                />
-              ) : (
-                <Empty description="No outstanding balances" />
-              )}
-            </div>
+
+            {statsLoading ? (
+              <Skeleton active paragraph={{ rows: 8 }} />
+            ) : outstandingTable.length ? (
+              <Table
+                dataSource={outstandingTable.slice(0, 5)}
+                columns={outstandingColumns}
+                pagination={false}
+                rowKey="key"
+                scroll={{ x: true }}
+                className="recovery-table"
+                rowClassName="hover:bg-slate-50 transition-colors"
+              />
+            ) : (
+              <Empty description="No outstanding balances" className="my-20" />
+            )}
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={[20, 20]} className="mt-2 pb-6" align="stretch">
-        <Col xs={24} xl={12} className="flex">
+      {/* Bottom Row */}
+      <Row gutter={[24, 24]} className="pb-8">
+        {/* Recent Customers */}
+        <Col xs={24} lg={12}>
           <Card
-            className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="rounded-2xl border-0 shadow-lg"
             bodyStyle={{
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              height: "100%",
+              padding: 32,
+              minHeight: 400,
             }}
-            style={{ minHeight: 320 }}
           >
-            <div>
-              <Title level={4} className="!mb-1 text-slate-800">
+            <div className="mb-6">
+              <Title level={3} className="!mb-2 !text-slate-800">
                 Recent Customers
               </Title>
-              <Text type="secondary">
-                A quick glance at the latest onboarded members
+              <Text className="text-slate-500">
+                Latest member onboarding activity
               </Text>
             </div>
-            <div className="flex-1 overflow-hidden">
-              {customersLoading ? (
-                <Skeleton active paragraph={{ rows: 6 }} />
-              ) : recentCustomers.length ? (
-                <List
-                  itemLayout="horizontal"
-                  dataSource={recentCustomers}
-                  renderItem={(customer: Customer) => {
-                    const fullName = [
-                      customer.firstname,
-                      customer.middlename,
-                      customer.lastname,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")
-                      .trim();
-                    const phone = customer.phone_number ?? "No phone provided";
-                    const initial = (fullName || phone || "C")
-                      .charAt(0)
-                      .toUpperCase();
 
-                    return (
-                      <List.Item>
-                        <List.Item.Meta
-                          avatar={<Avatar size="large">{initial}</Avatar>}
-                          title={
-                            <span className="font-medium text-slate-700">
-                              {fullName || "Unnamed Customer"}
-                            </span>
-                          }
-                          description={<Text type="secondary">{phone}</Text>}
-                        />
-                      </List.Item>
-                    );
-                  }}
-                />
-              ) : (
-                <Empty description="No customers yet" />
-              )}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} xl={12} className="flex">
-          <Card
-            className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm"
-            bodyStyle={{
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              height: "100%",
-            }}
-            style={{ minHeight: 320 }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <Title level={4} className="!mb-0 text-slate-800">
-                  Wallet Snapshot
-                </Title>
-                <Text type="secondary">
-                  Top group balances and loan exposure
-                </Text>
-              </div>
-              <Link to="/wallets" className="text-sm text-primary">
-                Wallets
-              </Link>
-            </div>
-            <div className="flex-1 overflow-auto">
-              {walletsLoading ? (
-                <Skeleton active paragraph={{ rows: 5 }} />
-              ) : walletSnapshot.length ? (
-                <List
-                  itemLayout="horizontal"
-                  dataSource={walletSnapshot}
-                  renderItem={(item: WalletSnapshotItem) => (
-                    <List.Item>
+            {customersLoading ? (
+              <Skeleton active paragraph={{ rows: 6 }} />
+            ) : recentCustomers.length ? (
+              <List
+                itemLayout="horizontal"
+                dataSource={recentCustomers}
+                renderItem={(customer: Customer, index) => {
+                  const fullName = [
+                    customer.firstname,
+                    customer.middlename,
+                    customer.lastname,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim();
+                  const phone = customer.phone_number ?? "No phone provided";
+                  const initial = (fullName || phone || "C")
+                    .charAt(0)
+                    .toUpperCase();
+                  const avatarGradients = [
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                    "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+                  ];
+                  return (
+                    <List.Item className="!border-b-slate-100 !py-4 transition-colors hover:bg-slate-50">
                       <List.Item.Meta
+                        avatar={
+                          <Avatar
+                            size={48}
+                            style={{
+                              background:
+                                avatarGradients[index % avatarGradients.length],
+                            }}
+                            className="shadow-md"
+                          >
+                            <span className="text-lg font-bold">{initial}</span>
+                          </Avatar>
+                        }
                         title={
-                          <span className="font-medium text-slate-700">
-                            {item.groupName}
+                          <span className="text-base font-semibold text-slate-800">
+                            {fullName || "Unnamed Customer"}
                           </span>
                         }
                         description={
-                          <div className="text-sm text-slate-500">
-                            <div>Balance: {formatCurrency(item.balance)}</div>
-                            <div>
-                              Loans out: {formatCurrency(item.loansOut)}
-                            </div>
-                          </div>
+                          <Text className="text-slate-500">{phone}</Text>
                         }
                       />
-                      <Tag color="blue" className="!m-0">
-                        {item.loanCount} loans
-                      </Tag>
                     </List.Item>
-                  )}
-                />
-              ) : (
-                <Empty description="No wallet data" />
-              )}
+                  );
+                }}
+              />
+            ) : (
+              <Empty description="No customers yet" className="my-20" />
+            )}
+          </Card>
+        </Col>
+
+        {/* Wallet Snapshot */}
+        <Col xs={24} lg={12}>
+          <Card
+            className="rounded-2xl border-0 shadow-lg"
+            bodyStyle={{
+              padding: 32,
+              minHeight: 400,
+            }}
+          >
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <Title level={3} className="!mb-2 !text-slate-800">
+                  Wallet Overview
+                </Title>
+                <Text className="text-slate-500">
+                  Top balances and loan exposure
+                </Text>
+              </div>
+              <Link
+                to="/wallets"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                View All →
+              </Link>
             </div>
+
+            {walletsLoading ? (
+              <Skeleton active paragraph={{ rows: 5 }} />
+            ) : walletSnapshot.length ? (
+              <List
+                itemLayout="horizontal"
+                dataSource={walletSnapshot}
+                renderItem={(item: WalletSnapshotItem) => (
+                  <List.Item className="!border-b-slate-100 !py-4 transition-colors hover:bg-slate-50">
+                    <List.Item.Meta
+                      avatar={
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 text-lg font-bold text-white shadow-md">
+                          {item.groupName.charAt(0).toUpperCase()}
+                        </div>
+                      }
+                      title={
+                        <span className="text-base font-semibold text-slate-800">
+                          {item.groupName}
+                        </span>
+                      }
+                      description={
+                        <div className="mt-1 space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Balance:</span>
+                            <span className="font-semibold text-emerald-600">
+                              {formatCurrency(item.balance)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Loans out:</span>
+                            <span className="font-semibold text-slate-700">
+                              {formatCurrency(item.loansOut)}
+                            </span>
+                          </div>
+                        </div>
+                      }
+                    />
+                    <Tag
+                      color="processing"
+                      className="!m-0 !rounded-full !px-4 !py-1.5 font-semibold"
+                    >
+                      {item.loanCount} loans
+                    </Tag>
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty description="No wallet data" className="my-20" />
+            )}
           </Card>
         </Col>
       </Row>
+
+      <style>{`
+        .dashboard-hero {
+          background: linear-gradient(135deg, rgba(50, 197, 244, 0.92) 0%, rgba(40, 154, 194, 0.86) 50%, rgba(236, 190, 29, 0.78) 100%);
+          box-shadow: 0 20px 56px rgba(40, 70, 106, 0.32);
+          padding: 1.5px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        .dashboard-hero:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 26px 72px rgba(40, 70, 106, 0.35);
+        }
+        .dashboard-hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1.5px;
+          background: conic-gradient(from 90deg, rgba(50, 197, 244, 0.9), rgba(236, 190, 29, 0.85), rgba(40, 154, 194, 0.9), rgba(50, 197, 244, 0.9));
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          opacity: 0;
+          transform: rotate(0deg);
+          transition: opacity 0.6s ease;
+          pointer-events: none;
+        }
+        .dashboard-hero:hover::before {
+          opacity: 1;
+        }
+        .recovery-table .ant-table-thead > tr > th {
+          background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+          font-weight: 600;
+          color: #334155;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        .recovery-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f1f5f9;
+        }
+      `}</style>
     </div>
   );
 };

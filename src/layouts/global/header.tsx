@@ -94,7 +94,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       to={to}
                       className={({ isActive }) =>
                         [
-                          "relative px-4 py-2 rounded-lg text-sm font-medium transition",
+                          "relative px-4 py-2 rounded-lg text-base font-medium transition",
                           "hover:bg-gray-100 hover:text-gray-900",
                           isActive ? "text-[#ecbe1d]" : "text-gray-700",
                         ].join(" ")
