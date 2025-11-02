@@ -178,7 +178,7 @@ export const tasksApi = apiSlice.injectEndpoints({
 
     markTaskDone: builder.mutation<TaskDto, string | number>({
       query: (id) => ({
-        url: `/tasks/done/${id}`,
+        url: `/tasks/${id}/done`,
         method: "PATCH",
       }),
       invalidatesTags: (_result, _error, id) => [
@@ -189,7 +189,7 @@ export const tasksApi = apiSlice.injectEndpoints({
 
     markTaskUndone: builder.mutation<TaskDto, string | number>({
       query: (id) => ({
-        url: `/tasks/undone/${id}`,
+        url: `/tasks/${id}/undone`,
         method: "PATCH",
       }),
       invalidatesTags: (_result, _error, id) => [
