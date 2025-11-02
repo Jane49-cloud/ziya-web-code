@@ -1,10 +1,21 @@
 import React from "react";
-import { Button, Card, Col, DatePicker, Form, Input, Row, Select, Typography } from "antd";
+import {
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Typography,
+} from "antd";
 import type { FormInstance } from "antd";
 import { Plus } from "lucide-react";
 import type { TaskFormValues, StaffOption } from "./taskUtils";
 
 interface AdminTaskCreateFormProps {
+  open: boolean;
+  onClose: () => void;
   staffOptions: StaffOption[];
   loading: boolean;
   form: FormInstance<TaskFormValues>;
@@ -12,29 +23,41 @@ interface AdminTaskCreateFormProps {
 }
 
 export const AdminTaskCreateForm: React.FC<AdminTaskCreateFormProps> = ({
+  open,
+  onClose,
   staffOptions,
   loading,
   form,
   onSubmit,
 }) => {
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
-    <Card
-      bordered={false}
-      rootClassName="task-panel task-panel--form"
-      className="mt-8"
+    <Modal
+      open={open}
+      onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okButtonProps={{ loading, className: "task-btn-primary" }}
+      cancelButtonProps={{ className: "task-btn-ghost" }}
+      okText="Add task"
+      centered
+      width={720}
       title={
-        <div>
-          <span className="task-panel__title">Launch a new task</span>
-          <span className="task-panel__subtitle">
-            Assign with clarity and fast-track the next best action.
-          </span>
+        <div className="task-modal__header">
+          <Typography.Title level={4} className="task-modal__title">
+            New task
+          </Typography.Title>
+          <Typography.Paragraph className="task-modal__subtitle">
+            Capture the essentials and route ownership with clarity.
+          </Typography.Paragraph>
         </div>
       }
+      className="task-modal"
+      destroyOnClose
     >
-      <Typography.Paragraph className="!mb-6 text-sm text-slate-500">
-        Elevate accountability with defined owners and polished timelines. Your team will see
-        updates reflected instantly across devices.
-      </Typography.Paragraph>
       <Form<TaskFormValues>
         form={form}
         layout="vertical"
@@ -43,7 +66,7 @@ export const AdminTaskCreateForm: React.FC<AdminTaskCreateFormProps> = ({
         className="task-form"
       >
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={12} lg={10}>
+          <Col xs={24} md={12} lg={12}>
             <Form.Item
               label="Task"
               name="title"
@@ -73,7 +96,7 @@ export const AdminTaskCreateForm: React.FC<AdminTaskCreateFormProps> = ({
               />
             </Form.Item>
           </Col>
-          <Col xs={24} md={8} lg={6}>
+          <Col xs={24} md={12} lg={6}>
             <Form.Item label="Deadline" name="dueAt">
               <DatePicker
                 showTime
@@ -83,19 +106,8 @@ export const AdminTaskCreateForm: React.FC<AdminTaskCreateFormProps> = ({
               />
             </Form.Item>
           </Col>
-          <Col xs={24} md={8} lg={4} className="flex items-end">
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={loading}
-              className="task-btn-primary"
-            >
-              Add task
-            </Button>
-          </Col>
         </Row>
       </Form>
-    </Card>
+    </Modal>
   );
 };

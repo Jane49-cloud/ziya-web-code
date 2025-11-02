@@ -55,6 +55,7 @@ const AdminTasksPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(9);
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
   const [drawerTask, setDrawerTask] = useState<NormalizedTask | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const [createForm] = Form.useForm<TaskFormValues>();
   const [editForm] = Form.useForm<TaskFormValues>();
@@ -221,6 +222,7 @@ const AdminTasksPage: React.FC = () => {
       await createTask({ userId: values.assignee, body: payload }).unwrap();
       pushAlert("success", "Task created.");
       createForm.resetFields();
+      setCreateModalOpen(false);
       await refetch();
     } catch (err) {
       pushAlert("danger", `Unable to create task: ${getErrorMessage(err)}`);
@@ -328,9 +330,12 @@ const AdminTasksPage: React.FC = () => {
         total={statusCounts.total}
         overdue={statusCounts.overdue}
         completed={statusCounts.completed}
+        onCreateTask={() => setCreateModalOpen(true)}
       />
 
       <AdminTaskCreateForm
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
         form={createForm}
         staffOptions={staffOptions}
         loading={creatingTask || loadingStaff}

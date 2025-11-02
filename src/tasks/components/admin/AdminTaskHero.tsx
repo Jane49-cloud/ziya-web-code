@@ -1,18 +1,21 @@
 import React from "react";
-import { Typography } from "antd";
-import { CheckCircle2, ClipboardList, Clock4, Sparkles } from "lucide-react";
+import { Button, Typography } from "antd";
+import {
+  CheckCircle2,
+  ClipboardList,
+  Clock4,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 
 interface AdminTaskHeroProps {
   total: number;
   overdue: number;
   completed: number;
+  onCreateTask?: () => void;
 }
 
-const heroStats = (
-  total: number,
-  overdue: number,
-  completed: number
-) => [
+const heroStats = (total: number, overdue: number, completed: number) => [
   {
     label: "Open workstreams",
     value: total,
@@ -33,7 +36,12 @@ const heroStats = (
   },
 ];
 
-export const AdminTaskHero: React.FC<AdminTaskHeroProps> = ({ total, overdue, completed }) => {
+export const AdminTaskHero: React.FC<AdminTaskHeroProps> = ({
+  total,
+  overdue,
+  completed,
+  onCreateTask,
+}) => {
   const stats = heroStats(total, overdue, completed);
 
   return (
@@ -42,23 +50,37 @@ export const AdminTaskHero: React.FC<AdminTaskHeroProps> = ({ total, overdue, co
         <div className="task-hero__copy">
           <span className="task-hero__eyebrow">Operations dashboard</span>
           <Typography.Title level={2} className="task-hero__title">
-            Elevate every client touchpoint
+            Guide every workstream with clarity
           </Typography.Title>
           <Typography.Paragraph className="task-hero__subtitle">
-            Orchestrate workloads across relationship managers with a premium workspace that
-            keeps priorities focused, deadlines illuminated, and delivery momentum unmistakable.
+            Coordinate owners, deadlines, and focus areas from one refined command surface.
           </Typography.Paragraph>
-          <div className="task-hero__cta">
-            <Sparkles size={16} />
-            Experience the concierge view of execution
-          </div>
+          {onCreateTask ? (
+            <div className="task-hero__actions">
+              <Button
+                type="primary"
+                size="large"
+                icon={<Plus size={16} />}
+                className="task-btn-primary"
+                onClick={onCreateTask}
+              >
+                New task
+              </Button>
+              <span className="task-hero__hint">
+                <Sparkles size={14} />
+                Launch a brief, assign a lead, stay ahead.
+              </span>
+            </div>
+          ) : null}
         </div>
 
         <div className="task-hero__stats">
           {stats.map((stat) => (
             <article key={stat.label} className="task-hero__stat">
               <div className="task-hero__label">
-                <span className={`task-hero__icon task-hero__icon--${stat.tone}`}>
+                <span
+                  className={`task-hero__icon task-hero__icon--${stat.tone}`}
+                >
                   {stat.icon}
                 </span>
                 {stat.label}

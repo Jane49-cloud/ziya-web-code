@@ -37,13 +37,14 @@ export const AdminTaskFilters: React.FC<AdminTaskFiltersProps> = ({
   refreshing,
 }) => {
   return (
-    <div className="task-filter-bar">
-      <div className="task-filter-bar__cluster">
+    <div className="task-filter-bar flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-white/80 px-6 py-4 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
+      <div className="flex flex-1 flex-wrap items-center gap-3">
         <Segmented
           size="large"
           value={statusValue}
           options={statusOptions}
           onChange={(value: SegmentedValue) => onStatusChange(value as StatusFilter)}
+          className="task-filter-bar__segmented"
         />
         <Select
           size="large"
@@ -53,24 +54,26 @@ export const AdminTaskFilters: React.FC<AdminTaskFiltersProps> = ({
             { value: "all", label: "All assignees" },
             ...assigneeOptions,
           ]}
-          style={{ minWidth: 220 }}
+          className="task-filter-bar__select min-w-[13rem]"
           loading={assigneeLoading}
+          popupMatchSelectWidth={false}
         />
         <Input
           allowClear
           size="large"
-          prefix={<Search size={16} className="text-slate-400" />}
-          placeholder="Search tasks"
+          type="search"
+          prefix={<Search size={14} className="task-filter-bar__search-icon" />}
+          placeholder="Search by title or owner"
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          style={{ minWidth: 240 }}
+          className="task-filter-bar__search grow basis-48"
         />
       </div>
       <Button
         icon={<RefreshCcw size={16} />}
         onClick={onRefresh}
         loading={refreshing}
-        className="task-btn-ghost"
+        className="task-filter-bar__refresh"
       >
         Refresh
       </Button>
