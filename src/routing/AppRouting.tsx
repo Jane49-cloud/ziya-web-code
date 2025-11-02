@@ -33,6 +33,12 @@ import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
 import AnalysisModule from "../analysis";
 import HomePage from "../home";
 import AdminTasksPage from "../tasks/pages/adminTasks";
+import BlogsModuleLayout from "../blogs";
+import {
+  BlogsListPage,
+  BlogComposerPage,
+  BlogDetailsPage,
+} from "../blogs/pages";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -109,6 +115,12 @@ const AppRouting = (): ReactElement => {
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/loan-categories" element={<LoanCategories />} />
           <Route path="/tasks" element={<AdminTasksPage />} />
+          <Route path="/blogs" element={<BlogsModuleLayout />}>
+            <Route index element={<BlogsListPage />} />
+            <Route path="create" element={<BlogComposerPage />} />
+            <Route path=":id" element={<BlogDetailsPage />} />
+            <Route path=":id/edit" element={<BlogComposerPage />} />
+          </Route>
         </Route>
       </Route>
 
