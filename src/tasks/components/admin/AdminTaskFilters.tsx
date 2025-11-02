@@ -1,7 +1,7 @@
 import React from "react";
-import { Button, Input, Segmented, Select, Space } from "antd";
+import { Button, Input, Segmented, Select } from "antd";
 import type { SegmentedValue } from "antd/es/segmented";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Search } from "lucide-react";
 import type { StaffOption, StatusFilter } from "./taskUtils";
 
 interface StatusOption {
@@ -37,38 +37,43 @@ export const AdminTaskFilters: React.FC<AdminTaskFiltersProps> = ({
   refreshing,
 }) => {
   return (
-    <Space className="mt-6 w-full justify-between flex-wrap gap-3">
-      <Space size={12} wrap>
+    <div className="task-filter-bar">
+      <div className="task-filter-bar__cluster">
         <Segmented
+          size="large"
           value={statusValue}
           options={statusOptions}
           onChange={(value: SegmentedValue) => onStatusChange(value as StatusFilter)}
         />
         <Select
+          size="large"
           value={assigneeValue}
           onChange={onAssigneeChange}
           options={[
             { value: "all", label: "All assignees" },
             ...assigneeOptions,
           ]}
-          style={{ minWidth: 200 }}
+          style={{ minWidth: 220 }}
           loading={assigneeLoading}
         />
         <Input
           allowClear
+          size="large"
+          prefix={<Search size={16} className="text-slate-400" />}
           placeholder="Search tasks"
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          style={{ minWidth: 220 }}
+          style={{ minWidth: 240 }}
         />
-      </Space>
+      </div>
       <Button
         icon={<RefreshCcw size={16} />}
         onClick={onRefresh}
         loading={refreshing}
+        className="task-btn-ghost"
       >
         Refresh
       </Button>
-    </Space>
+    </div>
   );
 };
