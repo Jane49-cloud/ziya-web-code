@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, Avatar, Button, Tag, Tooltip } from "antd";
-import { Clock, Eye, Edit3, Share2 } from "lucide-react";
+import { Card, Avatar, Button, Tag, Tooltip, Popconfirm } from "antd";
+import { Clock, Eye, Edit3, Share2, Trash2 } from "lucide-react";
 import type { BlogBase } from "../types";
 import { BlogStatusBadge } from "./BlogStatusBadge";
 import { BLOG_DEFAULT_COVER, tagPalette } from "../utils";
@@ -10,11 +10,20 @@ interface BlogCardProps {
   onView?: (blog: BlogBase) => void;
   onEdit?: (blog: BlogBase) => void;
   onShare?: (blog: BlogBase) => void;
+  onDelete?: (blog: BlogBase) => void;
+  isDeleting?: boolean;
 }
 
 const pickTagColor = (index: number): string => tagPalette[index % tagPalette.length];
 
-export const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onView, onShare }) => {
+export const BlogCard: React.FC<BlogCardProps> = ({
+  blog,
+  onEdit,
+  onView,
+  onShare,
+  onDelete,
+  isDeleting,
+}) => {
   const handleView = () => {
     if (onView) onView(blog);
   };
@@ -27,10 +36,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onView, onShar
     if (onShare) onShare(blog);
   };
 
+  const handleDelete = () => {
+    if (onDelete) onDelete(blog);
+  };
+
   return (
     <Card
       hoverable
-      className="blog-card relative overflow-hidden rounded-3xl border border-slate-200/50 bg-white/95 shadow-[0_28px_70px_-48px_rgba(15,23,42,0.55)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_36px_90px_-48px_rgba(15,23,42,0.6)]"
+      className="relative overflow-hidden rounded-3xl border border-slate-200/50 bg-white/95 shadow-[0_28px_70px_-48px_rgba(15,23,42,0.55)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_36px_90px_-48px_rgba(15,23,42,0.6)]"
       cover={
         <div className="relative h-48 overflow-hidden rounded-t-3xl bg-slate-900">
           <img
@@ -57,7 +70,15 @@ export const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onView, onShar
           <h3 className="text-xl font-semibold tracking-tight text-slate-900">
             {blog.title}
           </h3>
-          <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
+          <p
+            className="text-sm leading-relaxed text-slate-600"
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical" as const,
+              overflow: "hidden",
+            }}
+          >
             {blog.excerpt}
           </p>
         </div>
@@ -96,6 +117,26 @@ export const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onView, onShar
           </div>
 
           <div className="flex items-center gap-2">
+            {onDelete ? (
+              <Popconfirm
+                title="Delete this blog?"
+                description="This action cannot be undone."
+                okText="Delete"
+                okType="danger"
+                okButtonProps={{ loading: Boolean(isDeleting) }}
+                onConfirm={handleDelete}
+                disabled={Boolean(isDeleting)}
+              >
+                <Tooltip title="Delete">
+                  <Button
+                    type="text"
+                    icon={<Trash2 size={16} />}
+                    className="text-slate-400 hover:text-red-500"
+                    loading={isDeleting}
+                  />
+                </Tooltip>
+              </Popconfirm>
+            ) : null}
             {onShare ? (
               <Tooltip title="Share">
                 <Button

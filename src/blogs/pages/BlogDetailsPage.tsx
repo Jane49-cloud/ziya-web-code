@@ -78,7 +78,7 @@ export const BlogDetailsPage: React.FC = () => {
   };
 
   return (
-    <article className="blog-detail space-y-8">
+    <article className="space-y-8">
       <div className="flex items-center justify-between">
         <Button
           type="text"
@@ -107,7 +107,7 @@ export const BlogDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      <header className="blog-detail__hero overflow-hidden rounded-[32px] border border-slate-200/40 bg-gradient-to-br from-[#0f172a] via-[#152038] to-[#1d2f4a] text-white shadow-[0_36px_120px_-60px_rgba(7,14,32,0.85)]">
+      <header className="overflow-hidden rounded-[32px] border border-slate-200/40 bg-gradient-to-br from-[#0f172a] via-[#152038] to-[#1d2f4a] text-white shadow-[0_36px_120px_-60px_rgba(7,14,32,0.85)]">
         <div className="relative grid gap-8 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-6 px-10 py-12">
             <BlogStatusBadge status={blog.status} />
@@ -168,7 +168,7 @@ export const BlogDetailsPage: React.FC = () => {
       </header>
 
       <section
-        className="blog-detail__body rounded-[32px] border border-slate-200/60 bg-white/95 p-8 shadow-[0_26px_90px_-60px_rgba(15,23,42,0.5)]"
+        className="rounded-[32px] border border-slate-200/60 bg-white/95 p-8 text-slate-800 shadow-[0_26px_90px_-60px_rgba(15,23,42,0.5)] leading-relaxed [&>p]:mb-4 [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:text-2xl [&>h3]:mt-8 [&>h3]:mb-3 [&>h3]:text-xl [&>ul]:list-disc [&>ul]:pl-6 [&>ol]:list-decimal [&>ol]:pl-6 [&>blockquote]:border-l-4 [&>blockquote]:border-sky-200 [&>blockquote]:bg-sky-50 [&>blockquote]:px-4 [&>blockquote]:py-3 [&>blockquote]:rounded-xl [&>img]:rounded-2xl [&>img]:mx-auto [&>img]:my-6"
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     </article>

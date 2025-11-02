@@ -18,15 +18,18 @@ export const BlogStatusBadge: React.FC<BlogStatusBadgeProps> = ({
   size = "default",
 }) => {
   const meta = statusMeta[status] ?? statusMeta.published;
+  const baseClass =
+    "uppercase tracking-[0.2em] font-semibold rounded-full border-none";
+  const sizeClass =
+    size === "small"
+      ? "px-2.5 py-0.5 text-[10px]"
+      : "px-3 py-1 text-[11px]";
+
   return (
-    <Tag
-      color={meta.color}
-      className={size === "small" ? "blog-status-tag blog-status-tag--sm" : "blog-status-tag"}
-    >
+    <Tag color={meta.color} className={`${baseClass} ${sizeClass}`}>
       {meta.label}
     </Tag>
   );
 };
 
 export default BlogStatusBadge;
-

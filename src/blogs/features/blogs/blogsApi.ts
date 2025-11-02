@@ -83,7 +83,7 @@ export const blogsApi = apiSlice.injectEndpoints({
     }),
     publishBlog: builder.mutation<unknown, string | number>({
       query: (id) => ({
-        url: `/blogs/publish/${id}`,
+        url: `/blogs/${id}/publish`,
         method: "PATCH",
       }),
       invalidatesTags: (_result, _error, id) => [
@@ -103,7 +103,7 @@ export const blogsApi = apiSlice.injectEndpoints({
     }),
     deleteBlog: builder.mutation<unknown, string | number>({
       query: (id) => ({
-        url: `/blogs/delete/${id}`,
+        url: `/blogs/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: (_result, _error, id) => [

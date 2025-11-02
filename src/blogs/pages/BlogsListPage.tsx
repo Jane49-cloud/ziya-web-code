@@ -1,9 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { Alert, message, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useGetAllBlogsQuery } from "../features/blogs/blogsApi";
+import {
+  useGetAllBlogsQuery,
+  useGetDraftBlogsQuery,
+  useDeleteBlogMutation,
+} from "../features/blogs/blogsApi";
 import type { BlogBase } from "../types";
-import { normalizeBlogs, summarizeBlogs } from "../utils";
+import { normalizeBlogs } from "../utils";
+import { getUser } from "../../utils";
 import {
   BlogCard,
   BlogEmptyState,
@@ -16,11 +21,53 @@ export const BlogsListPage: React.FC = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<"all" | BlogBase["status"]>("all");
   const [search, setSearch] = useState("");
+  const currentUser = useMemo(() => getUser(), []);
+  const currentUserId = currentUser?.id ? String(currentUser.id) : undefined;
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data, isLoading, isFetching, error } = useGetAllBlogsQuery();
+  const {
+    data: publishedData,
+    isLoading: loadingPublished,
+    isFetching: fetchingPublished,
+    error,
+    refetch: refetchPublished,
+  } = useGetAllBlogsQuery();
 
-  const blogs = useMemo(() => normalizeBlogs(data), [data]);
-  const summary = useMemo(() => summarizeBlogs(blogs), [blogs]);
+  const {
+    data: draftsData,
+    isLoading: loadingDrafts,
+    isFetching: fetchingDrafts,
+    refetch: refetchDrafts,
+  } = useGetDraftBlogsQuery(undefined, {
+    skip: !currentUserId,
+  });
+
+  const [deleteBlog] = useDeleteBlogMutation();
+
+  const publishedBlogs = useMemo(() => normalizeBlogs(publishedData), [publishedData]);
+
+  const draftBlogs = useMemo(() => normalizeBlogs(draftsData), [draftsData]);
+
+  const blogs = useMemo(() => {
+    if (!draftBlogs.length) return publishedBlogs;
+    const merged = new Map<string, BlogBase>();
+    publishedBlogs.forEach((blog) => {
+      merged.set(blog.id, blog);
+    });
+    draftBlogs.forEach((blog) => {
+      merged.set(blog.id, blog);
+    });
+    return Array.from(merged.values());
+  }, [draftBlogs, publishedBlogs]);
+
+  const summary = useMemo(
+    () => ({
+      total: publishedBlogs.length + draftBlogs.length,
+      published: publishedBlogs.length,
+      drafts: draftBlogs.length,
+    }),
+    [publishedBlogs.length, draftBlogs.length]
+  );
 
   const filteredBlogs = useMemo(() => {
     return blogs.filter((blog) => {
@@ -55,6 +102,25 @@ export const BlogsListPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (blog: BlogBase) => {
+    try {
+      setDeletingId(blog.id);
+      await deleteBlog(blog.id).unwrap();
+      message.success("Blog deleted.");
+      await refetchPublished();
+      if (currentUserId) {
+        await refetchDrafts();
+      }
+    } catch (err) {
+      console.error("Delete blog failed", err);
+      message.error("Unable to delete this blog right now.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const isLoading = loadingPublished || (loadingDrafts && Boolean(currentUserId));
+  const isFetching = fetchingPublished || fetchingDrafts;
   const showEmpty = !isLoading && !isFetching && filteredBlogs.length === 0;
 
   return (
@@ -98,6 +164,8 @@ export const BlogsListPage: React.FC = () => {
               onView={handleView}
               onEdit={handleEdit}
               onShare={handleShare}
+              onDelete={handleDelete}
+              isDeleting={deletingId === blog.id}
             />
           ))}
         </div>

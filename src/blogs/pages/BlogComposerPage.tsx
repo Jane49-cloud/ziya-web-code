@@ -40,20 +40,22 @@ export const BlogComposerPage: React.FC = () => {
   const isEditing = Boolean(id);
   const [form] = Form.useForm<BlogFormValues>();
 
+  // Fetch existing blog when editing
   const blogId = id ?? "";
   const {
     data: blogData,
     isLoading: loadingBlog,
     error: blogError,
-  } = useGetBlogByIdQuery(blogId, {
-    skip: !isEditing,
-  });
+    refetch: refetchBlog,
+  } = useGetBlogByIdQuery(blogId, { skip: !isEditing });
 
+  // Mutations
   const [createBlog, { isLoading: creating }] = useCreateBlogMutation();
   const [updateBlog, { isLoading: updating }] = useUpdateBlogMutation();
   const [publishBlog, { isLoading: publishing }] = usePublishBlogMutation();
   const [markDraft, { isLoading: drafting }] = useMarkBlogDraftMutation();
 
+  // Normalize incoming blog
   const resolvedBlog: BlogBase | null = useMemo(() => {
     if (!isEditing) return null;
     const normalized = extractSingleBlog(blogData, id ?? "1");
@@ -64,6 +66,7 @@ export const BlogComposerPage: React.FC = () => {
     return null;
   }, [blogData, id, isEditing]);
 
+  // Seed form with existing values
   useEffect(() => {
     if (resolvedBlog) {
       const nextValues: BlogFormValues = {
@@ -77,23 +80,21 @@ export const BlogComposerPage: React.FC = () => {
     }
   }, [form, resolvedBlog]);
 
+  // SAVE ONLY (create or update). No publish here.
   const handleSubmit = async (values: BlogFormValues) => {
-    const html = values.content.trim();
+    const html = (values.content || "").trim();
     if (!html || html === "<p></p>") {
       message.error("Please add content before saving.");
       return;
     }
 
-    const payload = buildBlogPayload({
-      ...values,
-      content: html,
-    });
+    const payload = buildBlogPayload({ ...values, content: html });
 
+    // Preserve metadata on updates
     if (resolvedBlog) {
       if (!payload.date_created && resolvedBlog.createdAt) {
         payload.date_created = resolvedBlog.createdAt;
       }
-
       if (!payload.author_id && resolvedBlog.author?.id) {
         payload.author_id = resolvedBlog.author.id;
       }
@@ -103,16 +104,18 @@ export const BlogComposerPage: React.FC = () => {
       if (isEditing && id) {
         await updateBlog({ id, ...payload }).unwrap();
         message.success("Blog updated successfully.");
+        await refetchBlog();
         navigate(`/blogs/${id}`);
       } else {
-        const response = await createBlog(payload).unwrap();
+        // Always create first; publishing is a separate action afterwards
+        const response = await createBlog({
+          ...payload,
+          status: "draft",
+        }).unwrap();
         const created = extractSingleBlog(response, "new");
+        const createdId = created?.id;
         message.success("Blog created.");
-        if (created?.id) {
-          navigate(`/blogs/${created.id}`);
-        } else {
-          navigate("/blogs");
-        }
+        navigate(`/blogs/${createdId ?? "blogs"}`);
       }
     } catch (err) {
       console.error("Blog save failed", err);
@@ -120,24 +123,40 @@ export const BlogComposerPage: React.FC = () => {
     }
   };
 
-  const handlePublishToggle = async () => {
-    if (!id || !resolvedBlog) return;
+  // PUBLISH ONLY (no saving). Requires existing blog id.
+  const handlePublishOnly = async () => {
+    if (!id) {
+      message.warning("Create and save the blog before publishing.");
+      return;
+    }
     try {
-      if (resolvedBlog.status === "published") {
-        await markDraft(id).unwrap();
-        message.success("Moved back to draft.");
-      } else {
-        await publishBlog(id).unwrap();
-        message.success("Blog published.");
-      }
-      navigate(0);
+      await publishBlog(id).unwrap(); // publish is its own action, no payload
+      form.setFieldsValue({ status: "published" });
+      message.success("Blog published.");
+      await refetchBlog();
+      navigate(`/blogs/${id}`);
     } catch (err) {
-      console.error("Publish toggle failed", err);
-      message.error("Unable to update publish status right now.");
+      console.error("Publish failed", err);
+      message.error("Unable to publish right now.");
+    }
+  };
+
+  // Move a published blog back to draft (no saving).
+  const handleMoveToDraftOnly = async () => {
+    if (!id) return;
+    try {
+      await markDraft(id).unwrap();
+      form.setFieldsValue({ status: "draft" });
+      message.success("Moved back to draft.");
+      await refetchBlog();
+    } catch (err) {
+      console.error("Move to draft failed", err);
+      message.error("Unable to move back to draft right now.");
     }
   };
 
   const isBusy = creating || updating || publishing || drafting;
+  console.log("isBusy:", isBusy);
 
   if (isEditing && loadingBlog) {
     return (
@@ -239,33 +258,44 @@ export const BlogComposerPage: React.FC = () => {
                 />
               </Form.Item>
 
+              {/* Status is informative; publish/draft are separate actions */}
               <Form.Item label="Status" name="status">
                 <Select size="large" options={STATUS_OPTIONS} />
               </Form.Item>
 
               <Space direction="vertical" size="middle" className="w-full">
+                {/* Save ONLY */}
                 <Button
                   type="primary"
                   htmlType="submit"
                   icon={<Save size={16} />}
-                  loading={isBusy}
+                  loading={creating || updating}
                   className="w-full rounded-full bg-slate-900 text-white shadow-md hover:bg-slate-800"
                 >
                   {isEditing ? "Save changes" : "Create blog"}
                 </Button>
 
-                {isEditing ? (
-                  <Button
-                    icon={<UploadCloud size={16} />}
-                    onClick={handlePublishToggle}
-                    loading={publishing || drafting}
-                    className="w-full rounded-full border border-slate-300/60 bg-white/70 text-slate-700 hover:border-slate-400 hover:bg-white"
-                  >
-                    {resolvedBlog?.status === "published"
-                      ? "Move back to draft"
-                      : "Publish now"}
-                  </Button>
-                ) : null}
+                {/* Independent publish/draft buttons (only when editing an existing blog) */}
+                {isEditing &&
+                  (resolvedBlog?.status === "published" ? (
+                    <Button
+                      icon={<UploadCloud size={16} />}
+                      onClick={handleMoveToDraftOnly}
+                      loading={drafting}
+                      className="w-full rounded-full border border-slate-300/60 bg-white/70 text-slate-700 hover:border-slate-400 hover:bg-white"
+                    >
+                      Move back to draft
+                    </Button>
+                  ) : (
+                    <Button
+                      icon={<UploadCloud size={16} />}
+                      onClick={handlePublishOnly}
+                      loading={publishing}
+                      className="w-full rounded-full border border-slate-300/60 bg-white/70 text-slate-700 hover:border-slate-400 hover:bg-white"
+                    >
+                      Publish now
+                    </Button>
+                  ))}
               </Space>
             </div>
           </div>

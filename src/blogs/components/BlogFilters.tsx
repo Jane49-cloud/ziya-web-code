@@ -25,13 +25,12 @@ export const BlogFilters: React.FC<BlogFiltersProps> = ({
   onSearchChange,
 }) => {
   return (
-    <div className="blog-filter-bar flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/60 bg-white/85 px-5 py-4 shadow-[0_20px_70px_-46px_rgba(15,23,42,0.42)] backdrop-blur">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/70 bg-white/90 px-6 py-4 shadow-[0_20px_70px_-46px_rgba(15,23,42,0.42)] backdrop-blur">
       <Segmented
         size="large"
         value={status}
         onChange={(value: SegmentedValue) => onStatusChange(value as "all" | BlogStatus)}
         options={STATUS_OPTIONS}
-        className="blog-filter-bar__segmented"
       />
       <Input
         allowClear
@@ -40,7 +39,7 @@ export const BlogFilters: React.FC<BlogFiltersProps> = ({
         placeholder="Search by title, tag, or author"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        className="blog-filter-bar__search max-w-sm"
+        className="max-w-sm rounded-full border-slate-200 bg-white/95 px-2"
       />
     </div>
   );
