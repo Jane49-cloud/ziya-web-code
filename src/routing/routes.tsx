@@ -62,18 +62,7 @@ export const sidebarItems: SidebarItem[] = [
     path: "/roles",
     allowedRoles: ADMIN_DEV,
   },
-  {
-    title: "Tasks",
-    icon: "check-circle",
-    path: "/tasks",
-    allowedRoles: ADMIN_DEV,
-  },
-  {
-    title: "Blogs",
-    icon: "note-2",
-    path: "/blogs",
-    allowedRoles: ADMIN_DEV,
-  },
+
   {
     title: "Users",
     icon: "users",
@@ -119,6 +108,18 @@ export const sidebarItems: SidebarItem[] = [
     icon: "wallet",
     path: "/wallets",
     allowedRoles: STAFF_ROLES,
+  },
+  {
+    title: "Tasks",
+    icon: "check-circle",
+    path: "/tasks",
+    allowedRoles: ADMIN_DEV,
+  },
+  {
+    title: "Blogs",
+    icon: "note-2",
+    path: "/blogs",
+    allowedRoles: ADMIN_DEV,
   },
   {
     title: "Analysis",
