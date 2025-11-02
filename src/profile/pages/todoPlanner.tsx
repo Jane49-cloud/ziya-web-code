@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import {
   Badge,
   Button,
-  Card,
   Checkbox,
   Col,
   DatePicker,
@@ -35,8 +34,6 @@ import {
   useCreateTaskMutation,
   useDeleteTaskMutation,
   useGetTasksForUserQuery,
-  useMarkTaskDoneMutation,
-  useMarkTaskUndoneMutation,
   useUpdateTaskMutation,
   type TaskDto,
   type TasksResponse,
@@ -102,6 +99,8 @@ const pickBoolean = (...values: unknown[]): boolean | undefined => {
     if (typeof value === "number" && (value === 0 || value === 1)) return Boolean(value);
     if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
+      if (normalized === "1") return true;
+      if (normalized === "0") return false;
       if (["true", "yes", "done", "complete", "completed"].includes(normalized)) {
         return true;
       }
@@ -218,7 +217,8 @@ const normalizeTask = (task: TaskDto, fallbackId: number): NormalizedTask => {
       (task as Record<string, unknown>).completed,
       (task as Record<string, unknown>).done,
       (task as Record<string, unknown>).is_done,
-      (task as Record<string, unknown>).isCompleted
+      (task as Record<string, unknown>).isCompleted,
+      (task as Record<string, unknown>).status
     ) ?? false;
 
   const dueAt = pickDate(
@@ -308,8 +308,6 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
 
   const [createTask, { isLoading: creatingTask }] = useCreateTaskMutation();
   const [updateTask, { isLoading: updatingTask }] = useUpdateTaskMutation();
-  const [markTaskDone] = useMarkTaskDoneMutation();
-  const [markTaskUndone] = useMarkTaskUndoneMutation();
   const [deleteTask] = useDeleteTaskMutation();
 
   const pushAlert = (variant: AlertMessage["variant"], message: string) => {
@@ -360,6 +358,7 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
 
     const payload: Record<string, unknown> = {
       title: values.title.trim(),
+      status: 0,
     };
 
     if (values.dueAt) {
@@ -379,13 +378,13 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
 
   const toggleTaskStatus = async (task: NormalizedTask, next: boolean) => {
     try {
-      if (next) {
-        await markTaskDone(task.sourceId).unwrap();
-        pushAlert("success", `Marked “${task.title}” as complete.`);
-      } else {
-        await markTaskUndone(task.sourceId).unwrap();
-        pushAlert("success", `Moved “${task.title}” back to pending.`);
-      }
+      await updateTask({ id: task.sourceId, status: next ? 1 : 0 }).unwrap();
+      pushAlert(
+        "success",
+        next
+          ? `Marked “${task.title}” as complete.`
+          : `Moved “${task.title}” back to pending.`
+      );
       await refetch();
     } catch (err) {
       pushAlert("danger", `Unable to update ${task.title}: ${getErrorMessage(err)}`);
@@ -469,129 +468,127 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
         ) : null}
       </div>
 
-      <Card bordered={false} className="shadow-sm overflow-hidden">
-        <div className="border-b border-slate-100 bg-white px-6 py-5">
-          <Space direction="vertical" size={6}>
-            <Typography.Text className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+      <div className="rounded-3xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 p-6 text-white shadow-[0_30px_100px_-40px_rgba(15,23,42,0.65)]">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/80">
               Daily command centre
-            </Typography.Text>
-            <Typography.Title level={3} className="!mb-0 text-slate-900">
+            </span>
+            <Typography.Title level={3} className="!mb-0 text-white">
               Plan your day, {displayName ?? "there"}
             </Typography.Title>
-            <Typography.Text className="max-w-2xl text-sm text-slate-500">
-              Every task stays linked to your profile. Use clear deadlines to keep work from slipping.
-            </Typography.Text>
-          </Space>
-        </div>
+            <Typography.Paragraph className="!mb-0 max-w-2xl text-sm text-white/80">
+              Keep work visible, stay ahead of deadlines, and celebrate the little wins. Your tasks update in real-time as you complete them.
+            </Typography.Paragraph>
+          </div>
 
-        <div className="bg-slate-50 px-6 py-5">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={8}>
-              <Card bordered className="shadow-sm">
-                <Space direction="vertical" size={4}>
-                  <Space align="center" size={8}>
-                    <ClipboardList size={18} className="text-[#1f7dc8]" />
-                    <Typography.Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Total tasks
-                    </Typography.Text>
-                  </Space>
-                  <Typography.Title level={3} className="!m-0 text-slate-900">
-                    {summary.total}
-                  </Typography.Title>
+          <div className="grid w-full gap-4 sm:grid-cols-3 lg:max-w-xl">
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur">
+              <Space direction="vertical" size={6}>
+                <Space align="center" size={8}>
+                  <ClipboardList size={18} className="text-white" />
+                  <Typography.Text className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
+                    Total
+                  </Typography.Text>
                 </Space>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card bordered className="shadow-sm">
-                <Space direction="vertical" size={4}>
-                  <Space align="center" size={8}>
-                    <Clock4 size={18} className="text-rose-500" />
-                    <Typography.Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Overdue
-                    </Typography.Text>
-                  </Space>
-                  <Typography.Title level={3} className="!m-0 text-rose-500">
-                    {summary.overdueCount}
-                  </Typography.Title>
+                <Typography.Title level={3} className="!m-0 text-white">
+                  {summary.total}
+                </Typography.Title>
+              </Space>
+            </div>
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur">
+              <Space direction="vertical" size={6}>
+                <Space align="center" size={8}>
+                  <Clock4 size={18} className="text-rose-200" />
+                  <Typography.Text className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
+                    Overdue
+                  </Typography.Text>
                 </Space>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card bordered className="shadow-sm">
-                <Space direction="vertical" size={4}>
-                  <Space align="center" size={8}>
-                    <CheckCircle2 size={18} className="text-emerald-500" />
-                    <Typography.Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Completed
-                    </Typography.Text>
-                  </Space>
-                  <Typography.Title level={3} className="!m-0 text-emerald-500">
-                    {summary.completedCount}
-                  </Typography.Title>
+                <Typography.Title level={3} className="!m-0 text-rose-100">
+                  {summary.overdueCount}
+                </Typography.Title>
+              </Space>
+            </div>
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur">
+              <Space direction="vertical" size={6}>
+                <Space align="center" size={8}>
+                  <CheckCircle2 size={18} className="text-emerald-200" />
+                  <Typography.Text className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
+                    Completed
+                  </Typography.Text>
                 </Space>
-              </Card>
-            </Col>
-          </Row>
-
-          <div className="mt-6 rounded-xl bg-white p-5 shadow-sm">
-            <Typography.Title level={5} className="!mb-4">
-              Add a task
-            </Typography.Title>
-            <Form<TaskFormValues>
-              form={createForm}
-              layout="vertical"
-              onFinish={handleCreateTask}
-            >
-              <Row gutter={[16, 16]}>
-                <Col xs={24} md={14}>
-                  <Form.Item
-                    name="title"
-                    label="What needs attention?"
-                    rules={[{ required: true, message: "Please describe the task" }]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="e.g. Check in with Umoja group lead"
-                      allowClear
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={6}>
-                  <Form.Item name="dueAt" label="Deadline">
-                    <DatePicker
-                      showTime
-                      size="large"
-                      style={{ width: "100%" }}
-                      placeholder="Pick date"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={4} className="flex items-end">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    size="large"
-                    block
-                    loading={creatingTask}
-                  >
-                    Save task
-                  </Button>
-                </Col>
-              </Row>
-            </Form>
+                <Typography.Title level={3} className="!m-0 text-emerald-100">
+                  {summary.completedCount}
+                </Typography.Title>
+              </Space>
+            </div>
           </div>
         </div>
-      </Card>
 
-      <Card bordered={false} className="shadow-sm">
-        <Space className="w-full justify-between flex-wrap gap-3">
-          <Space align="center" size={10}>
-            <CheckCircle2 size={20} className="text-emerald-500" />
+        <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+          <Typography.Title level={5} className="!mb-4 text-white">
+            Quick add
+          </Typography.Title>
+          <Form<TaskFormValues>
+            form={createForm}
+            layout="vertical"
+            onFinish={handleCreateTask}
+          >
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={14}>
+                <Form.Item
+                  name="title"
+                  label={<span className="text-sm font-medium text-white/80">What needs attention?</span>}
+                  rules={[{ required: true, message: "Please describe the task" }]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="e.g. Check in with Umoja group lead"
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={6}>
+                <Form.Item
+                  name="dueAt"
+                  label={<span className="text-sm font-medium text-white/80">Deadline</span>}
+                >
+                  <DatePicker
+                    showTime
+                    size="large"
+                    style={{ width: "100%" }}
+                    placeholder="Pick date"
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={4} className="flex items-end">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  block
+                  loading={creatingTask}
+                  className="rounded-full border border-white/30 bg-white/90 px-4 text-sky-700 hover:bg-white"
+                >
+                  Save task
+                </Button>
+              </Col>
+            </Row>
+          </Form>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_26px_90px_-60px_rgba(15,23,42,0.45)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <CheckCircle2 size={20} />
+            </span>
             <div>
-              <Typography.Title level={4} className="!mb-0">
+              <Typography.Title level={4} className="!mb-1">
                 Task board
               </Typography.Title>
-              <Typography.Text type="secondary">
+              <Typography.Text className="text-sm text-slate-500">
                 {statusFilter === "all"
                   ? `${summary.total} total`
                   : statusFilter === "pending"
@@ -601,10 +598,11 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
                   : `${summary.completedCount} completed`}
               </Typography.Text>
             </div>
-          </Space>
+          </div>
 
           <Space size={12} wrap>
             <Segmented
+              size="large"
               value={statusFilter}
               options={[
                 { label: "All", value: "all" },
@@ -613,16 +611,18 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
                 { label: "Completed", value: "completed" },
               ]}
               onChange={onFilterChange}
+              className="rounded-full bg-slate-100/80 px-1"
             />
             <Button
               icon={<RefreshCcw size={16} />}
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
+              className="rounded-full border-slate-200"
             >
               Refresh
             </Button>
           </Space>
-        </Space>
+        </div>
 
         <Spin spinning={isLoading} tip="Loading tasks...">
           {visibleTasks.length === 0 ? (
@@ -630,12 +630,11 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
           ) : (
             <Space direction="vertical" size={16} className="mt-6 w-full">
               {visibleTasks.map((task) => (
-                <Card
+                <div
                   key={task.id}
-                  className={`transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                    task.status === "completed" ? "border-emerald-200" : ""
+                  className={`rounded-2xl border bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                    task.status === "completed" ? "border-emerald-200 bg-emerald-50/40" : "border-slate-200"
                   }`}
-                  bodyStyle={{ padding: 16 }}
                 >
                   <Space align="start" className="w-full" size={12}>
                     <Checkbox
@@ -647,8 +646,8 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
                         <Typography.Text
                           className={
                             task.status === "completed"
-                              ? "text-gray-400 line-through"
-                              : "font-medium text-gray-800"
+                              ? "text-slate-400 line-through"
+                              : "font-medium text-slate-800"
                           }
                         >
                           {task.title}
@@ -662,7 +661,7 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
                         </Typography.Text>
                       ) : null}
                     </div>
-                    <Space>
+                    <Space size={6}>
                       <Button
                         type="text"
                         icon={<PencilLine size={16} />}
@@ -680,12 +679,12 @@ const TodoPlanner: React.FC<TodoPlannerProps> = ({ userId, displayName }) => {
                       </Button>
                     </Space>
                   </Space>
-                </Card>
+                </div>
               ))}
             </Space>
           )}
         </Spin>
-      </Card>
+      </div>
 
       <Modal
         title="Edit task"

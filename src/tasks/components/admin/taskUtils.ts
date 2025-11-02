@@ -69,6 +69,8 @@ const pickBoolean = (...values: unknown[]): boolean | undefined => {
     if (typeof value === "number" && (value === 0 || value === 1)) return Boolean(value);
     if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
+      if (normalized === "1") return true;
+      if (normalized === "0") return false;
       if (["true", "yes", "done", "complete", "completed"].includes(normalized)) return true;
       if (["false", "no", "open", "pending"].includes(normalized)) return false;
     }
@@ -111,12 +113,14 @@ const deriveStatus = (task: TaskDto): {
   badgeColor: string;
   dueMoment?: Dayjs;
 } => {
-  const completed = pickBoolean(
-    (task as PlainObject).completed,
-    (task as PlainObject).done,
-    (task as PlainObject).is_done,
-    (task as PlainObject).isCompleted
-  ) ?? false;
+  const completed =
+    pickBoolean(
+      (task as PlainObject).completed,
+      (task as PlainObject).done,
+      (task as PlainObject).is_done,
+      (task as PlainObject).isCompleted,
+      (task as PlainObject).status
+    ) ?? false;
 
   const deadline = pickDate(
     (task as PlainObject).deadline,
@@ -201,18 +205,15 @@ export const normalizeTask = (task: TaskDto, fallbackId: number): NormalizedTask
     (task as PlainObject).assignee ??
     (task as PlainObject).user;
 
-  const assignedToIdRaw = pickString(
-    (task as PlainObject).assigned_to_id,
-    (task as PlainObject).assignee_id,
-    (task as PlainObject).user_id,
-    (assigneeRecord as PlainObject | undefined)?.id
-  );
+  const assignedCandidate =
+    (task as PlainObject).assigned_to_id ??
+    (task as PlainObject).assignee_id ??
+    (task as PlainObject).user_id ??
+    (assigneeRecord as PlainObject | undefined)?.id;
+
   const assignedToId =
-    assignedToIdRaw !== undefined && assignedToIdRaw !== null
-      ? assignedToIdRaw
-      : typeof (task as PlainObject).assigned_to_id === "number" ||
-        typeof (task as PlainObject).assigned_to_id === "string"
-      ? ((task as PlainObject).assigned_to_id as string | number)
+    typeof assignedCandidate === "string" || typeof assignedCandidate === "number"
+      ? assignedCandidate
       : undefined;
 
   return {

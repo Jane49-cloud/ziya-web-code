@@ -37,15 +37,32 @@ export const AdminTaskFilters: React.FC<AdminTaskFiltersProps> = ({
   refreshing,
 }) => {
   return (
-    <div className="task-filter-bar flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-white/80 px-6 py-4 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
-      <div className="flex flex-1 flex-wrap items-center gap-3">
+    <div
+      className="
+        flex flex-wrap items-center justify-between gap-3
+        rounded-2xl border border-slate-200/70
+        bg-gradient-to-br from-amber-50 via-white to-sky-50
+        px-4 py-3 md:px-6 md:py-4
+        shadow-[0_14px_40px_-20px_rgba(15,23,42,0.12)]
+      "
+      aria-label="Task filters"
+    >
+      {/* left cluster */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
         <Segmented
           size="large"
           value={statusValue}
           options={statusOptions}
-          onChange={(value: SegmentedValue) => onStatusChange(value as StatusFilter)}
-          className="task-filter-bar__segmented"
+          onChange={(value: SegmentedValue) =>
+            onStatusChange(value as StatusFilter)
+          }
+          className="
+            [&_.ant-segmented-group]:rounded-full
+            [&_.ant-segmented-item]:px-3
+            [&_.ant-segmented-thumb]:rounded-full
+          "
         />
+
         <Select
           size="large"
           value={assigneeValue}
@@ -54,26 +71,51 @@ export const AdminTaskFilters: React.FC<AdminTaskFiltersProps> = ({
             { value: "all", label: "All assignees" },
             ...assigneeOptions,
           ]}
-          className="task-filter-bar__select min-w-[13rem]"
           loading={assigneeLoading}
           popupMatchSelectWidth={false}
+          className="
+            min-w-[12rem]
+            [&_.ant-select-selector]:rounded-full
+            [&_.ant-select-selector]:!h-10
+            [&_.ant-select-selection-item]:!leading-10
+            [&_.ant-select-selection-placeholder]:!leading-10
+          "
+          aria-label="Filter by assignee"
         />
-        <Input
-          allowClear
-          size="large"
-          type="search"
-          prefix={<Search size={14} className="task-filter-bar__search-icon" />}
-          placeholder="Search by title or owner"
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="task-filter-bar__search grow basis-48"
-        />
+
+        <div className="flex grow basis-44 items-center">
+          <Input
+            allowClear
+            size="large"
+            type="search"
+            prefix={<Search size={16} className="text-slate-500" />}
+            placeholder="Search by title or owner"
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="
+              w-full
+              rounded-full
+              [&_.ant-input-prefix]:mr-2
+              [&_.ant-input]:rounded-full
+              [&_.ant-input]:!h-10
+              [&_.ant-input]:text-[14px]
+            "
+            aria-label="Search tasks"
+          />
+        </div>
       </div>
+
+      {/* right cluster */}
       <Button
         icon={<RefreshCcw size={16} />}
         onClick={onRefresh}
         loading={refreshing}
-        className="task-filter-bar__refresh"
+        className="
+          h-10 rounded-full px-4
+          bg-slate-900 text-white hover:!bg-slate-800
+          shadow-sm
+        "
+        aria-label="Refresh tasks"
       >
         Refresh
       </Button>

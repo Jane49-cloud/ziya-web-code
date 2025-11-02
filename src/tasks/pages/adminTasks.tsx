@@ -5,8 +5,6 @@ import {
   useDeleteTaskMutation,
   useGetAllTasksQuery,
   useLazyGetTaskByIdQuery,
-  useMarkTaskDoneMutation,
-  useMarkTaskUndoneMutation,
   useUpdateTaskMutation,
   type GetAllTasksParams,
   type TaskDto,
@@ -83,8 +81,6 @@ const AdminTasksPage: React.FC = () => {
 
   const [createTask, { isLoading: creatingTask }] = useCreateTaskMutation();
   const [updateTask, { isLoading: updatingTask }] = useUpdateTaskMutation();
-  const [markTaskDone] = useMarkTaskDoneMutation();
-  const [markTaskUndone] = useMarkTaskUndoneMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const [fetchTaskById, { isFetching: loadingSingle }] = useLazyGetTaskByIdQuery();
 
@@ -211,6 +207,7 @@ const AdminTasksPage: React.FC = () => {
 
     const payload: Record<string, unknown> = {
       title: values.title.trim(),
+      status: 0,
     };
 
     if (values.dueAt) {
@@ -231,13 +228,14 @@ const AdminTasksPage: React.FC = () => {
 
   const handleToggleStatus = async (task: NormalizedTask) => {
     try {
-      if (task.status === "completed") {
-        await markTaskUndone(task.sourceId).unwrap();
-        pushAlert("success", `Moved ${task.title} back to pending.`);
-      } else {
-        await markTaskDone(task.sourceId).unwrap();
-        pushAlert("success", `Marked ${task.title} complete.`);
-      }
+      const nextStatus = task.status === "completed" ? 0 : 1;
+      await updateTask({ id: task.sourceId, status: nextStatus }).unwrap();
+      pushAlert(
+        "success",
+        nextStatus === 1
+          ? `Marked ${task.title} complete.`
+          : `Moved ${task.title} back to pending.`
+      );
       await refetch();
     } catch (err) {
       pushAlert("danger", `Unable to update ${task.title}: ${getErrorMessage(err)}`);
@@ -276,7 +274,7 @@ const AdminTasksPage: React.FC = () => {
     }
 
     if (values.assignee && values.assignee !== String(drawerTask.assignedToId ?? "")) {
-      payload.assigned_to_id = values.assignee;
+      payload.user_id = values.assignee;
     }
 
     const nextDeadline = values.dueAt ? values.dueAt.toISOString() : null;
