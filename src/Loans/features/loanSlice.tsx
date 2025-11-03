@@ -25,7 +25,7 @@ export const loansSlice = apiSlice.injectEndpoints({
 
     getLoansByCustomerId: builder.query({
       query: (customerId) => ({
-        url: `/customer-loans/get/customer/${customerId}`,
+        url: `/group-loans/member/${customerId}`,
         method: "GET",
       }),
     }),
