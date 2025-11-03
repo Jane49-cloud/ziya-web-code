@@ -17,6 +17,38 @@ interface BlogCardProps {
 const pickTagColor = (index: number): string =>
   tagPalette[index % tagPalette.length];
 
+const cardTone = (status: BlogBase["status"]) => {
+  switch (status) {
+    case "published":
+      return {
+        surface:
+          "border-emerald-200/70 bg-gradient-to-br from-white via-emerald-50/55 to-white shadow-[0_32px_80px_-48px_rgba(16,185,129,0.32)] hover:shadow-[0_40px_96px_-52px_rgba(16,185,129,0.38)]",
+        halo: "bg-gradient-to-br from-emerald-200/18 via-emerald-100/12 to-transparent",
+        overlay:
+          "bg-gradient-to-t from-emerald-950/70 via-emerald-900/25 to-transparent",
+        footer: "bg-emerald-50/80",
+      };
+    case "archived":
+      return {
+        surface:
+          "border-slate-300/60 bg-gradient-to-br from-white via-slate-100/70 to-slate-200/40 shadow-[0_32px_80px_-48px_rgba(100,116,139,0.35)] hover:shadow-[0_40px_96px_-52px_rgba(100,116,139,0.4)]",
+        halo: "bg-gradient-to-br from-slate-300/20 via-slate-200/12 to-transparent",
+        overlay:
+          "bg-gradient-to-t from-slate-950/70 via-slate-900/25 to-transparent",
+        footer: "bg-slate-100/85",
+      };
+    default:
+      return {
+        surface:
+          "border-amber-200/70 bg-gradient-to-br from-white via-amber-50/60 to-white shadow-[0_32px_80px_-48px_rgba(245,158,11,0.28)] hover:shadow-[0_40px_96px_-52px_rgba(245,158,11,0.33)]",
+        halo: "bg-gradient-to-br from-amber-200/18 via-amber-100/12 to-transparent",
+        overlay:
+          "bg-gradient-to-t from-amber-950/70 via-amber-900/25 to-transparent",
+        footer: "bg-amber-50/80",
+      };
+  }
+};
+
 export const BlogCard: React.FC<BlogCardProps> = ({
   blog,
   onEdit,
@@ -50,15 +82,12 @@ export const BlogCard: React.FC<BlogCardProps> = ({
       : "Recently curated";
   }, [blog.publishedAt, blog.updatedAt]);
 
+  const tone = cardTone(blog.status);
+
   return (
     <Card
       hoverable
-      className="
-        group relative overflow-hidden rounded-3xl border border-slate-200/60
-        bg-white/95 shadow-[0_28px_70px_-48px_rgba(15,23,42,0.55)]
-        transition-all duration-300
-        hover:-translate-y-1 hover:shadow-[0_36px_90px_-48px_rgba(15,23,42,0.6)]
-      "
+      className={`group relative overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-1 ${tone.surface}`}
       cover={
         <div className="relative overflow-hidden rounded-t-3xl bg-slate-900">
           {/* Dark cinematic cover */}
@@ -75,7 +104,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
               draggable={false}
             />
             {/* Dark gradient overlay for depth */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent" />
+            <div className={`absolute inset-0 ${tone.overlay}`} />
             {/* Status + read time top overlay */}
             <div className="absolute left-4 top-4 flex items-center gap-2">
               <BlogStatusBadge status={blog.status} size="small" />
@@ -91,6 +120,11 @@ export const BlogCard: React.FC<BlogCardProps> = ({
       }
       bodyStyle={{ padding: 16 }}
     >
+      <div
+        className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${tone.halo}`}
+        aria-hidden="true"
+      />
+
       <div className="flex flex-col gap-4">
         {/* Title & Excerpt */}
         <div className="space-y-2">
@@ -132,7 +166,9 @@ export const BlogCard: React.FC<BlogCardProps> = ({
         ) : null}
 
         {/* Footer: author + actions */}
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50/90 px-3 py-2">
+        <div
+          className={`flex items-center justify-between rounded-2xl px-3 py-2 backdrop-blur-sm ${tone.footer}`}
+        >
           {/* Author */}
           <div className="flex min-w-0 items-center gap-2">
             {blog.author?.avatarUrl ? (
