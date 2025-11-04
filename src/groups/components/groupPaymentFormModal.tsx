@@ -126,7 +126,12 @@ const GroupPaymentFormModal = ({
               name="date_paid"
               rules={[{ required: true, message: "Select payment date" }]}
             >
-              <DatePicker className="w-full" format="YYYY-MM-DD" />
+              <DatePicker
+                className="w-full"
+                format="YYYY-MM-DD"
+                popupClassName="group-modal-date-picker-dropdown"
+                placement="bottomLeft"
+              />
             </Form.Item>
           </Col>
         </Row>

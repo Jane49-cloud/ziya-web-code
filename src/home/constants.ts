@@ -111,7 +111,7 @@ export const weeklyUpdate = {
   session: {
     topic: "Unlocking wallet rituals across emerging cohorts",
     dateLabel: "Monday, 27 January",
-    timeLabel: "11:00 AM WAT",
+    timeLabel: "11:00 AM EAT",
     location: "Momentum Studio",
   },
 };

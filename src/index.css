@@ -132,3 +132,12 @@ body {
   background-color: rgba(16, 185, 129, 0.32);
   border-color: rgba(52, 211, 153, 0.75);
 }
+
+.group-modal-date-picker-dropdown {
+  z-index: 2200 !important;
+}
+
+.group-modal-date-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+.group-modal-date-picker-dropdown.ant-picker-dropdown-placement-topRight {
+  margin-top: 12px;
+}
