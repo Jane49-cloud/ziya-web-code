@@ -119,7 +119,7 @@ export const sidebarItems: SidebarItem[] = [
     title: "Blogs",
     icon: "note-2",
     path: "/blogs",
-    allowedRoles: ADMIN_DEV,
+    allowedRoles: ALL_ROLES,
   },
   {
     title: "Analysis",

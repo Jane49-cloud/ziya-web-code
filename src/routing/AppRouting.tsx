@@ -105,6 +105,13 @@ const AppRouting = (): ReactElement => {
           <Route path="/create-group" element={<CreateGroupPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-user" element={<AddUser />} />
+
+          <Route path="/blogs" element={<BlogsModuleLayout />}>
+            <Route index element={<BlogsListPage />} />
+            <Route path="create" element={<BlogComposerPage />} />
+            <Route path=":id" element={<BlogDetailsPage />} />
+            <Route path=":id/edit" element={<BlogComposerPage />} />
+          </Route>
         </Route>
       </Route>
 
@@ -115,12 +122,6 @@ const AppRouting = (): ReactElement => {
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/loan-categories" element={<LoanCategories />} />
           <Route path="/tasks" element={<AdminTasksPage />} />
-          <Route path="/blogs" element={<BlogsModuleLayout />}>
-            <Route index element={<BlogsListPage />} />
-            <Route path="create" element={<BlogComposerPage />} />
-            <Route path=":id" element={<BlogDetailsPage />} />
-            <Route path=":id/edit" element={<BlogComposerPage />} />
-          </Route>
         </Route>
       </Route>
 
