@@ -60,7 +60,7 @@ deploy_dev:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
   only:
@@ -70,7 +70,7 @@ deploy_staging:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
   only:
@@ -80,7 +80,7 @@ deploy_live:
   <<: *deploy_template
   variables:
     SSH_KEY: $LIVE_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-live
     PORT: 3001
   only:

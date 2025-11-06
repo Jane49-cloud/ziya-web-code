@@ -141,3 +141,27 @@ body {
 .group-modal-date-picker-dropdown.ant-picker-dropdown-placement-topRight {
   margin-top: 12px;
 }
+
+@media (max-height: 720px) {
+  .group-modal-date-picker-dropdown .ant-picker-panel-container {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .group-modal-date-picker-dropdown .ant-picker-panel {
+    min-width: 280px;
+  }
+
+  .group-modal-date-picker-dropdown .ant-picker-header {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 8px;
+    justify-content: space-between;
+  }
+
+  .group-modal-date-picker-dropdown .ant-picker-body {
+    padding-bottom: 42px;
+  }
+}
