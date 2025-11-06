@@ -43,7 +43,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   );
 
   return (
-    <div className="bg-white p-6 shadow-lg rounded-lg">
+    <div className="">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Customer Form
       </h2>

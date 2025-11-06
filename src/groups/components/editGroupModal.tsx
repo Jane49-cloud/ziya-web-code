@@ -43,10 +43,6 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({
             <Input />
           </Form.Item>
 
-          <Form.Item name="bio" label="Bio" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
-          </Form.Item>
-
           <Form.Item
             name="relationship_manager"
             label="Relationship Manager (Staff)"

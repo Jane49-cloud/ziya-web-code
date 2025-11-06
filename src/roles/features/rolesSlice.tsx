@@ -4,7 +4,7 @@ export const rolesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllRoles: builder.query({
       query: () => ({
-        url: "/roles/definitions/get/all",
+        url: "/role-definitions/get/all",
         method: "GET",
       }),
     }),

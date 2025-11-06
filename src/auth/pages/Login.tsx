@@ -58,6 +58,7 @@ export function Login() {
 
         // console.log(response.token);
         localStorage.setItem("ziya-access", response.token);
+        localStorage.setItem("ziya-role", response.role);
 
         initializeUser();
 

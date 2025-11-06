@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect } from "react";
-import { FiMenu, FiChevronDown } from "react-icons/fi";
+import { FiMenu, FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { IconContext } from "react-icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
-import { customAvatar, getRole, getUser } from "../../utils";
+import { customAvatar, getUser } from "../../utils";
 import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
@@ -15,11 +16,8 @@ function useOutsideClick(
       if (!ref.current || ref.current.contains(event.target as Node)) return;
       handler();
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [ref, handler]);
 }
 
@@ -40,28 +38,20 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     refetch: refetchUserDetails,
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
+
   const [user, setUser] = useState(getUser());
-  const [role, setRole] = useState(getRole());
-  // console.log(role.name);
+  const role = localStorage.getItem("ziya-role") || "";
   const userData = data?.staff;
+
   useEffect(() => {
     if (userData && !isLoading) {
       setUser(userData?.staffData);
-      setRole(userData?.userRole);
-      // console.log(user, "from header");
-      localStorage.setItem("ziya-profile", JSON.stringify(userData?.staffData));
-      localStorage.setItem("ziya-role", JSON.stringify(userData?.userRole));
-      // console.log(user);
+      localStorage.setItem("ziya-profile", JSON.stringify(userData));
     }
   }, [userData, isLoading, user]);
 
-  // console.log(user, "from header");
-  // console.log(userData, "userData");
-
   useEffect(() => {
-    if (token) {
-      refetchUserDetails();
-    }
+    if (token) refetchUserDetails();
   }, [token, refetchUserDetails]);
 
   const handleLogout = () => {
@@ -72,92 +62,136 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     navigate("/auth/login");
   };
 
-  // console.log(user);
-  const fullName = user
-    ? `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim()
+  const fullName = userData
+    ? `${userData?.firstname ?? ""} ${userData?.lastname ?? ""}`.trim()
     : "Ziya";
-  const userRole = role?.name;
+  const userRole = role;
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
-      <header className="sticky top-0 z-30 bg-white shadow-sm py-2 max-w-[100vw] px-4">
-        <div className="container mx-auto flex items-center justify-between h-[3.75rem]">
-          {/* Sidebar Toggle */}
-          <button
-            onClick={toggleSidebar}
-            className="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors duration-200"
-            aria-label="Toggle Sidebar"
-          >
-            <FiMenu className="w-6 h-6" />
-          </button>
-
-          {/* Navigation Links */}
-          <nav className="hidden lg:flex space-x-4">
-            {navLinks
-              .filter((link) => link.allowedRoles.includes(userRole))
-              .map(({ to, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-[#ecbe1d] font-bold"
-                      : "text-gray-700 hover:text-gray-900"
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
-          </nav>
-
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setProfileDropdownOpen((prev) => !prev)}
-              className="flex items-center space-x-2 h-10 pl-2 pr-3 rounded-full hover:bg-gray-100 text-gray-600 focus:outline-none transition-colors duration-200"
-              aria-haspopup="true"
-              aria-expanded={isProfileDropdownOpen ? "true" : "false"}
-            >
-              <div>{customAvatar(fullName)}</div>
-              <span className="hidden sm:block font-medium capitalize">
-                {fullName}
-              </span>
-              <FiChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  isProfileDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Dropdown Menu */}
-            <div
-              className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20 transform transition-all duration-300 ease-out ${
-                isProfileDropdownOpen
-                  ? "opacity-100 scale-100 pointer-events-auto"
-                  : "opacity-0 scale-95 pointer-events-none"
-              }`}
-              role="menu"
-              aria-orientation="vertical"
-              aria-labelledby="user-menu"
-            >
-              <NavLink
-                to="/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                role="menuitem"
-              >
-                My Profile
-              </NavLink>
+      {/* Top border accent */}
+      <div className="sticky top-0 z-40">
+        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-amber-400" />
+        <header className="backdrop-blur supports-[backdrop-filter]:bg-white/85 bg-white/95 border-b border-gray-200 shadow-[0_1px_0_0_rgba(0,0,0,0.02)]">
+          <div className="mx-auto container px-2">
+            <div className="flex h-[3.75rem] items-center justify-between gap-3">
+              {/* Sidebar Toggle (mobile) */}
               <button
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleLogout}
-                role="menuitem"
+                onClick={toggleSidebar}
+                className="lg:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition"
+                aria-label="Toggle Sidebar"
               >
-                Logout
+                <FiMenu className="h-5 w-5" />
               </button>
+
+              {/* Navigation Links */}
+              <nav className="hidden lg:flex items-center gap-1">
+                {navLinks
+                  .filter((link) => link.allowedRoles.includes(userRole as any))
+                  .map(({ to, label }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      className={({ isActive }) =>
+                        [
+                          "relative px-4 py-2 rounded-lg text-base font-medium transition",
+                          "hover:bg-gray-100 hover:text-gray-900",
+                          isActive ? "text-[#ecbe1d]" : "text-gray-700",
+                        ].join(" ")
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {label}
+                          {/* active underline */}
+                          <span
+                            className={[
+                              "pointer-events-none absolute left-3 right-3 -bottom-[2px] h-0.5 rounded",
+                              isActive ? "bg-[#ecbe1d]" : "bg-transparent",
+                            ].join(" ")}
+                          />
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
+              </nav>
+
+              {/* Right: Profile */}
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen((p) => !p)}
+                  className="group flex items-center gap-3 h-11 pl-2 pr-3 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition"
+                  aria-haspopup="true"
+                  aria-expanded={isProfileDropdownOpen ? "true" : "false"}
+                >
+                  <div className="rounded-full ring-2 ring-gray-200 group-hover:ring-blue-400 transition">
+                    {customAvatar(fullName)}
+                  </div>
+                  <div className="hidden sm:flex flex-col items-start">
+                    <span className="text-sm font-semibold text-gray-800 leading-tight capitalize">
+                      {isLoading ? "Loading…" : fullName}
+                    </span>
+                    <span className="text-[11px] text-gray-500 leading-tight capitalize">
+                      {userRole || "—"}
+                    </span>
+                  </div>
+                  <FiChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                      isProfileDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown */}
+                <div
+                  className={[
+                    "absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-xl",
+                    "transition-all duration-200 ease-out origin-top-right z-50",
+                    isProfileDropdownOpen
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
+                  ].join(" ")}
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="user-menu"
+                >
+                  {/* User summary */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="truncate text-sm font-semibold text-gray-800 capitalize">
+                      {fullName}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500 capitalize">
+                      {userRole || "—"}
+                    </p>
+                  </div>
+
+                  {/* Items */}
+                  <div className="py-1">
+                    <NavLink
+                      to="/profile"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      role="menuitem"
+                    >
+                      <FiUser className="h-4 w-4 text-gray-500" />
+                      <span>My Profile</span>
+                    </NavLink>
+                    <button
+                      onClick={handleLogout}
+                      role="menuitem"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <FiLogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {/* /Right */}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
     </IconContext.Provider>
   );
 };

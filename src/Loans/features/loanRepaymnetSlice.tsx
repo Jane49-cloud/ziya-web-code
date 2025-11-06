@@ -19,7 +19,7 @@ export const loanPaymentsSlice = apiSlice.injectEndpoints({
 
     getLoanPaymentsByLoanId: builder.query({
       query: (customerLoanId) => ({
-        url: `/loan-payments/get/loan/${customerLoanId}`,
+        url: `/group-loan-payments/loan/${customerLoanId}`,
         method: "GET",
       }),
     }),

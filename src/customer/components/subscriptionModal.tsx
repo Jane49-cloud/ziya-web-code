@@ -19,11 +19,14 @@ export const SubscriptionModal: FC<Props> = ({
   const [form] = Form.useForm();
 
   const handleFinish = (values: any) => {
-    const start_date = dayjs(values.start_date).format("YYYY-MM-DD");
-    const end_date = dayjs(values.start_date)
+    const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
+    const endDate = dayjs(values.start_date)
       .add(30, "day")
       .format("YYYY-MM-DD");
-    onSubmit({ start_date, end_date });
+    onSubmit({
+      start_date: `${startDate}T00:00:00Z`,
+      end_date: `${endDate}T00:00:00Z`,
+    });
   };
 
   return (

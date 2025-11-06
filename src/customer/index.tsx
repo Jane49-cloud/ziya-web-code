@@ -11,12 +11,9 @@ import {
   Input,
   Tag,
   Tooltip,
-  Row,
-  Col,
   Statistic,
   Segmented,
   Button,
-  Typography,
   Empty,
 } from "antd";
 import { CustomerForm } from "./components/addCustomer";
@@ -36,11 +33,17 @@ import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
-import {
-  SearchOutlined,
-  UserAddOutlined,
-  ThunderboltFilled,
-} from "@ant-design/icons";
+import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
+import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
+
+const toTitleCase = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) =>
+      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    )
+    .join(" ");
 
 const CustomerManagement: FC = () => {
   const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
@@ -48,7 +51,6 @@ const CustomerManagement: FC = () => {
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
   const [toggleStatus] = useToggleCustomerStatusMutation();
-
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -61,9 +63,8 @@ const CustomerManagement: FC = () => {
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [createSubscription, { isLoading: creatingSubscription }] =
     useCreateSubscriptionMutation();
-
   const navigate = useNavigate();
-  const { Text } = Typography;
+  // const { Text, Title } = Typography;
 
   type SubscriptionFilter = "all" | "active" | "inactive";
 
@@ -79,6 +80,7 @@ const CustomerManagement: FC = () => {
   const handleTabChange = (key: string) => {
     setActiveTab(key);
   };
+
   const handleSaveCustomer = async (values: any) => {
     try {
       await createCustomer(values).unwrap();
@@ -97,7 +99,6 @@ const CustomerManagement: FC = () => {
   const handleUpdateCustomer = async (values: any) => {
     const id = selectedCustomer?.id;
     if (!id) return false;
-
     try {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
@@ -136,13 +137,11 @@ const CustomerManagement: FC = () => {
     end_date: string;
   }) => {
     const customerId = selectedForSubscription?.id;
-
     if (!customerId) {
       setAlertMessage("No customer selected for subscription.");
       setAlertType("danger");
       return;
     }
-
     try {
       await createSubscription({
         customer_id: customerId,
@@ -170,13 +169,11 @@ const CustomerManagement: FC = () => {
       (customer: any) => customer.subscription_status === 1
     ).length;
     const inactive = total - active;
-
     return { total, active, inactive };
   }, [normalizedCustomers]);
 
   const filteredCustomers = useMemo(() => {
     const search = searchText.trim().toLowerCase();
-
     return normalizedCustomers.filter((customer: any) => {
       const firstName = customer.firstname ?? "";
       const lastName = customer.lastname ?? "";
@@ -187,9 +184,7 @@ const CustomerManagement: FC = () => {
         !search ||
         fullName.includes(search) ||
         phone.includes(search) ||
-        (customer.identification_number ?? "")
-          .toLowerCase()
-          .includes(search);
+        (customer.identification_number ?? "").toLowerCase().includes(search);
 
       const matchesStatus =
         subscriptionFilter === "all" ||
@@ -220,7 +215,6 @@ const CustomerManagement: FC = () => {
       if (nextCurrent === current.current) {
         return current;
       }
-
       return {
         ...current,
         current: nextCurrent,
@@ -236,9 +230,7 @@ const CustomerManagement: FC = () => {
       width: 70,
       align: "center" as const,
       render: (value: string | number) => (
-        <Tag color="default" bordered={false} className="!m-0 !px-3">
-          #{value}
-        </Tag>
+        <span className="text-slate-600 font-mono text-sm">#{value}</span>
       ),
     },
     {
@@ -249,19 +241,26 @@ const CustomerManagement: FC = () => {
         const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`
           .trim()
           .replace(/\s+/g, " ");
-        const fallbackName = record.name ?? "Unnamed Customer";
-        const displayName = fullName || fallbackName;
+        const fallbackName = record.name ?? "";
+        const displayNameRaw = fullName || fallbackName;
+        const displayName = displayNameRaw
+          ? toTitleCase(displayNameRaw)
+          : "Unnamed Customer";
         const initial = displayName.charAt(0).toUpperCase() || "?";
         return (
-          <Space align="start">
-            <Avatar src={customAvatar(displayName)} size={44}>
+          <Space align="center" size={10}>
+            <Avatar
+              src={customAvatar(displayName)}
+              size={40}
+              style={{ backgroundColor: "#6366f1" }}
+            >
               {initial}
             </Avatar>
             <div className="flex flex-col">
-              <Text strong>{displayName}</Text>
-              <Text type="secondary" className="text-xs">
+              <span className="text-slate-900 font-medium">{displayName}</span>
+              <span className="text-slate-500 text-xs">
                 {record.phone_number || "No phone on file"}
-              </Text>
+              </span>
             </div>
           </Space>
         );
@@ -271,22 +270,33 @@ const CustomerManagement: FC = () => {
       title: "Identification",
       key: "identification",
       render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <Tag color="blue" bordered={false} className="!px-2">
+        <Space direction="vertical" size={2}>
+          {/* <Tag color="geekblue" className="text-xs">
             {record.identification_type || "Not provided"}
-          </Tag>
-          <Text type="secondary" className="text-xs">
+          </Tag> */}
+          <span className="text-slate-600 text-xs">
             {record.identification_number || "—"}
-          </Text>
+          </span>
         </Space>
+      ),
+    },
+    {
+      title: "Group",
+      dataIndex: "group_name",
+      key: "group_name",
+      render: (value: string) => (
+        <Tag color="cyan" className="capitalize">
+          {value || "Unassigned"}
+        </Tag>
       ),
     },
     {
       title: "Subscription",
       dataIndex: "subscription_status",
       key: "subscription_status",
+      align: "center" as const,
       render: (status: number) => (
-        <Tag color={status === 1 ? "green" : "red"}>
+        <Tag color={status === 1 ? "success" : "default"}>
           {status === 1 ? "Active" : "Inactive"}
         </Tag>
       ),
@@ -298,15 +308,18 @@ const CustomerManagement: FC = () => {
       render: (value: string) =>
         value ? (
           <Tooltip title={moment(value).format("YYYY-MM-DD HH:mm:ss")}>
-            {moment(value).fromNow()}
+            <span className="text-slate-600 text-sm">
+              {moment(value).fromNow()}
+            </span>
           </Tooltip>
         ) : (
-          "Never"
+          <span className="text-slate-400 text-sm">Never</span>
         ),
     },
     {
       title: "Actions",
       key: "actions",
+      align: "center" as const,
       render: (_: any, customer: any) => (
         <CustomerTableActions
           customer={customer}
@@ -321,154 +334,224 @@ const CustomerManagement: FC = () => {
       ),
     },
   ];
+
   const handleCloseModal = () => {
     setSelectedCustomer(null);
   };
 
   return (
-    <div className="customer-management">
-      {/* Show status alert */}
-      {alertMessage && alertType && (
-        <Alert variant={alertType} className="mb-4">
-          {alertMessage}
-        </Alert>
-      )}
+    <div className="customer-management p-6 bg-slate-50/30 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-slate-800 mb-1">
+            Customer Management
+          </h1>
+          <p className="text-slate-500">
+            Manage your customer base and track subscriptions
+          </p>
+        </div>
 
-      <Card className="mb-4 shadow-sm" bodyStyle={{ padding: 20 }}>
-        <Row gutter={[24, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Total Customers"
-              value={customerMetrics.total}
-              loading={isLoading || isFetching}
-              prefix={<ThunderboltFilled className="text-yellow-500" />}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Active Subscriptions"
-              value={customerMetrics.active}
-              loading={isLoading || isFetching}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Inactive Subscriptions"
-              value={customerMetrics.inactive}
-              loading={isLoading || isFetching}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      <Tabs activeKey={activeTab} onChange={handleTabChange}>
-        {/* Tab 1: Customer List */}
-        <Tabs.TabPane tab="Customer List" key="1">
-          <Card className="shadow-sm" bodyStyle={{ padding: 20 }}>
-            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Manage Ziya Customers</h3>
-                <Text type="secondary">
-                  Explore customer subscriptions and account activity at a
-                  glance.
-                </Text>
-              </div>
-              <Space wrap>
-                <Input
-                  allowClear
-                  value={searchText}
-                  onChange={(event) => setSearchText(event.target.value)}
-                  prefix={<SearchOutlined className="text-gray-400" />}
-                  placeholder="Search by name, phone, or ID"
-                  className="w-full md:w-64"
-                />
-                <Segmented
-                  value={subscriptionFilter}
-                  options={[
-                    { label: "All", value: "all" },
-                    { label: "Active", value: "active" },
-                    { label: "Inactive", value: "inactive" },
-                  ]}
-                  onChange={(value) =>
-                    setSubscriptionFilter(value as SubscriptionFilter)
-                  }
-                />
-                <Button
-                  type="primary"
-                  icon={<UserAddOutlined />}
-                  onClick={() => setActiveTab("2")}
-                >
-                  New Customer
-                </Button>
-              </Space>
-            </div>
-            <Table
-              dataSource={filteredCustomers}
-              columns={columns}
-              rowKey="id"
-              loading={isLoading || isFetching}
-              size="middle"
-              pagination={{
-                ...tablePagination,
-                showSizeChanger: true,
-                pageSizeOptions: [10, 20, 50],
-                total: filteredCustomers.length,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} customers`,
-              }}
-              onChange={(paginationConfig) =>
-                setTablePagination({
-                  current: paginationConfig.current ?? 1,
-                  pageSize: paginationConfig.pageSize ?? 10,
-                })
-              }
-              scroll={{ x: 900 }}
-              bordered
-              locale={{
-                emptyText: (
-                  <Empty
-                    description={
-                      searchText || subscriptionFilter !== "all"
-                        ? "No customers match your filters"
-                        : "No customers found yet"
-                    }
-                  />
-                ),
-              }}
-            />
-          </Card>
-        </Tabs.TabPane>
-
-        {/* Tab 2: Add Customer */}
-        <Tabs.TabPane tab="Add Customer" key="2">
-          <CustomerForm onSubmit={handleSaveCustomer} isLoading={creating} />
-        </Tabs.TabPane>
-      </Tabs>
-
-      {/* Modal for editing customer */}
-      <Modal
-        title="Edit Customer"
-        visible={selectedCustomer !== null}
-        onCancel={handleCloseModal}
-        footer={null}
-        width={800}
-        style={{ top: "20%", marginTop: "10px" }}
-      >
-        {selectedCustomer && (
-          <EditCustomerForm
-            customer={selectedCustomer}
-            onSubmit={handleUpdateCustomer}
-            isLoading={updating}
-          />
+        {/* Show status alert */}
+        {alertMessage && alertType && (
+          <Alert variant={alertType} className="mb-5">
+            {alertMessage}
+          </Alert>
         )}
-      </Modal>
 
-      <SubscriptionModal
-        open={subscriptionModalOpen}
-        onCancel={() => setSubscriptionModalOpen(false)}
-        onSubmit={handleCreateSubscription}
-        loading={creatingSubscription}
-      />
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          {/* Total Customers */}
+          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-sm mb-1">Total Customers</p>
+                <Statistic
+                  value={customerMetrics.total}
+                  loading={isLoading || isFetching}
+                  valueStyle={{
+                    fontSize: "1.875rem",
+                    fontWeight: 600,
+                    color: "#1e293b",
+                  }}
+                />
+              </div>
+              <div className="w-11 h-11 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <FiUsers className="text-indigo-600 text-xl" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Active Subscriptions */}
+          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-sm mb-1">
+                  Active Subscriptions
+                </p>
+                <Statistic
+                  value={customerMetrics.active}
+                  loading={isLoading || isFetching}
+                  valueStyle={{
+                    fontSize: "1.875rem",
+                    fontWeight: 600,
+                    color: "#1e293b",
+                  }}
+                />
+              </div>
+              <div className="w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <FiCheckCircle className="text-emerald-600 text-xl" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Inactive Subscriptions */}
+          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-sm mb-1">
+                  Inactive Subscriptions
+                </p>
+                <Statistic
+                  value={customerMetrics.inactive}
+                  loading={isLoading || isFetching}
+                  valueStyle={{
+                    fontSize: "1.875rem",
+                    fontWeight: 600,
+                    color: "#1e293b",
+                  }}
+                />
+              </div>
+              <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center">
+                <FiSlash className="text-slate-600 text-xl" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Card className="border border-slate-200 shadow-sm">
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            className="customer-tabs"
+          >
+            {/* Tab 1: Customer List */}
+            <Tabs.TabPane tab="Customer List" key="1">
+              <div className="space-y-4">
+                {/* Controls */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-4 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-base font-medium text-slate-800">
+                      All Customers
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      View and manage customer information
+                    </p>
+                  </div>
+                  <Space wrap>
+                    <Input
+                      allowClear
+                      value={searchText}
+                      onChange={(event) => setSearchText(event.target.value)}
+                      prefix={<SearchOutlined className="text-slate-400" />}
+                      placeholder="Search customers..."
+                      className="w-full md:w-60"
+                    />
+                    <Segmented
+                      value={subscriptionFilter}
+                      options={[
+                        { label: "All", value: "all" },
+                        { label: "Active", value: "active" },
+                        { label: "Inactive", value: "inactive" },
+                      ]}
+                      onChange={(value) =>
+                        setSubscriptionFilter(value as SubscriptionFilter)
+                      }
+                    />
+                    <Button
+                      type="primary"
+                      icon={<UserAddOutlined />}
+                      onClick={() => setActiveTab("2")}
+                    >
+                      New Customer
+                    </Button>
+                  </Space>
+                </div>
+
+                {/* Table */}
+                <Table
+                  dataSource={filteredCustomers}
+                  columns={columns}
+                  rowKey="id"
+                  loading={isLoading || isFetching}
+                  size="middle"
+                  pagination={{
+                    ...tablePagination,
+                    showSizeChanger: true,
+                    pageSizeOptions: [10, 20, 50],
+                    total: filteredCustomers.length,
+                    showTotal: (total, range) =>
+                      `${range[0]}-${range[1]} of ${total} customers`,
+                  }}
+                  onChange={(paginationConfig) =>
+                    setTablePagination({
+                      current: paginationConfig.current ?? 1,
+                      pageSize: paginationConfig.pageSize ?? 10,
+                    })
+                  }
+                  scroll={{ x: 900 }}
+                  bordered
+                  locale={{
+                    emptyText: (
+                      <Empty
+                        description={
+                          searchText || subscriptionFilter !== "all"
+                            ? "No customers match your filters"
+                            : "No customers found yet"
+                        }
+                      />
+                    ),
+                  }}
+                />
+              </div>
+            </Tabs.TabPane>
+
+            {/* Tab 2: Add Customer */}
+            <Tabs.TabPane tab="Add Customer" key="2">
+              <CustomerForm
+                onSubmit={handleSaveCustomer}
+                isLoading={creating}
+              />
+            </Tabs.TabPane>
+          </Tabs>
+        </Card>
+
+        {/* Modal for editing customer */}
+        <Modal
+          title="Edit Customer"
+          open={selectedCustomer !== null}
+          onCancel={handleCloseModal}
+          footer={null}
+          width={800}
+          style={{ top: "20%", marginTop: "10px" }}
+        >
+          {selectedCustomer && (
+            <EditCustomerForm
+              customer={selectedCustomer}
+              onSubmit={handleUpdateCustomer}
+              isLoading={updating}
+            />
+          )}
+        </Modal>
+
+        <SubscriptionModal
+          open={subscriptionModalOpen}
+          onCancel={() => setSubscriptionModalOpen(false)}
+          onSubmit={handleCreateSubscription}
+          loading={creatingSubscription}
+        />
+      </div>
     </div>
   );
 };

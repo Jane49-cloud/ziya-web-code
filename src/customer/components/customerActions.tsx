@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { Button } from "antd";
+import { Button, Tooltip, Space } from "antd";
+import {
+  EditOutlined,
+  EyeOutlined,
+  PlusCircleOutlined,
+  PoweroffOutlined,
+} from "@ant-design/icons";
 import { FC } from "react";
 
 export const CustomerTableActions: FC<{
@@ -22,10 +27,19 @@ export const CustomerTableActions: FC<{
   };
 
   return (
-    <div className="flex gap-2 space-x-2">
-      <Button onClick={onEdit} type="primary" size="small">
-        Edit
-      </Button>
+    <Space size={4}>
+      <Tooltip title="Edit customer" placement="top">
+        <Button
+          onClick={onEdit}
+          type="text"
+          size="small"
+          shape="circle"
+          aria-label="Edit customer"
+          icon={<EditOutlined />}
+          className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border-0"
+        />
+      </Tooltip>
+
       <Button
         onClick={handleActivateDeactivate}
         type="default"
@@ -34,21 +48,35 @@ export const CustomerTableActions: FC<{
           backgroundColor: customer?.status === 1 ? "#fca5a5" : "#86efac",
           color: customer?.status === 1 ? "#991b1b" : "#166534",
           borderColor: customer?.status === 1 ? "#dc2626" : "#22c55e",
-          width: "70px",
           display: "none",
         }}
       >
-        {customer?.status === 1 ? "Deactivate" : "Activate"}
+        <PoweroffOutlined />
       </Button>
-      <button
-        onClick={() => handleView(customer.id)}
-        className="bg-amber-200 text-amber-500 px-4 rounded"
-      >
-        View
-      </button>
-      <Button onClick={onCreateSubscription} size="small" type="dashed">
-        + Subscription
-      </Button>
-    </div>
+
+      <Tooltip title="View details" placement="top">
+        <Button
+          onClick={() => handleView(customer.id)}
+          type="text"
+          size="small"
+          shape="circle"
+          aria-label="View customer"
+          icon={<EyeOutlined />}
+          className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 border-0"
+        />
+      </Tooltip>
+
+      <Tooltip title="Create subscription" placement="top">
+        <Button
+          onClick={onCreateSubscription}
+          type="text"
+          size="small"
+          shape="circle"
+          aria-label="Create subscription"
+          icon={<PlusCircleOutlined />}
+          className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 border-0"
+        />
+      </Tooltip>
+    </Space>
   );
 };

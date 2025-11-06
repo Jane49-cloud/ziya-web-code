@@ -32,15 +32,24 @@ const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+const toTitleCase = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) =>
+      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    )
+    .join(" ");
+
 export interface GroupLoan {
   id: number;
   amount: string;
   balance: string;
   group_id: number;
   group_name: string;
-  recipient_id: number;
-  recipient_firstname: string;
-  recipient_lastname: string;
+  issued_to: number;
+  customer_firstname: string;
+  customer_lastname: string;
   date_issued: string;
   cycle?: number;
 }
@@ -63,7 +72,11 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
-      const fullName = `${item.recipient_firstname} ${item.recipient_lastname}`;
+      const fullName = `${item?.customer_firstname ?? ""} ${
+        item?.customer_lastname ?? ""
+      }`
+        .trim()
+        .replace(/\s+/g, " ");
       const isPaid = Number(item.balance) === 0;
 
       // Text search
@@ -110,7 +123,12 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     ];
 
     const rows = filteredData.map((item) => {
-      const recipient = `${item.recipient_firstname} ${item.recipient_lastname}`;
+      const recipientRaw = `${item?.customer_firstname ?? ""} ${
+        item?.customer_lastname ?? ""
+      }`
+        .trim()
+        .replace(/\s+/g, " ");
+      const recipient = toTitleCase(recipientRaw);
       const isPaid = Number(item.balance) === 0;
       const repaid = Number(item.amount) - Number(item.balance);
       const repaymentRate =
@@ -122,7 +140,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         `#${item.id.toString().padStart(4, "0")}`,
         formatDate(item.date_issued),
         recipient,
-        item.group_name,
+        toTitleCase(item.group_name ?? ""),
         Number(item.amount).toLocaleString(),
         repaid.toLocaleString(),
         Number(item.balance).toLocaleString(),
@@ -199,11 +217,16 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       key: "recipient",
       // width: 150,
       render: (_, record) => {
-        const fullName = `${record.recipient_firstname} ${record.recipient_lastname}`;
+        const rawName = `${record?.customer_firstname ?? ""} ${
+          record?.customer_lastname ?? ""
+        }`
+          .trim()
+          .replace(/\s+/g, " ");
+        const fullName = rawName ? toTitleCase(rawName) : "Unnamed Customer";
         return (
           <div
             className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors"
-            onClick={() => navigate(`/customer/${record.recipient_id}`)}
+            onClick={() => navigate(`/customer/${record.issued_to}`)}
           >
             <div className="relative">{customAvatar(fullName)}</div>
             <div>
@@ -211,7 +234,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                 {fullName}
               </div>
               <div className="text-xs text-gray-500">
-                ID: {record.recipient_id}
+                ID: {record.issued_to}
               </div>
             </div>
           </div>
@@ -222,21 +245,28 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       title: "Group",
       key: "group",
       // width: 100,
-      render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <div>
-            <div
-              className="font-medium text-gray-800 truncate max-w-32"
-              title={record.group_name}
-            >
-              {record.group_name}
-            </div>
-            <div className="text-xs text-gray-500">
-              Group ID: {record.group_id}
+      render: (_, record) => {
+        const groupNameRaw = record.group_name?.trim() ?? "";
+        const groupName = groupNameRaw
+          ? toTitleCase(groupNameRaw.replace(/\s+/g, " "))
+          : "Unnamed Group";
+
+        return (
+          <div className="flex items-center gap-2">
+            <div>
+              <div
+                className="font-medium text-gray-800 truncate max-w-32"
+                title={groupName}
+              >
+                {groupName}
+              </div>
+              <div className="text-xs text-gray-500">
+                Group ID: {record.group_id}
+              </div>
             </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: "Status & Progress",

@@ -1,4 +1,4 @@
-image: docker:20.10.16
+image: node:20
 
 services:
   - docker:20.10.16-dind
@@ -14,18 +14,24 @@ before_script:
   # 1) Log in to the GitLab Container Registry on the CI runner
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
+# 🧱 BUILD STAGE
 build_image:
   stage: build
+  tags:
+    - web
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
   only:
-    - dev
+    - v2
     - staging
     - live
 
+# 🚀 DEPLOY TEMPLATE
 .deploy_template: &deploy_template
   stage: deploy
+  tags:
+    - web
   before_script:
     # 2) Install your SSH key on the runner
     - mkdir -p ~/.ssh
@@ -45,25 +51,26 @@ build_image:
       docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       EOF
   only:
-    - dev
+    - v2
     - staging
     - live
 
+# 🧩 DEPLOY JOBS
 deploy_dev:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
   only:
-    - dev
+    - v2
 
 deploy_staging:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
   only:
@@ -73,7 +80,7 @@ deploy_live:
   <<: *deploy_template
   variables:
     SSH_KEY: $LIVE_KEY
-    TARGET_HOST: 34.211.227.206
+    TARGET_HOST: 35.92.105.99
     CONTAINER_NAME: ziyaweb-live
     PORT: 3001
   only:

@@ -47,7 +47,7 @@ const GroupLoanFormModal = ({
 
   const members = membersData?.members || [];
   const loanDefs =
-    loanDefsData?.loanDefinitions?.filter(
+    loanDefsData?.loan_definitions?.filter(
       (loanDef: any) => loanDef.status === 1
     ) || [];
 
@@ -62,7 +62,7 @@ const GroupLoanFormModal = ({
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ date_issued: dayjs() });
+      form.setFieldsValue({ date_issued: dayjs().startOf("day") });
     }
   }, [loan, form]);
 
@@ -72,7 +72,9 @@ const GroupLoanFormModal = ({
       const payload = {
         ...values,
         date_issued: values.date_issued
-          ? values.date_issued.format("YYYY-MM-DD")
+          ? values.date_issued
+              .startOf("day")
+              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
         group_id: groupId,
         issued_by: issuedBy,
@@ -192,7 +194,12 @@ const GroupLoanFormModal = ({
               name="date_issued"
               rules={[{ required: true, message: "Select issued date" }]}
             >
-              <DatePicker className="w-full" format="YYYY-MM-DD" />
+              <DatePicker
+                className="w-full"
+                format="YYYY-MM-DD"
+                popupClassName="group-modal-date-picker-dropdown"
+                placement="bottomLeft"
+              />
             </Form.Item>
           </Col>
         </Row>

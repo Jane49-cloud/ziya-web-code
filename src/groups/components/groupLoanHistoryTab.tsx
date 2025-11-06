@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetGroupLoansQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
+import { getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,14 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
   groupId,
   groupAdminId,
 }) => {
+  const staffUserId = useMemo(() => {
+    const user = getUser();
+    if (!user?.id) return null;
+
+    const parsedId = Number(user.id);
+    return Number.isNaN(parsedId) ? null : parsedId;
+  }, []);
+
   const { data, isLoading, isFetching, refetch } = useGetGroupLoansQuery(
     groupId,
     {
@@ -37,7 +46,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       pollingInterval: 30000,
     }
   );
-  const loans = data?.loans || [];
+  const loans = useMemo(() => data?.loans || [], [data?.loans]);
 
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,8 +63,8 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     if (!needle) return loans;
 
     return loans.filter((loan: any) => {
-      const recipient = `${loan.recipient_firstname ?? ""} ${
-        loan.recipient_lastname ?? ""
+      const recipient = `${loan.customer_firstname ?? ""} ${
+        loan.customer_lastname ?? ""
       }`
         .trim()
         .toLowerCase();
@@ -63,18 +72,22 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       return (
         recipient.includes(needle) ||
         loanType.includes(needle) ||
-        String(loan.cycle ?? "").toLowerCase().includes(needle)
+        String(loan.cycle ?? "")
+          .toLowerCase()
+          .includes(needle)
       );
     });
   }, [loans, searchTerm]);
 
-  const sortedLoans = useMemo(() =>
-    [...filteredLoans].sort((a, b) =>
-      sortOrder === "ascend"
-        ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    ),
-  [filteredLoans, sortOrder]);
+  const sortedLoans = useMemo(
+    () =>
+      [...filteredLoans].sort((a, b) =>
+        sortOrder === "ascend"
+          ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ),
+    [filteredLoans, sortOrder]
+  );
 
   const totalLoaned = sortedLoans.reduce((sum, loan) => {
     const amount =
@@ -92,9 +105,9 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
         <Button
           type="link"
           className="p-0"
-          onClick={() => navigate(`/customer/${record.recipient_id}`)}
+          onClick={() => navigate(`/customer/${record.issued_to}`)}
         >
-          {record.recipient_firstname} {record.recipient_lastname}
+          {record.customer_firstname} {record.customer_lastname}
         </Button>
       ),
     },
@@ -159,9 +172,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
   ];
 
   const activeLoans = sortedLoans.length;
-  const averageAmount = activeLoans
-    ? Math.round(totalLoaned / activeLoans)
-    : 0;
+  const averageAmount = activeLoans ? Math.round(totalLoaned / activeLoans) : 0;
 
   return (
     <Card bordered={false} className="shadow-sm">
@@ -172,7 +183,8 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
               Group Loan Portfolio
             </Title>
             <Text type="secondary">
-              Monitor issued loans, track balances, and capture repayments in real time.
+              Monitor issued loans, track balances, and capture repayments in
+              real time.
             </Text>
           </div>
           <Button
@@ -247,7 +259,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           groupId={groupId}
           loan={editLoan}
           refetch={refetch}
-          issuedBy={groupAdminId}
+          issuedBy={staffUserId ?? groupAdminId ?? null}
         />
       )}
 
@@ -259,7 +271,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           groupId={groupId}
           loan={selectedLoan}
           refetch={refetch}
-          approved_by={groupAdminId}
+          approved_by={staffUserId ?? groupAdminId ?? null}
         />
       )}
     </Card>

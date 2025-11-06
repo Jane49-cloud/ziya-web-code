@@ -31,6 +31,14 @@ import AccountDeletion from "../privacy/delete-account";
 // role groups
 import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
 import AnalysisModule from "../analysis";
+import HomePage from "../home";
+import AdminTasksPage from "../tasks/pages/adminTasks";
+import BlogsModuleLayout from "../blogs";
+import {
+  BlogsListPage,
+  BlogComposerPage,
+  BlogDetailsPage,
+} from "../blogs/pages";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -46,9 +54,11 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
 
     const fetchRole = () => {
       const role = getRole();
-      if (role?.name) {
-        setUserRole(role.name);
-        console.log("User role fetched:", role.name);
+      if (role) {
+        setUserRole(role);
+        console.log("User role fetched:", role);
+      } else {
+        setUserRole(role);
       }
       setIsLoading(false);
     };
@@ -87,13 +97,21 @@ const AppRouting = (): ReactElement => {
 
       {/* All roles */}
       <Route element={<PrivateRoutes allowedRoles={ALL_ROLES} />}>
+        <Route path="/" element={<HomePage />} />
         <Route element={<Layout children={undefined} />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/groups/:id" element={<SingleGroupPage />} />
           <Route path="/create-group" element={<CreateGroupPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-user" element={<AddUser />} />
+
+          <Route path="/blogs" element={<BlogsModuleLayout />}>
+            <Route index element={<BlogsListPage />} />
+            <Route path="create" element={<BlogComposerPage />} />
+            <Route path=":id" element={<BlogDetailsPage />} />
+            <Route path=":id/edit" element={<BlogComposerPage />} />
+          </Route>
         </Route>
       </Route>
 
@@ -103,6 +121,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/staff" element={<Staff />} />
           <Route path="/roles" element={<RolesManagement />} />
           <Route path="/loan-categories" element={<LoanCategories />} />
+          <Route path="/tasks" element={<AdminTasksPage />} />
         </Route>
       </Route>
 

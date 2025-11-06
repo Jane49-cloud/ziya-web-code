@@ -14,12 +14,19 @@ export const navLinks = [
     allowedRoles: ALL_ROLES,
   },
   {
+    to: "/dashboard",
+    label: "Dashboard",
+    allowedRoles: ALL_ROLES,
+  },
+  {
     to: "/profile",
     label: "Profile",
     allowedRoles: ALL_ROLES,
   },
-  { to: "/staff", label: "Staff", allowedRoles: ADMIN_DEV },
-  { to: "/roles", label: "Roles", allowedRoles: ADMIN_DEV },
+  // { to: "/staff", label: "Staff", allowedRoles: ADMIN_DEV },
+  // { to: "/roles", label: "Roles", allowedRoles: ADMIN_DEV },
+  // { to: "/tasks", label: "Tasks", allowedRoles: ADMIN_DEV },
+  // { to: "/blogs", label: "Blogs", allowedRoles: ADMIN_DEV },
   {
     to: "/customers",
     label: "Customers",
@@ -46,7 +53,7 @@ export const sidebarItems: SidebarItem[] = [
   {
     title: "Dashboard",
     icon: "graph-up",
-    path: "/",
+    path: "/dashboard",
     allowedRoles: ALL_ROLES,
   },
   {
@@ -55,6 +62,7 @@ export const sidebarItems: SidebarItem[] = [
     path: "/roles",
     allowedRoles: ADMIN_DEV,
   },
+
   {
     title: "Users",
     icon: "users",
@@ -100,6 +108,18 @@ export const sidebarItems: SidebarItem[] = [
     icon: "wallet",
     path: "/wallets",
     allowedRoles: STAFF_ROLES,
+  },
+  {
+    title: "Tasks",
+    icon: "check-circle",
+    path: "/tasks",
+    allowedRoles: ADMIN_DEV,
+  },
+  {
+    title: "Blogs",
+    icon: "note-2",
+    path: "/blogs",
+    allowedRoles: ALL_ROLES,
   },
   {
     title: "Analysis",
