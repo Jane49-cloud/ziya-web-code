@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetGroupLoansQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
+import { getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,14 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
   groupId,
   groupAdminId,
 }) => {
+  const staffUserId = useMemo(() => {
+    const user = getUser();
+    if (!user?.id) return null;
+
+    const parsedId = Number(user.id);
+    return Number.isNaN(parsedId) ? null : parsedId;
+  }, []);
+
   const { data, isLoading, isFetching, refetch } = useGetGroupLoansQuery(
     groupId,
     {
@@ -250,7 +259,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           groupId={groupId}
           loan={editLoan}
           refetch={refetch}
-          issuedBy={groupAdminId}
+          issuedBy={staffUserId ?? groupAdminId ?? null}
         />
       )}
 
@@ -262,7 +271,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           groupId={groupId}
           loan={selectedLoan}
           refetch={refetch}
-          approved_by={groupAdminId}
+          approved_by={staffUserId ?? groupAdminId ?? null}
         />
       )}
     </Card>
