@@ -36,6 +36,15 @@ import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
+const toTitleCase = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) =>
+      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    )
+    .join(" ");
+
 const CustomerManagement: FC = () => {
   const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
   const customers = data?.customers;
@@ -232,8 +241,11 @@ const CustomerManagement: FC = () => {
         const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`
           .trim()
           .replace(/\s+/g, " ");
-        const fallbackName = record.name ?? "Unnamed Customer";
-        const displayName = fullName || fallbackName;
+        const fallbackName = record.name ?? "";
+        const displayNameRaw = fullName || fallbackName;
+        const displayName = displayNameRaw
+          ? toTitleCase(displayNameRaw)
+          : "Unnamed Customer";
         const initial = displayName.charAt(0).toUpperCase() || "?";
         return (
           <Space align="center" size={10}>

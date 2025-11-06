@@ -3,7 +3,14 @@ import { Modal, Form, Input, message } from "antd";
 import { useEffect } from "react";
 import { useUpdateCustomerMutation } from "../features/customerSlice";
 
-const CustomerForm = ({ visible, onClose, customer }: any) => {
+interface CustomerFormProps {
+  visible: boolean;
+  onClose: () => void;
+  customer: any;
+  onSuccess?: () => void;
+}
+
+const CustomerForm = ({ visible, onClose, customer, onSuccess }: CustomerFormProps) => {
   const [form] = Form.useForm();
   const [updateCustomer, { isLoading }] = useUpdateCustomerMutation();
 
@@ -39,7 +46,11 @@ const CustomerForm = ({ visible, onClose, customer }: any) => {
       }).unwrap();
 
       message.success("Customer updated successfully!");
-      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (error) {
       message.error("Failed to update customer.");
       console.error(error);

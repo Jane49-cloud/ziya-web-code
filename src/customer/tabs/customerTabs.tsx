@@ -34,9 +34,14 @@ interface Loan {
 interface CustomerTabsProps {
   customer: Customer;
   recentLoans: Loan[];
+  onCustomerUpdated?: () => void;
 }
 
-const CustomerTabs: FC<CustomerTabsProps> = ({ customer, recentLoans }) => {
+const CustomerTabs: FC<CustomerTabsProps> = ({
+  customer,
+  recentLoans,
+  onCustomerUpdated,
+}) => {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
 
   const customerData = useMemo(
@@ -193,6 +198,10 @@ const CustomerTabs: FC<CustomerTabsProps> = ({ customer, recentLoans }) => {
         visible={isEditModalOpen}
         onClose={() => setEditModalOpen(false)}
         customer={customer}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          onCustomerUpdated?.();
+        }}
       />
     </div>
   );

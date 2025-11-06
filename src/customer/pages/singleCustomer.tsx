@@ -10,9 +10,16 @@ import { formatDate, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
 import { useCreateSubscriptionMutation } from "../features/customerSlice";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import CustomerPerformanceTab from "../components/performance/customerPerformanceTab";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
+
+const toTitleCase = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`)
+    .join(" ");
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,11 +35,17 @@ const CustomerPage = () => {
   const customer = customerData?.customer;
   const loans = loanData?.loans || [];
 
-  const fullName = `${customer?.firstname} ${customer?.middlename || ""} ${
-    customer?.lastname
-  }`
-    .replace(/\s+/g, " ")
-    .trim();
+  const fullName = useMemo(() => {
+    if (!customer) return "";
+
+    const rawName = `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${
+      customer.lastname ?? ""
+    }`
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return toTitleCase(rawName);
+  }, [customer]);
 
   const lastLoginDisplay = customer?.last_login
     ? new Date(customer.last_login)?.toLocaleString()
@@ -94,7 +107,7 @@ const CustomerPage = () => {
             </div>
             <div>
               <h2 className="text-2xl font-semibold text-slate-900 md:text-3xl">
-                {fullName}
+                {fullName || "Unnamed Customer"}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
                 {customer.email || "No email on file"}
@@ -183,7 +196,11 @@ const CustomerPage = () => {
       {/* Tabbed Section */}
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Customer Details" key="1">
-          <CustomerTabs customer={customer} recentLoans={loans.slice(0, 3)} />
+          <CustomerTabs
+            customer={customer}
+            recentLoans={loans.slice(0, 3)}
+            onCustomerUpdated={() => refetch()}
+          />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Businesses" key="2">
           <CustomerBusinessList customerId={customer.id} />

@@ -168,7 +168,7 @@ const DashboardOverview = () => {
   }, [groupLoans]);
 
   const navigate = useNavigate();
-  const recentCustomers = useMemo(() => customers.slice(0, 9), [customers]);
+  const recentCustomers = useMemo(() => customers.slice(0, 6), [customers]);
 
   const walletSnapshot = useMemo<WalletSnapshotItem[]>(
     () =>
