@@ -200,16 +200,16 @@ const DashboardOverview = () => {
       dataIndex: "groupName",
       key: "groupName",
       render: (value: string) => (
-        <Space>
+        <Space size="small">
           <Avatar
-            size="small"
+            size={32}
             style={{
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
           >
             {value?.charAt(0)?.toUpperCase() ?? "G"}
           </Avatar>
-          <span className="font-semibold text-slate-800">{value}</span>
+          <span className="font-medium text-slate-800 text-sm">{value}</span>
         </Space>
       ),
     },
@@ -219,7 +219,7 @@ const DashboardOverview = () => {
       key: "disbursed",
       align: "right" as const,
       render: (value: number) => (
-        <span className="font-semibold text-slate-700">
+        <span className="font-medium text-slate-700 text-sm">
           {formatCurrency(value)}
         </span>
       ),
@@ -232,7 +232,7 @@ const DashboardOverview = () => {
       render: (value: number) => (
         <Tag
           color={value > 0 ? "error" : "success"}
-          className="!m-0 !px-4 !py-1.5 font-semibold rounded-full"
+          className="!m-0 !px-3 !py-1 font-medium rounded-full text-xs"
         >
           {formatCurrency(value)}
         </Tag>
@@ -254,7 +254,7 @@ const DashboardOverview = () => {
             trailColor="#e2e8f0"
             className="flex-1"
           />
-          <span className="text-xs font-semibold text-slate-600 min-w-[40px]">
+          <span className="text-xs font-medium text-slate-600 min-w-[36px]">
             {Math.round(value)}%
           </span>
         </div>
@@ -306,11 +306,10 @@ const DashboardOverview = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       {/* Hero Header */}
-      <div className="relative mb-10">
-        <div className="dashboard-hero relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-sm">
-          {/* Subtle background pattern */}
+      <div className="relative mb-6">
+        <div className="dashboard-hero relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-sm">
           <div className="absolute inset-0 opacity-[0.02]">
             <svg width="100%" height="100%">
               <pattern
@@ -329,44 +328,37 @@ const DashboardOverview = () => {
               <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
           </div>
-
-          {/* Accent decoration */}
-          <div className="absolute left-0 top-0 h-1 w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
-
-          <div className="relative flex flex-col gap-8 px-8 py-12 md:flex-row md:items-center md:justify-between md:px-12">
-            <div className="relative z-10 max-w-xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 border border-indigo-100">
+          <div className="absolute left-0 top-0 h-1 w-20 bg-gradient-to-r from-indigo-500 to-transparent" />
+          <div className="relative flex flex-col gap-6 px-6 py-8 md:flex-row md:items-center md:justify-between md:px-10">
+            <div className="relative z-10 max-w-xl space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 border border-indigo-100">
                 <LineChartOutlined className="text-indigo-600" />
                 INSIGHT HUB
               </div>
-
-              <Title level={1} className="!mb-0 !text-slate-900">
+              <Title level={2} className="!mb-0 !text-slate-900">
                 Dashboard Overview
               </Title>
-
-              <Text className="block text-base text-slate-600 leading-relaxed">
+              <Text className="block text-sm text-slate-600 leading-relaxed">
                 Surface key trends, monitor performance, and move from insight
                 to action with confidence.
               </Text>
             </div>
-
             <Space size="middle" className="relative z-10">
               <Button
                 type="default"
-                size="large"
+                size="middle"
                 onClick={() => navigate("/analysis")}
                 icon={<LineChartOutlined />}
-                className="!h-11 !border-slate-200 !bg-white !px-6 !text-slate-700 hover:!border-indigo-300 hover:!bg-indigo-50 hover:!text-indigo-700 transition-all"
+                className="!h-9 !border-slate-200 !bg-white !px-4 !text-slate-700 hover:!border-indigo-300 hover:!bg-indigo-50 hover:!text-indigo-700 transition-all"
               >
                 Analytics
               </Button>
-
               <Button
                 type="primary"
-                size="large"
+                size="middle"
                 onClick={() => navigate("/profile")}
                 icon={<TrophyOutlined />}
-                className="!h-11 !bg-indigo-600 !px-6 hover:!bg-indigo-700 transition-all"
+                className="!h-9 !bg-indigo-600 !px-4 hover:!bg-indigo-700 transition-all"
               >
                 Performance
               </Button>
@@ -376,46 +368,42 @@ const DashboardOverview = () => {
       </div>
 
       {/* Stats Cards */}
-      <Row gutter={[24, 24]} className="mb-8">
+      <Row gutter={[16, 16]} className="mb-6">
         {statCards.map((card) => (
           <Col key={card.key} xs={24} sm={12} xl={6}>
             <Card
-              className="group relative overflow-hidden rounded-2xl border-0 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
-              bodyStyle={{ padding: 0 }}
+              className="group relative overflow-hidden rounded-xl border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              bodyStyle={{ padding: 0, height: "100%" }}
               style={{
                 background: "white",
+                minHeight: "160px",
               }}
             >
               {statsLoading ? (
-                <div className="p-6">
+                <div className="p-5">
                   <Skeleton active paragraph={{ rows: 2 }} />
                 </div>
               ) : (
                 <>
-                  {/* Gradient Background */}
                   <div
                     className="absolute inset-0 opacity-5 transition-opacity duration-300 group-hover:opacity-10"
                     style={{ background: card.gradient }}
                   />
-
-                  <div className="relative p-6">
-                    {/* Icon */}
+                  <div className="relative p-5">
                     <div
-                      className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white shadow-lg"
+                      className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl text-xl text-white shadow-md"
                       style={{ background: card.gradient }}
                     >
                       {card.icon}
                     </div>
-
-                    {/* Content */}
-                    <div className="space-y-2">
-                      <Text className="block text-sm font-medium text-slate-500">
+                    <div className="space-y-1.5">
+                      <Text className="block text-xs font-medium text-slate-500 uppercase tracking-wide">
                         {card.title}
                       </Text>
-                      <div className="text-3xl font-bold text-slate-800">
+                      <div className="text-2xl font-bold text-slate-800 leading-tight">
                         {card.value}
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-1">
                         <Text className="text-xs text-slate-400">
                           {card.helper}
                         </Text>
@@ -441,34 +429,33 @@ const DashboardOverview = () => {
       </Row>
 
       {/* Charts Row */}
-      <Row gutter={[24, 24]} className="mb-8">
+      <Row gutter={[16, 16]} className="mb-6">
         {/* Disbursement Share */}
         <Col xs={24} xl={12}>
           <Card
-            className="rounded-2xl border-0 shadow-lg"
+            className="rounded-xl border-0 shadow-md"
             bodyStyle={{
-              padding: 32,
+              padding: 24,
               height: "100%",
-              minHeight: 500,
             }}
+            style={{ minHeight: "480px" }}
           >
-            <div className="mb-6 flex items-start justify-between">
+            <div className="mb-5 flex items-start justify-between">
               <div>
-                <Title level={3} className="!mb-2 !text-slate-800">
+                <Title level={4} className="!mb-1 !text-slate-800">
                   Disbursement Distribution
                 </Title>
-                <Text className="text-slate-500">
+                <Text className="text-xs text-slate-500">
                   Portfolio allocation across top performing groups
                 </Text>
               </div>
-              <RiseOutlined className="text-2xl text-indigo-500" />
+              <RiseOutlined className="text-xl text-indigo-500" />
             </div>
-
             {statsLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
+              <Skeleton active paragraph={{ rows: 6 }} />
             ) : disbursementShare.some((item) => item.value > 0) ? (
-              <div className="space-y-6">
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="space-y-4">
+                <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <defs>
                       {palette.map((color, i) => (
@@ -492,8 +479,8 @@ const DashboardOverview = () => {
                     <Pie
                       data={disbursementShare}
                       dataKey="value"
-                      innerRadius={70}
-                      outerRadius={110}
+                      innerRadius={60}
+                      outerRadius={95}
                       paddingAngle={3}
                       strokeWidth={2}
                       stroke="#fff"
@@ -509,38 +496,37 @@ const DashboardOverview = () => {
                       contentStyle={{
                         background: "rgba(0,0,0,0.8)",
                         border: "none",
-                        borderRadius: "12px",
-                        padding: "12px",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        fontSize: "12px",
                       }}
                       itemStyle={{ color: "#fff" }}
                       formatter={(value: number) => formatCurrency(value)}
                     />
                     <Legend
-                      wrapperStyle={{ paddingTop: "20px" }}
+                      wrapperStyle={{ paddingTop: "16px", fontSize: "12px" }}
                       iconType="circle"
                     />
                   </PieChart>
                 </ResponsiveContainer>
-
-                {/* Legend Items */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {disbursementShare.slice(0, 4).map((item, index) => (
                     <div
                       key={item.name}
-                      className="flex items-center justify-between rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-4 transition-all hover:shadow-md"
+                      className="flex items-center justify-between rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 p-3 transition-all hover:shadow-sm"
                     >
-                      <Space>
+                      <Space size="small">
                         <span
-                          className="inline-flex h-3 w-3 rounded-full shadow-sm"
+                          className="inline-flex h-2.5 w-2.5 rounded-full shadow-sm"
                           style={{
                             background: palette[index % palette.length],
                           }}
                         />
-                        <Text className="font-semibold text-slate-700">
+                        <Text className="font-medium text-slate-700 text-xs">
                           {item.name}
                         </Text>
                       </Space>
-                      <Text className="text-sm font-bold text-slate-800">
+                      <Text className="text-xs font-bold text-slate-800">
                         {formatCurrency(item.value)}
                       </Text>
                     </div>
@@ -550,7 +536,7 @@ const DashboardOverview = () => {
             ) : (
               <Empty
                 description="No disbursement data available"
-                className="my-20"
+                className="my-16"
               />
             )}
           </Card>
@@ -559,32 +545,31 @@ const DashboardOverview = () => {
         {/* Recovery Pipeline */}
         <Col xs={24} xl={12}>
           <Card
-            className="rounded-2xl border-0 shadow-lg"
+            className="rounded-xl border-0 shadow-md"
             bodyStyle={{
-              padding: 32,
+              padding: 24,
               height: "100%",
-              minHeight: 500,
             }}
+            style={{ minHeight: "480px" }}
           >
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <div>
-                <Title level={3} className="!mb-2 !text-slate-800">
+                <Title level={4} className="!mb-1 !text-slate-800">
                   Recovery Pipeline
                 </Title>
-                <Text className="text-slate-500">
+                <Text className="text-xs text-slate-500">
                   High-priority collection targets
                 </Text>
               </div>
               <Link
                 to="/loans"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
               >
                 View All →
               </Link>
             </div>
-
             {statsLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
+              <Skeleton active paragraph={{ rows: 6 }} />
             ) : outstandingTable.length ? (
               <Table
                 dataSource={outstandingTable.slice(0, 5)}
@@ -594,36 +579,36 @@ const DashboardOverview = () => {
                 scroll={{ x: true }}
                 className="recovery-table"
                 rowClassName="hover:bg-slate-50 transition-colors"
+                size="small"
               />
             ) : (
-              <Empty description="No outstanding balances" className="my-20" />
+              <Empty description="No outstanding balances" className="my-16" />
             )}
           </Card>
         </Col>
       </Row>
 
       {/* Bottom Row */}
-      <Row gutter={[24, 24]} className="pb-8">
+      <Row gutter={[16, 16]} className="pb-6">
         {/* Recent Customers */}
         <Col xs={24} lg={12}>
           <Card
-            className="rounded-2xl border-0 shadow-lg"
+            className="rounded-xl border-0 shadow-md"
             bodyStyle={{
-              padding: 32,
-              minHeight: 400,
+              padding: 24,
             }}
+            style={{ minHeight: "380px" }}
           >
-            <div className="mb-6">
-              <Title level={3} className="!mb-2 !text-slate-800">
+            <div className="mb-5">
+              <Title level={4} className="!mb-1 !text-slate-800">
                 Recent Customers
               </Title>
-              <Text className="text-slate-500">
+              <Text className="text-xs text-slate-500">
                 Latest member onboarding activity
               </Text>
             </div>
-
             {customersLoading ? (
-              <Skeleton active paragraph={{ rows: 6 }} />
+              <Skeleton active paragraph={{ rows: 5 }} />
             ) : recentCustomers.length ? (
               <List
                 itemLayout="horizontal"
@@ -650,27 +635,31 @@ const DashboardOverview = () => {
                     "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
                   ];
                   return (
-                    <List.Item className="!border-b-slate-100 !py-4 transition-colors hover:bg-slate-50">
+                    <List.Item className="!border-b-slate-100 !py-3 transition-colors hover:bg-slate-50">
                       <List.Item.Meta
                         avatar={
                           <Avatar
-                            size={48}
+                            size={40}
                             style={{
                               background:
                                 avatarGradients[index % avatarGradients.length],
                             }}
-                            className="shadow-md"
+                            className="shadow-sm"
                           >
-                            <span className="text-lg font-bold">{initial}</span>
+                            <span className="text-base font-bold">
+                              {initial}
+                            </span>
                           </Avatar>
                         }
                         title={
-                          <span className="text-base font-semibold text-slate-800">
+                          <span className="text-sm font-semibold text-slate-800">
                             {fullName || "Unnamed Customer"}
                           </span>
                         }
                         description={
-                          <Text className="text-slate-500">{phone}</Text>
+                          <Text className="text-xs text-slate-500">
+                            {phone}
+                          </Text>
                         }
                       />
                     </List.Item>
@@ -678,7 +667,7 @@ const DashboardOverview = () => {
                 }}
               />
             ) : (
-              <Empty description="No customers yet" className="my-20" />
+              <Empty description="No customers yet" className="my-16" />
             )}
           </Card>
         </Col>
@@ -686,50 +675,49 @@ const DashboardOverview = () => {
         {/* Wallet Snapshot */}
         <Col xs={24} lg={12}>
           <Card
-            className="rounded-2xl border-0 shadow-lg"
+            className="rounded-xl border-0 shadow-md"
             bodyStyle={{
-              padding: 32,
-              minHeight: 400,
+              padding: 24,
             }}
+            style={{ minHeight: "380px" }}
           >
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <div>
-                <Title level={3} className="!mb-2 !text-slate-800">
+                <Title level={4} className="!mb-1 !text-slate-800">
                   Wallet Overview
                 </Title>
-                <Text className="text-slate-500">
+                <Text className="text-xs text-slate-500">
                   Top balances and loan exposure
                 </Text>
               </div>
               <Link
                 to="/wallets"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
               >
                 View All →
               </Link>
             </div>
-
             {walletsLoading ? (
-              <Skeleton active paragraph={{ rows: 5 }} />
+              <Skeleton active paragraph={{ rows: 4 }} />
             ) : walletSnapshot.length ? (
               <List
                 itemLayout="horizontal"
                 dataSource={walletSnapshot}
                 renderItem={(item: WalletSnapshotItem) => (
-                  <List.Item className="!border-b-slate-100 !py-4 transition-colors hover:bg-slate-50">
+                  <List.Item className="!border-b-slate-100 !py-3 transition-colors hover:bg-slate-50">
                     <List.Item.Meta
                       avatar={
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 text-lg font-bold text-white shadow-md">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-base font-bold text-white shadow-sm">
                           {item.groupName.charAt(0).toUpperCase()}
                         </div>
                       }
                       title={
-                        <span className="text-base font-semibold text-slate-800">
+                        <span className="text-sm font-semibold text-slate-800">
                           {item.groupName}
                         </span>
                       }
                       description={
-                        <div className="mt-1 space-y-1 text-sm">
+                        <div className="mt-1 space-y-0.5 text-xs">
                           <div className="flex items-center gap-2">
                             <span className="text-slate-500">Balance:</span>
                             <span className="font-semibold text-emerald-600">
@@ -747,7 +735,7 @@ const DashboardOverview = () => {
                     />
                     <Tag
                       color="processing"
-                      className="!m-0 !rounded-full !px-4 !py-1.5 font-semibold"
+                      className="!m-0 !rounded-full !px-3 !py-1 font-medium text-xs"
                     >
                       {item.loanCount} loans
                     </Tag>
@@ -755,7 +743,7 @@ const DashboardOverview = () => {
                 )}
               />
             ) : (
-              <Empty description="No wallet data" className="my-20" />
+              <Empty description="No wallet data" className="my-16" />
             )}
           </Card>
         </Col>
@@ -764,14 +752,14 @@ const DashboardOverview = () => {
       <style>{`
         .dashboard-hero {
           background: linear-gradient(135deg, rgba(50, 197, 244, 0.92) 0%, rgba(40, 154, 194, 0.86) 50%, rgba(236, 190, 29, 0.78) 100%);
-          box-shadow: 0 20px 56px rgba(40, 70, 106, 0.32);
+          box-shadow: 0 10px 40px rgba(40, 70, 106, 0.25);
           padding: 1.5px;
           border: 1px solid rgba(255, 255, 255, 0.08);
           transition: transform 0.5s ease, box-shadow 0.5s ease;
         }
         .dashboard-hero:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 26px 72px rgba(40, 70, 106, 0.35);
+          transform: translateY(-2px);
+          box-shadow: 0 16px 48px rgba(40, 70, 106, 0.3);
         }
         .dashboard-hero::before {
           content: "";
@@ -785,7 +773,6 @@ const DashboardOverview = () => {
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           opacity: 0;
-          transform: rotate(0deg);
           transition: opacity 0.6s ease;
           pointer-events: none;
         }
@@ -797,9 +784,12 @@ const DashboardOverview = () => {
           font-weight: 600;
           color: #334155;
           border-bottom: 2px solid #e2e8f0;
+          padding: 12px 16px;
+          font-size: 13px;
         }
         .recovery-table .ant-table-tbody > tr > td {
           border-bottom: 1px solid #f1f5f9;
+          padding: 12px 16px;
         }
       `}</style>
     </div>
