@@ -9,52 +9,44 @@ import {
   UserCog,
   TrendingUp,
 } from "lucide-react";
+
 import { CustomerStatsTab } from "../components/customersStatTab";
 import { GeneralStatsTab } from "../components/generalStatTab";
 import { LoanStatsTab } from "../components/loanStatsTab";
 import { StaffStatsTab } from "../components/staffStatTab";
+
 import {
   useGetCustomerStatQuery,
   useGetLoanStatQuery,
   useGetStaffStatQuery,
   useGetGeneralStatQuery,
 } from "../features/statSlice";
+
 import { StatisticItem } from "../types/statistics";
 
 const StatisticsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("general");
+  const [activeTab, setActiveTab] = useState("general");
 
-  // Fetch all statistics
-  const {
-    data: customerData,
-    isLoading: customerLoading,
-    error: customerError,
-  } = useGetCustomerStatQuery({});
+  // Data queries
+  const customer = useGetCustomerStatQuery({});
+  const loan = useGetLoanStatQuery({});
+  const staff = useGetStaffStatQuery({});
+  const general = useGetGeneralStatQuery({});
 
-  const {
-    data: loanData,
-    isLoading: loanLoading,
-    error: loanError,
-  } = useGetLoanStatQuery({});
-
-  const {
-    data: staffData,
-    isLoading: staffLoading,
-    error: staffError,
-  } = useGetStaffStatQuery({});
-
-  const {
-    data: generalData,
-    isLoading: generalLoading,
-    error: generalError,
-  } = useGetGeneralStatQuery({});
-
-  // Check for any errors
-  const hasError = customerError || loanError || staffError || generalError;
   const isLoading =
-    customerLoading || loanLoading || staffLoading || generalLoading;
+    customer.isLoading ||
+    loan.isLoading ||
+    staff.isLoading ||
+    general.isLoading;
 
-  // Tab items configuration
+  const hasError = !!(
+    customer.error ||
+    loan.error ||
+    staff.error ||
+    general.error
+  );
+
+  // Tabs configuration
   const tabItems = [
     {
       key: "general",
@@ -66,8 +58,8 @@ const StatisticsPage: React.FC = () => {
       ),
       children: (
         <GeneralStatsTab
-          data={(generalData as StatisticItem[]) || []}
-          loading={generalLoading}
+          data={(general.data as StatisticItem[]) || []}
+          loading={general.isLoading}
         />
       ),
     },
@@ -81,8 +73,8 @@ const StatisticsPage: React.FC = () => {
       ),
       children: (
         <CustomerStatsTab
-          data={(customerData as StatisticItem[]) || []}
-          loading={customerLoading}
+          data={(customer.data as StatisticItem[]) || []}
+          loading={customer.isLoading}
         />
       ),
     },
@@ -96,8 +88,8 @@ const StatisticsPage: React.FC = () => {
       ),
       children: (
         <LoanStatsTab
-          data={(loanData as StatisticItem[]) || []}
-          loading={loanLoading}
+          data={(loan.data as StatisticItem[]) || []}
+          loading={loan.isLoading}
         />
       ),
     },
@@ -111,8 +103,8 @@ const StatisticsPage: React.FC = () => {
       ),
       children: (
         <StaffStatsTab
-          data={(staffData as StatisticItem[]) || []}
-          loading={staffLoading}
+          data={(staff.data as StatisticItem[]) || []}
+          loading={staff.isLoading}
         />
       ),
     },
@@ -128,20 +120,18 @@ const StatisticsPage: React.FC = () => {
             bodyStyle={{ padding: "24px 32px" }}
           >
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-                    <BarChart3 size={24} />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900">
-                      Statistics & Analytics
-                    </h1>
-                    <p className="text-sm text-slate-600">
-                      Comprehensive insights into platform performance and
-                      trends
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+                  <BarChart3 size={24} />
+                </div>
+
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900">
+                    Statistics & Analytics
+                  </h1>
+                  <p className="text-sm text-slate-600">
+                    Comprehensive insights into platform performance
+                  </p>
                 </div>
               </div>
 
@@ -159,7 +149,7 @@ const StatisticsPage: React.FC = () => {
         {hasError && (
           <Alert
             message="Error Loading Statistics"
-            description="There was an issue loading some statistics. Please try refreshing the page."
+            description="There was an issue loading some statistics. Please try again."
             type="error"
             showIcon
             closable
@@ -177,21 +167,22 @@ const StatisticsPage: React.FC = () => {
             onChange={setActiveTab}
             items={tabItems}
             size="large"
-            className="statistics-tabs"
+            className="statistics-tabs mb-4" // <-- Tailwind margin-bottom
             tabBarStyle={{
               padding: "0 24px",
-              margin: 0,
+              marginBottom: "16px", // <-- margin-bottom applied here too
               borderBottom: "1px solid #e2e8f0",
             }}
             animated={{ inkBar: true, tabPane: false }}
           />
 
           <div className="p-6">
-            {tabItems.find((item) => item.key === activeTab)?.children}
+            {tabItems.find((i) => i.key === activeTab)?.children}
           </div>
         </Card>
       </div>
 
+      {/* Custom Styles */}
       <style>{`
         .statistics-tabs .ant-tabs-tab {
           padding: 16px 8px;
@@ -199,21 +190,21 @@ const StatisticsPage: React.FC = () => {
           color: #64748b;
           transition: all 0.3s ease;
         }
-        
+
         .statistics-tabs .ant-tabs-tab:hover {
           color: #4f46e5;
         }
-        
+
         .statistics-tabs .ant-tabs-tab.ant-tabs-tab-active {
           color: #4f46e5;
         }
-        
+
         .statistics-tabs .ant-tabs-ink-bar {
           background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
           height: 3px;
           border-radius: 3px 3px 0 0;
         }
-        
+
         .statistics-tabs .ant-tabs-nav::before {
           border-bottom: none;
         }
