@@ -244,7 +244,7 @@ export const GeneralStatsTab: React.FC<GeneralStatsTabProps> = ({
             className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-sm"
             bodyStyle={{ padding: 24 }}
           >
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 ">
               Platform Summary
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

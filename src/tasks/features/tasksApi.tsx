@@ -106,7 +106,7 @@ export const tasksApi = apiSlice.injectEndpoints({
 
     getTasksForUser: builder.query<TasksResponse | TaskDto[], string | number>({
       query: (userId) => ({
-        url: `/tasks/staff/${userId}`,
+        url: `/tasks/user/${userId}`,
         method: "GET",
       }),
       providesTags: (_result, _error, userId) => [
@@ -157,7 +157,7 @@ export const tasksApi = apiSlice.injectEndpoints({
       { id: string | number } & Record<string, unknown>
     >({
       query: ({ id, ...taskData }) => ({
-        url: `/tasks/update/${id}`,
+        url: `/tasks/${id}`,
         method: "PUT",
         body: taskData,
       }),
@@ -203,8 +203,8 @@ export const tasksApi = apiSlice.injectEndpoints({
       string | number
     >({
       query: (id) => ({
-        url: `/tasks/delete/${id}`,
-        method: "GET",
+        url: `/tasks/${id}`,
+        method: "DELETE",
       }),
       invalidatesTags: (_result, _error, id) => [
         { type: "Tasks" as const, id },

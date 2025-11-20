@@ -260,7 +260,8 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
           showTotal: (total, range) =>
             `${range[0]}-${range[1]} of ${total} groups`,
         }}
-        scroll={{ x: true }}
+        scroll={{ x: 900 }}
+        size="middle"
         tableLayout="auto"
         className="group-table"
         rowClassName="hover:bg-blue-50 transition-colors"

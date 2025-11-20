@@ -1,5 +1,4 @@
 // pages/Statistics/index.tsx
-
 import React, { useState } from "react";
 import { Tabs, Card, Alert, Spin } from "antd";
 import {
@@ -57,10 +56,12 @@ const StatisticsPage: React.FC = () => {
         </span>
       ),
       children: (
-        <GeneralStatsTab
-          data={(general.data as StatisticItem[]) || []}
-          loading={general.isLoading}
-        />
+        <div className="p-6">
+          <GeneralStatsTab
+            data={(general.data as StatisticItem[]) || []}
+            loading={general.isLoading}
+          />
+        </div>
       ),
     },
     {
@@ -72,10 +73,12 @@ const StatisticsPage: React.FC = () => {
         </span>
       ),
       children: (
-        <CustomerStatsTab
-          data={(customer.data as StatisticItem[]) || []}
-          loading={customer.isLoading}
-        />
+        <div className="p-6">
+          <CustomerStatsTab
+            data={(customer.data as StatisticItem[]) || []}
+            loading={customer.isLoading}
+          />
+        </div>
       ),
     },
     {
@@ -87,10 +90,12 @@ const StatisticsPage: React.FC = () => {
         </span>
       ),
       children: (
-        <LoanStatsTab
-          data={(loan.data as StatisticItem[]) || []}
-          loading={loan.isLoading}
-        />
+        <div className="p-6">
+          <LoanStatsTab
+            data={(loan.data as StatisticItem[]) || []}
+            loading={loan.isLoading}
+          />
+        </div>
       ),
     },
     {
@@ -102,10 +107,12 @@ const StatisticsPage: React.FC = () => {
         </span>
       ),
       children: (
-        <StaffStatsTab
-          data={(staff.data as StatisticItem[]) || []}
-          loading={staff.isLoading}
-        />
+        <div className="p-6">
+          <StaffStatsTab
+            data={(staff.data as StatisticItem[]) || []}
+            loading={staff.isLoading}
+          />
+        </div>
       ),
     },
   ];
@@ -124,7 +131,6 @@ const StatisticsPage: React.FC = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
                   <BarChart3 size={24} />
                 </div>
-
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900">
                     Statistics & Analytics
@@ -157,7 +163,7 @@ const StatisticsPage: React.FC = () => {
           />
         )}
 
-        {/* Main Content */}
+        {/* Tabs */}
         <Card
           className="rounded-xl border border-slate-200 shadow-sm"
           bodyStyle={{ padding: 0 }}
@@ -167,18 +173,14 @@ const StatisticsPage: React.FC = () => {
             onChange={setActiveTab}
             items={tabItems}
             size="large"
-            className="statistics-tabs mb-4" // <-- Tailwind margin-bottom
+            className="statistics-tabs mb-4"
             tabBarStyle={{
               padding: "0 24px",
-              marginBottom: "16px", // <-- margin-bottom applied here too
+              marginBottom: "16px",
               borderBottom: "1px solid #e2e8f0",
             }}
             animated={{ inkBar: true, tabPane: false }}
           />
-
-          <div className="p-6">
-            {tabItems.find((i) => i.key === activeTab)?.children}
-          </div>
         </Card>
       </div>
 

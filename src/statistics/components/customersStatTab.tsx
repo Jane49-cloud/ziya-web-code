@@ -30,13 +30,71 @@ interface CustomerStatsTabProps {
   loading: boolean;
 }
 
-const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316"];
+// Define a consistent color palette for charts and cards
+const GRADIENTS = [
+  "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+  "linear-gradient(135deg, #ec4899 0%, #f97316 100%)",
+  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+];
+
+const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#43e97b"];
 
 export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
   data,
   loading,
 }) => {
   const stats = useMemo(() => normalizeStatData(data), [data]);
+
+  const statCards = useMemo(
+    () => [
+      {
+        stat: stats.new_customers,
+        title: "New Customers",
+        icon: <UserPlus size={20} />,
+        formatter: formatNumber,
+        gradient: GRADIENTS[0],
+      },
+      {
+        stat: stats.active_last_week,
+        title: "Active Last Week",
+        icon: <TrendingUp size={20} />,
+        formatter: formatNumber,
+        gradient: GRADIENTS[1],
+      },
+      {
+        stat: stats.customers_in_groups,
+        title: "In Groups",
+        icon: <UsersRound size={20} />,
+        formatter: formatNumber,
+        gradient: GRADIENTS[2],
+      },
+      {
+        stat: stats.customers_with_loans,
+        title: "With Loans",
+        icon: <DollarSign size={20} />,
+        formatter: formatNumber,
+        gradient: GRADIENTS[3],
+      },
+      {
+        stat: stats.p2p_count_last_week,
+        title: "P2P Transactions (Week)",
+        icon: <ArrowRightLeft size={20} />,
+        formatter: formatNumber,
+        gradient: GRADIENTS[4],
+      },
+      {
+        stat: stats.p2p_value_last_week,
+        title: "P2P Value (Week)",
+        icon: <DollarSign size={20} />,
+        formatter: formatCurrency,
+        gradient: GRADIENTS[5],
+      },
+    ],
+    [stats]
+  );
 
   const distributionData = useMemo(
     () => [
@@ -87,141 +145,62 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
+      {/* Stat Cards */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            stat={stats.new_customers}
-            title="New Customers"
-            formatter={formatNumber}
-            icon={<UserPlus size={20} />}
-            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            stat={stats.active_last_week}
-            title="Active Last Week"
-            formatter={formatNumber}
-            icon={<TrendingUp size={20} />}
-            gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            stat={stats.customers_in_groups}
-            title="In Groups"
-            formatter={formatNumber}
-            icon={<UsersRound size={20} />}
-            gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            stat={stats.customers_with_loans}
-            title="With Loans"
-            formatter={formatNumber}
-            icon={<DollarSign size={20} />}
-            gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-            loading={loading}
-          />
-        </Col>
+        {statCards.slice(0, 4).map((card, i) => (
+          <Col key={i} xs={24} sm={12} lg={6}>
+            <StatCard {...card} loading={loading} />
+          </Col>
+        ))}
       </Row>
 
-      {/* P2P Transactions */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <StatCard
-            stat={stats.p2p_count_last_week}
-            title="P2P Transactions (Week)"
-            formatter={formatNumber}
-            icon={<ArrowRightLeft size={20} />}
-            gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12}>
-          <StatCard
-            stat={stats.p2p_value_last_week}
-            title="P2P Value (Week)"
-            formatter={formatCurrency}
-            icon={<DollarSign size={20} />}
-            gradient="linear-gradient(135deg, #30cfd0 0%, #330867 100%)"
-            loading={loading}
-          />
-        </Col>
+        {statCards.slice(4).map((card, i) => (
+          <Col key={i} xs={24} sm={12}>
+            <StatCard {...card} loading={loading} />
+          </Col>
+        ))}
       </Row>
 
       {/* Charts */}
       <Row gutter={[16, 16]}>
-        {/* Customer Distribution */}
-        <Col xs={24} lg={12}>
-          <Card
-            title="Customer Distribution"
-            className="rounded-xl border border-slate-200 shadow-sm"
-            styles={{ header: { borderBottom: "1px solid #e2e8f0" } }}
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={distributionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {distributionData.map((index: any) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => formatNumber(value)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+        {[
+          { title: "Customer Distribution", data: distributionData },
+          { title: "Loan Status Distribution", data: loanDistributionData },
+        ].map((chart, idx) => (
+          <Col key={idx} xs={24} lg={12}>
+            <Card
+              title={chart.title}
+              className="rounded-xl border border-slate-200 shadow-sm"
+              styles={{ header: { borderBottom: "1px solid #e2e8f0" } }}
+            >
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={chart.data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {chart.data.map((entry, i) => (
+                      <Cell
+                        key={`cell-${i}`}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatNumber(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+        ))}
 
-        {/* Loan Status */}
-        <Col xs={24} lg={12}>
-          <Card
-            title="Loan Status Distribution"
-            className="rounded-xl border border-slate-200 shadow-sm"
-            styles={{ header: { borderBottom: "1px solid #e2e8f0" } }}
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={loanDistributionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {loanDistributionData.map((index: any) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => formatNumber(value)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-
-        {/* Activity Overview */}
+        {/* Activity Chart */}
         <Col xs={24}>
           <Card
             title="Activity Overview"
@@ -234,7 +213,11 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
                 <YAxis stroke="#64748b" fontSize={12} />
                 <Tooltip formatter={(value: number) => formatNumber(value)} />
-                <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                <Bar
+                  dataKey="value"
+                  fill={CHART_COLORS[0]}
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>

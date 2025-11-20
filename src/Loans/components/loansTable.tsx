@@ -36,8 +36,9 @@ const toTitleCase = (value: string) =>
   value
     .split(" ")
     .filter(Boolean)
-    .map((segment) =>
-      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    .map(
+      (segment) =>
+        `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
     )
     .join(" ");
 
@@ -48,8 +49,8 @@ export interface GroupLoan {
   group_id: number;
   group_name: string;
   issued_to: number;
-  customer_firstname: string;
-  customer_lastname: string;
+  recipient_firstname: string;
+  recipient_lastname: string;
   date_issued: string;
   cycle?: number;
 }
@@ -72,8 +73,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
-      const fullName = `${item?.customer_firstname ?? ""} ${
-        item?.customer_lastname ?? ""
+      const fullName = `${item?.recipient_firstname ?? ""} ${
+        item?.recipient_lastname ?? ""
       }`
         .trim()
         .replace(/\s+/g, " ");
@@ -123,8 +124,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     ];
 
     const rows = filteredData.map((item) => {
-      const recipientRaw = `${item?.customer_firstname ?? ""} ${
-        item?.customer_lastname ?? ""
+      const recipientRaw = `${item?.recipient_firstname ?? ""} ${
+        item?.recipient_lastname ?? ""
       }`
         .trim()
         .replace(/\s+/g, " ");
@@ -217,8 +218,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       key: "recipient",
       // width: 150,
       render: (_, record) => {
-        const rawName = `${record?.customer_firstname ?? ""} ${
-          record?.customer_lastname ?? ""
+        const rawName = `${record?.recipient_firstname ?? ""} ${
+          record?.recipient_lastname ?? ""
         }`
           .trim()
           .replace(/\s+/g, " ");
@@ -394,7 +395,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       <Card
         className="shadow-lg"
         title={
-          <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold text-gray-800">
                 Loans Management
@@ -405,13 +406,13 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
               />
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap my-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap my-2 w-full">
               <Search
                 placeholder="Search loans, recipients, groups..."
                 allowClear
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="w-64"
+                className="w-full sm:w-64"
                 prefix={<UserOutlined className="text-gray-400" />}
               />
 
@@ -437,12 +438,12 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         }
         extra={
           showFilters && (
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-gray-50 rounded-lg">
               <Select
                 placeholder="Filter by status"
                 value={statusFilter}
                 onChange={setStatusFilter}
-                className="w-32"
+                className="w-full sm:w-32"
               >
                 <Option value="all">All Status</Option>
                 <Option value="active">Active</Option>
@@ -454,7 +455,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                 placeholder={["Start Date", "End Date"]}
                 value={dateRange}
                 onChange={setDateRange}
-                className="w-64"
+                className="w-full sm:w-64"
               />
 
               <Button
@@ -475,7 +476,6 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
           loading={isLoading}
           rowKey="id"
           size="small"
-          // scroll={{ x: 1200 }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -486,7 +486,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
           className="loan-table"
           rowClassName="hover:bg-blue-50 transition-colors duration-200"
           bordered
-          scroll={{ x: true }}
+          scroll={{ x: 900 }}
         />
       </Card>
     </div>

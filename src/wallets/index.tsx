@@ -57,21 +57,22 @@ const compareGroupNames = (left: string, right: string) => {
 };
 
 const AllGroupWalletsPage = () => {
-  const { data, isLoading, isFetching, refetch } = useGetAllGroupWalletsQuery({});
+  const { data, isLoading, isFetching, refetch } = useGetAllGroupWalletsQuery(
+    {}
+  );
   const [updateWallet] = useUpdateGroupWalletMutation();
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
     pageSize: 10,
   });
-  const [selectedWallet, setSelectedWallet] = useState<GroupWallet | null>(null);
+  const [selectedWallet, setSelectedWallet] = useState<GroupWallet | null>(
+    null
+  );
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   const queryWallets = data?.wallets as GroupWallet[] | undefined;
-  const wallets = useMemo(
-    () => queryWallets ?? [],
-    [queryWallets]
-  );
+  const wallets = useMemo(() => queryWallets ?? [], [queryWallets]);
 
   const filteredWallets = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -245,9 +246,7 @@ const AllGroupWalletsPage = () => {
             <Statistic
               title="Aggregate Balance"
               value={totals.totalBalance}
-              formatter={(value) =>
-                formatCurrency(value as number)
-              }
+              formatter={(value) => formatCurrency(value as number)}
               valueStyle={{ fontSize: 22 }}
             />
           </Card>
@@ -257,9 +256,7 @@ const AllGroupWalletsPage = () => {
             <Statistic
               title="Aggregate Loans Out"
               value={totals.totalLoansValue}
-              formatter={(value) =>
-                formatCurrency(value as number)
-              }
+              formatter={(value) => formatCurrency(value as number)}
               valueStyle={{ fontSize: 22 }}
             />
           </Card>
@@ -288,8 +285,10 @@ const AllGroupWalletsPage = () => {
               onShowSizeChange: (_current, size) =>
                 setPagination({ current: 1, pageSize: size }),
             }}
-            locale={{ emptyText: <Empty description="No matching wallets" /> }}
+            scroll={{ x: 900 }}
+            size="middle"
             bordered
+            locale={{ emptyText: <Empty description="No matching wallets" /> }}
             loading={isFetching}
           />
         )}
@@ -303,7 +302,8 @@ const AllGroupWalletsPage = () => {
             Last refreshed just now — update a wallet to pull latest balances.
           </Text>
           <Text type="secondary" className="text-xs">
-            Network-wide loan count: {totals.totalLoanCount.toLocaleString()} loans
+            Network-wide loan count: {totals.totalLoanCount.toLocaleString()}{" "}
+            loans
           </Text>
         </Space>
       )}

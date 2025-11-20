@@ -127,7 +127,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
     getAllGroupWallets: builder.query({
       query: () => ({
-        url: `/groups/wallet/all`,
+        url: `/group-wallets/all`,
         method: "GET",
       }),
       providesTags: [{ type: "Groups" }],

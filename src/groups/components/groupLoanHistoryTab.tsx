@@ -248,6 +248,8 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           loading={isLoading || isFetching}
           rowKey="id"
           pagination={{ pageSize: 6, showSizeChanger: true }}
+          scroll={{ x: 900 }}
+          size="middle"
         />
       </Space>
 

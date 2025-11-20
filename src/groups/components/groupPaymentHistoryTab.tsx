@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useGetGroupPaymentsQuery } from "../features";
-import { Card, Table, Typography, Space, Button, Statistic, Row, Col } from "antd";
+import {
+  Card,
+  Table,
+  Typography,
+  Space,
+  Button,
+  Statistic,
+  Row,
+  Col,
+} from "antd";
 import { useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
@@ -143,6 +152,8 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
           loading={isLoading || isFetching}
           rowKey="id"
           pagination={{ pageSize: 6, showSizeChanger: true }}
+          scroll={{ x: 900 }}
+          size="middle"
         />
       </Space>
     </Card>

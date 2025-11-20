@@ -37,7 +37,10 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [addMember] = useAddGroupMemberMutation();
 
   const members = useMemo(() => data?.members || [], [data]);
-  const customers = useMemo(() => allCustomersData?.customers || [], [allCustomersData]);
+  const customers = useMemo(
+    () => allCustomersData?.customers || [],
+    [allCustomersData]
+  );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [searchMembers, setSearchMembers] = useState("");
@@ -146,7 +149,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
 
   return (
     <Card className="mt-6" bordered={false} bodyStyle={{ padding: 24 }}>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center mb-4">
         <Title level={4}>Group Members</Title>
 
         <div className="flex gap-2">
@@ -176,6 +179,8 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
           dataSource={filteredMembers}
           rowKey={(record) => record.id}
           pagination={{ pageSize: 10, showSizeChanger: true }}
+          scroll={{ x: 900 }}
+          size="middle"
         />
       )}
 
