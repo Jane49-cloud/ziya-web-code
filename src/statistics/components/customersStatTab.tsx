@@ -185,7 +185,7 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {chart.data.map((entry, i) => (
+                    {chart.data.map((i: any) => (
                       <Cell
                         key={`cell-${i}`}
                         fill={CHART_COLORS[i % CHART_COLORS.length]}
