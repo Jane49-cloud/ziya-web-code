@@ -30,17 +30,17 @@ interface CustomerStatsTabProps {
   loading: boolean;
 }
 
-// Define a consistent color palette for charts and cards
+// Clean, soft gradients
 const GRADIENTS = [
-  "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-  "linear-gradient(135deg, #ec4899 0%, #f97316 100%)",
-  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-  "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+  "linear-gradient(135deg, #8293ee 0%, #b7a6f6 100%)",
+  "linear-gradient(135deg, #f4a9c4 0%, #f7b57e 100%)",
+  "linear-gradient(135deg, #8ad4b8 0%, #b7e3d1 100%)",
+  "linear-gradient(135deg, #b7a6f6 0%, #8293ee 100%)",
+  "linear-gradient(135deg, #f7b57e 0%, #ffe0a3 100%)",
+  "linear-gradient(135deg, #8ad4b8 0%, #6fbfa5 100%)",
 ];
 
-const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#43e97b"];
+const CHART_COLORS = ["#6f7fd6", "#9b91d9", "red", "#d8a878", "#75b3a0"];
 
 export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
   data,
@@ -185,7 +185,7 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {chart.data.map((i: any) => (
+                    {chart.data.map((_, i) => (
                       <Cell
                         key={`cell-${i}`}
                         fill={CHART_COLORS[i % CHART_COLORS.length]}
@@ -200,7 +200,7 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
           </Col>
         ))}
 
-        {/* Activity Chart */}
+        {/* Activity Bar Chart */}
         <Col xs={24}>
           <Card
             title="Activity Overview"
@@ -215,7 +215,7 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
                 <Tooltip formatter={(value: number) => formatNumber(value)} />
                 <Bar
                   dataKey="value"
-                  fill={CHART_COLORS[0]}
+                  fill={CHART_COLORS[1]} // softer bar color
                   radius={[8, 8, 0, 0]}
                 />
               </BarChart>
