@@ -63,8 +63,8 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     if (!needle) return loans;
 
     return loans.filter((loan: any) => {
-      const recipient = `${loan.customer_firstname ?? ""} ${
-        loan.customer_lastname ?? ""
+      const recipient = `${loan.recipient_firstname ?? ""} ${
+        loan.recipient_lastname ?? ""
       }`
         .trim()
         .toLowerCase();
@@ -107,7 +107,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           className="p-0"
           onClick={() => navigate(`/customer/${record.issued_to}`)}
         >
-          {record.customer_firstname} {record.customer_lastname}
+          {record.recipient_firstname} {record.recipient_lastname}
         </Button>
       ),
     },
