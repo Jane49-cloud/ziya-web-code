@@ -1,3 +1,4 @@
+// rolesSlice.ts
 import { apiSlice } from "../../redux/api";
 
 export const rolesApi = apiSlice.injectEndpoints({
@@ -8,6 +9,7 @@ export const rolesApi = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+
     createRole: builder.mutation({
       query: (newRole) => ({
         url: "/roles/definitions/create",
@@ -15,11 +17,26 @@ export const rolesApi = apiSlice.injectEndpoints({
         body: newRole,
       }),
     }),
+
     updateRole: builder.mutation({
-      query: ({ id, ...roleData }) => ({
-        url: `/roles/definitions/update/${id}`,
+      query: ({ roleId, staffId }) => ({
+        url: `/staff/role/${staffId}/role/${roleId}`,
         method: "PUT",
-        body: roleData,
+      }),
+    }),
+
+    assignRole: builder.mutation({
+      query: (body) => ({
+        url: `/staff/role/assign`,
+        method: "POST",
+        body: body,
+      }),
+    }),
+
+    getStaffRole: builder.query({
+      query: (id) => ({
+        url: `/staff/role/${id}`,
+        method: "GET",
       }),
     }),
 
@@ -36,5 +53,7 @@ export const {
   useGetAllRolesQuery,
   useCreateRoleMutation,
   useUpdateRoleMutation,
+  useAssignRoleMutation,
+  useGetStaffRoleQuery,
   useDeleteRoleMutation,
 } = rolesApi;
