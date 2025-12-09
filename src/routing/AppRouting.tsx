@@ -40,6 +40,10 @@ import {
   BlogDetailsPage,
 } from "../blogs/pages";
 import StatisticsPage from "../statistics/pages";
+import { CreateDocumentForm } from "../documents/components/createDocumentForm";
+import { DocumentsList } from "../documents/pages/documentList";
+import { DocumentViewer } from "../documents/pages/documentViewer";
+import { EditDocumentForm } from "../documents/pages/editDocument";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -106,6 +110,11 @@ const AppRouting = (): ReactElement => {
           <Route path="/create-group" element={<CreateGroupPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-user" element={<AddUser />} />
+
+          <Route path="/documents" element={<DocumentsList />} />
+          <Route path="/documents/create" element={<CreateDocumentForm />} />
+          <Route path="/documents/:id" element={<DocumentViewer />} />
+          <Route path="/documents/edit/:id" element={<EditDocumentForm />} />
 
           <Route path="/blogs" element={<BlogsModuleLayout />}>
             <Route index element={<BlogsListPage />} />
