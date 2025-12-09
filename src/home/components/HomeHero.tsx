@@ -116,12 +116,12 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
 
               <div className="flex flex-col gap-3">
                 <Link
-                  to="/create-group"
+                  to="/documents"
                   className="group/btn relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f2a4a] to-[#1b3e6f] px-6 py-3.5 text-sm font-bold text-white shadow-[0_20px_45px_rgba(12,40,72,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(12,40,72,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f2a4a]"
                 >
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
                   <PlusCircle className="h-5 w-5" />
-                  <span>Create Group</span>
+                  <span>Open document</span>
                 </Link>
 
                 <Link
