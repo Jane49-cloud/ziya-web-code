@@ -21,6 +21,7 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { Document } from "../types/document";
 
 import DOMPurify from "dompurify";
 import {
@@ -40,6 +41,7 @@ export const DocumentsList: React.FC = () => {
   const [deleteDocument, { isLoading: deleting }] = useDeleteDocumentMutation();
 
   const documents = useMemo(() => data?.documents || [], [data]);
+  console.log("Documents:", documents);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc: any) => {
@@ -93,7 +95,7 @@ export const DocumentsList: React.FC = () => {
           <div>
             <div className="font-semibold text-gray-900">{text}</div>
             <div className="text-xs text-gray-500 mt-1">
-              {new Date(record.date_created).toLocaleDateString()}
+              {new Date(record?.date_created).toLocaleDateString()}
             </div>
           </div>
         </div>
@@ -139,19 +141,19 @@ export const DocumentsList: React.FC = () => {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            onClick={() => navigate(`/documents/${record.id}`)}
+            onClick={() => navigate(`/documents/${record.ID}`)}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
           />
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => navigate(`/documents/edit/${record.id}`)}
+            onClick={() => navigate(`/documents/edit/${record.ID}`)}
             className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
           />
           <Popconfirm
             title="Delete Document"
             description="Are you sure you want to delete this document?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.ID)}
             okText="Delete"
             cancelText="Cancel"
             okButtonProps={{ danger: true, loading: deleting }}

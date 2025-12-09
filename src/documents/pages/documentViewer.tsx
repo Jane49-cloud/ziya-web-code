@@ -115,7 +115,7 @@ export const DocumentViewer: React.FC = () => {
             <div className="flex gap-2 print:hidden">
               <Button
                 icon={<EditOutlined />}
-                onClick={() => navigate(`/documents/edit/${document.id}`)}
+                onClick={() => navigate(`/documents/edit/${document.ID}`)}
                 className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
               >
                 Edit

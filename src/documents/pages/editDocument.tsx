@@ -76,7 +76,8 @@ export const EditDocumentForm: React.FC = () => {
         access_level: values.access_level,
       };
 
-      await updateDocument({ id: Number(id), updateData: payload }).unwrap();
+      await updateDocument(payload).unwrap();
+
       message.success("Document updated successfully!");
       navigate(`/documents/${id}`);
     } catch (error: any) {

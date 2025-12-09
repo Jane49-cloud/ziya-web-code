@@ -12,6 +12,7 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useCreateDocumentMutation } from "../features/docSlice";
 import { EditorToolbar } from "./editorToolbar";
+import { getUser } from "../../utils";
 
 const { Option } = Select;
 
@@ -19,6 +20,9 @@ export const CreateDocumentForm: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [createDocument, { isLoading }] = useCreateDocumentMutation();
+
+  const user = getUser(); // FIX: must call the function
+  const authorId = Number(user?.id); // ensure number
 
   const editor = useEditor({
     extensions: [
@@ -50,7 +54,7 @@ export const CreateDocumentForm: React.FC = () => {
 
     try {
       const payload = {
-        author_id: values.author_id,
+        author_id: authorId, // FIXED: directly from logged-in user
         title: values.title,
         content: content,
         access_level: values.access_level,
@@ -96,16 +100,12 @@ export const CreateDocumentForm: React.FC = () => {
             <Form.Item
               label="Access Level"
               name="access_level"
+              initialValue="staff"
               rules={[
                 { required: true, message: "Please select access level" },
               ]}
-              initialValue="staff"
             >
-              <Select
-                size="large"
-                placeholder="Select access level"
-                className="rounded-lg"
-              >
+              <Select size="large" className="rounded-lg">
                 <Option value="public">Public</Option>
                 <Option value="staff">Staff</Option>
                 <Option value="management">Management</Option>
@@ -114,18 +114,7 @@ export const CreateDocumentForm: React.FC = () => {
             </Form.Item>
           </div>
 
-          <Form.Item
-            label="Author ID"
-            name="author_id"
-            rules={[{ required: true, message: "Please enter author ID" }]}
-          >
-            <Input
-              type="number"
-              placeholder="Enter your staff ID"
-              size="large"
-              className="rounded-lg"
-            />
-          </Form.Item>
+          {/* AUTHOR ID REMOVED */}
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">

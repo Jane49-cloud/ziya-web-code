@@ -25,8 +25,8 @@ export const docApi = apiSlice.injectEndpoints({
     }),
 
     updateDocument: builder.mutation({
-      query: ({ id, updateData }) => ({
-        url: `/documents/${id}`,
+      query: (updateData) => ({
+        url: `/documents/update`, // ✔ FIXED — NO extra "}"
         method: "PUT",
         body: updateData,
       }),
