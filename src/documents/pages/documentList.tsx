@@ -218,39 +218,11 @@ export const DocumentsList: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {documents.length}
+        <div className="mb-6">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+            <div className="text-xs text-gray-500 mt-2">
+              Showing {filteredDocuments.length} of {documents.length} documents
             </div>
-            <div className="text-sm text-blue-700">Total Documents</div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {
-                documents.filter((d: Document) => d.access_level === "public")
-                  .length
-              }
-            </div>
-            <div className="text-sm text-green-700">Public</div>
-          </div>
-          <div className="bg-amber-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-amber-600">
-              {
-                documents.filter((d: Document) => d.access_level === "staff")
-                  .length
-              }
-            </div>
-            <div className="text-sm text-amber-700">Staff Only</div>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-red-600">
-              {
-                documents.filter((d: Document) => d.access_level === "admin")
-                  .length
-              }
-            </div>
-            <div className="text-sm text-red-700">Admin Only</div>
           </div>
         </div>
 
