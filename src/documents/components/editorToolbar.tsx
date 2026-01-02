@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Divider, Tooltip } from "antd";
 import {
   BoldOutlined,
@@ -22,6 +23,12 @@ interface EditorToolbarProps {
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   if (!editor) return null;
 
+  // Helper so clicking toolbar buttons doesn't steal focus
+  const run = (command: () => void) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    command();
+  };
+
   const addLink = () => {
     const url = window.prompt("Enter URL");
     if (url) {
@@ -30,14 +37,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   };
 
   return (
-    <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1">
+    <div className="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex flex-wrap gap-1">
       {/* Text Formatting */}
       <Tooltip title="Bold">
         <Button
           size="small"
           type={editor.isActive("bold") ? "primary" : "default"}
           icon={<BoldOutlined />}
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onMouseDown={run(() => editor.chain().focus().toggleBold().run())}
         />
       </Tooltip>
 
@@ -46,7 +53,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("italic") ? "primary" : "default"}
           icon={<ItalicOutlined />}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onMouseDown={run(() => editor.chain().focus().toggleItalic().run())}
         />
       </Tooltip>
 
@@ -55,7 +62,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("underline") ? "primary" : "default"}
           icon={<UnderlineOutlined />}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().toggleUnderline().run()
+          )}
         />
       </Tooltip>
 
@@ -64,11 +73,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("strike") ? "primary" : "default"}
           icon={<StrikethroughOutlined />}
-          onClick={() => editor.chain().focus().toggleStrike().run()}
+          onMouseDown={run(() => editor.chain().focus().toggleStrike().run())}
         />
       </Tooltip>
 
-      <Divider type="vertical" className="h-8" />
+      <Divider type="vertical" className="h-7 mx-1" />
 
       {/* Headings */}
       <Tooltip title="Heading 1">
@@ -77,9 +86,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           type={
             editor.isActive("heading", { level: 1 }) ? "primary" : "default"
           }
-          onClick={() =>
+          onMouseDown={run(() =>
             editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
+          )}
         >
           H1
         </Button>
@@ -91,9 +100,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           type={
             editor.isActive("heading", { level: 2 }) ? "primary" : "default"
           }
-          onClick={() =>
+          onMouseDown={run(() =>
             editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
+          )}
         >
           H2
         </Button>
@@ -105,15 +114,15 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           type={
             editor.isActive("heading", { level: 3 }) ? "primary" : "default"
           }
-          onClick={() =>
+          onMouseDown={run(() =>
             editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
+          )}
         >
           H3
         </Button>
       </Tooltip>
 
-      <Divider type="vertical" className="h-8" />
+      <Divider type="vertical" className="h-7 mx-1" />
 
       {/* Lists */}
       <Tooltip title="Bullet List">
@@ -121,7 +130,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("bulletList") ? "primary" : "default"}
           icon={<UnorderedListOutlined />}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().toggleBulletList().run()
+          )}
         />
       </Tooltip>
 
@@ -130,11 +141,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("orderedList") ? "primary" : "default"}
           icon={<OrderedListOutlined />}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().toggleOrderedList().run()
+          )}
         />
       </Tooltip>
 
-      <Divider type="vertical" className="h-8" />
+      <Divider type="vertical" className="h-7 mx-1" />
 
       {/* Alignment */}
       <Tooltip title="Align Left">
@@ -142,7 +155,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive({ textAlign: "left" }) ? "primary" : "default"}
           icon={<AlignLeftOutlined />}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().setTextAlign("left").run()
+          )}
         />
       </Tooltip>
 
@@ -153,7 +168,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
             editor.isActive({ textAlign: "center" }) ? "primary" : "default"
           }
           icon={<AlignCenterOutlined />}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().setTextAlign("center").run()
+          )}
         />
       </Tooltip>
 
@@ -162,11 +179,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive({ textAlign: "right" }) ? "primary" : "default"}
           icon={<AlignRightOutlined />}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          onMouseDown={run(() =>
+            editor.chain().focus().setTextAlign("right").run()
+          )}
         />
       </Tooltip>
 
-      <Divider type="vertical" className="h-8" />
+      <Divider type="vertical" className="h-7 mx-1" />
 
       {/* Link */}
       <Tooltip title="Add Link">
@@ -174,18 +193,18 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="small"
           type={editor.isActive("link") ? "primary" : "default"}
           icon={<LinkOutlined />}
-          onClick={addLink}
+          onMouseDown={run(addLink)}
         />
       </Tooltip>
 
-      <Divider type="vertical" className="h-8" />
+      <Divider type="vertical" className="h-7 mx-1" />
 
       {/* Undo/Redo */}
       <Tooltip title="Undo">
         <Button
           size="small"
           icon={<UndoOutlined />}
-          onClick={() => editor.chain().focus().undo().run()}
+          onMouseDown={run(() => editor.chain().focus().undo().run())}
           disabled={!editor.can().undo()}
         />
       </Tooltip>
@@ -194,7 +213,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         <Button
           size="small"
           icon={<RedoOutlined />}
-          onClick={() => editor.chain().focus().redo().run()}
+          onMouseDown={run(() => editor.chain().focus().redo().run())}
           disabled={!editor.can().redo()}
         />
       </Tooltip>
