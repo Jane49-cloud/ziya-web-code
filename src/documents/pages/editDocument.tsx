@@ -31,9 +31,7 @@ export const EditDocumentForm: React.FC = () => {
   const lastUpdated = document?.updated_at ?? document?.date_created ?? null;
 
   const editor = useEditor({
-    extensions: buildDocumentEditorExtensions(
-      "Start editing your document...",
-    ),
+    extensions: buildDocumentEditorExtensions("Start editing your document..."),
     content: "",
     editorProps: {
       attributes: {
@@ -130,7 +128,10 @@ export const EditDocumentForm: React.FC = () => {
                     name="title"
                     className="mb-0"
                     rules={[
-                      { required: true, message: "Please enter document title" },
+                      {
+                        required: true,
+                        message: "Please enter document title",
+                      },
                     ]}
                   >
                     <Input
@@ -194,7 +195,7 @@ export const EditDocumentForm: React.FC = () => {
               </div>
 
               <div className="py-8 flex justify-center">
-                <div className="doc-page w-full max-w-[850px] rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
+                <div className="doc-page w-full rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
                   <div className="px-12 py-12">
                     <EditorContent editor={editor} />
                   </div>
@@ -208,10 +209,16 @@ export const EditDocumentForm: React.FC = () => {
           <div className="max-w-5xl mx-auto flex flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
               <span>
-                <span className="font-semibold text-slate-900">{stats.words}</span> words
+                <span className="font-semibold text-slate-900">
+                  {stats.words}
+                </span>{" "}
+                words
               </span>
               <span>
-                <span className="font-semibold text-slate-900">{stats.characters}</span> characters
+                <span className="font-semibold text-slate-900">
+                  {stats.characters}
+                </span>{" "}
+                characters
               </span>
               <span>≈ {stats.readingTime || 0} min read</span>
             </div>
