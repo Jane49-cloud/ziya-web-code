@@ -210,36 +210,44 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   };
 
   const handleTableAction = (action: TableAction) => {
+    const runTableCommand = (command: string, ...args: unknown[]) => {
+      const chain = editor.chain().focus() as unknown as Record<
+        string,
+        (...params: unknown[]) => { run?: () => void }
+      >;
+      chain[command]?.(...args)?.run?.();
+    };
+
     switch (action) {
       case "insert": {
         const rows = promptForNumber("Rows", 3);
         const cols = promptForNumber("Columns", 3);
-        editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+        runTableCommand("insertTable", { rows, cols, withHeaderRow: true });
         return;
       }
       case "add-row-above":
-        editor.chain().focus().addRowBefore().run();
+        runTableCommand("addRowBefore");
         return;
       case "add-row-below":
-        editor.chain().focus().addRowAfter().run();
+        runTableCommand("addRowAfter");
         return;
       case "add-col-left":
-        editor.chain().focus().addColumnBefore().run();
+        runTableCommand("addColumnBefore");
         return;
       case "add-col-right":
-        editor.chain().focus().addColumnAfter().run();
+        runTableCommand("addColumnAfter");
         return;
       case "delete-row":
-        editor.chain().focus().deleteRow().run();
+        runTableCommand("deleteRow");
         return;
       case "delete-col":
-        editor.chain().focus().deleteColumn().run();
+        runTableCommand("deleteColumn");
         return;
       case "delete-table":
-        editor.chain().focus().deleteTable().run();
+        runTableCommand("deleteTable");
         return;
       case "toggle-header":
-        editor.chain().focus().toggleHeaderRow().run();
+        runTableCommand("toggleHeaderRow");
         return;
     }
   };

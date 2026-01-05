@@ -22,7 +22,10 @@
     "baseUrl": ".",
     "paths": {
       "@tiptap/core": ["./src/types/tiptap-core"],
-      "@tiptap/react": ["./src/types/tiptap-react"]
+      "@tiptap/react": ["./src/types/tiptap-react"],
+      "@tiptap/extension-table": [
+        "./node_modules/@tiptap/extension-table/dist/index.d.ts"
+      ]
     }
   },
   "include": ["vite.config.ts"]
