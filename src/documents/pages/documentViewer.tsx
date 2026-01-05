@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Button, Tag, Spin, Empty, Space } from "antd";
+import { Button, Tag, Spin, Empty, message } from "antd";
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -9,7 +10,7 @@ import {
   UserOutlined,
   LockOutlined,
 } from "@ant-design/icons";
-
+import { FileText, Share2 } from "lucide-react";
 import DOMPurify from "dompurify";
 import { useGetSingleDocumentQuery } from "../features/docSlice";
 
@@ -19,6 +20,10 @@ export const DocumentViewer: React.FC = () => {
 
   const { data, isLoading, error } = useGetSingleDocumentQuery(id!);
   const doc = data?.document; // renamed from "document" to avoid confusion
+  const sanitizedContent = useMemo(
+    () => (doc?.content ? DOMPurify.sanitize(doc.content) : ""),
+    [doc?.content]
+  );
 
   const handlePrint = () => {
     window.print();
@@ -63,134 +68,115 @@ export const DocumentViewer: React.FC = () => {
     );
   }
 
-  const sanitizedContent = DOMPurify.sanitize(doc.content);
+  const createdAt = doc ? new Date(doc.date_created) : null;
 
   return (
-    <div className=" min-h-screen ">
-      <div className="">
-        {/* Header */}
-        <div className="mb-4 print:hidden flex items-center justify-between">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/documents")}
-          >
-            Back to Documents
-          </Button>
-        </div>
+    <div className="min-h-screen bg-slate-50 print:bg-white">
+      <div className="relative min-h-screen">
+        <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top,_rgba(50,197,244,0.08),_transparent_60%)] lg:block" />
+        <div className="relative z-10 flex min-h-screen flex-col">
+          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
+            <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3 px-4 py-3">
+              <Button
+                icon={<ArrowLeftOutlined />}
+                className="rounded-full"
+                onClick={() => navigate("/documents")}
+              >
+                Documents
+              </Button>
 
-        <Card className="shadow-sm border-none">
-          {/* Document Header */}
-          <div className="mb-6 pb-5 border-b border-slate-100 print:border-b-2">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-3">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                  {doc.title}
-                </h1>
-
-                <Space size="middle" wrap>
-                  <Tag
-                    color={getAccessLevelColor(doc.access_level)}
-                    icon={<LockOutlined />}
-                    className="capitalize px-3 py-1"
-                  >
-                    {doc.access_level}
-                  </Tag>
-
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <UserOutlined />
-                    Author ID: {doc.author_id}
-                  </span>
-
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <CalendarOutlined />
-                    {new Date(doc.date_created).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </Space>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <FileText size={22} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="truncate text-lg font-semibold text-slate-900">
+                    {doc.title}
+                  </h1>
+                  <div className="mt-1 flex flex-wrap gap-4 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <UserOutlined /> Author #{doc.author_id}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <CalendarOutlined />
+                      {createdAt?.toLocaleDateString() || "--"}
+                    </span>
+                    <Tag
+                      color={getAccessLevelColor(doc.access_level)}
+                      icon={<LockOutlined />}
+                      className="capitalize"
+                    >
+                      {doc.access_level}
+                    </Tag>
+                  </div>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 print:hidden">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  icon={<Share2 size={16} />}
+                  className="rounded-full"
+                  onClick={() => message.info("Sharing controls coming soon")}
+                >
+                  Share
+                </Button>
                 <Button
                   icon={<EditOutlined />}
                   onClick={() => navigate(`/documents/edit/${doc.ID}`)}
-                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
                 >
                   Edit
                 </Button>
-                <Button
-                  icon={<PrinterOutlined />}
-                  onClick={handlePrint}
-                  className="hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
-                >
+                <Button icon={<PrinterOutlined />} onClick={handlePrint}>
                   Print
                 </Button>
-                <Button
-                  icon={<DownloadOutlined />}
-                  onClick={handleDownload}
-                  className="hover:bg-green-50 hover:text-green-600 hover:border-green-300"
-                >
+                <Button icon={<DownloadOutlined />} onClick={handleDownload}>
                   Download
                 </Button>
               </div>
             </div>
+          </header>
 
-            {doc.date_updated && (
-              <div className="text-xs text-gray-500">
-                Last updated: {new Date(doc.date_updated).toLocaleString()}
+          <main className="flex-1">
+            <div className=" mx-auto w-full px-4 pb-16 pt-6 lg:pt-10">
+              <div className="flex justify-center">
+                <article className="doc-printable doc-page w-full  rounded-[36px] border border-white/70 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+                  <div className="doc-render px-12 py-14 text-base leading-relaxed text-slate-700">
+                    <div
+                      className="prose prose-slate max-w-none"
+                      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                    />
+                  </div>
+                </article>
               </div>
-            )}
-          </div>
-
-          {/* Document Content */}
-          <div
-            className="
-              prose prose-slate max-w-none
-              prose-headings:text-gray-900
-              prose-p:text-gray-700 prose-p:leading-relaxed
-              prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-gray-900 prose-strong:font-semibold
-              prose-ul:list-disc prose-ol:list-decimal
-              prose-li:text-gray-700
-              prose-blockquote:border-l-4 prose-blockquote:border-gray-300 
-              prose-blockquote:pl-4 prose-blockquote:italic
-              prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 
-              prose-code:rounded prose-code:text-sm
-              print:prose-sm
-            "
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          />
-        </Card>
-
-        {/* Print Styles */}
-        <style>{`
-          @media print {
-            body {
-              background: #ffffff !important;
-            }
-            body * {
-              visibility: hidden;
-            }
-            .ant-card, .ant-card * {
-              visibility: visible;
-            }
-            .ant-card {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              box-shadow: none !important;
-              border: none !important;
-            }
-            .print\\:hidden {
-              display: none !important;
-            }
-          }
-        `}</style>
+            </div>
+          </main>
+        </div>
       </div>
+
+      <style>{`
+        @media print {
+          body {
+            background: #ffffff !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          .doc-printable, .doc-printable * {
+            visibility: visible;
+          }
+          .doc-printable {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+    `}</style>
     </div>
   );
 };

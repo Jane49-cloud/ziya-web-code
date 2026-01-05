@@ -20,7 +20,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tiptap/core": ["./src/types/tiptap-core"],
+      "@tiptap/react": ["./src/types/tiptap-react"]
+    }
   },
   "include": ["src"]
 }

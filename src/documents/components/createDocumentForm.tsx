@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Card, Button, Input, Select, Form, message } from "antd";
-import { SaveOutlined } from "@ant-design/icons";
+import { Button, Input, Select, Form, message } from "antd";
+import { SaveOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
 import { useCreateDocumentMutation } from "../features/docSlice";
 import { EditorToolbar } from "./editorToolbar";
 import { getUser } from "../../utils";
+import { buildDocumentEditorExtensions } from "./editorExtensions";
+import { useEditorStats } from "../hooks/useEditorStats";
+import { FileText, Share2 } from "lucide-react";
 
 const { Option } = Select;
 
@@ -25,22 +22,16 @@ export const CreateDocumentForm: React.FC = () => {
   const authorId = Number(user?.id); // ensure number
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Image,
-      Link.configure({ openOnClick: false }),
-      Placeholder.configure({ placeholder: "Start writing your document..." }),
-    ],
+    extensions: buildDocumentEditorExtensions("Start writing your document..."),
     content: "",
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[400px] p-6",
+          "doc-editor prose prose-slate max-w-none focus:outline-none min-h-[900px]",
       },
     },
   });
+  const stats = useEditorStats(editor);
 
   const handleSubmit = async (values: any) => {
     if (!editor) return;
@@ -70,85 +61,153 @@ export const CreateDocumentForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-6 px-4">
-      <Card className="shadow-sm border-slate-200">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Create New Document
-          </h1>
-          <p className="text-sm text-gray-600">
-            Fill in the details to create a new document
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-100">
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="min-h-screen flex flex-col"
+      >
+        <div className="flex-1 flex flex-col">
+          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div className="max-w-5xl mx-auto flex items-center gap-4 px-4 py-3">
+              <Button
+                icon={<ArrowLeftOutlined />}
+                className="rounded-full"
+                onClick={() => navigate("/documents")}
+              >
+                Documents
+              </Button>
+              <div className="flex items-center gap-3 flex-1">
+                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/15 text-primary">
+                  <FileText size={22} />
+                </div>
+                <div className="flex-1">
+                  <Form.Item
+                    name="title"
+                    className="mb-0"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter document title",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Untitled document"
+                      variant="borderless"
+                      size="large"
+                      className="text-lg font-semibold text-slate-900"
+                    />
+                  </Form.Item>
+                  <p className="text-xs text-slate-500">
+                    Draft · Changes save when you submit
+                  </p>
+                </div>
+              </div>
 
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Form.Item
-              label="Title"
-              name="title"
-              rules={[
-                { required: true, message: "Please enter document title" },
-              ]}
-            >
-              <Input
-                placeholder="Enter document title"
-                size="large"
-                className="rounded-lg"
-              />
-            </Form.Item>
+              <div className="flex items-center gap-3">
+                <Form.Item
+                  name="access_level"
+                  className="mb-0 w-40"
+                  initialValue="staff"
+                  rules={[
+                    { required: true, message: "Please select access level" },
+                  ]}
+                >
+                  <Select
+                    size="large"
+                    popupClassName="rounded-lg"
+                    className="rounded-full"
+                  >
+                    <Option value="public">Public</Option>
+                    <Option value="staff">Staff</Option>
+                    <Option value="management">Management</Option>
+                    <Option value="admin">Admin</Option>
+                  </Select>
+                </Form.Item>
 
-            <Form.Item
-              label="Access Level"
-              name="access_level"
-              initialValue="staff"
-              rules={[
-                { required: true, message: "Please select access level" },
-              ]}
-            >
-              <Select size="large" className="rounded-lg">
-                <Option value="public">Public</Option>
-                <Option value="staff">Staff</Option>
-                <Option value="management">Management</Option>
-                <Option value="admin">Admin</Option>
-              </Select>
-            </Form.Item>
-          </div>
+                <Button
+                  icon={<Share2 size={16} />}
+                  type="default"
+                  className="rounded-full"
+                  onClick={() => message.info("Sharing controls coming soon")}
+                >
+                  Share
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  icon={<SaveOutlined />}
+                  loading={isLoading}
+                  className="rounded-full bg-primary hover:bg-hover"
+                >
+                  Submit
+                </Button>
+              </div>
+            </div>
+          </header>
 
-          {/* AUTHOR ID REMOVED */}
+          <div className="flex-1">
+            <div className="max-w-5xl mx-auto px-4">
+              <div className="sticky top-[84px] z-20">
+                <div className="rounded-full border border-slate-200 bg-whites px-3 py-2 shadow-sm mt-2">
+                  <EditorToolbar editor={editor} />
+                </div>
+              </div>
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Content <span className="text-red-500">*</span>
-            </label>
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <EditorToolbar editor={editor} />
-              <div className="bg-white">
-                <EditorContent editor={editor} />
+              <div className="py-8 flex justify-center">
+                <div className="doc-page w-full rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
+                  <div className="px-12 py-12">
+                    <EditorContent editor={editor} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex gap-3 justify-end pt-4 border-t">
-            <Button
-              size="large"
-              onClick={() => navigate("/documents")}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              icon={<SaveOutlined />}
-              loading={isLoading}
-              className="bg-primary hover:bg-hover"
-            >
-              Create Document
-            </Button>
+        <footer className="border-t border-slate-200 bg-white/95">
+          <div className="max-w-5xl mx-auto flex flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+              <span>
+                <span className="font-semibold text-slate-900">
+                  {stats.words}
+                </span>{" "}
+                words
+              </span>
+              <span>
+                <span className="font-semibold text-slate-900">
+                  {stats.characters}
+                </span>{" "}
+                characters
+              </span>
+              <span>≈ {stats.readingTime || 0} min read</span>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                size="large"
+                onClick={() => navigate("/documents")}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                htmlType="submit"
+                icon={<SaveOutlined />}
+                loading={isLoading}
+                className="bg-primary hover:bg-hover"
+              >
+                Create Document
+              </Button>
+            </div>
           </div>
-        </Form>
-      </Card>
+        </footer>
+      </Form>
     </div>
   );
 };
