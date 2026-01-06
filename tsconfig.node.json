@@ -23,9 +23,7 @@
     "paths": {
       "@tiptap/core": ["./src/types/tiptap-core"],
       "@tiptap/react": ["./src/types/tiptap-react"],
-      "@tiptap/extension-table": [
-        "./node_modules/@tiptap/extension-table/dist/index.d.ts"
-      ]
+      "@tiptap/extension-table": ["./src/types/tiptap-extension-table"]
     }
   },
   "include": ["vite.config.ts"]
