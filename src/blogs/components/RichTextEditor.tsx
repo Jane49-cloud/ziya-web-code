@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
+import type { Editor as TiptapEditor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
@@ -73,7 +74,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           "min-h-[320px] focus:outline-none text-slate-800 leading-relaxed",
       },
     },
-    onUpdate({ editor: instance }) {
+    onUpdate({ editor: instance }: { editor: TiptapEditor }) {
       const html = instance.getHTML();
       handleChange(html);
     },

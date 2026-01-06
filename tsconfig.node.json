@@ -18,7 +18,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tiptap/core": ["./src/types/tiptap-core"],
+      "@tiptap/react": ["./src/types/tiptap-react"],
+      "@tiptap/extension-table": ["./src/types/tiptap-extension-table"]
+    }
   },
   "include": ["vite.config.ts"]
 }

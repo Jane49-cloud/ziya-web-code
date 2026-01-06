@@ -5,3 +5,5 @@ export interface IKeenIconsProps {
   style?: TKeenIconsStyle;
   className?: string;
 }
+
+declare module "@tiptap/extension-table";

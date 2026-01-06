@@ -1,6 +1,5 @@
 import { ReactElement, useState, useEffect } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router";
-import { Spin } from "antd";
 import { AuthPage } from "../auth/pages/AuthPage";
 import Layout from "../layouts/global";
 import { UserProfilePage } from "../profile/pages";
@@ -40,12 +39,18 @@ import {
   BlogDetailsPage,
 } from "../blogs/pages";
 import StatisticsPage from "../statistics/pages";
+import { CreateDocumentForm } from "../documents/components/createDocumentForm";
+import { DocumentsList } from "../documents/pages/documentList";
+import { DocumentViewer } from "../documents/pages/documentViewer";
+import { EditDocumentForm } from "../documents/pages/editDocument";
+import HomeLoading from "../components/common/homeLoading";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const user = localStorage.getItem("ziya-profile");
+
   const token = localStorage.getItem("ziya-access");
+  const user = localStorage.getItem("ziya-profile");
 
   useEffect(() => {
     if (!token) {
@@ -53,32 +58,22 @@ const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
       return;
     }
 
-    const fetchRole = () => {
-      const role = getRole();
-      if (role) {
-        setUserRole(role);
-        console.log("User role fetched:", role);
-      } else {
-        setUserRole(role);
-      }
-      setIsLoading(false);
-    };
-
-    setTimeout(fetchRole, 500);
+    const role = getRole();
+    setUserRole(role);
+    setIsLoading(false);
   }, [token]);
 
-  if (!user || !token) {
+  // block rendering while loading first
+  if (isLoading) {
+    return <HomeLoading />;
+  }
+
+  //  Only redirect AFTER loading completes
+  if (!token || !user) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
+  //and finally, Role check
   if (userRole && !allowedRoles.includes(userRole)) {
     return <Unauthorized />;
   }
@@ -106,6 +101,11 @@ const AppRouting = (): ReactElement => {
           <Route path="/create-group" element={<CreateGroupPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-user" element={<AddUser />} />
+
+          <Route path="/documents" element={<DocumentsList />} />
+          <Route path="/documents/create" element={<CreateDocumentForm />} />
+          <Route path="/documents/:id" element={<DocumentViewer />} />
+          <Route path="/documents/edit/:id" element={<EditDocumentForm />} />
 
           <Route path="/blogs" element={<BlogsModuleLayout />}>
             <Route index element={<BlogsListPage />} />

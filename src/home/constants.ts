@@ -64,6 +64,7 @@ export const homeCards: HomeCardConfig[] = [
     description:
       "Stay synced with rolling announcements, policy refreshers, and upcoming milestones.",
     icon: Megaphone,
+    to: "/documents",
     accent: "neutral",
     badge: "Communications",
   },
