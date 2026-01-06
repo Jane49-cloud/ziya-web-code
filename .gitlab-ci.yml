@@ -11,7 +11,7 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # 1) Log in to the GitLab Container Registry on the CI runner
+  # 1) Log in to the GitLab Container Registry on the CI runner f
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 # 🧱 BUILD STAGE
