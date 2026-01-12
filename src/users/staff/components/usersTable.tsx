@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Table, Avatar, Space, Button, Card, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { customAvatar } from "../../../utils";
+import { customAvatar, formatName } from "../../../utils";
 import { useNavigate } from "react-router-dom";
 
 interface UserData {
@@ -26,18 +26,19 @@ export function UsersTable({ users }: UsersTableProps) {
   const [searchText, setSearchText] = useState("");
 
   // Filter users based on search text (searching in name, email, and phone)
+  const needle = searchText.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
-    const fullName = `${user.firstname} ${user.middlename || ""} ${
+    const rawName = `${user.firstname} ${user.middlename || ""} ${
       user.lastname || ""
-    }`
-      .trim()
-      .toLowerCase();
+    }`.trim();
+    const fullName = formatName(rawName).toLowerCase();
     const email = user.email.toLowerCase();
     const phone = `${user.country_code} ${user.phone_number}`.toLowerCase();
+    if (!needle) return true;
     return (
-      fullName.includes(searchText.toLowerCase()) ||
-      email.includes(searchText.toLowerCase()) ||
-      phone.includes(searchText.toLowerCase())
+      fullName.includes(needle) ||
+      email.includes(needle) ||
+      phone.includes(needle)
     );
   });
 
@@ -53,9 +54,10 @@ export function UsersTable({ users }: UsersTableProps) {
       dataIndex: "name",
       key: "name",
       render: (_: any, record: UserData) => {
-        const fullName = `${record.firstname} ${
+        const fullNameRaw = `${record.firstname} ${
           record.middlename || ""
         }`.trim();
+        const fullName = formatName(fullNameRaw);
         return (
           <Space>
             <Avatar src={customAvatar(fullName)}>{fullName[0]}</Avatar>

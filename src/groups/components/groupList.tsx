@@ -21,6 +21,7 @@ import {
 } from "react-icons/fi";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { useNavigate } from "react-router-dom";
+import { formatName, getInitials } from "../../utils";
 
 const { Text, Title } = Typography;
 
@@ -48,15 +49,6 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const toTitleCase = (value: string) =>
-    value?.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
-
-  const getInitials = (firstname?: string, lastname?: string) => {
-    const first = firstname?.charAt(0) || "";
-    const last = lastname?.charAt(0) || "";
-    return (first + last).toUpperCase() || "?";
-  };
-
   const filteredData = useMemo(() => {
     const searchText = search.trim().toLowerCase();
     if (!searchText) return data;
@@ -65,11 +57,10 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       const manager = staffList.find(
         (staff) => staff.id === group.relationship_manager
       );
-      const managerName = manager
-        ? `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
-            .trim()
-            .toLowerCase()
-        : "unassigned";
+    const managerName = manager
+      ? formatName(`${manager.firstname ?? ""} ${manager.lastname ?? ""}`)
+          .toLowerCase()
+      : "unassigned";
 
       return (
         (group.name ?? "").toString().toLowerCase().includes(searchText) ||
@@ -95,9 +86,9 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       );
     }
 
-    const fullName = `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
-      .trim()
-      .replace(/\s+/g, " ");
+    const fullName = formatName(
+      `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
+    );
 
     return (
       <Space size="small">
@@ -105,7 +96,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
           size="small"
           style={{ backgroundColor: "#1890ff", fontSize: "12px" }}
         >
-          {getInitials(manager.firstname, manager.lastname)}
+          {getInitials(fullName)}
         </Avatar>
         <Text className="capitalize">{fullName || "Unassigned"}</Text>
       </Space>
@@ -137,7 +128,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         <Space size="small">
           <FiUsers className="text-blue-500" size={16} />
           <Text strong className="text-base">
-            {toTitleCase(value?.trim() ?? "")}
+            {formatName(value) || "Unnamed Group"}
           </Text>
         </Space>
       ),
@@ -159,7 +150,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
             className="px-3 py-1 text-sm font-medium"
             style={{ borderRadius: "6px" }}
           >
-            {toTitleCase(value)}
+            {formatName(value)}
           </Tag>
         ) : (
           <Tag

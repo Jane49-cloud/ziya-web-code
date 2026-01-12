@@ -1,5 +1,6 @@
 import { apiSlice } from "../redux/api";
 import { store } from "../redux/store";
+import { formatName } from ".";
 
 export const initializeUser = async () => {
   try {
@@ -19,9 +20,14 @@ export const initializeUser = async () => {
     // Guard for browser-only
     if (typeof window !== "undefined") {
       localStorage.setItem("ziya-profile", JSON.stringify(data.staff));
-      // localStorage.setItem("ziya-role", data.staff.username);
-      // sanity check
-      // console.log("stored", localStorage.getItem("ziya-profile"));
+      const detectedRole =
+        data.staff?.userRole?.name ??
+        data.staff?.role ??
+        data.staff?.staffData?.role ??
+        "";
+      if (detectedRole) {
+        localStorage.setItem("ziya-role", formatName(detectedRole));
+      }
     }
 
     return data;

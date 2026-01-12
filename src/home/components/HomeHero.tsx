@@ -6,10 +6,16 @@ import {
   Sparkles,
   Clock,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getInitials } from "../../utils";
-import { weeklyUpdate } from "../constants";
+import dayjs from "dayjs";
+import { Button, Form, Input, Modal, DatePicker } from "antd";
+import { formatName, getInitials, getRole } from "../../utils";
+import {
+  WEEKLY_UPDATE_STORAGE_KEY,
+  weeklyUpdate as defaultWeeklyUpdate,
+  WeeklyUpdateConfig,
+} from "../constants";
 
 interface HomeHeroProps {
   firstName: string;
@@ -25,7 +31,109 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
     }).format(new Date());
   }, []);
 
-  const hostInitials = useMemo(() => getInitials(weeklyUpdate.host.name), []);
+  const [weeklyDetails, setWeeklyDetails] = useState<WeeklyUpdateConfig>(() => {
+    if (typeof window === "undefined") return defaultWeeklyUpdate;
+    try {
+      const stored = localStorage.getItem(WEEKLY_UPDATE_STORAGE_KEY);
+      if (!stored) return defaultWeeklyUpdate;
+      const parsed = JSON.parse(stored) as WeeklyUpdateConfig;
+      return {
+        host: {
+          name: formatName(parsed.host?.name) || defaultWeeklyUpdate.host.name,
+          role: parsed.host?.role || defaultWeeklyUpdate.host.role,
+          squad: parsed.host?.squad || defaultWeeklyUpdate.host.squad,
+        },
+        session: {
+          topic: parsed.session?.topic || defaultWeeklyUpdate.session.topic,
+          dateISO:
+            parsed.session?.dateISO || defaultWeeklyUpdate.session.dateISO,
+          timeLabel:
+            parsed.session?.timeLabel || defaultWeeklyUpdate.session.timeLabel,
+        },
+      };
+    } catch (err) {
+      console.warn("Failed to parse weekly update", err);
+      return defaultWeeklyUpdate;
+    }
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem(WEEKLY_UPDATE_STORAGE_KEY);
+    if (!stored) {
+      localStorage.setItem(
+        WEEKLY_UPDATE_STORAGE_KEY,
+        JSON.stringify(defaultWeeklyUpdate)
+      );
+    }
+  }, []);
+
+  const sessionDateLabel = useMemo(() => {
+    try {
+      if (!weeklyDetails.session.dateISO) {
+        return new Intl.DateTimeFormat("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        }).format(new Date());
+      }
+      const dateValue = new Date(weeklyDetails.session.dateISO);
+      if (Number.isNaN(dateValue.getTime())) {
+        return weeklyDetails.session.dateISO;
+      }
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }).format(dateValue);
+    } catch (error) {
+      return weeklyDetails.session.dateISO;
+    }
+  }, [weeklyDetails.session.dateISO]);
+
+  const hostInitials = useMemo(
+    () => getInitials(weeklyDetails.host.name),
+    [weeklyDetails.host.name]
+  );
+
+  const role = getRole();
+  const canEditWeekly = role === "admin" || role === "dev";
+  const [isWeeklyEditorOpen, setWeeklyEditorOpen] = useState(false);
+  const [weeklyForm] = Form.useForm();
+
+  const openWeeklyEditor = () => {
+    weeklyForm.setFieldsValue({
+      hostName: weeklyDetails.host.name,
+      hostRole: weeklyDetails.host.role,
+      hostSquad: weeklyDetails.host.squad,
+      topic: weeklyDetails.session.topic,
+      date: weeklyDetails.session.dateISO
+        ? dayjs(weeklyDetails.session.dateISO)
+        : null,
+      timeLabel: weeklyDetails.session.timeLabel,
+    });
+    setWeeklyEditorOpen(true);
+  };
+
+  const handleWeeklySave = async () => {
+    const values = await weeklyForm.validateFields();
+    const next: WeeklyUpdateConfig = {
+      host: {
+        name: formatName(values.hostName),
+        role: values.hostRole,
+        squad: values.hostSquad,
+      },
+      session: {
+        topic: values.topic,
+        dateISO: values.date
+          ? values.date.toDate().toISOString()
+          : weeklyDetails.session.dateISO,
+        timeLabel: values.timeLabel,
+      },
+    };
+    setWeeklyDetails(next);
+    localStorage.setItem(WEEKLY_UPDATE_STORAGE_KEY, JSON.stringify(next));
+    setWeeklyEditorOpen(false);
+  };
 
   return (
     <section
@@ -146,57 +254,119 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
           </div>
 
           {/* Weekly Update Card */}
-          <div className="group relative overflow-hidden rounded-3xl border border-[#f0dba3] bg-gradient-to-br from-[#fff9ec] via-[#fff4da] to-[#fffbf0] p-7 shadow-xl shadow-amber-500/15 ring-1 ring-[#ecbe1d]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/25">
-            {/* Enhanced Background Effects */}
+          <div className="group relative overflow-hidden rounded-3xl border border-[#f0dba3] bg-gradient-to-br from-[#fff9ec] via-[#fff4da] to-[#fffbf0] px-6 py-5 shadow-xl shadow-amber-500/15 ring-1 ring-[#ecbe1d]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/25">
             <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-[#ffe8a8]/80 to-[#ffd700]/60 blur-[90px] transition-transform duration-500 group-hover:scale-125" />
             <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-gradient-to-br from-[#fff1c8]/70 to-[#ffe48c]/50 blur-[85px]" />
 
-            <div className="relative space-y-5">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#ecbe1d] to-[#d4a817]">
-                  <Clock className="h-3.5 w-3.5 text-white" />
+            <div className="relative flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#ecbe1d] to-[#d4a817]">
+                    <Clock className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#7a5300]/75">
+                      Weekly series
+                    </p>
+                    <p className="text-sm font-semibold text-[#0f2a4a]">
+                      A Monday vignette from the team
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#7a5300]/75">
-                  Upcoming weekly update
-                </p>
+                {canEditWeekly && (
+                  <Button size="small" onClick={openWeeklyEditor}>
+                    Update
+                  </Button>
+                )}
               </div>
 
-              <div className="flex items-start gap-5">
+              <div className="flex flex-wrap items-center gap-5">
                 <div className="relative flex-shrink-0">
-                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#ecbe1d]/40 to-[#d4a817]/40 blur-lg" />
+                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#ecbe1d]/40 to-[#d4a817]/40 blur-md" />
                   <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f2a4a] to-[#1b3e6f] text-lg font-bold text-white shadow-lg">
                     {hostInitials}
                   </span>
                 </div>
-
-                <div className="flex-1 space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#7a5300]/75">
-                      {weeklyUpdate.session.dateLabel}
-                    </p>
-                    <h3 className="text-xl font-bold text-[#0f2a4a]">
-                      {weeklyUpdate.session.topic}
-                    </h3>
-                  </div>
-
-                  <p className="text-sm leading-relaxed text-[#1f3047]/70">
-                    Hosted by{" "}
-                    <span className="font-semibold text-[#0f2a4a]">
-                      {weeklyUpdate.host.name}
-                    </span>{" "}
-                    · {weeklyUpdate.host.role}, {weeklyUpdate.host.squad}
+                <div>
+                  <p className="text-sm text-[#7a5300]/80">{sessionDateLabel}</p>
+                  <p className="text-sm font-semibold text-[#0f2a4a]">
+                    {weeklyDetails.host.name}
                   </p>
+                  <p className="text-xs text-[#1f3047]/70">
+                    {weeklyDetails.host.role} · {weeklyDetails.host.squad}
+                  </p>
+                </div>
+                <div className="flex-1 text-sm text-[#1f3047]/80">
+                  {weeklyDetails.session.topic}
+                </div>
+              </div>
 
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-[#f0dba3]/80 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-[#7a5300] shadow-sm backdrop-blur-sm">
-                    <Clock className="h-3.5 w-3.5" />
-                    {weeklyUpdate.session.timeLabel}
-                  </div>
+              <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7a5300]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#ecbe1d]/60 bg-[#fff7e5] px-3 py-1.5 shadow-sm">
+                  <Clock className="h-3 w-3" />
+                  {weeklyDetails.session.timeLabel}
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#0f2a4a]/10 bg-white/80 px-3 py-1.5 shadow-sm text-[#0f2a4a]">
+                  Rotates weekly
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <Modal
+        title="Update Weekly Story"
+        open={isWeeklyEditorOpen}
+        onCancel={() => setWeeklyEditorOpen(false)}
+        onOk={handleWeeklySave}
+        okText="Save"
+      >
+        <Form layout="vertical" form={weeklyForm}>
+          <Form.Item
+            label="Host Name"
+            name="hostName"
+            rules={[{ required: true, message: "Enter host name" }]}
+          >
+            <Input placeholder="Fatma Hassan" />
+          </Form.Item>
+          <Form.Item
+            label="Role"
+            name="hostRole"
+            rules={[{ required: true, message: "Enter host role" }]}
+          >
+            <Input placeholder="Culture & Community Lead" />
+          </Form.Item>
+          <Form.Item
+            label="Squad"
+            name="hostSquad"
+            rules={[{ required: true, message: "Enter squad" }]}
+          >
+            <Input placeholder="People Lab" />
+          </Form.Item>
+          <Form.Item
+            label="Update Theme"
+            name="topic"
+            rules={[{ required: true, message: "Enter topic" }]}
+          >
+            <Input placeholder="Stories that shape our lending rituals" />
+          </Form.Item>
+          <Form.Item
+            label="Date"
+            name="date"
+            rules={[{ required: true, message: "Pick a date" }]}
+          >
+            <DatePicker className="w-full" format="dddd, MMMM D" />
+          </Form.Item>
+          <Form.Item
+            label="Time"
+            name="timeLabel"
+            rules={[{ required: true, message: "Provide time" }]}
+          >
+            <Input placeholder="11:00 AM EAT" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </section>
   );
 };

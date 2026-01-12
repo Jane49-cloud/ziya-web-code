@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Card, Table, Typography } from "antd";
 import moment from "moment";
 import { useGetGroupActivitiesByUserQuery } from "../features";
+import { formatName } from "../../utils";
 
 const { Title } = Typography;
 
@@ -20,6 +21,7 @@ const UserGroupActivities: React.FC = () => {
     {
       title: "Group",
       dataIndex: "group_name",
+      render: (value: string) => formatName(value) || "Unnamed Group",
     },
     {
       title: "Type",

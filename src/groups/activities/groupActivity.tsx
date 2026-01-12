@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, Table, Typography, Button, Space } from "antd";
 import moment from "moment";
 import { useGetGroupActivitiesByGroupQuery } from "../features";
+import { formatName } from "../../utils";
 
 const { Title } = Typography;
 
@@ -13,7 +14,9 @@ const GroupActivitiesByGroup: React.FC = () => {
   const groupId = parseInt(id || "0");
   const { data, isLoading } = useGetGroupActivitiesByGroupQuery(groupId);
 
-  const groupName = data?.data?.[0]?.group_name || "Group Activity";
+  const groupName =
+    formatName(data?.data?.[0]?.group_name || "Group Activity") ||
+    "Group Activity";
 
   const columns = [
     {
@@ -23,7 +26,8 @@ const GroupActivitiesByGroup: React.FC = () => {
     },
     {
       title: "Customer",
-      render: (_: any, record: any) => `${record.firstname} ${record.lastname}`,
+      render: (_: any, record: any) =>
+        formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`),
     },
     {
       title: "Type",

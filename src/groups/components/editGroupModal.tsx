@@ -3,6 +3,7 @@ import React from "react";
 import { Modal, Form, Input, InputNumber, Select, Spin } from "antd";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
+import { formatName } from "../../utils";
 
 const { Option } = Select;
 
@@ -51,7 +52,9 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({
             <Select placeholder="Select staff">
               {staffList.map((staff: any) => (
                 <Option key={staff.id} value={staff.id}>
-                  {staff.firstname} {staff.lastname}
+                  {formatName(
+                    `${staff.firstname ?? ""} ${staff.lastname ?? ""}`
+                  )}
                 </Option>
               ))}
             </Select>
@@ -74,7 +77,9 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({
             >
               {customers.map((customer: any) => (
                 <Option key={customer.id} value={customer.id}>
-                  {customer.firstname} {customer.lastname}
+                  {formatName(
+                    `${customer.firstname ?? ""} ${customer.lastname ?? ""}`
+                  )}
                 </Option>
               ))}
             </Select>

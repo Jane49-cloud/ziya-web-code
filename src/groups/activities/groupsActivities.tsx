@@ -5,6 +5,7 @@ import { Button, Card, Table, Typography } from "antd";
 import moment from "moment";
 import { useGetAllGroupActivitiesQuery } from "../features";
 import { useNavigate } from "react-router-dom";
+import { formatName } from "../../utils";
 
 const { Title } = Typography;
 
@@ -22,10 +23,12 @@ const AllGroupActivities: React.FC = () => {
     {
       title: "Group",
       dataIndex: "group_name",
+      render: (value: string) => formatName(value) || "Unnamed Group",
     },
     {
       title: "Customer",
-      render: (_: any, record: any) => `${record.firstname} ${record.lastname}`,
+      render: (_: any, record: any) =>
+        formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`),
     },
     {
       title: "Type",

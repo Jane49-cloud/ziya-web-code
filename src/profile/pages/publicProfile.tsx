@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { customAvatar } from "../../utils";
+import { customAvatar, formatName } from "../../utils";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import {
   Tabs,
@@ -63,6 +63,10 @@ const PublicProfile: React.FC = () => {
     // city,
   } = user;
 
+  const fullName = formatName(
+    `${firstname ?? ""} ${middlename ?? ""} ${lastname ?? ""}`.trim()
+  );
+
   const handleRoleUpdateSuccess = () => {
     refetchRole();
     refetch();
@@ -72,7 +76,7 @@ const PublicProfile: React.FC = () => {
     {
       key: "1",
       label: "Full Name",
-      value: `${firstname} ${middlename || ""} ${lastname}`.trim(),
+      value: fullName,
     },
     { key: "2", label: "Email", value: email },
     {
@@ -129,11 +133,11 @@ const PublicProfile: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex items-center space-x-6">
             <div className="w-24 h-24 flex justify-center items-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100">
-              {customAvatar(`${firstname} ${lastname}`)}
+              {customAvatar(fullName)}
             </div>
             <div>
               <h2 className="text-3xl font-semibold text-gray-900">
-                {`${firstname} ${middlename || ""} ${lastname}`.trim()}
+                {fullName}
               </h2>
               <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <p className="text-gray-500">{email}</p>
@@ -281,7 +285,7 @@ const PublicProfile: React.FC = () => {
         visible={showAssignRoleModal}
         onClose={() => setShowAssignRoleModal(false)}
         staffId={Number(id)}
-        staffName={`${firstname} ${lastname}`}
+        staffName={fullName}
         onSuccess={handleRoleUpdateSuccess}
       />
     </div>

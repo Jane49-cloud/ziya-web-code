@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { UserProfile } from "../profile/pages";
+
 export const getUser = (): UserProfile | null => {
   const user = localStorage.getItem("ziya-profile");
 
@@ -26,11 +27,23 @@ export const getRole = (): string | null => {
   return role.trim();
 };
 
+export const formatName = (value?: string | null): string => {
+  if (!value) return "";
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((segment) =>
+      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    )
+    .join(" ");
+};
+
 export const getInitials = (name: string) => {
-  if (!name) {
+  const normalized = formatName(name);
+  if (!normalized) {
     return "N/A";
   }
-  return name
+  return normalized
     .split(" ")
     .map((word) => word[0])
     .join("")
@@ -42,6 +55,32 @@ export const customAvatar = (name: string) => (
     {getInitials(name)}
   </div>
 );
+
+export const clearZiyaSession = () => {
+  if (typeof window === "undefined") return;
+  const keys = ["ziya-access", "ziya-profile", "ziya-role"];
+  keys.forEach((key) => localStorage.removeItem(key));
+  localStorage.clear();
+};
+
+const LOGOUT_NOTICE_KEY = "ziya-logout-message";
+
+export const triggerLogoutNotice = (
+  message = "You have been logged out"
+) => {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(LOGOUT_NOTICE_KEY, message);
+};
+
+export const consumeLogoutNotice = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const message = sessionStorage.getItem(LOGOUT_NOTICE_KEY);
+  if (message) {
+    sessionStorage.removeItem(LOGOUT_NOTICE_KEY);
+    return message;
+  }
+  return null;
+};
 
 export const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
