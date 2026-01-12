@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { customAvatar } from "../../utils";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import {
@@ -18,10 +18,12 @@ import { useGetUserByIdQuery } from "../../users/features/userSlice";
 import ResetPasswordForm from "../../users/staff/components/resetPassword";
 import { useGetStaffRoleQuery } from "../../roles/features/rolesSlice";
 import { AssignRoleModal } from "../components/assignRoleModel";
+import AccountTab from "./account";
 
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
+  const navigate = useNavigate();
 
   const { data, isLoading, refetch } = useGetUserByIdQuery(id);
   const {
@@ -116,7 +118,15 @@ const PublicProfile: React.FC = () => {
     <div className="py-6">
       {/* Profile Header */}
       <Card bordered={false} className="shadow-sm mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <Button type="link" onClick={() => navigate("/staff")}
+              className="px-0 text-[#1677ff]"
+            >
+              ← Back to Staff
+            </Button>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex items-center space-x-6">
             <div className="w-24 h-24 flex justify-center items-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100">
               {customAvatar(`${firstname} ${lastname}`)}
@@ -167,6 +177,7 @@ const PublicProfile: React.FC = () => {
           >
             {userRole ? "Update Role" : "Assign Role"}
           </Button>
+        </div>
         </div>
       </Card>
 
@@ -255,6 +266,12 @@ const PublicProfile: React.FC = () => {
         <Tabs.TabPane tab="Reset Password" key="3">
           <Card bordered={false} className="shadow-sm">
             <ResetPasswordForm id={user.id} />
+          </Card>
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="Update Details" key="4">
+          <Card bordered={false} className="shadow-sm">
+            <AccountTab user={user} onUpdateSuccess={refetch} />
           </Card>
         </Tabs.TabPane>
       </Tabs>

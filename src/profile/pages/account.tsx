@@ -7,10 +7,11 @@ import { Alert } from "../../components/Alert";
 
 interface AccountTabProps {
   user: any;
-  setUser: React.Dispatch<React.SetStateAction<any>>;
+  setUser?: React.Dispatch<React.SetStateAction<any>>;
+  onUpdateSuccess?: () => void;
 }
 
-const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
+const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [form] = Form.useForm();
 
@@ -39,6 +40,7 @@ const AccountTab: React.FC<AccountTabProps> = ({ user }) => {
       // Show success alert message
       setColor("success");
       setServerStatus("User updated successfully!");
+      onUpdateSuccess?.();
     } catch (err: any) {
       // Show actual error message returned from the API
       if (err?.data?.error) {

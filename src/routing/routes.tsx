@@ -122,6 +122,12 @@ export const sidebarItems: SidebarItem[] = [
     allowedRoles: ALL_ROLES,
   },
   {
+    title: "Documents",
+    icon: "file",
+    path: "/documents",
+    allowedRoles: ALL_ROLES,
+  },
+  {
     title: "Analysis",
     icon: "chart-simple-2",
     path: "/analysis",

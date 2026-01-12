@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 interface HomeTopNavProps {
   anchors: { id: string; label: string }[];
 }
 
 const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
+  const navigate = useNavigate();
   const todayLabel = useMemo(() => {
     return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
@@ -20,6 +21,14 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("ziya-access");
+    localStorage.removeItem("ziya-profile");
+    localStorage.removeItem("ziya-role");
+    localStorage.clear();
+    navigate("/auth/login");
   };
 
   return (
@@ -41,18 +50,27 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
         </p>
       </div>
 
-      <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
-        {anchors.map((anchor) => (
-          <button
-            key={anchor.id}
-            onClick={() => handleAnchorClick(anchor.id)}
-            className="inline-flex items-center rounded-full border border-[#e3ebf6] bg-[#f8fbff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#1f3047]/70 transition-colors duration-200 hover:border-[#32c5f4] hover:text-[#0f2a4a]"
-            type="button"
-          >
-            {anchor.label}
-          </button>
-        ))}
-      </nav>
+      <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+        <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
+          {anchors.map((anchor) => (
+            <button
+              key={anchor.id}
+              onClick={() => handleAnchorClick(anchor.id)}
+              className="inline-flex items-center rounded-full border border-[#e3ebf6] bg-[#f8fbff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#1f3047]/70 transition-colors duration-200 hover:border-[#32c5f4] hover:text-[#0f2a4a]"
+              type="button"
+            >
+              {anchor.label}
+            </button>
+          ))}
+        </nav>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex items-center rounded-full bg-[#ecbe1d] px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#0f2a4a] shadow-sm transition hover:bg-[#d7a70f]"
+        >
+          Logout
+        </button>
+      </div>
     </header>
   );
 };
