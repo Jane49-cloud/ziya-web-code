@@ -26,6 +26,7 @@ export function UsersTable({ users }: UsersTableProps) {
   const [searchText, setSearchText] = useState("");
 
   // Filter users based on search text (searching in name, email, and phone)
+  const needle = searchText.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
     const rawName = `${user.firstname} ${user.middlename || ""} ${
       user.lastname || ""
@@ -33,10 +34,11 @@ export function UsersTable({ users }: UsersTableProps) {
     const fullName = formatName(rawName).toLowerCase();
     const email = user.email.toLowerCase();
     const phone = `${user.country_code} ${user.phone_number}`.toLowerCase();
+    if (!needle) return true;
     return (
-      fullName.includes(searchText.toLowerCase()) ||
-      email.includes(searchText.toLowerCase()) ||
-      phone.includes(searchText.toLowerCase())
+      fullName.includes(needle) ||
+      email.includes(needle) ||
+      phone.includes(needle)
     );
   });
 

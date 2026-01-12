@@ -21,6 +21,7 @@ import {
 } from "../features";
 import { UserAddOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
+import { formatName, getInitials } from "../../utils";
 
 const { Title } = Typography;
 
@@ -79,14 +80,14 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   };
 
   const filteredMembers = useMemo(() => {
+    const needle = searchMembers.trim().toLowerCase();
     return members.filter((m: any) => {
-      const fullName = `${m.firstname} ${m.lastname}`.toLowerCase();
-      return (
-        fullName.includes(searchMembers.toLowerCase()) ||
-        (m.phone_number || "")
-          .toLowerCase()
-          .includes(searchMembers.toLowerCase())
+      const normalizedName = formatName(
+        `${m.firstname ?? ""} ${m.lastname ?? ""}`
       );
+      const fullName = normalizedName.toLowerCase();
+      const phone = (m.phone_number || "").toLowerCase();
+      return fullName.includes(needle) || phone.includes(needle);
     });
   }, [members, searchMembers]);
 
@@ -96,9 +97,9 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
     const searchText = searchCustomers.trim().toLowerCase();
     return customers.filter((cust: any) => {
-      const fullName = `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
-        .trim()
-        .toLowerCase();
+      const fullName = formatName(
+        `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+      ).toLowerCase();
       return fullName.includes(searchText);
     });
   }, [customers, modalOpen, searchCustomers]);
@@ -116,7 +117,8 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         `${a.firstname} ${a.lastname}`.localeCompare(
           `${b.firstname} ${b.lastname}`
         ),
-      render: (_: any, record: any) => `${record.firstname} ${record.lastname}`,
+      render: (_: any, record: any) =>
+        formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`),
     },
     {
       title: "Phone Number",
@@ -234,8 +236,18 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar>{cust.firstname[0]}</Avatar>}
-                    title={`${cust.firstname} ${cust.lastname}`}
+                    avatar={
+                      <Avatar>
+                        {getInitials(
+                          formatName(
+                            `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+                          ) || "?"
+                        )}
+                      </Avatar>
+                    }
+                    title={formatName(
+                      `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+                    )}
                     description={cust.email}
                   />
                 </List.Item>

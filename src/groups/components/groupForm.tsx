@@ -5,6 +5,7 @@ import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
+import { formatName } from "../../utils";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -116,9 +117,13 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
                 <Option
                   key={customer.id}
                   value={customer.id}
-                  label={`${customer.firstname} ${customer.lastname}`}
+                  label={formatName(
+                    `${customer.firstname ?? ""} ${customer.lastname ?? ""}`
+                  )}
                 >
-                  {customer.firstname} {customer.lastname}
+                  {formatName(
+                    `${customer.firstname ?? ""} ${customer.lastname ?? ""}`
+                  )}
                 </Option>
               ))}
             </Select>

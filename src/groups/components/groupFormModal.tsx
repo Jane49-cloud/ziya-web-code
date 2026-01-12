@@ -22,6 +22,7 @@ import {
 } from "../features";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
 import dayjs from "dayjs";
+import { formatName } from "../../utils";
 
 const { Text } = Typography;
 
@@ -221,7 +222,7 @@ const GroupLoanFormModal = ({
             >
               {members.map((m: any) => (
                 <Select.Option key={m.id} value={m.id}>
-                  {m.firstname} {m.lastname}
+                  {formatName(`${m.firstname ?? ""} ${m.lastname ?? ""}`)}
                 </Select.Option>
               ))}
             </Select>

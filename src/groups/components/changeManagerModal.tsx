@@ -2,6 +2,7 @@
 import React from "react";
 import { Modal, Form, Select, Spin } from "antd";
 import { useGetAllUsersQuery } from "../../users/features/userSlice";
+import { formatName } from "../../utils";
 
 const { Option } = Select;
 
@@ -52,9 +53,13 @@ const ChangeManagerModal: React.FC<ChangeManagerModalProps> = ({
                 <Option
                   key={staff.id}
                   value={staff.id}
-                  label={`${staff.firstname} ${staff.lastname}`}
+                  label={formatName(
+                    `${staff.firstname ?? ""} ${staff.lastname ?? ""}`
+                  )}
                 >
-                  {staff.firstname} {staff.lastname}
+                  {formatName(
+                    `${staff.firstname ?? ""} ${staff.lastname ?? ""}`
+                  )}
                 </Option>
               ))}
             </Select>

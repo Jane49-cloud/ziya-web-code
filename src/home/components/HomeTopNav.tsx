@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { clearZiyaSession } from "../../utils";
+import { clearZiyaSession, triggerLogoutNotice } from "../../utils";
 
 interface HomeTopNavProps {
   anchors: { id: string; label: string }[];
@@ -26,6 +26,7 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
 
   const handleLogout = () => {
     clearZiyaSession();
+    triggerLogoutNotice();
     navigate("/auth/login");
   };
 

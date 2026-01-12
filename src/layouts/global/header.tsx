@@ -4,7 +4,12 @@ import { FiMenu, FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { IconContext } from "react-icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
-import { clearZiyaSession, customAvatar, getUser } from "../../utils";
+import {
+  clearZiyaSession,
+  customAvatar,
+  getUser,
+  triggerLogoutNotice,
+} from "../../utils";
 import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
@@ -57,6 +62,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const handleLogout = () => {
     clearZiyaSession();
     refetchUserDetails();
+    triggerLogoutNotice();
     navigate("/auth/login");
   };
 

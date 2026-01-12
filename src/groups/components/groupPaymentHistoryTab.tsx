@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
+import { formatName } from "../../utils";
 
 const { Title, Text } = Typography;
 
@@ -49,7 +50,11 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
       title: "Customer",
       key: "customer",
       render: (_: any, record: any) =>
-        `${record.customer_firstname} ${record.customer_lastname}`,
+        formatName(
+          `${record.customer_firstname ?? ""} ${
+            record.customer_lastname ?? ""
+          }`.trim()
+        ) || "Unnamed Customer",
     },
     {
       title: "Loan Amount",

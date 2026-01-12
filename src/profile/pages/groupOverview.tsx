@@ -16,6 +16,7 @@ import {
   extractManagedCustomers,
   ManagedCustomer,
 } from "./managedPortfolioUtils";
+import { formatName } from "../../utils";
 
 interface GroupOverviewProps {
   managesGroups: boolean;
@@ -25,16 +26,11 @@ interface GroupOverviewProps {
   displayName?: string;
 }
 
-const toTitleCase = (value: string): string =>
-  value
-    ?.toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase()) ?? "";
-
 const resolveGroupMembers = (group: any): ManagedCustomer[] => {
   const customers = extractManagedCustomers([group]);
   return customers.map((customer) => ({
     ...customer,
-    groupName: toTitleCase(group?.name ?? ""),
+    groupName: formatName(group?.name ?? ""),
   }));
 };
 
@@ -54,7 +50,7 @@ const computeGroupRow = (group: any) => {
 
   return {
     key: group?.id ?? group?.group_id ?? group?.uuid ?? group?.name,
-    name: toTitleCase(group?.name ?? "Unnamed Group"),
+    name: formatName(group?.name ?? "Unnamed Group"),
     portfolio: group?.portfolio || group?.category || group?.segment || "—",
     totalMembers,
     activeMembers,
@@ -94,7 +90,9 @@ const GroupOverview: React.FC<GroupOverviewProps> = ({
         dataIndex: "name",
         key: "name",
         render: (value: string) => (
-          <Typography.Text strong>{toTitleCase(value)}</Typography.Text>
+          <Typography.Text strong>
+            {formatName(value) || "Unnamed Group"}
+          </Typography.Text>
         ),
       },
       {

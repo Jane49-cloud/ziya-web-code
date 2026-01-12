@@ -25,22 +25,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
 import type { ColumnsType } from "antd/es/table";
-import { formatDate, customAvatar } from "../../utils";
+import { formatDate, customAvatar, formatName } from "../../utils";
 import dayjs from "dayjs";
 
 const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-
-const toTitleCase = (value: string) =>
-  value
-    .split(" ")
-    .filter(Boolean)
-    .map(
-      (segment) =>
-        `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
-    )
-    .join(" ");
 
 export interface GroupLoan {
   id: number;
@@ -73,11 +63,12 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
-      const fullName = `${item?.recipient_firstname ?? ""} ${
+      const rawName = `${item?.recipient_firstname ?? ""} ${
         item?.recipient_lastname ?? ""
       }`
         .trim()
         .replace(/\s+/g, " ");
+      const fullName = formatName(rawName);
       const isPaid = Number(item.balance) === 0;
 
       // Text search
@@ -129,7 +120,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       }`
         .trim()
         .replace(/\s+/g, " ");
-      const recipient = toTitleCase(recipientRaw);
+      const recipient = formatName(recipientRaw);
       const isPaid = Number(item.balance) === 0;
       const repaid = Number(item.amount) - Number(item.balance);
       const repaymentRate =
@@ -141,7 +132,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         `#${item.id.toString().padStart(4, "0")}`,
         formatDate(item.date_issued),
         recipient,
-        toTitleCase(item.group_name ?? ""),
+        formatName(item.group_name) || "",
         Number(item.amount).toLocaleString(),
         repaid.toLocaleString(),
         Number(item.balance).toLocaleString(),
@@ -223,7 +214,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         }`
           .trim()
           .replace(/\s+/g, " ");
-        const fullName = rawName ? toTitleCase(rawName) : "Unnamed Customer";
+        const fullName = rawName ? formatName(rawName) : "Unnamed Customer";
         return (
           <div
             className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors"
@@ -249,7 +240,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       render: (_, record) => {
         const groupNameRaw = record.group_name?.trim() ?? "";
         const groupName = groupNameRaw
-          ? toTitleCase(groupNameRaw.replace(/\s+/g, " "))
+          ? formatName(groupNameRaw.replace(/\s+/g, " "))
           : "Unnamed Group";
 
         return (

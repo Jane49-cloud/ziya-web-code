@@ -13,6 +13,7 @@ import { styles } from "../../styles";
 // import { store } from "../../redux/store";
 // import { apiSlice } from "../../redux/api";
 import { initializeUser } from "../../utils/initializeUser";
+import { consumeLogoutNotice } from "../../utils";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -33,6 +34,7 @@ export function Login() {
   >("danger");
 
   const navigate = useNavigate();
+  const [logoutNotice] = useState(() => consumeLogoutNotice());
 
   const formik = useFormik({
     initialValues: {
@@ -145,6 +147,13 @@ export function Login() {
               <span className="bg-white px-2 text-gray-500">OR</span>
             </div>
           </div>
+
+          {/* Logout notice */}
+          {logoutNotice && (
+            <Alert variant="info" className="mb-4">
+              {logoutNotice}
+            </Alert>
+          )}
 
           {/* Show success/error Alert */}
           {(formik.status || serverStatus) && (

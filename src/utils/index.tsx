@@ -39,10 +39,11 @@ export const formatName = (value?: string | null): string => {
 };
 
 export const getInitials = (name: string) => {
-  if (!name) {
+  const normalized = formatName(name);
+  if (!normalized) {
     return "N/A";
   }
-  return name
+  return normalized
     .split(" ")
     .map((word) => word[0])
     .join("")
@@ -60,6 +61,25 @@ export const clearZiyaSession = () => {
   const keys = ["ziya-access", "ziya-profile", "ziya-role"];
   keys.forEach((key) => localStorage.removeItem(key));
   localStorage.clear();
+};
+
+const LOGOUT_NOTICE_KEY = "ziya-logout-message";
+
+export const triggerLogoutNotice = (
+  message = "You have been logged out"
+) => {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(LOGOUT_NOTICE_KEY, message);
+};
+
+export const consumeLogoutNotice = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const message = sessionStorage.getItem(LOGOUT_NOTICE_KEY);
+  if (message) {
+    sessionStorage.removeItem(LOGOUT_NOTICE_KEY);
+    return message;
+  }
+  return null;
 };
 
 export const formatDate = (dateString: string) => {

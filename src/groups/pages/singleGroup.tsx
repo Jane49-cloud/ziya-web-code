@@ -8,6 +8,7 @@ import GroupWalletTab from "../components/wallet";
 import GroupLoanHistoryTab from "../components/groupLoanHistoryTab";
 import GroupPaymentHistoryTab from "../components/groupPaymentHistoryTab";
 import GroupAnalysisTab from "../components/groupAnalysisTab";
+import { formatName } from "../../utils";
 
 const { Title } = Typography;
 
@@ -32,7 +33,7 @@ const SingleGroupPage: React.FC = () => {
         {
           key: "1",
           label: "Name",
-          value: group.name,
+          value: formatName(group.name) || "Unnamed Group",
         },
         {
           key: "2",
@@ -42,14 +43,16 @@ const SingleGroupPage: React.FC = () => {
         {
           key: "5",
           label: "Relationship Manager",
-          value: `${group.manager?.firstname ?? ""} ${
-            group.manager?.lastname ?? ""
-          }`.trim(),
+          value: formatName(
+            `${group.manager?.firstname ?? ""} ${
+              group.manager?.lastname ?? ""
+            }`
+          ),
         },
         {
           key: "6",
           label: "Admin",
-          value: group.adminUser?.name || "N/A",
+          value: formatName(group.adminUser?.name || "") || "N/A",
         },
       ]
     : [];

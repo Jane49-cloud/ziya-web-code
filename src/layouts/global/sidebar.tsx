@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaTimes, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import clsx from "clsx";
 import { KeenIcon } from "../../components/keenIcons/KeenIcon";
-import { clearZiyaSession, getRole } from "../../utils";
+import { clearZiyaSession, getRole, triggerLogoutNotice } from "../../utils";
 import { sidebarItems } from "../../routing/routes";
 
 interface SidebarProps {
@@ -36,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ closeSidebar }) => {
 
   const handleLogout = () => {
     clearZiyaSession();
+    triggerLogoutNotice();
     navigate("/auth/login");
   };
 

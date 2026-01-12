@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetGroupLoansQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
-import { getUser } from "../../utils";
+import { formatName, getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
@@ -63,11 +63,9 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     if (!needle) return loans;
 
     return loans.filter((loan: any) => {
-      const recipient = `${loan.recipient_firstname ?? ""} ${
-        loan.recipient_lastname ?? ""
-      }`
-        .trim()
-        .toLowerCase();
+      const recipient = formatName(
+        `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
+      ).toLowerCase();
       const loanType = String(loan.loan_type ?? "").toLowerCase();
       return (
         recipient.includes(needle) ||
@@ -107,7 +105,11 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           className="p-0"
           onClick={() => navigate(`/customer/${record.issued_to}`)}
         >
-          {record.recipient_firstname} {record.recipient_lastname}
+          {formatName(
+            `${record.recipient_firstname ?? ""} ${
+              record.recipient_lastname ?? ""
+            }`
+          )}
         </Button>
       ),
     },
