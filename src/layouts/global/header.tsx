@@ -4,7 +4,7 @@ import { FiMenu, FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { IconContext } from "react-icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoadUserQuery } from "../../redux/api";
-import { customAvatar, getUser } from "../../utils";
+import { clearZiyaSession, customAvatar, getUser } from "../../utils";
 import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
@@ -55,9 +55,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   }, [token, refetchUserDetails]);
 
   const handleLogout = () => {
-    localStorage.removeItem("ziya-access");
-    localStorage.removeItem("ziya-profile");
-    localStorage.clear();
+    clearZiyaSession();
     refetchUserDetails();
     navigate("/auth/login");
   };

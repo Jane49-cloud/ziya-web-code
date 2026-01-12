@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { UserProfile } from "../profile/pages";
+
 export const getUser = (): UserProfile | null => {
   const user = localStorage.getItem("ziya-profile");
 
@@ -26,6 +27,17 @@ export const getRole = (): string | null => {
   return role.trim();
 };
 
+export const formatName = (value?: string | null): string => {
+  if (!value) return "";
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((segment) =>
+      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
+    )
+    .join(" ");
+};
+
 export const getInitials = (name: string) => {
   if (!name) {
     return "N/A";
@@ -42,6 +54,13 @@ export const customAvatar = (name: string) => (
     {getInitials(name)}
   </div>
 );
+
+export const clearZiyaSession = () => {
+  if (typeof window === "undefined") return;
+  const keys = ["ziya-access", "ziya-profile", "ziya-role"];
+  keys.forEach((key) => localStorage.removeItem(key));
+  localStorage.clear();
+};
 
 export const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";

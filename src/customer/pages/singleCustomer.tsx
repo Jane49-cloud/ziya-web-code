@@ -6,20 +6,13 @@ import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
 import CustomerTabs from "../tabs/customerTabs";
 import CustomerBusinessList from "../components/customerBusinessList";
 import CustomerLoansList from "./customerLoans";
-import { formatDate, getInitials } from "../../utils";
+import { formatDate, formatName, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
 import { useCreateSubscriptionMutation } from "../features/customerSlice";
 import { useState, useMemo } from "react";
 import CustomerPerformanceTab from "../components/performance/customerPerformanceTab";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
-
-const toTitleCase = (value: string) =>
-  value
-    .split(" ")
-    .filter(Boolean)
-    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`)
-    .join(" ");
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +37,7 @@ const CustomerPage = () => {
       .replace(/\s+/g, " ")
       .trim();
 
-    return toTitleCase(rawName);
+    return formatName(rawName);
   }, [customer]);
 
   const lastLoginDisplay = customer?.last_login

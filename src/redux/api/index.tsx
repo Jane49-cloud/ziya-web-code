@@ -62,6 +62,7 @@ export const apiSlice = createApi({
     "GroupLoanPayments",
     "Tasks",
     "Blogs",
+    "Documents",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

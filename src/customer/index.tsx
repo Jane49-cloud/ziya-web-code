@@ -27,7 +27,7 @@ import {
   useCreateSubscriptionMutation,
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
-import { customAvatar } from "../utils";
+import { customAvatar, formatName } from "../utils";
 import { Alert } from "../components/Alert";
 import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
@@ -35,15 +35,6 @@ import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
-
-const toTitleCase = (value: string) =>
-  value
-    .split(" ")
-    .filter(Boolean)
-    .map((segment) =>
-      `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`
-    )
-    .join(" ");
 
 const CustomerManagement: FC = () => {
   const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
@@ -244,7 +235,7 @@ const CustomerManagement: FC = () => {
         const fallbackName = record.name ?? "";
         const displayNameRaw = fullName || fallbackName;
         const displayName = displayNameRaw
-          ? toTitleCase(displayNameRaw)
+          ? formatName(displayNameRaw)
           : "Unnamed Customer";
         const initial = displayName.charAt(0).toUpperCase() || "?";
         return (

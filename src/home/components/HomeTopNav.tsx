@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { clearZiyaSession } from "../../utils";
 
 interface HomeTopNavProps {
   anchors: { id: string; label: string }[];
@@ -24,10 +25,7 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("ziya-access");
-    localStorage.removeItem("ziya-profile");
-    localStorage.removeItem("ziya-role");
-    localStorage.clear();
+    clearZiyaSession();
     navigate("/auth/login");
   };
 
