@@ -254,19 +254,21 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
           </div>
 
           {/* Weekly Update Card */}
-          <div className="group relative overflow-hidden rounded-3xl border border-[#f0dba3] bg-gradient-to-br from-[#fff9ec] via-[#fff4da] to-[#fffbf0] px-6 py-5 shadow-xl shadow-amber-500/15 ring-1 ring-[#ecbe1d]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/25">
-            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-[#ffe8a8]/80 to-[#ffd700]/60 blur-[90px] transition-transform duration-500 group-hover:scale-125" />
-            <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-gradient-to-br from-[#fff1c8]/70 to-[#ffe48c]/50 blur-[85px]" />
+          <div className="group relative overflow-hidden rounded-3xl border border-[#f0dba3] bg-gradient-to-br from-[#fff9ec] via-[#fff4da] to-[#fffbf0] p-6 shadow-xl shadow-amber-500/15 ring-1 ring-[#ecbe1d]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/25">
+            {/* Background gradient circles */}
+            <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-[#ffe8a8]/80 to-[#ffd700]/60 blur-[90px] transition-transform duration-500 group-hover:scale-110" />
+            <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-gradient-to-br from-[#fff1c8]/70 to-[#ffe48c]/50 blur-[85px]" />
 
             <div className="relative flex flex-col gap-4">
+              {/* Header Section */}
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#ecbe1d] to-[#d4a817]">
                     <Clock className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#7a5300]/75">
-                      Weekly series
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#7a5300]/75">
+                      Weekly Series
                     </p>
                     <p className="text-sm font-semibold text-[#0f2a4a]">
                       A Monday vignette from the team
@@ -280,33 +282,35 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-5">
+              {/* Host and session details */}
+              <div className="flex flex-wrap items-center gap-4">
                 <div className="relative flex-shrink-0">
                   <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#ecbe1d]/40 to-[#d4a817]/40 blur-md" />
-                  <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f2a4a] to-[#1b3e6f] text-lg font-bold text-white shadow-lg">
+                  <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f2a4a] to-[#1b3e6f] text-lg font-bold text-white shadow-lg">
                     {hostInitials}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm text-[#7a5300]/80">{sessionDateLabel}</p>
-                  <p className="text-sm font-semibold text-[#0f2a4a]">
+                <div className="flex flex-col text-sm">
+                  <p className="text-[#7a5300]/80">{sessionDateLabel}</p>
+                  <p className="font-semibold text-[#0f2a4a]">
                     {weeklyDetails.host.name}
                   </p>
                   <p className="text-xs text-[#1f3047]/70">
                     {weeklyDetails.host.role} · {weeklyDetails.host.squad}
                   </p>
                 </div>
-                <div className="flex-1 text-sm text-[#1f3047]/80">
-                  {weeklyDetails.session.topic}
-                </div>
+              </div>
+              <div className="flex-1 text-sm text-[#1f3047]/80">
+                {weeklyDetails.session.topic}
               </div>
 
-              <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7a5300]">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#ecbe1d]/60 bg-[#fff7e5] px-3 py-1.5 shadow-sm">
+              {/* Session Details */}
+              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#7a5300]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#ecbe1d]/60 bg-[#fff7e5] px-3 py-1 shadow-sm">
                   <Clock className="h-3 w-3" />
                   {weeklyDetails.session.timeLabel}
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#0f2a4a]/10 bg-white/80 px-3 py-1.5 shadow-sm text-[#0f2a4a]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#0f2a4a]/10 bg-white/80 px-3 py-1 shadow-sm text-[#0f2a4a]">
                   Rotates weekly
                 </div>
               </div>
