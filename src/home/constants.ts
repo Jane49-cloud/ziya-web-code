@@ -9,6 +9,25 @@ import {
   Wallet2,
 } from "lucide-react";
 
+export interface WeeklyUpdateHost {
+  name: string;
+  role: string;
+  squad: string;
+}
+
+export interface WeeklyUpdateSession {
+  topic: string;
+  dateISO: string;
+  timeLabel: string;
+}
+
+export interface WeeklyUpdateConfig {
+  host: WeeklyUpdateHost;
+  session: WeeklyUpdateSession;
+}
+
+export const WEEKLY_UPDATE_STORAGE_KEY = "ziya-weekly-update";
+
 export type HomeCardAccent = "sky" | "sun" | "navy" | "neutral";
 
 export interface HomeCardConfig {
@@ -103,17 +122,16 @@ export const homeCards: HomeCardConfig[] = [
   },
 ];
 
-export const weeklyUpdate = {
+export const weeklyUpdate: WeeklyUpdateConfig = {
   host: {
-    name: "Jane Ndirangu",
-    role: "Software Engineer",
-    squad: "Tech team and support",
+    name: "Fatma Hassan",
+    role: "Culture & Community Lead",
+    squad: "People Lab",
   },
   session: {
-    topic: "Unlocking wallet rituals across emerging cohorts",
-    dateLabel: "Monday, 27 January",
+    topic: "Stories that shape our lending rituals",
+    dateISO: "2025-02-03T11:00:00+03:00",
     timeLabel: "11:00 AM EAT",
-    location: "Momentum Studio",
   },
 };
 
