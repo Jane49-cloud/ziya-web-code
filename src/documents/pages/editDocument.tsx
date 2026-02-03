@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from "react";
-import { Button, Input, Select, Form, message, Spin, Empty } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Button, Input, Select, Form, message, Spin, Empty, Alert } from "antd";
 import { SaveOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -24,8 +24,25 @@ export const EditDocumentForm: React.FC = () => {
     data,
     isLoading: fetchingData,
     error,
-  } = useGetSingleDocumentQuery(id!);
+  } = useGetSingleDocumentQuery(id!, {
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+  });
   const [updateDocument, { isLoading: updating }] = useUpdateDocumentMutation();
+  const [isDirty, setIsDirty] = useState(false);
+  const [autoSaveState, setAutoSaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [lastAutoSaveAt, setLastAutoSaveAt] = useState<Date | null>(null);
+  const [hasConflict, setHasConflict] = useState(false);
+  const hasInitializedRef = useRef(false);
+  const isAutoSavingRef = useRef(false);
+  const lastSavedContentRef = useRef<string>("");
+  const lastSavedMetaRef = useRef<{ title: string; access_level: string }>({
+    title: "",
+    access_level: "",
+  });
+  const lastRemoteUpdatedAtRef = useRef<string>("");
 
   const document = data?.document;
   const lastUpdated = document?.updated_at ?? document?.date_created ?? null;
@@ -41,46 +58,184 @@ export const EditDocumentForm: React.FC = () => {
     },
   });
   const stats = useEditorStats(editor);
+  const watchedTitle = Form.useWatch("title", form);
+  const watchedAccess = Form.useWatch("access_level", form);
 
   // Populate editor + form when document loads
   useEffect(() => {
-    if (document && editor) {
-      editor.commands.setContent(document.content || "");
-      form.setFieldsValue({
-        title: document.title,
-        access_level: document.access_level,
-      });
-    }
-  }, [document, editor, form]);
+    if (!document || !editor) return;
+    const remoteUpdatedAt = document.updated_at ?? document.date_created ?? "";
+    const hasRemoteChanged =
+      Boolean(remoteUpdatedAt) &&
+      remoteUpdatedAt !== lastRemoteUpdatedAtRef.current;
 
-  const handleSubmit = async (values: any) => {
-    if (!editor || !document) return;
-
-    const content = editor.getHTML();
-
-    if (!content || content === "<p></p>") {
-      message.error("Please add content to your document");
+    if (hasInitializedRef.current) {
+      if (hasRemoteChanged) {
+        setHasConflict(true);
+        lastRemoteUpdatedAtRef.current = remoteUpdatedAt;
+      }
       return;
     }
 
+    editor.commands.setContent(document.content || "");
+    form.setFieldsValue({
+      title: document.title,
+      access_level: document.access_level,
+    });
+    lastSavedContentRef.current = document.content || "";
+    lastSavedMetaRef.current = {
+      title: document.title || "",
+      access_level: document.access_level || "",
+    };
+    lastRemoteUpdatedAtRef.current = remoteUpdatedAt;
+    setIsDirty(false);
+    setHasConflict(false);
+    setAutoSaveState("saved");
+    setLastAutoSaveAt(
+      document.updated_at ? new Date(document.updated_at) : null
+    );
+    hasInitializedRef.current = true;
+  }, [document, editor, form]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const handleUpdate = () => setIsDirty(true);
+    editor.on("update", handleUpdate);
+    return () => {
+      editor.off("update", handleUpdate);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (watchedTitle || watchedAccess) {
+      setIsDirty(true);
+    }
+  }, [watchedTitle, watchedAccess]);
+
+  const buildPayload = () => {
+    if (!editor || !document) return null;
+    const content = editor.getHTML();
+    return {
+      id: Number(id),
+      author_id: document.author_id,
+      title: watchedTitle ?? document.title ?? "",
+      content,
+      access_level: watchedAccess ?? document.access_level ?? "",
+    };
+  };
+
+  const performSave = async (mode: "auto" | "manual") => {
+    if (!document) return false;
+    const payload = buildPayload();
+    if (!payload) return false;
+
+    if (!payload.title || !payload.access_level) {
+      if (mode === "manual") {
+        message.error("Please fill in title and access level");
+      }
+      return false;
+    }
+
+    if (!payload.content || payload.content === "<p></p>") {
+      if (mode === "manual") {
+        message.error("Please add content to your document");
+      }
+      return false;
+    }
+
+    const hasContentChange = payload.content !== lastSavedContentRef.current;
+    const hasMetaChange =
+      payload.title !== lastSavedMetaRef.current.title ||
+      payload.access_level !== lastSavedMetaRef.current.access_level;
+
+    if (!hasContentChange && !hasMetaChange) {
+      setIsDirty(false);
+      return false;
+    }
+
     try {
-      const payload = {
-        id: Number(id),
-        // keep the original author id; not edited via the form
-        author_id: document.author_id,
-        title: values.title,
-        content,
-        access_level: values.access_level,
-      };
-
+      if (mode === "auto") {
+        setAutoSaveState("saving");
+        isAutoSavingRef.current = true;
+      }
       await updateDocument(payload).unwrap();
-
-      message.success("Document updated successfully!");
-      navigate(`/documents/${id}`);
+      lastSavedContentRef.current = payload.content;
+      lastSavedMetaRef.current = {
+        title: payload.title,
+        access_level: payload.access_level,
+      };
+      setIsDirty(false);
+      setAutoSaveState("saved");
+      setLastAutoSaveAt(new Date());
+      return true;
     } catch (error: any) {
-      message.error(error?.data?.error || "Failed to update document");
+      if (mode === "manual") {
+        message.error(error?.data?.error || "Failed to update document");
+      } else {
+        setAutoSaveState("error");
+      }
+      return false;
+    } finally {
+      if (mode === "auto") {
+        isAutoSavingRef.current = false;
+      }
     }
   };
+
+  useEffect(() => {
+    if (!isDirty) return;
+    if (!editor || !document) return;
+    if (!watchedTitle || !watchedAccess) return;
+    if (updating || isAutoSavingRef.current) return;
+    if (hasConflict) return;
+
+    const handle = window.setTimeout(() => {
+      void performSave("auto");
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [
+    isDirty,
+    watchedTitle,
+    watchedAccess,
+    updating,
+    editor,
+    document,
+    hasConflict,
+  ]);
+
+  const handleSubmit = async (_values: any) => {
+    try {
+      const saved = await performSave("manual");
+      if (saved) {
+        message.success("Document updated successfully!");
+        navigate(`/documents/${id}`);
+      }
+    } catch (_error: any) {
+      // performSave handles errors
+    }
+  };
+
+  const autosaveLabel = (() => {
+    if (isDirty && autoSaveState !== "saving") return "Unsaved changes";
+    if (autoSaveState === "saving") return "Saving...";
+    if (autoSaveState === "error") return "Auto-save failed. Will retry.";
+    if (autoSaveState === "saved") {
+      return `Saved ${
+        lastAutoSaveAt ? lastAutoSaveAt.toLocaleTimeString() : "just now"
+      }`;
+    }
+    return "All changes saved";
+  })();
+  const isSaving = updating || autoSaveState === "saving";
+  const hasUnsavedChanges = isDirty || autoSaveState === "error";
+  const saveButtonLabel = isSaving
+    ? "Saving..."
+    : hasUnsavedChanges
+      ? "Save now"
+      : "Saved";
 
   if (fetchingData) {
     return (
@@ -150,6 +305,12 @@ export const EditDocumentForm: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                <div className="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+                    Auto-save on
+                  </span>
+                  <span>{autosaveLabel}</span>
+                </div>
                 <Form.Item
                   name="access_level"
                   className="mb-0 w-40"
@@ -177,10 +338,11 @@ export const EditDocumentForm: React.FC = () => {
                   size="large"
                   htmlType="submit"
                   icon={<SaveOutlined />}
-                  loading={updating}
-                  className="rounded-full bg-primary hover:bg-hover"
+                  loading={isSaving}
+                  disabled={!hasUnsavedChanges && !isSaving}
+                  className="rounded-full bg-primary hover:bg-hover disabled:bg-slate-300 disabled:text-slate-600"
                 >
-                  Submit
+                  {saveButtonLabel}
                 </Button>
               </div>
             </div>
@@ -188,15 +350,67 @@ export const EditDocumentForm: React.FC = () => {
 
           <div className="flex-1">
             <div className="max-w-5xl mx-auto px-4">
+              {hasConflict && (
+                <div className="pt-4">
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="This document was updated elsewhere."
+                    description="You can reload the latest version or keep editing your current copy."
+                    action={
+                      <div className="flex gap-2">
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            if (!document || !editor) return;
+                            editor.commands.setContent(document.content || "");
+                            form.setFieldsValue({
+                              title: document.title,
+                              access_level: document.access_level,
+                            });
+                            lastSavedContentRef.current =
+                              document.content || "";
+                            lastSavedMetaRef.current = {
+                              title: document.title || "",
+                              access_level: document.access_level || "",
+                            };
+                            lastRemoteUpdatedAtRef.current =
+                              document.updated_at ??
+                              document.date_created ??
+                              "";
+                            setIsDirty(false);
+                            setHasConflict(false);
+                            setAutoSaveState("saved");
+                            setLastAutoSaveAt(
+                              document.updated_at
+                                ? new Date(document.updated_at)
+                                : null
+                            );
+                          }}
+                        >
+                          Reload latest
+                        </Button>
+                        <Button
+                          size="small"
+                          type="text"
+                          onClick={() => setHasConflict(false)}
+                        >
+                          Keep editing
+                        </Button>
+                      </div>
+                    }
+                  />
+                </div>
+              )}
               <div className="sticky top-[84px] z-20">
                 <div className="rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
                   <EditorToolbar editor={editor} />
                 </div>
               </div>
 
-              <div className="py-8 flex justify-center">
-                <div className="doc-page w-full rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
-                  <div className="px-12 py-12">
+              <div className="py-6 flex justify-center">
+                <div className="doc-page w-full rounded-[24px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
+                  <div className="px-6 sm:px-8 lg:px-10 py-6 sm:py-8 lg:py-10">
                     <EditorContent editor={editor} />
                   </div>
                 </div>
@@ -224,6 +438,12 @@ export const EditDocumentForm: React.FC = () => {
             </div>
 
             <div className="flex gap-3 justify-end">
+              <div className="hidden items-center gap-2 text-xs text-slate-500 md:flex">
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+                  Auto-save on
+                </span>
+                <span>{autosaveLabel}</span>
+              </div>
               <Button
                 size="large"
                 onClick={() => navigate(`/documents/${id}`)}
@@ -236,10 +456,11 @@ export const EditDocumentForm: React.FC = () => {
                 size="large"
                 htmlType="submit"
                 icon={<SaveOutlined />}
-                loading={updating}
-                className="bg-primary hover:bg-hover"
+                loading={isSaving}
+                disabled={!hasUnsavedChanges && !isSaving}
+                className="bg-primary hover:bg-hover disabled:bg-slate-300 disabled:text-slate-600"
               >
-                Update Document
+                {saveButtonLabel}
               </Button>
             </div>
           </div>

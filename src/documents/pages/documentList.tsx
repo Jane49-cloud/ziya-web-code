@@ -37,7 +37,14 @@ export const DocumentsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccessLevel, setFilterAccessLevel] = useState<string>("all");
 
-  const { data, isLoading, refetch } = useGetAllDocumentsQuery({});
+  const { data, isLoading, refetch } = useGetAllDocumentsQuery(
+    {},
+    {
+      pollingInterval: 3000,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    }
+  );
   const [deleteDocument, { isLoading: deleting }] = useDeleteDocumentMutation();
 
   const documents = useMemo(() => data?.documents || [], [data]);
@@ -236,7 +243,7 @@ export const DocumentsList: React.FC = () => {
           <Table
             columns={columns}
             dataSource={filteredDocuments}
-            rowKey="id"
+            rowKey="ID"
             loading={isLoading}
             pagination={{
               pageSize: 10,
