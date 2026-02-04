@@ -388,6 +388,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
             }}
+            xAxis={{
+              label: {
+                autoRotate: true,
+                autoHide: true,
+                autoEllipsis: true,
+                formatter: (value: string) =>
+                  dayjs(value, "YYYY-MM").format("MMM YY"),
+              },
+            }}
           />
         ),
     },
@@ -410,6 +419,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 name: "Amount",
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
+            }}
+            xAxis={{
+              label: {
+                autoRotate: true,
+                autoHide: true,
+                autoEllipsis: true,
+                formatter: (value: string) =>
+                  dayjs(value, "YYYY-MM").format("MMM YY"),
+              },
             }}
           />
         ),
@@ -435,6 +453,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 name: "Net",
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
+            }}
+            xAxis={{
+              label: {
+                autoRotate: true,
+                autoHide: true,
+                autoEllipsis: true,
+                formatter: (value: string) =>
+                  dayjs(value, "YYYY-MM").format("MMM YY"),
+              },
             }}
           />
         ),
