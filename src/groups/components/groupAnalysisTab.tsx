@@ -50,6 +50,16 @@ interface MemberInsight {
 }
 
 const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+const parseDayjs = (value: unknown) => {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    value instanceof Date
+  ) {
+    return dayjs(value);
+  }
+  return dayjs(undefined);
+};
 const getSingleName = (fullName: string) => {
   const tokens = fullName.trim().split(/\s+/).filter(Boolean);
   if (!tokens.length) return fullName;
@@ -211,7 +221,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   const paymentVelocity = useMemo(() => {
     const thirtyDaysAgo = dayjs().subtract(30, "day");
     return payments.filter((payment: GenericRecord) => {
-      const date = dayjs(payment?.date_paid);
+      const date = parseDayjs(payment?.date_paid);
       return date.isValid() && date.isAfter(thirtyDaysAgo);
     }).length;
   }, [payments]);
@@ -250,7 +260,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
         paid: 0,
         lastPayment: null,
       };
-      const date = dayjs(payment?.date_paid);
+      const date = parseDayjs(payment?.date_paid);
       const lastPayment =
         date.isValid() && (!current.lastPayment || date.isAfter(current.lastPayment))
           ? date
@@ -365,7 +375,6 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
             data={loanTrend}
             xField="month"
             yField="value"
-            smooth
             padding={[20, 24, 40, 50]}
             area={{
               style: {
@@ -470,7 +479,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     ];
   }, [totalOutstanding, repaymentRate, laggingMembers.length]);
 
-  const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
+  const downloadCSV = (rows: Array<Record<string, unknown>>, filename: string) => {
     if (!rows.length) return;
     const headers = Object.keys(rows[0]);
     const csv = [
@@ -530,7 +539,16 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 <Button
                   onClick={() =>
                     downloadCSV(
-                      memberInsights,
+                      memberInsights.map((member) => ({
+                        id: member.id,
+                        name: member.name,
+                        totalLoaned: member.totalLoaned,
+                        totalPaid: member.totalPaid,
+                        outstanding: member.outstanding,
+                        lastPayment: member.lastPayment,
+                        daysSincePayment: member.daysSincePayment ?? "",
+                        riskLevel: member.riskLevel,
+                      })),
                       `group-${groupId}-member-analytics.csv`
                     )
                   }
