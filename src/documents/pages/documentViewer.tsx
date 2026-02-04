@@ -18,7 +18,11 @@ export const DocumentViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data, isLoading, error } = useGetSingleDocumentQuery(id!);
+  const { data, isLoading, error } = useGetSingleDocumentQuery(id!, {
+    pollingInterval: 3000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
   const doc = data?.document; // renamed from "document" to avoid confusion
   const sanitizedContent = useMemo(
     () => (doc?.content ? DOMPurify.sanitize(doc.content) : ""),
@@ -76,7 +80,7 @@ export const DocumentViewer: React.FC = () => {
         <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top,_rgba(50,197,244,0.08),_transparent_60%)] lg:block" />
         <div className="relative z-10 flex min-h-screen flex-col">
           <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
-            <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3 px-4 py-3">
+            <div className="mx-auto flex flex-wrap items-center gap-3 px-4 py-3 lg:max-w-6xl">
               <Button
                 icon={<ArrowLeftOutlined />}
                 className="rounded-full"
@@ -86,14 +90,14 @@ export const DocumentViewer: React.FC = () => {
               </Button>
 
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <FileText size={22} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <FileText size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className="truncate text-lg font-semibold text-slate-900">
                     {doc.title}
                   </h1>
-                  <div className="mt-1 flex flex-wrap gap-4 text-xs text-slate-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <UserOutlined /> Author #{doc.author_id}
                     </span>
@@ -137,10 +141,10 @@ export const DocumentViewer: React.FC = () => {
           </header>
 
           <main className="flex-1">
-            <div className=" mx-auto w-full px-4 pb-16 pt-6 lg:pt-10">
+            <div className="mx-auto w-full px-4 pb-14 pt-6 lg:max-w-6xl">
               <div className="flex justify-center">
-                <article className="doc-printable doc-page w-full  rounded-[36px] border border-white/70 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
-                  <div className="doc-render px-12 py-14 text-base leading-relaxed text-slate-700">
+                <article className="doc-printable doc-page w-full rounded-[28px] border border-white/70 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+                  <div className="doc-render px-6 py-8 text-[15px] leading-relaxed text-slate-700 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
                     <div
                       className="prose prose-slate max-w-none"
                       dangerouslySetInnerHTML={{ __html: sanitizedContent }}

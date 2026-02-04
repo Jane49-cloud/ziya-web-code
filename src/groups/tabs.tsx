@@ -26,12 +26,14 @@ import {
 } from "./features";
 import CreateGroupForm from "./components/groupForm";
 import { useNavigate } from "react-router-dom";
+import GroupAnalyticsPage from "./pages/groupAnalytics";
 import {
   FiActivity,
   FiPlusCircle,
   FiLayers,
   FiUsers,
   FiUserCheck,
+  FiTrendingUp,
 } from "react-icons/fi";
 
 const { Title, Text } = Typography;
@@ -190,6 +192,16 @@ const GroupTabs = () => {
           // onDelete={onDelete}
         />
       ),
+    },
+    {
+      key: "analytics",
+      label: (
+        <Space size={6}>
+          Analytics
+          <FiTrendingUp />
+        </Space>
+      ),
+      children: <GroupAnalyticsPage />,
     },
   ];
 
