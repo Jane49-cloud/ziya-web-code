@@ -388,13 +388,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
             }}
-            xAxis={{
-              label: {
-                autoRotate: true,
-                autoHide: true,
-                autoEllipsis: true,
-                formatter: (value: string) =>
-                  dayjs(value, "YYYY-MM").format("MMM YY"),
+            axis={{
+              x: {
+                label: {
+                  autoRotate: true,
+                  autoHide: true,
+                  autoEllipsis: true,
+                  formatter: (value: string) =>
+                    dayjs(value, "YYYY-MM").format("MMM YY"),
+                },
               },
             }}
           />
@@ -420,13 +422,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
             }}
-            xAxis={{
-              label: {
-                autoRotate: true,
-                autoHide: true,
-                autoEllipsis: true,
-                formatter: (value: string) =>
-                  dayjs(value, "YYYY-MM").format("MMM YY"),
+            axis={{
+              x: {
+                label: {
+                  autoRotate: true,
+                  autoHide: true,
+                  autoEllipsis: true,
+                  formatter: (value: string) =>
+                    dayjs(value, "YYYY-MM").format("MMM YY"),
+                },
               },
             }}
           />
@@ -454,13 +458,15 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 value: `KES ${datum.value.toLocaleString()}`,
               }),
             }}
-            xAxis={{
-              label: {
-                autoRotate: true,
-                autoHide: true,
-                autoEllipsis: true,
-                formatter: (value: string) =>
-                  dayjs(value, "YYYY-MM").format("MMM YY"),
+            axis={{
+              x: {
+                label: {
+                  autoRotate: true,
+                  autoHide: true,
+                  autoEllipsis: true,
+                  formatter: (value: string) =>
+                    dayjs(value, "YYYY-MM").format("MMM YY"),
+                },
               },
             }}
           />
