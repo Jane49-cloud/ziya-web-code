@@ -10,6 +10,7 @@ const baseQuery = fetchBaseQuery({
 
   baseUrl: "https://api.ziya.co.ke/api/v2",
 
+  // baseUrl: "http://
   // baseUrl: "https://stagingapi.ziya.co.ke/api/v2",
 
   prepareHeaders: (headers) => {
@@ -24,7 +25,7 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithAuth = async (
   args: string | FetchArgs,
   api: BaseQueryApi,
-  extraOptions: object
+  extraOptions: object,
 ) => {
   const result = await baseQuery(args, api, extraOptions);
   // console.log("the result", result);
