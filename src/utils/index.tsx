@@ -17,14 +17,15 @@ export const getUser = (): UserProfile | null => {
   }
 };
 
+export const normalizeRole = (role: string | null | undefined): string => {
+  if (!role) return "";
+  return role.trim().toLowerCase();
+};
+
 export const getRole = (): string | null => {
   const role = localStorage.getItem("ziya-role");
-
-  if (!role) {
-    return null;
-  }
-
-  return role.trim();
+  if (!role) return null;
+  return normalizeRole(role) || null;
 };
 
 export const formatName = (value?: string | null): string => {
@@ -60,7 +61,6 @@ export const clearZiyaSession = () => {
   if (typeof window === "undefined") return;
   const keys = ["ziya-access", "ziya-profile", "ziya-role"];
   keys.forEach((key) => localStorage.removeItem(key));
-  localStorage.clear();
 };
 
 const LOGOUT_NOTICE_KEY = "ziya-logout-message";

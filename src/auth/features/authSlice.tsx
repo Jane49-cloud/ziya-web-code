@@ -28,7 +28,9 @@ const authSlice = createSlice({
     userLoggedOut: (state) => {
       state.token = "";
       state.user = "";
-      localStorage.clear();
+      localStorage.removeItem("ziya-access");
+      localStorage.removeItem("ziya-profile");
+      localStorage.removeItem("ziya-role");
     },
   },
 });

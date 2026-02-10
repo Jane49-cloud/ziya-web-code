@@ -23,7 +23,7 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithAuth = async (
   args: string | FetchArgs,
   api: BaseQueryApi,
-  extraOptions: object
+  extraOptions: object,
 ) => {
   const result = await baseQuery(args, api, extraOptions);
   // console.log("the result", result);
@@ -33,7 +33,7 @@ const baseQueryWithAuth = async (
     console.log("status", result.error.status);
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
-    localStorage.clear();
+    localStorage.removeItem("ziya-role");
     if (window.location.pathname !== "/auth/login") {
       window.location.href = "/auth/login";
     }

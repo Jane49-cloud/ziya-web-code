@@ -13,7 +13,7 @@ import { styles } from "../../styles";
 // import { store } from "../../redux/store";
 // import { apiSlice } from "../../redux/api";
 import { initializeUser } from "../../utils/initializeUser";
-import { consumeLogoutNotice } from "../../utils";
+import { consumeLogoutNotice, normalizeRole } from "../../utils";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -60,7 +60,7 @@ export function Login() {
 
         // console.log(response.token);
         localStorage.setItem("ziya-access", response.token);
-        localStorage.setItem("ziya-role", response.role);
+        localStorage.setItem("ziya-role", normalizeRole(response.role));
 
         initializeUser();
 

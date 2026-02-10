@@ -7,7 +7,7 @@ import Dashboard from "../dashboard";
 import { AddUser } from "../auth/pages/addUser";
 import NotFound from "../errors/404";
 import Unauthorized from "../errors/403";
-import Staff from "../users/staff/pages/index.";
+import Staff from "../users/staff/pages/index..tsx";
 import { RolesManagement } from "../roles";
 import CustomerManagement from "../customer";
 import PublicProfile from "../profile/pages/publicProfile";
