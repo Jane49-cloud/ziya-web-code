@@ -16,6 +16,7 @@ import BusinessList from "../Business";
 import LoanCategories from "../Loans";
 import LoanManagementPage from "../Loans/pages/loanManagement";
 import SingleLoanPage from "../Loans/pages/singleLoanPage";
+import CyclesPage from "../cycles";
 import { getRole } from "../utils";
 import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
@@ -133,6 +134,7 @@ const AppRouting = (): ReactElement => {
           <Route path="/businesses" element={<BusinessList />} />
           <Route path="/loans" element={<LoanManagementPage />} />
           <Route path="/loans/:loanId" element={<SingleLoanPage />} />
+          <Route path="/loan-cycles" element={<CyclesPage />} />
           <Route path="/staff/:id" element={<PublicProfile />} />
           <Route path="/customer/:id" element={<CustomerPage />} />
           <Route path="/wallets" element={<AllGroupWalletsPage />} />

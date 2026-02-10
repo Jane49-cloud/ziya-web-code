@@ -95,6 +95,11 @@ export const sidebarItems: SidebarItem[] = [
         path: "/loans",
         allowedRoles: STAFF_ROLES,
       },
+      {
+        title: "Cycles",
+        path: "/loan-cycles",
+        allowedRoles: STAFF_ROLES,
+      },
     ],
   },
   {

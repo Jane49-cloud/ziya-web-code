@@ -44,7 +44,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       refetchOnFocus: true,
       refetchOnReconnect: true,
       pollingInterval: 30000,
-    }
+    },
   );
   const loans = useMemo(() => data?.loans || [], [data?.loans]);
 
@@ -64,7 +64,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
 
     return loans.filter((loan: any) => {
       const recipient = formatName(
-        `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
+        `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`,
       ).toLowerCase();
       const loanType = String(loan.loan_type ?? "").toLowerCase();
       return (
@@ -82,9 +82,9 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       [...filteredLoans].sort((a, b) =>
         sortOrder === "ascend"
           ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       ),
-    [filteredLoans, sortOrder]
+    [filteredLoans, sortOrder],
   );
 
   const totalLoaned = sortedLoans.reduce((sum, loan) => {
@@ -108,7 +108,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           {formatName(
             `${record.recipient_firstname ?? ""} ${
               record.recipient_lastname ?? ""
-            }`
+            }`,
           )}
         </Button>
       ),
@@ -127,7 +127,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     },
     {
       title: "Loan Type",
-      dataIndex: "loan_type",
+      dataIndex: "loan_type_name",
       key: "loan_type",
       render: (type: string) => type || "N/A",
     },
