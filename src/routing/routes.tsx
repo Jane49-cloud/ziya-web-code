@@ -128,9 +128,19 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
     title: "Documents",
-    icon: "file",
-    path: "/documents",
-    allowedRoles: ALL_ROLES,
+    icon: "note-2",
+    dropdown: [
+      {
+        title: "All Documents",
+        path: "/documents",
+        allowedRoles: ALL_ROLES,
+      },
+      {
+        title: "Weekly Series",
+        path: "/documents/weekly-series",
+        allowedRoles: ALL_ROLES,
+      },
+    ],
   },
   {
     title: "Analysis",
