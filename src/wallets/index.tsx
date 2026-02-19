@@ -11,14 +11,17 @@ import {
   Button,
   Space,
   message,
+  Tag,
 } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useGetAllGroupWalletsQuery,
   useUpdateGroupWalletMutation,
 } from "../groups/features";
 import EditWalletModal from "../groups/components/editWalletModel";
+import { formatName } from "../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -60,6 +63,7 @@ const AllGroupWalletsPage = () => {
   const { data, isLoading, isFetching, refetch } = useGetAllGroupWalletsQuery(
     {}
   );
+  const navigate = useNavigate();
   const [updateWallet] = useUpdateGroupWalletMutation();
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -172,7 +176,15 @@ const AllGroupWalletsPage = () => {
         sorter: (a, b) =>
           compareGroupNames(a.group_name ?? "", b.group_name ?? ""),
         defaultSortOrder: "ascend",
-        render: (name: string | undefined) => name ?? "Unnamed Group",
+        render: (name: string | undefined, record) => (
+          <Button
+            type="link"
+            className="!px-0"
+            onClick={() => navigate(`/groups/${record.group_id}`)}
+          >
+            {name ? formatName(name) : "Unnamed Group"}
+          </Button>
+        ),
       },
       {
         title: "Balance",
@@ -201,9 +213,13 @@ const AllGroupWalletsPage = () => {
         key: "actions",
         align: "right" as const,
         render: (_: unknown, record) => (
-          <Button type="link" onClick={() => handleOpenEdit(record)}>
+          <Tag
+            color="blue"
+            className="cursor-pointer"
+            onClick={() => handleOpenEdit(record)}
+          >
             Update Wallet
-          </Button>
+          </Tag>
         ),
       },
     ],

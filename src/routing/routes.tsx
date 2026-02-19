@@ -136,7 +136,7 @@ export const sidebarItems: SidebarItem[] = [
         allowedRoles: ALL_ROLES,
       },
       {
-        title: "Weekly Series",
+        title: "Weekly Series (Coming Soon)",
         path: "/documents/weekly-series",
         allowedRoles: ALL_ROLES,
       },

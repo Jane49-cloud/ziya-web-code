@@ -7,6 +7,7 @@ import {
   Typography,
   Space,
   Button,
+  Tag,
   Input,
   Statistic,
   Row,
@@ -148,28 +149,40 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: any) => (
-        <Space>
-          <Button
-            size="small"
-            onClick={() => {
-              setEditLoan(record);
-              setShowLoanModal(true);
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            size="small"
-            onClick={() => {
-              setSelectedLoan(record);
-              setShowPaymentModal(true);
-            }}
-          >
-            Payment
-          </Button>
-        </Space>
-      ),
+      render: (_: any, record: any) => {
+        const isPaid = Number(record?.balance ?? 0) <= 0;
+
+        return (
+          <Space>
+            <Tag
+              color="blue"
+              className="cursor-pointer"
+              onClick={() => {
+                setEditLoan(record);
+                setShowLoanModal(true);
+              }}
+            >
+              Edit
+            </Tag>
+            {isPaid ? (
+              <Tag className="cursor-not-allowed opacity-70" color="green">
+                Paid
+              </Tag>
+            ) : (
+              <Tag
+                color="gold"
+                className="cursor-pointer"
+                onClick={() => {
+                  setSelectedLoan(record);
+                  setShowPaymentModal(true);
+                }}
+              >
+                Payment
+              </Tag>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

@@ -36,6 +36,13 @@ import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
+const isSubscriptionActive = (status: unknown) => {
+  if (typeof status === "string") {
+    return status.toLowerCase() === "active";
+  }
+  return Number(status) === 1;
+};
+
 const CustomerManagement: FC = () => {
   const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
   const customers = data?.customers;
@@ -157,7 +164,7 @@ const CustomerManagement: FC = () => {
   const customerMetrics = useMemo(() => {
     const total = normalizedCustomers.length;
     const active = normalizedCustomers.filter(
-      (customer: any) => customer.subscription_status === 1
+      (customer: any) => isSubscriptionActive(customer.subscription_status)
     ).length;
     const inactive = total - active;
     return { total, active, inactive };
@@ -180,9 +187,9 @@ const CustomerManagement: FC = () => {
       const matchesStatus =
         subscriptionFilter === "all" ||
         (subscriptionFilter === "active" &&
-          customer.subscription_status === 1) ||
+          isSubscriptionActive(customer.subscription_status)) ||
         (subscriptionFilter === "inactive" &&
-          customer.subscription_status !== 1);
+          !isSubscriptionActive(customer.subscription_status));
 
       return matchesSearch && matchesStatus;
     });
@@ -287,8 +294,8 @@ const CustomerManagement: FC = () => {
       key: "subscription_status",
       align: "center" as const,
       render: (status: number) => (
-        <Tag color={status === 1 ? "success" : "default"}>
-          {status === 1 ? "Active" : "Inactive"}
+        <Tag color={isSubscriptionActive(status) ? "success" : "default"}>
+          {isSubscriptionActive(status) ? "Active" : "Inactive"}
         </Tag>
       ),
     },

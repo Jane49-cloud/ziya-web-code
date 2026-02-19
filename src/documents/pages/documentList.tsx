@@ -48,7 +48,6 @@ export const DocumentsList: React.FC = () => {
   const [deleteDocument, { isLoading: deleting }] = useDeleteDocumentMutation();
 
   const documents = useMemo(() => data?.documents || [], [data]);
-  console.log("Documents:", documents);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc: any) => {
@@ -178,43 +177,43 @@ export const DocumentsList: React.FC = () => {
   ];
 
   return (
-    <div className="py-6 px-4">
-      <Card className="shadow-sm border-slate-200">
+    <div className="-mt-4 pt-2">
+      <Card className="overflow-hidden border-slate-200 shadow-sm">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Documents</h1>
-            <p className="text-sm text-gray-600">
-              Manage and organize your documents
-            </p>
+        <div className="mb-6 rounded-2xl border border-slate-200/70 bg-gradient-to-r from-white via-sky-50 to-cyan-50 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="mb-1 text-2xl font-bold text-gray-900">Documents</h1>
+              <p className="text-sm text-gray-600">
+                Manage and organize your documents
+              </p>
+            </div>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => navigate("/documents/create")}
+              className="bg-primary hover:bg-hover md:self-start"
+            >
+              Create Document
+            </Button>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => navigate("/documents/create")}
-            className="bg-primary hover:bg-hover"
-          >
-            Create Document
-          </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_220px]">
           <Search
             placeholder="Search documents..."
             prefix={<SearchOutlined />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             size="large"
-            className="md:w-96"
             allowClear
           />
           <Select
             size="large"
             value={filterAccessLevel}
             onChange={setFilterAccessLevel}
-            className="md:w-48"
           >
             <Option value="all">All Access Levels</Option>
             <Option value="public">Public</Option>
@@ -226,32 +225,103 @@ export const DocumentsList: React.FC = () => {
 
         {/* Stats */}
         <div className="mb-6">
-          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-            <div className="text-xs text-gray-500 mt-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs text-gray-500">
               Showing {filteredDocuments.length} of {documents.length} documents
             </div>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Empty */}
         {filteredDocuments.length === 0 && !isLoading ? (
           <Empty
             description="No documents found"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
-          <Table
-            columns={columns}
-            dataSource={filteredDocuments}
-            rowKey="ID"
-            loading={isLoading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} documents`,
-            }}
-            scroll={{ x: 1000 }}
-          />
+          <>
+            {/* Mobile list */}
+            <div className="grid gap-3 md:hidden">
+              {filteredDocuments.map((record: Document) => (
+                <div
+                  key={record.ID}
+                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-semibold text-slate-900">
+                        {record.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {new Date(record?.date_created).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Tag
+                      color={getAccessLevelColor(record.access_level)}
+                      className="capitalize"
+                    >
+                      {record.access_level}
+                    </Tag>
+                  </div>
+                  <p className="mb-3 text-sm text-slate-600">
+                    {stripHtml(record.content)}
+                  </p>
+                  <div className="mb-3 text-xs text-slate-500">
+                    Author ID: {record.author_id}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => navigate(`/documents/${record.ID}`)}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => navigate(`/documents/edit/${record.ID}`)}
+                    >
+                      Edit
+                    </Button>
+                    <Popconfirm
+                      title="Delete Document"
+                      description="Are you sure you want to delete this document?"
+                      onConfirm={() => handleDelete(record.ID)}
+                      okText="Delete"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true, loading: deleting }}
+                    >
+                      <Button
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        loading={deleting}
+                      >
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table
+                columns={columns}
+                dataSource={filteredDocuments}
+                rowKey="ID"
+                loading={isLoading}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Total ${total} documents`,
+                }}
+                scroll={{ x: 1000 }}
+              />
+            </div>
+          </>
         )}
       </Card>
     </div>

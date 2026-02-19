@@ -326,11 +326,95 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     });
   }, [loans, payments, members, thresholds]);
 
+  const cycleSummary = useMemo(() => {
+    const cycleMap = new Map<
+      string,
+      {
+        cycle: string;
+        cycleNumber: number | null;
+        members: Set<string>;
+        loaned: number;
+        outstanding: number;
+      }
+    >();
+
+    loans.forEach((loan: GenericRecord) => {
+      const rawCycle =
+        loan?.cycle ?? loan?.cycle_number ?? loan?.cycle_id ?? loan?.cycleId;
+      const cycleLabel =
+        rawCycle !== undefined && rawCycle !== null && rawCycle !== ""
+          ? String(rawCycle)
+          : "Unassigned";
+      const cycleNumber = Number(cycleLabel);
+      const memberId =
+        loan?.issued_to ??
+        loan?.customer_id ??
+        loan?.member_id ??
+        loan?.user_id;
+
+      const amount = Number(loan?.amount ?? 0);
+      const balance = Number(loan?.balance ?? 0);
+      const entry =
+        cycleMap.get(cycleLabel) ??
+        {
+          cycle: cycleLabel,
+          cycleNumber: Number.isNaN(cycleNumber) ? null : cycleNumber,
+          members: new Set<string>(),
+          loaned: 0,
+          outstanding: 0,
+        };
+
+      if (memberId !== undefined && memberId !== null) {
+        entry.members.add(String(memberId));
+      }
+      entry.loaned += Number.isNaN(amount) ? 0 : amount;
+      entry.outstanding += Number.isNaN(balance) ? 0 : balance;
+
+      cycleMap.set(cycleLabel, entry);
+    });
+
+    return Array.from(cycleMap.values())
+      .map((entry) => ({
+        cycle: entry.cycle,
+        membersCount: entry.members.size,
+        totalLoaned: Math.round(entry.loaned),
+        outstanding: Math.round(entry.outstanding),
+        cycleNumber: entry.cycleNumber,
+      }))
+      .sort((a, b) => {
+        if (a.cycleNumber !== null && b.cycleNumber !== null) {
+          return a.cycleNumber - b.cycleNumber;
+        }
+        return a.cycle.localeCompare(b.cycle);
+      });
+  }, [loans]);
+
   const laggingMembers = useMemo(() => {
     return [...memberInsights]
-      .filter((member) => member.riskLevel !== "Stable")
+      .filter(
+        (member) =>
+          member.riskLevel !== "Stable" &&
+          (member.daysSincePayment === null ||
+            member.daysSincePayment > 1)
+      )
       .sort((a, b) => (b.daysSincePayment ?? 0) - (a.daysSincePayment ?? 0))
       .slice(0, 8);
+  }, [memberInsights]);
+
+  const noLoanMembers = useMemo(() => {
+    return [...memberInsights]
+      .filter((member) => member.totalLoaned <= 0)
+      .slice(0, 10);
+  }, [memberInsights]);
+
+  const nearlyClearedMembers = useMemo(() => {
+    return [...memberInsights]
+      .filter(
+        (member) =>
+          member.outstanding > 0 && member.outstanding < 200
+      )
+      .sort((a, b) => a.outstanding - b.outstanding)
+      .slice(0, 10);
   }, [memberInsights]);
 
   const topContributors = useMemo(() => {
@@ -723,6 +807,131 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
           </Row>
 
           <Row gutter={[12, 12]}>
+            <Col xs={24}>
+              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+                <Typography.Title level={5} className="!mb-3">
+                  Cycle Distribution
+                </Typography.Title>
+                {cycleSummary.length === 0 ? (
+                  <Empty description="No cycle data available" />
+                ) : (
+                  <Table
+                    dataSource={cycleSummary}
+                    rowKey="cycle"
+                    pagination={false}
+                    size="small"
+                    columns={[
+                      {
+                        title: "Cycle",
+                        dataIndex: "cycle",
+                        key: "cycle",
+                        render: (value: string) => (
+                          <Tag color={value === "Unassigned" ? "default" : "blue"}>
+                            {value}
+                          </Tag>
+                        ),
+                      },
+                      {
+                        title: "Members",
+                        dataIndex: "membersCount",
+                        key: "membersCount",
+                        render: (value: number) => (
+                          <Tag color="geekblue">{value}</Tag>
+                        ),
+                      },
+                      {
+                        title: "Total Loaned",
+                        dataIndex: "totalLoaned",
+                        key: "totalLoaned",
+                        render: (value: number) => (
+                          <Tag color="blue">{formatCurrency(value)}</Tag>
+                        ),
+                      },
+                      {
+                        title: "Outstanding",
+                        dataIndex: "outstanding",
+                        key: "outstanding",
+                        render: (value: number) => (
+                          <Tag color={value > 0 ? "red" : "green"}>
+                            {formatCurrency(value)}
+                          </Tag>
+                        ),
+                      },
+                    ]}
+                  />
+                )}
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={[12, 12]}>
+            <Col xs={24} lg={12}>
+              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+                <Typography.Title level={5} className="!mb-3">
+                  Members Without Loans
+                </Typography.Title>
+                {noLoanMembers.length === 0 ? (
+                  <Empty description="All members have loans" />
+                ) : (
+                  <Table
+                    dataSource={noLoanMembers}
+                    rowKey="id"
+                    pagination={false}
+                    size="small"
+                    columns={[
+                      { title: "Member", dataIndex: "name", key: "name" },
+                      {
+                        title: "Status",
+                        dataIndex: "riskLevel",
+                        key: "riskLevel",
+                        render: () => <Tag color="default">No Loan</Tag>,
+                      },
+                    ]}
+                  />
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} lg={12}>
+              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+                <Typography.Title level={5} className="!mb-3">
+                  Nearly Cleared Balances
+                </Typography.Title>
+                {nearlyClearedMembers.length === 0 ? (
+                  <Empty description="No members below KES 200 outstanding" />
+                ) : (
+                  <Table
+                    dataSource={nearlyClearedMembers}
+                    rowKey="id"
+                    pagination={false}
+                    size="small"
+                    columns={[
+                      { title: "Member", dataIndex: "name", key: "name" },
+                      {
+                        title: "Outstanding",
+                        dataIndex: "outstanding",
+                        key: "outstanding",
+                        render: (value: number) => (
+                          <Tag color="gold">{formatCurrency(value)}</Tag>
+                        ),
+                      },
+                      {
+                        title: "Last Payment",
+                        dataIndex: "lastPayment",
+                        key: "lastPayment",
+                        render: (value: string) => (
+                          <Tag color={value === "—" ? "default" : "blue"}>
+                            {value}
+                          </Tag>
+                        ),
+                      },
+                    ]}
+                  />
+                )}
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={[12, 12]}>
             <Col xs={24} lg={16}>
               <Card bordered={false} className="bg-slate-50" bodyStyle={{ padding: 12 }}>
                 <Tabs
@@ -803,12 +1012,21 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                         title: "Outstanding",
                         dataIndex: "outstanding",
                         key: "outstanding",
-                        render: (value: number) => formatCurrency(value),
+                        render: (value: number) => (
+                          <Tag color={value > 0 ? "red" : "green"}>
+                            {formatCurrency(value)}
+                          </Tag>
+                        ),
                       },
                       {
                         title: "Last Payment",
                         dataIndex: "lastPayment",
                         key: "lastPayment",
+                        render: (value: string) => (
+                          <Tag color={value === "—" ? "default" : "blue"}>
+                            {value}
+                          </Tag>
+                        ),
                       },
                       {
                         title: "Risk",
@@ -849,13 +1067,17 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                       title: "Total Paid",
                       dataIndex: "totalPaid",
                       key: "totalPaid",
-                      render: (value: number) => formatCurrency(value),
+                      render: (value: number) => (
+                        <Tag color="green">{formatCurrency(value)}</Tag>
+                      ),
                     },
                     {
                       title: "Total Loaned",
                       dataIndex: "totalLoaned",
                       key: "totalLoaned",
-                      render: (value: number) => formatCurrency(value),
+                      render: (value: number) => (
+                        <Tag color="blue">{formatCurrency(value)}</Tag>
+                      ),
                     },
                     {
                       title: "Status",

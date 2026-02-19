@@ -28,6 +28,13 @@ const CustomerPage = () => {
   const customer = customerData?.customer;
   const loans = loanData?.loans || [];
 
+  const isSubscriptionActive = (status: unknown) => {
+    if (typeof status === "string") {
+      return status.toLowerCase() === "active";
+    }
+    return Number(status) === 1;
+  };
+
   const fullName = useMemo(() => {
     if (!customer) return "";
 
@@ -119,12 +126,14 @@ const CustomerPage = () => {
           </div>
           <div className="flex flex-col items-start gap-4 text-sm text-slate-600 md:items-end md:text-right">
             <Tag
-              color={customer.subscription_status === 1 ? "green" : "red"}
+              color={isSubscriptionActive(customer.subscription_status) ? "green" : "red"}
               className="self-start rounded-full px-4 py-1 text-sm md:self-end"
             >
-              {customer.subscription_status === 1 ? "Subscribed" : "Unsubscribed"}
+              {isSubscriptionActive(customer.subscription_status)
+                ? "Subscribed"
+                : "Unsubscribed"}
             </Tag>
-            {customer.subscription_status !== 1 && (
+            {!isSubscriptionActive(customer.subscription_status) && (
               <Button
                 type="primary"
                 size="large"

@@ -17,7 +17,7 @@ interface LoanRecord {
 interface PerformanceTabProps {
   loans: LoanRecord[];
   customerName: string;
-  subscriptionStatus?: number | null;
+  subscriptionStatus?: string | number | null;
   lastLogin?: string | null;
 }
 
@@ -93,9 +93,13 @@ const CustomerPerformanceTab: React.FC<PerformanceTabProps> = ({
     if (subscriptionStatus === undefined || subscriptionStatus === null) {
       return [];
     }
+    const isActive =
+      typeof subscriptionStatus === "string"
+        ? subscriptionStatus.toLowerCase() === "active"
+        : Number(subscriptionStatus) === 1;
     return [
-      { status: "Active", value: subscriptionStatus === 1 ? 1 : 0 },
-      { status: "Inactive", value: subscriptionStatus === 1 ? 0 : 1 },
+      { status: "Active", value: isActive ? 1 : 0 },
+      { status: "Inactive", value: isActive ? 0 : 1 },
     ];
   }, [subscriptionStatus]);
 

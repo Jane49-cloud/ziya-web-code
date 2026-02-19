@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { clearZiyaSession, triggerLogoutNotice } from "../../utils";
 
@@ -8,6 +8,7 @@ interface HomeTopNavProps {
 
 const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const todayLabel = useMemo(() => {
     return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
@@ -21,6 +22,7 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
     const target = document.getElementById(targetId);
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setIsMenuOpen(false);
     }
   };
 
@@ -28,6 +30,7 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
     clearZiyaSession();
     triggerLogoutNotice();
     navigate("/auth/login");
+    setIsMenuOpen(false);
   };
 
   return (
@@ -47,9 +50,21 @@ const HomeTopNav: React.FC<HomeTopNavProps> = ({ anchors }) => {
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#1f3047]/50">
           {todayLabel}
         </p>
+        <button
+          type="button"
+          aria-expanded={isMenuOpen}
+          aria-controls="home-top-nav-menu"
+          onClick={() => setIsMenuOpen((open) => !open)}
+          className="ml-auto inline-flex items-center rounded-full border border-[#e3ebf6] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#1f3047] transition hover:border-[#32c5f4] lg:hidden"
+        >
+          {isMenuOpen ? "Close" : "Menu"}
+        </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+      <div
+        id="home-top-nav-menu"
+        className={`w-full flex-col gap-3 ${isMenuOpen ? "flex" : "hidden"} lg:flex lg:w-auto lg:flex-row lg:items-center lg:gap-3`}
+      >
         <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
           {anchors.map((anchor) => (
             <button
