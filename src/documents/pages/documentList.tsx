@@ -257,14 +257,14 @@ export const DocumentsList: React.FC = () => {
                       </p>
                     </div>
                     <Tag
-                      color={getAccessLevelColor(record.access_level)}
+                      color={getAccessLevelColor(record.access_level ?? "")}
                       className="capitalize"
                     >
-                      {record.access_level}
+                      {record.access_level ?? "unknown"}
                     </Tag>
                   </div>
                   <p className="mb-3 text-sm text-slate-600">
-                    {stripHtml(record.content)}
+                    {stripHtml(record.content ?? "")}
                   </p>
                   <div className="mb-3 text-xs text-slate-500">
                     Author ID: {record.author_id}
