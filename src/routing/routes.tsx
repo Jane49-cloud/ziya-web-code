@@ -129,18 +129,8 @@ export const sidebarItems: SidebarItem[] = [
   {
     title: "Documents",
     icon: "note-2",
-    dropdown: [
-      {
-        title: "All Documents",
-        path: "/documents",
-        allowedRoles: ALL_ROLES,
-      },
-      {
-        title: "Weekly Series (Coming Soon)",
-        path: "/documents/weekly-series",
-        allowedRoles: ALL_ROLES,
-      },
-    ],
+    path: "/documents",
+    allowedRoles: ALL_ROLES,
   },
   {
     title: "Analysis",

@@ -44,7 +44,6 @@ import { CreateDocumentForm } from "../documents/components/createDocumentForm";
 import { DocumentsList } from "../documents/pages/documentList";
 import { DocumentViewer } from "../documents/pages/documentViewer";
 import { EditDocumentForm } from "../documents/pages/editDocument";
-import WeeklySeriesComingSoon from "../documents/weeklySeries/pages/WeeklySeriesComingSoon";
 import HomeLoading from "../components/common/homeLoading";
 
 const PrivateRoutes = ({ allowedRoles }: { allowedRoles: string[] }) => {
@@ -107,16 +106,16 @@ const AppRouting = (): ReactElement => {
           <Route path="/documents" element={<DocumentsList />} />
           <Route path="/documents/create" element={<CreateDocumentForm />} />
           <Route
-            path="/documents/weekly-series"
-            element={<WeeklySeriesComingSoon />}
-          />
-          <Route
             path="/documents/weekly-series/create"
-            element={<Navigate to="/documents/weekly-series" replace />}
+            element={<Navigate to="/documents" replace />}
           />
           <Route
             path="/documents/weekly-series/:id"
-            element={<Navigate to="/documents/weekly-series" replace />}
+            element={<Navigate to="/documents" replace />}
+          />
+          <Route
+            path="/documents/weekly-series"
+            element={<Navigate to="/documents" replace />}
           />
           <Route path="/documents/:id" element={<DocumentViewer />} />
           <Route path="/documents/edit/:id" element={<EditDocumentForm />} />
