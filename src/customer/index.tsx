@@ -300,9 +300,16 @@ const CustomerManagement: FC = () => {
       ),
     },
     {
-      title: "Last Login",
+      title: "Last Access",
       dataIndex: "last_login",
       key: "last_login",
+      sorter: (a: any, b: any) => {
+        const aTime = a?.last_login ? moment(a.last_login).valueOf() : 0;
+        const bTime = b?.last_login ? moment(b.last_login).valueOf() : 0;
+        return aTime - bTime;
+      },
+      defaultSortOrder: "descend",
+      sortDirections: ["descend", "ascend"],
       render: (value: string) =>
         value ? (
           <Tooltip title={moment(value).format("YYYY-MM-DD HH:mm:ss")}>
