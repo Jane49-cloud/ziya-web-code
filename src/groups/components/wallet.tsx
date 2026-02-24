@@ -41,7 +41,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
     { title: "Value", dataIndex: "value", key: "value" },
   ];
 
-  const handleUpdate = async (values: { amount: number }) => {
+  const handleUpdate = async (values: { amount: number; op: "inc" | "dec" }) => {
     try {
       await updateWallet({ id: groupId, ...values }).unwrap();
       message.success("Wallet updated successfully");
@@ -119,7 +119,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
               <EditWalletModal
                 visible={walletModalVisible}
                 onCancel={() => setWalletModalVisible(false)}
-                initialValues={{ amount: wallet.balance }}
+                initialValues={{ op: "inc" }}
                 onUpdate={handleUpdate}
               />
             )}

@@ -142,7 +142,7 @@ const AllGroupWalletsPage = () => {
   }, []);
 
   const handleWalletUpdate = useCallback(
-    async ({ amount }: { amount: number }) => {
+    async ({ amount, op }: { amount: number; op: "inc" | "dec" }) => {
       if (!selectedWallet) return;
 
       const walletId = Number(selectedWallet.group_id);
@@ -155,6 +155,7 @@ const AllGroupWalletsPage = () => {
         await updateWallet({
           id: walletId,
           amount,
+          op,
         }).unwrap();
         message.success("Wallet updated successfully");
         handleEditCancel();
@@ -329,9 +330,7 @@ const AllGroupWalletsPage = () => {
           visible={isEditModalVisible}
           onCancel={handleEditCancel}
           onUpdate={handleWalletUpdate}
-          initialValues={{
-            amount: Number(selectedWallet.balance ?? 0),
-          }}
+          initialValues={{ op: "inc" }}
         />
       )}
     </div>

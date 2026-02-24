@@ -134,10 +134,18 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
     updateGroupWallet: builder.mutation({
-      query: ({ id, ...body }) => ({
-        url: `/groups/wallet/${id}`,
+      query: ({
+        id,
+        amount,
+        op,
+      }: {
+        id: number;
+        amount: number;
+        op: "inc" | "dec";
+      }) => ({
+        url: `/groups/wallet/${id}?op=${op}`,
         method: "PUT",
-        body,
+        body: { amount },
       }),
       invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
     }),
