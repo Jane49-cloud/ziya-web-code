@@ -19,6 +19,7 @@ export const {
   useGetAllGroupActivitiesQuery,
   useGetGroupActivitiesByUserQuery,
   useGetGroupActivitiesByGroupQuery,
+  useGetGroupAdminActivityQuery,
   useCreateGroupLoanMutation,
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,

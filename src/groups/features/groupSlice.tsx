@@ -158,6 +158,13 @@ export const GroupSlice = apiSlice.injectEndpoints({
     getGroupActivitiesByGroup: builder.query({
       query: (groupId) => `/group-activities/group/${groupId}`,
     }),
+    getGroupAdminActivity: builder.query({
+      query: (groupId: number) => ({
+        url: `/groups/admin/activity/${groupId}`,
+        method: "GET",
+      }),
+      providesTags: (_res, _err, groupId) => [{ type: "Groups", id: groupId }],
+    }),
 
     // group loans
     createGroupLoan: builder.mutation({

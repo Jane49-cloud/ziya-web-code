@@ -9,7 +9,6 @@ import {
   Card,
   Badge,
   Space,
-  Tooltip,
 } from "antd";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
@@ -25,10 +24,9 @@ import {
   useUpdateGroupMemberCountMutation,
 } from "./features";
 import CreateGroupForm from "./components/groupForm";
-import { useNavigate } from "react-router-dom";
 import GroupAnalyticsPage from "./pages/groupAnalytics";
+import GroupAdminAccessAnalytics from "./pages/groupAdminAccessAnalytics";
 import {
-  FiActivity,
   FiPlusCircle,
   FiLayers,
   FiUsers,
@@ -55,8 +53,6 @@ const GroupTabs = () => {
   const { data: allGroups, refetch: refetchAll } = useGetAllGroupsQuery({});
   const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
   const { data: managedGroups } = useGetMyManagedGroupsQuery({});
-
-  const navigate = useNavigate();
 
   // const [deleteGroup] = useDeleteGroupMutation();
   const [updateGroup] = useUpdateGroupMutation();
@@ -203,6 +199,16 @@ const GroupTabs = () => {
       ),
       children: <GroupAnalyticsPage />,
     },
+    {
+      key: "admin-access",
+      label: (
+        <Space size={6}>
+          Admin Tracker
+          <FiUserCheck />
+        </Space>
+      ),
+      children: <GroupAdminAccessAnalytics />,
+    },
   ];
 
   return (
@@ -219,14 +225,6 @@ const GroupTabs = () => {
         </div>
 
         <Space wrap>
-          <Tooltip title="See timeline of actions across all groups">
-            <Button
-              onClick={() => navigate("/activities/all")}
-              icon={<FiActivity />}
-            >
-              View Group Activity
-            </Button>
-          </Tooltip>
           <Button
             type="primary"
             icon={<FiPlusCircle />}

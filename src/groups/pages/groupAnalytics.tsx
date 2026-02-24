@@ -12,7 +12,10 @@ import {
   Button,
 } from "antd";
 import { Column } from "@ant-design/plots";
-import { useGetAllGroupsQuery, useGetAllGroupWalletsQuery } from "../features";
+import {
+  useGetAllGroupsQuery,
+  useGetAllGroupWalletsQuery,
+} from "../features";
 import { formatName } from "../../utils";
 
 const { Title, Text } = Typography;
