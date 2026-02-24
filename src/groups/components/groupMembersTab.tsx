@@ -150,16 +150,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   ];
 
   return (
-    <Card className="mt-6" bordered={false} bodyStyle={{ padding: 24 }}>
-      <div className="flex flex-wrap justify-between items-center mb-4">
-        <Title level={4}>Group Members</Title>
-
+    <Card bordered={false} className="rounded-xl shadow-sm" styles={{ body: { padding: '20px 24px' } }}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+          <Title level={4} className="!mb-0.5">Group Members</Title>
+          <Typography.Text type="secondary" className="text-sm">
+            Manage who belongs to this group.
+          </Typography.Text>
+        </div>
         <div className="flex gap-2">
           <Input
             placeholder="Search members..."
             value={searchMembers}
             onChange={(e) => setSearchMembers(e.target.value)}
-            style={{ width: 250 }}
+            style={{ width: 220 }}
+            allowClear
           />
           <Button
             type="primary"
@@ -183,6 +188,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
           pagination={{ pageSize: 10, showSizeChanger: true }}
           scroll={{ x: 900 }}
           size="middle"
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
         />
       )}
 

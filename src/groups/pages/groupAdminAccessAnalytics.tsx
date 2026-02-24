@@ -43,7 +43,7 @@ const getLevelFromDays = (
 ): { level: AccessLevel; status: AccessStatus } => {
   if (daysSinceActivity <= 3) return { level: "High", status: "Good" };
   if (daysSinceActivity <= 14) return { level: "Moderate", status: "Fair" };
-  if (daysSinceActivity <= 30) return { level: "Low", status: "Fair" };
+  if (daysSinceActivity <= 30) return { level: "Low", status: "Poor" };
   return { level: "Poor", status: "Poor" };
 };
 
@@ -213,11 +213,11 @@ const GroupAdminAccessAnalytics = () => {
   }
 
   return (
-    <div className="space-y-6 mt-2">
+    <div className="space-y-6 mt-2.5">
       <Card
         bordered={false}
-        className="shadow-sm"
-        bodyStyle={{ padding: 16 }}
+        className="rounded-xl shadow-sm"
+        styles={{ body: { padding: "16px 20px" } }}
       >
         <div className="flex flex-wrap items-center justify-between gap-3 ">
           <div>
@@ -238,42 +238,65 @@ const GroupAdminAccessAnalytics = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-        <Card bordered={false} className="bg-emerald-50">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-4 mt-2">
+        <Card
+          bordered={false}
+          className="rounded-xl bg-emerald-50"
+          styles={{ body: { padding: "14px 18px" } }}
+        >
           <Statistic
             title="High Activity"
             value={
               mergedRows.filter((row) => row.activityLevel === "High").length
             }
+            valueStyle={{ fontWeight: 600, color: "#059669" }}
           />
         </Card>
-        <Card bordered={false} className="bg-blue-50">
+        <Card
+          bordered={false}
+          className="rounded-xl bg-blue-50"
+          styles={{ body: { padding: "14px 18px" } }}
+        >
           <Statistic
             title="Moderate Activity"
             value={
               mergedRows.filter((row) => row.activityLevel === "Moderate")
                 .length
             }
+            valueStyle={{ fontWeight: 600, color: "#1d4ed8" }}
           />
         </Card>
-        <Card bordered={false} className="bg-amber-50">
+        <Card
+          bordered={false}
+          className="rounded-xl bg-amber-50"
+          styles={{ body: { padding: "14px 18px" } }}
+        >
           <Statistic
             title="Low Activity"
             value={
               mergedRows.filter((row) => row.activityLevel === "Low").length
             }
+            valueStyle={{ fontWeight: 600, color: "#d97706" }}
           />
         </Card>
-        <Card bordered={false} className="bg-rose-50">
-          <Statistic title="Red Zone Groups" value={redZoneRows.length} />
+        <Card
+          bordered={false}
+          className="rounded-xl bg-rose-50"
+          styles={{ body: { padding: "14px 18px" } }}
+        >
+          <Statistic
+            title="Red Zone Groups"
+            value={redZoneRows.length}
+            valueStyle={{ fontWeight: 600, color: "#e11d48" }}
+          />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -296,8 +319,8 @@ const GroupAdminAccessAnalytics = () => {
         </Card>
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -317,8 +340,15 @@ const GroupAdminAccessAnalytics = () => {
               yField="value"
               height={240}
               padding={[16, 16, 40, 40]}
-              color="#ef4444"
-              columnStyle={{ radius: [6, 6, 0, 0] }}
+              color={() => "#ef4444"}
+              columnStyle={{ radius: [6, 6, 0, 0], fill: "#ef4444" }}
+              axis={{
+                x: {
+                  label: false,
+                  tick: false,
+                  line: false,
+                },
+              }}
               tooltip={{
                 formatter: (datum: { group: string; value: number }) => ({
                   name: datum.group,
@@ -330,12 +360,17 @@ const GroupAdminAccessAnalytics = () => {
         </Card>
       </div>
 
-      <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+      <Card
+        bordered={false}
+        className="rounded-xl shadow-sm"
+        styles={{ body: { padding: "12px 16px" } }}
+      >
         <Table
           dataSource={filteredRows}
           rowKey="key"
           size="middle"
           pagination={{ pageSize: 10, showSizeChanger: true }}
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
           columns={[
             {
               title: "Group",

@@ -236,44 +236,44 @@ const GroupTabs = () => {
       </div>
 
       {/* summary */}
-      <Card bordered={false} className="shadow-sm rounded-xl   mb-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FiLayers />
+      <Card bordered={false} className="rounded-xl shadow-sm mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
+                <FiLayers size={18} />
               </div>
               <div>
-                <Text type="secondary">Total Groups</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Total Groups</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.total}
                 </div>
               </div>
             </Space>
           </div>
 
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FiUsers />
+          <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
+                <FiUsers size={18} />
               </div>
               <div>
-                <Text type="secondary">Created by Me</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Created by Me</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.created}
                 </div>
               </div>
             </Space>
           </div>
 
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiUserCheck />
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                <FiUserCheck size={18} />
               </div>
               <div>
-                <Text type="secondary">Managed by Me</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Managed by Me</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.managed}
                 </div>
               </div>

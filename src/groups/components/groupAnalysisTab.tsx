@@ -69,7 +69,7 @@ const getSingleName = (fullName: string) => {
 const buildMonthlySeries = (
   records: GenericRecord[] | undefined,
   dateField: string,
-  valueField: string
+  valueField: string,
 ): MonthlyDatum[] => {
   if (!Array.isArray(records)) return [];
 
@@ -122,17 +122,18 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   const loans = (loansQuery.data?.loans as GenericRecord[] | undefined) ?? [];
   const payments =
     (paymentsQuery.data?.payments as GenericRecord[] | undefined) ?? [];
-  const members = (membersQuery.data?.members as GenericRecord[] | undefined) ?? [];
+  const members =
+    (membersQuery.data?.members as GenericRecord[] | undefined) ?? [];
   const wallet = walletQuery.data?.wallet as GenericRecord | undefined;
 
   const loanTrend = useMemo(
     () => buildMonthlySeries(loans, "date_issued", "amount"),
-    [loans]
+    [loans],
   );
 
   const paymentTrend = useMemo(
     () => buildMonthlySeries(payments, "date_paid", "amount"),
-    [payments]
+    [payments],
   );
 
   const totalLoaned = useMemo(() => {
@@ -167,7 +168,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     () =>
       loans.filter((loan: GenericRecord) => Number(loan?.balance ?? 0) > 0)
         .length,
-    [loans]
+    [loans],
   );
 
   const activeBorrowers = useMemo(() => {
@@ -176,7 +177,10 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
       const balance = Number(loan?.balance ?? 0);
       if (Number.isNaN(balance) || balance <= 0) return;
       const memberId =
-        loan?.issued_to ?? loan?.customer_id ?? loan?.member_id ?? loan?.user_id;
+        loan?.issued_to ??
+        loan?.customer_id ??
+        loan?.member_id ??
+        loan?.user_id;
       if (memberId !== undefined && memberId !== null) {
         activeSet.add(String(memberId));
       }
@@ -186,14 +190,14 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
   const netPosition = useMemo(
     () => totalLoaned - totalPayments,
-    [totalLoaned, totalPayments]
+    [totalLoaned, totalPayments],
   );
 
   const netTrend = useMemo(() => {
     if (!loanTrend.length && !paymentTrend.length) return [];
     const merged = new Map<string, { loans: number; payments: number }>();
     loanTrend.forEach((item) =>
-      merged.set(item.month, { loans: item.value, payments: 0 })
+      merged.set(item.month, { loans: item.value, payments: 0 }),
     );
     paymentTrend.forEach((item) => {
       const existing = merged.get(item.month) ?? { loans: 0, payments: 0 };
@@ -210,7 +214,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   const loanMix = useMemo(() => {
     if (!loans.length) return [];
     const settled = loans.filter(
-      (loan: GenericRecord) => Number(loan?.balance ?? 0) <= 0
+      (loan: GenericRecord) => Number(loan?.balance ?? 0) <= 0,
     ).length;
     return [
       { status: "Settled", value: settled },
@@ -227,10 +231,16 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   }, [payments]);
 
   const memberInsights = useMemo<MemberInsight[]>(() => {
-    const loansByMember = new Map<string, { loaned: number; outstanding: number }>();
+    const loansByMember = new Map<
+      string,
+      { loaned: number; outstanding: number }
+    >();
     loans.forEach((loan: GenericRecord) => {
       const memberId =
-        loan?.issued_to ?? loan?.customer_id ?? loan?.member_id ?? loan?.user_id;
+        loan?.issued_to ??
+        loan?.customer_id ??
+        loan?.member_id ??
+        loan?.user_id;
       if (memberId === undefined || memberId === null) return;
       const key = String(memberId);
       const amount = Number(loan?.amount ?? 0);
@@ -262,7 +272,8 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
       };
       const date = parseDayjs(payment?.date_paid);
       const lastPayment =
-        date.isValid() && (!current.lastPayment || date.isAfter(current.lastPayment))
+        date.isValid() &&
+        (!current.lastPayment || date.isAfter(current.lastPayment))
           ? date
           : current.lastPayment;
       paymentsByMember.set(key, {
@@ -310,7 +321,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               : "Stable";
 
       const name = formatName(
-        `${member?.firstname ?? ""} ${member?.lastname ?? ""}`.trim()
+        `${member?.firstname ?? ""} ${member?.lastname ?? ""}`.trim(),
       );
 
       return {
@@ -354,15 +365,13 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
       const amount = Number(loan?.amount ?? 0);
       const balance = Number(loan?.balance ?? 0);
-      const entry =
-        cycleMap.get(cycleLabel) ??
-        {
-          cycle: cycleLabel,
-          cycleNumber: Number.isNaN(cycleNumber) ? null : cycleNumber,
-          members: new Set<string>(),
-          loaned: 0,
-          outstanding: 0,
-        };
+      const entry = cycleMap.get(cycleLabel) ?? {
+        cycle: cycleLabel,
+        cycleNumber: Number.isNaN(cycleNumber) ? null : cycleNumber,
+        members: new Set<string>(),
+        loaned: 0,
+        outstanding: 0,
+      };
 
       if (memberId !== undefined && memberId !== null) {
         entry.members.add(String(memberId));
@@ -394,8 +403,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
       .filter(
         (member) =>
           member.riskLevel !== "Stable" &&
-          (member.daysSincePayment === null ||
-            member.daysSincePayment > 1)
+          (member.daysSincePayment === null || member.daysSincePayment > 1),
       )
       .sort((a, b) => (b.daysSincePayment ?? 0) - (a.daysSincePayment ?? 0))
       .slice(0, 8);
@@ -409,10 +417,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
   const nearlyClearedMembers = useMemo(() => {
     return [...memberInsights]
-      .filter(
-        (member) =>
-          member.outstanding > 0 && member.outstanding < 200
-      )
+      .filter((member) => member.outstanding > 0 && member.outstanding < 200)
       .sort((a, b) => a.outstanding - b.outstanding)
       .slice(0, 10);
   }, [memberInsights]);
@@ -596,7 +601,10 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     ];
   }, [totalOutstanding, repaymentRate, laggingMembers.length]);
 
-  const downloadCSV = (rows: Array<Record<string, unknown>>, filename: string) => {
+  const downloadCSV = (
+    rows: Array<Record<string, unknown>>,
+    filename: string,
+  ) => {
     if (!rows.length) return;
     const headers = Object.keys(rows[0]);
     const csv = [
@@ -608,7 +616,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
             const escaped = String(value ?? "").replace(/"/g, '""');
             return `"${escaped}"`;
           })
-          .join(",")
+          .join(","),
       ),
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -621,7 +629,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
   };
 
   return (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       {isInitialLoading ? (
         <div className="flex min-h-[240px] items-center justify-center">
           <Space direction="vertical" align="center">
@@ -633,7 +641,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
         </div>
       ) : (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <Card bordered={false} className="shadow-sm">
+          <Card bordered={false} className="rounded-xl shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <Typography.Title level={4} className="!mb-0">
@@ -666,7 +674,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                         daysSincePayment: member.daysSincePayment ?? "",
                         riskLevel: member.riskLevel,
                       })),
-                      `group-${groupId}-member-analytics.csv`
+                      `group-${groupId}-member-analytics.csv`,
                     )
                   }
                 >
@@ -677,7 +685,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
             </div>
           </Card>
 
-          <Card bordered={false} className="shadow-sm">
+          <Card bordered={false} className="rounded-xl shadow-sm">
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={12}>
                 <Typography.Title level={5} className="!mb-2">
@@ -790,7 +798,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               },
             ].map((stat) => (
               <Col xs={24} sm={12} md={8} key={stat.title}>
-                <Card bordered={false} className={stat.tone} bodyStyle={{ padding: 14 }}>
+                <Card
+                  bordered={false}
+                  className={`rounded-xl ${stat.tone}`}
+                  styles={{ body: { padding: "12px 16px" } }}
+                >
                   <Statistic
                     title={stat.title}
                     value={stat.value}
@@ -808,7 +820,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
           <Row gutter={[12, 12]}>
             <Col xs={24}>
-              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl shadow-sm"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Cycle Distribution
                 </Typography.Title>
@@ -820,13 +836,16 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                     rowKey="cycle"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
                     columns={[
                       {
                         title: "Cycle",
                         dataIndex: "cycle",
                         key: "cycle",
                         render: (value: string) => (
-                          <Tag color={value === "Unassigned" ? "default" : "blue"}>
+                          <Tag
+                            color={value === "Unassigned" ? "default" : "blue"}
+                          >
                             {value}
                           </Tag>
                         ),
@@ -866,7 +885,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
           <Row gutter={[12, 12]}>
             <Col xs={24} lg={12}>
-              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl shadow-sm"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Members Without Loans
                 </Typography.Title>
@@ -878,6 +901,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                     rowKey="id"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
                     columns={[
                       { title: "Member", dataIndex: "name", key: "name" },
                       {
@@ -892,7 +916,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl shadow-sm"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Nearly Cleared Balances
                 </Typography.Title>
@@ -904,6 +932,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                     rowKey="id"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
                     columns={[
                       { title: "Member", dataIndex: "name", key: "name" },
                       {
@@ -933,7 +962,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
           <Row gutter={[12, 12]}>
             <Col xs={24} lg={16}>
-              <Card bordered={false} className="bg-slate-50" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl bg-slate-50"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Tabs
                   items={analysisTabs}
                   defaultActiveKey="loans"
@@ -942,7 +975,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card bordered={false} className="bg-slate-50" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl bg-slate-50"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Loan Status Mix
                 </Typography.Title>
@@ -965,7 +1002,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                 )}
               </Card>
 
-              <Card bordered={false} className="bg-slate-50 mt-3" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl bg-slate-50 mt-3"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-1">
                   Trend-based Projection
                 </Typography.Title>
@@ -994,7 +1035,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
           <Row gutter={[12, 12]}>
             <Col xs={24} lg={12}>
-              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl shadow-sm"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Members Lagging Behind
                 </Typography.Title>
@@ -1006,6 +1051,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                     rowKey="id"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
                     columns={[
                       { title: "Member", dataIndex: "name", key: "name" },
                       {
@@ -1052,7 +1098,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 12 }}>
+              <Card
+                bordered={false}
+                className="rounded-xl shadow-sm"
+                styles={{ body: { padding: "12px 16px" } }}
+              >
                 <Typography.Title level={5} className="!mb-3">
                   Member Contribution Snapshot
                 </Typography.Title>
@@ -1061,6 +1111,7 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                   rowKey="id"
                   pagination={false}
                   size="small"
+                  className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
                   columns={[
                     { title: "Member", dataIndex: "name", key: "name" },
                     {

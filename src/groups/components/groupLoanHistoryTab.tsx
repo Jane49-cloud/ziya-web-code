@@ -190,7 +190,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
   const averageAmount = activeLoans ? Math.round(totalLoaned / activeLoans) : 0;
 
   return (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -215,27 +215,33 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
 
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Total Amount Issued"
-              value={totalLoaned}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-blue-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Total Amount Issued"
+                value={totalLoaned}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#1d4ed8' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Active Loans"
-              value={activeLoans}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-emerald-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Active Loans"
+                value={activeLoans}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#059669' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Average Ticket Size"
-              value={averageAmount}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-amber-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Average Ticket Size"
+                value={averageAmount}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#d97706' }}
+              />
+            </Card>
           </Col>
         </Row>
 
@@ -265,6 +271,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
           pagination={{ pageSize: 6, showSizeChanger: true }}
           scroll={{ x: 900 }}
           size="middle"
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
         />
       </Space>
 

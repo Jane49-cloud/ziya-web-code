@@ -94,7 +94,7 @@ const SingleGroupPage: React.FC = () => {
   }
 
   const renderPlaceholder = (title: string, subtitle?: string) => (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space
         direction="vertical"
         align="center"
@@ -139,12 +139,13 @@ const SingleGroupPage: React.FC = () => {
             </Space>
           </Card>
         ) : (
-          <Card bordered={false} className="shadow-sm">
+          <Card bordered={false} className="rounded-xl shadow-sm">
             <Table
               columns={columns}
               dataSource={groupDetails}
               pagination={false}
               rowKey="key"
+              className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
             />
           </Card>
         ),

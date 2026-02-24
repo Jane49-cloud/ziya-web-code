@@ -177,7 +177,7 @@ const GroupAnalyticsPage = () => {
 
   return (
     <div className="space-y-3">
-      <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 16 }}>
+      <Card bordered={false} className="rounded-xl shadow-sm" styles={{ body: { padding: '16px 20px' } }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Title level={4} className="!mb-1">
@@ -203,15 +203,15 @@ const GroupAnalyticsPage = () => {
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         <Card
           bordered={false}
-          className="bg-blue-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-blue-50"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <Statistic title="Total Groups" value={summary.totalGroups} />
         </Card>
         <Card
           bordered={false}
-          className="bg-emerald-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-emerald-50"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <Statistic
             title="Total Wallet Balance"
@@ -221,8 +221,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="bg-amber-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-amber-50"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <Statistic
             title="Loans Out Value"
@@ -235,8 +235,8 @@ const GroupAnalyticsPage = () => {
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -269,8 +269,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -306,8 +306,8 @@ const GroupAnalyticsPage = () => {
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -346,8 +346,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: '12px 16px' } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">

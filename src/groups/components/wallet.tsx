@@ -58,21 +58,27 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
         {
           title: "Available Balance",
           value: Number(wallet.balance ?? 0),
+          bg: "bg-blue-50",
+          color: "#1d4ed8",
         },
         {
           title: "Loans Out Value",
           value: Number(wallet.loans_out_value ?? 0),
+          bg: "bg-amber-50",
+          color: "#d97706",
         },
         {
           title: "Total Loans Count",
           value: Number(wallet.total_loans_counts ?? 0),
           isCount: true,
+          bg: "bg-emerald-50",
+          color: "#059669",
         },
       ]
     : [];
 
   return (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space direction="vertical" size={20} style={{ width: "100%" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Title level={4} className="!mb-0">
@@ -92,10 +98,11 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
             <Row gutter={[16, 16]}>
               {summaryStats.map((stat) => (
                 <Col xs={24} md={8} key={stat.title}>
-                  <Card bordered={false} className="bg-slate-50">
+                  <Card bordered={false} className={`rounded-xl ${stat.bg}`} styles={{ body: { padding: '14px 18px' } }}>
                     <Statistic
                       title={stat.title}
                       value={stat.value}
+                      valueStyle={{ fontWeight: 600, color: stat.color }}
                       formatter={(value) =>
                         stat.isCount
                           ? `${value}`
@@ -113,6 +120,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
               pagination={false}
               loading={isFetching && Boolean(wallet)}
               rowKey="key"
+              className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
             />
 
             {wallet && (

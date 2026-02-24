@@ -104,7 +104,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
     : 0;
 
   return (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -127,27 +127,33 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Total Received"
-              value={totalPaid}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-emerald-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Total Received"
+                value={totalPaid}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#059669' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Transactions"
-              value={totalTransactions}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-blue-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Transactions"
+                value={totalTransactions}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#1d4ed8' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Average Ticket"
-              value={averagePayment}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-slate-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Average Ticket"
+                value={averagePayment}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600 }}
+              />
+            </Card>
           </Col>
         </Row>
 
@@ -159,6 +165,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
           pagination={{ pageSize: 6, showSizeChanger: true }}
           scroll={{ x: 900 }}
           size="middle"
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-emerald-50/30"
         />
       </Space>
     </Card>
