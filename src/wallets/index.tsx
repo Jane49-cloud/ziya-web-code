@@ -224,7 +224,7 @@ const AllGroupWalletsPage = () => {
         ),
       },
     ],
-    [formatCurrency, handleOpenEdit]
+    [formatCurrency, handleOpenEdit, navigate]
   );
 
   return (
