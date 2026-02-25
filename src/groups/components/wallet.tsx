@@ -13,7 +13,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
     skip: !groupId,
     refetchOnReconnect: true,
     refetchOnMountOrArgChange: true,
-    pollingInterval: 30000,
+    pollingInterval: 60000,
   });
   const [walletModalVisible, setWalletModalVisible] = useState(false);
   const [updateWallet] = useUpdateGroupWalletMutation();

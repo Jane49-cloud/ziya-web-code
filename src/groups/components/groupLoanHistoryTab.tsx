@@ -44,7 +44,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
     {
       refetchOnFocus: true,
       refetchOnReconnect: true,
-      pollingInterval: 30000,
+      pollingInterval: 60000,
     },
   );
   const loans = useMemo(() => data?.loans || [], [data?.loans]);

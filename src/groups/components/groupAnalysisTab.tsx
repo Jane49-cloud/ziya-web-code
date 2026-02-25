@@ -119,11 +119,18 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     refetchOnReconnect: true,
   });
 
-  const loans = (loansQuery.data?.loans as GenericRecord[] | undefined) ?? [];
-  const payments =
-    (paymentsQuery.data?.payments as GenericRecord[] | undefined) ?? [];
-  const members =
-    (membersQuery.data?.members as GenericRecord[] | undefined) ?? [];
+  const loans = useMemo(
+    () => (loansQuery.data?.loans as GenericRecord[] | undefined) ?? [],
+    [loansQuery.data?.loans],
+  );
+  const payments = useMemo(
+    () => (paymentsQuery.data?.payments as GenericRecord[] | undefined) ?? [],
+    [paymentsQuery.data?.payments],
+  );
+  const members = useMemo(
+    () => (membersQuery.data?.members as GenericRecord[] | undefined) ?? [],
+    [membersQuery.data?.members],
+  );
   const wallet = walletQuery.data?.wallet as GenericRecord | undefined;
 
   const loanTrend = useMemo(
@@ -621,11 +628,14 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (

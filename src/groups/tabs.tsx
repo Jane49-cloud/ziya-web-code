@@ -10,6 +10,7 @@ import {
   Badge,
   Space,
 } from "antd";
+import { useSearchParams } from "react-router-dom";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
@@ -18,7 +19,6 @@ import {
   useGetAllGroupsQuery,
   useGetMyCreatedGroupsQuery,
   useGetMyManagedGroupsQuery,
-  // useDeleteGroupMutation,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
@@ -48,13 +48,13 @@ const GroupTabs = () => {
     member: false,
   });
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "all";
 
   const { data: allGroups, refetch: refetchAll } = useGetAllGroupsQuery({});
   const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
   const { data: managedGroups } = useGetMyManagedGroupsQuery({});
 
-  // const [deleteGroup] = useDeleteGroupMutation();
   const [updateGroup] = useUpdateGroupMutation();
   const [changeManager] = useChangeRelationshipManagerMutation();
   const [updateMemberCount] = useUpdateGroupMemberCountMutation();
@@ -95,11 +95,6 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  // const onChangeMembers = (group: any) => {
-  //   setSelectedGroup(group);
-  //   setModals((prev) => ({ ...prev, member: true }));
-  // };
-
   const onMemberSubmit = async () => {
     const values = await memberForm.validateFields();
     await updateMemberCount({
@@ -110,12 +105,6 @@ const GroupTabs = () => {
     setModals((prev) => ({ ...prev, member: false }));
     refetchAll();
   };
-
-  // const onDelete = async (id: any) => {
-  //   await deleteGroup(id);
-  //   message.success("Group deleted");
-  //   refetchAll();
-  // };
 
   const summary = useMemo(() => {
     const total = allGroups?.groups?.length ?? 0;
@@ -133,15 +122,17 @@ const GroupTabs = () => {
           data={allGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
     {
       key: "create",
       label: "Create Group",
-      children: <CreateGroupForm onSuccess={() => setActiveTab("all")} />,
+      children: (
+        <CreateGroupForm
+          onSuccess={() => setSearchParams({ tab: "all" }, { replace: true })}
+        />
+      ),
     },
     {
       key: "created",
@@ -161,8 +152,6 @@ const GroupTabs = () => {
           data={createdGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
@@ -184,8 +173,6 @@ const GroupTabs = () => {
           data={managedGroups?.groups || []}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
@@ -228,7 +215,7 @@ const GroupTabs = () => {
           <Button
             type="primary"
             icon={<FiPlusCircle />}
-            onClick={() => setActiveTab("create")}
+            onClick={() => setSearchParams({ tab: "create" }, { replace: true })}
           >
             Create Group
           </Button>
@@ -285,7 +272,7 @@ const GroupTabs = () => {
       {/* ---------- Tabs ---------- */}
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key)}
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
         items={tabItems}
         type="card"
         size="large"
@@ -298,19 +285,19 @@ const GroupTabs = () => {
       <EditGroupModal
         visible={modals.edit}
         form={form}
-        onCancel={() => setModals({ ...modals, edit: false })}
+        onCancel={() => { form.resetFields(); setModals({ ...modals, edit: false }); }}
         onUpdate={onUpdate}
       />
       <ChangeManagerModal
         visible={modals.manager}
         form={managerForm}
-        onCancel={() => setModals({ ...modals, manager: false })}
+        onCancel={() => { managerForm.resetFields(); setModals({ ...modals, manager: false }); }}
         onSubmit={onManagerSubmit}
       />
       <UpdateMemberCountModal
         visible={modals.member}
         form={memberForm}
-        onCancel={() => setModals({ ...modals, member: false })}
+        onCancel={() => { memberForm.resetFields(); setModals({ ...modals, member: false }); }}
         onSubmit={onMemberSubmit}
       />
     </div>

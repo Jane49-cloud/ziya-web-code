@@ -22,7 +22,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
   const { data, isLoading, isFetching } = useGetGroupPaymentsQuery(groupId, {
     refetchOnFocus: true,
     refetchOnReconnect: true,
-    pollingInterval: 30000,
+    pollingInterval: 60000,
   });
 
   const payments = data?.payments || [];
