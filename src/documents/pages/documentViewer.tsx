@@ -26,7 +26,7 @@ export const DocumentViewer: React.FC = () => {
   const doc = data?.document; // renamed from "document" to avoid confusion
   const sanitizedContent = useMemo(
     () => (doc?.content ? DOMPurify.sanitize(doc.content) : ""),
-    [doc?.content]
+    [doc?.content],
   );
 
   const handlePrint = () => {
@@ -75,10 +75,10 @@ export const DocumentViewer: React.FC = () => {
   const createdAt = doc ? new Date(doc.date_created) : null;
 
   return (
-    <div className="-mt-4 min-h-screen bg-slate-50 print:bg-white">
+    <div className="mt-4 min-h-screen print:bg-white">
       <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top,_rgba(50,197,244,0.08),_transparent_60%)] lg:block" />
-      <main className="relative z-10 pb-10 sm:pb-12">
-        <section className="mx-auto w-full max-w-6xl overflow-hidden bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 pb-10 sm:pb-12 ">
+        <section className="mx-auto w-full  overflow-hidden bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
           <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
             <div className="flex flex-wrap items-center gap-3 px-4 py-3">
               <Button
@@ -140,7 +140,7 @@ export const DocumentViewer: React.FC = () => {
             </div>
           </header>
           <article className="doc-printable doc-page w-full">
-            <div className="doc-render px-4 py-6 text-[15px] leading-relaxed text-slate-700">
+            <div className="doc-render px-10 py-6 text-[15px] leading-relaxed text-slate-700">
               <div
                 className="prose prose-slate max-w-none"
                 dangerouslySetInnerHTML={{ __html: sanitizedContent }}
