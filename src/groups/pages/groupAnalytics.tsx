@@ -12,10 +12,7 @@ import {
   Button,
 } from "antd";
 import { Column } from "@ant-design/plots";
-import {
-  useGetAllGroupsQuery,
-  useGetAllGroupWalletsQuery,
-} from "../features";
+import { useGetAllGroupsQuery, useGetAllGroupWalletsQuery } from "../features";
 import { formatName } from "../../utils";
 
 const { Title, Text } = Typography;
@@ -180,8 +177,12 @@ const GroupAnalyticsPage = () => {
 
   return (
     <div className="space-y-3">
-      <Card bordered={false} className="rounded-xl shadow-sm" styles={{ body: { padding: '16px 20px' } }}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <Card
+        bordered={false}
+        className="rounded-xl shadow-smß"
+        styles={{ body: { padding: "16px 20px" } }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 ">
           <div>
             <Title level={4} className="!mb-1">
               Group Analytics
@@ -203,18 +204,18 @@ const GroupAnalyticsPage = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-3 my-3">
         <Card
           bordered={false}
           className="rounded-xl bg-blue-50"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic title="Total Groups" value={summary.totalGroups} />
         </Card>
         <Card
           bordered={false}
           className="rounded-xl bg-emerald-50"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic
             title="Total Wallet Balance"
@@ -225,7 +226,7 @@ const GroupAnalyticsPage = () => {
         <Card
           bordered={false}
           className="rounded-xl bg-amber-50"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic
             title="Loans Out Value"
@@ -239,7 +240,7 @@ const GroupAnalyticsPage = () => {
         <Card
           bordered={false}
           className="rounded-xl shadow-sm"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -273,7 +274,7 @@ const GroupAnalyticsPage = () => {
         <Card
           bordered={false}
           className="rounded-xl shadow-sm"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -310,7 +311,7 @@ const GroupAnalyticsPage = () => {
         <Card
           bordered={false}
           className="rounded-xl shadow-sm"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -334,7 +335,8 @@ const GroupAnalyticsPage = () => {
                 key: "coverage",
                 render: (value: number) => {
                   const pct = Math.round(value * 100);
-                  const color = pct < 40 ? "red" : pct < 70 ? "orange" : "green";
+                  const color =
+                    pct < 40 ? "red" : pct < 70 ? "orange" : "green";
                   return <Tag color={color}>{pct}%</Tag>;
                 },
               },
@@ -350,7 +352,7 @@ const GroupAnalyticsPage = () => {
         <Card
           bordered={false}
           className="rounded-xl shadow-sm"
-          styles={{ body: { padding: '12px 16px' } }}
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -374,7 +376,8 @@ const GroupAnalyticsPage = () => {
                 key: "utilization",
                 render: (value: number) => {
                   const pct = Math.round(value * 100);
-                  const color = pct > 80 ? "red" : pct > 60 ? "orange" : "green";
+                  const color =
+                    pct > 80 ? "red" : pct > 60 ? "orange" : "green";
                   return <Tag color={color}>{pct}%</Tag>;
                 },
               },
