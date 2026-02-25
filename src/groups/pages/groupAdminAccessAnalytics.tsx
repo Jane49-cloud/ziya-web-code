@@ -13,15 +13,12 @@ import {
 } from "antd";
 import { Column, Pie } from "@ant-design/plots";
 import dayjs from "dayjs";
-import {
-  useGetAllGroupsQuery,
-  useGetGroupAdminActivityQuery,
-} from "../features";
+import { useGetGroupAdminActivityQuery } from "../features";
 import { formatName, getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
-type AccessLevel = "High" | "Moderate" | "Low" | "Poor" | "No Activity";
+type AccessLevel = "High" | "Moderate" | "Low" | "Poor";
 type AccessStatus = "Good" | "Fair" | "Poor";
 
 type AdminAccessRow = {
@@ -30,10 +27,9 @@ type AdminAccessRow = {
   adminName: string;
   lastLogin: string | null;
   lastActivity: string | null;
-  daysSinceActivity: number | null;
+  daysSinceActivity: number;
   activityLevel: AccessLevel;
   accessStatus: AccessStatus;
-  hasActivity: boolean;
 };
 
 const normalize = (value: string) => value.trim().toLowerCase();
@@ -68,23 +64,17 @@ const GroupAdminAccessAnalytics = () => {
     user?.id ?? user?.user_id ?? user?.staff_id ?? 0,
   );
 
-  const groupsQuery = useGetAllGroupsQuery({});
   const activityQuery = useGetGroupAdminActivityQuery(adminActivityId, {
     skip: !adminActivityId,
     refetchOnReconnect: true,
   });
 
-  const groups = useMemo<any[]>(
-    () => groupsQuery.data?.groups ?? [],
-    [groupsQuery.data],
-  );
-
-  const activityByGroup = useMemo(() => {
+  const activityRows = useMemo<AdminAccessRow[]>(() => {
     const payload = activityQuery.data as any;
-    const raw = payload?.data ?? [];
+    const raw = payload?.data;
     const map = new Map<string, AdminAccessRow>();
 
-    if (!Array.isArray(raw)) return map;
+    if (!Array.isArray(raw)) return [];
 
     raw.forEach((entry: any, index: number) => {
       const groupName = formatName(
@@ -115,7 +105,6 @@ const GroupAdminAccessAnalytics = () => {
         daysSinceActivity,
         activityLevel: level,
         accessStatus: status,
-        hasActivity: true,
       };
 
       const existing = map.get(key);
@@ -129,69 +118,46 @@ const GroupAdminAccessAnalytics = () => {
       }
     });
 
-    return map;
+    return Array.from(map.values()).sort((a, b) =>
+      a.groupName.localeCompare(b.groupName),
+    );
   }, [activityQuery.data]);
 
-  const mergedRows = useMemo<AdminAccessRow[]>(() => {
-    const rows: AdminAccessRow[] = groups.map((group: any, idx: number) => {
-      const groupName = formatName(String(group?.name ?? "Unnamed Group"));
-      const key = normalize(groupName);
-      const existing = activityByGroup.get(key);
-
-      if (existing) return existing;
-
-      return {
-        key: `no-activity-${idx}-${key}`,
-        groupName,
-        adminName: "—",
-        lastLogin: null,
-        lastActivity: null,
-        daysSinceActivity: null,
-        activityLevel: "No Activity",
-        accessStatus: "Poor",
-        hasActivity: false,
-      };
-    });
-
-    return rows.sort((a, b) => a.groupName.localeCompare(b.groupName));
-  }, [activityByGroup, groups]);
+  const payload = activityQuery.data as any;
+  const isActivityPayloadInvalid =
+    Boolean(activityQuery.data) && !Array.isArray(payload?.data);
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return mergedRows;
-    return mergedRows.filter((row) =>
+    if (!needle) return activityRows;
+    return activityRows.filter((row) =>
       [row.groupName, row.adminName, row.activityLevel, row.accessStatus]
         .join(" ")
         .toLowerCase()
         .includes(needle),
     );
-  }, [mergedRows, search]);
+  }, [activityRows, search]);
 
   const redZoneRows = useMemo(
     () =>
-      mergedRows
+      activityRows
         .filter((row) => row.accessStatus === "Poor")
-        .sort(
-          (a, b) => (b.daysSinceActivity ?? 999) - (a.daysSinceActivity ?? 999),
-        ),
-    [mergedRows],
+        .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity),
+    [activityRows],
   );
 
   const levelDistribution = useMemo(() => {
     const counts = new Map<AccessLevel, number>();
-    mergedRows.forEach((row) => {
+    activityRows.forEach((row) => {
       counts.set(row.activityLevel, (counts.get(row.activityLevel) ?? 0) + 1);
     });
     return Array.from(counts.entries()).map(([level, value]) => ({
       level,
       value,
     }));
-  }, [mergedRows]);
+  }, [activityRows]);
 
-  if (
-    (groupsQuery.isLoading || activityQuery.isLoading) &&
-    !mergedRows.length
-  ) {
+  if (activityQuery.isLoading && !activityRows.length) {
     return (
       <Card bordered={false} className="shadow-sm">
         <div className="flex min-h-[220px] items-center justify-center">
@@ -204,10 +170,25 @@ const GroupAdminAccessAnalytics = () => {
     );
   }
 
-  if (!mergedRows.length) {
+  if (!adminActivityId || activityQuery.isError || isActivityPayloadInvalid) {
     return (
       <Card bordered={false} className="shadow-sm">
-        <Empty description="No groups available for admin access analytics." />
+        <div className="flex min-h-[220px] items-center justify-center">
+          <Space direction="vertical" align="center">
+            <Text strong>Admin tracker unavailable</Text>
+            <Text type="secondary" className="text-center">
+              Admin activity data is missing right now. Please try again later.
+            </Text>
+          </Space>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!activityRows.length) {
+    return (
+      <Card bordered={false} className="shadow-sm">
+        <Empty description="No admin activity available." />
       </Card>
     );
   }
@@ -244,26 +225,27 @@ const GroupAdminAccessAnalytics = () => {
           className="rounded-xl bg-emerald-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-          <Statistic
-            title="High Activity"
-            value={
-              mergedRows.filter((row) => row.activityLevel === "High").length
-            }
-            valueStyle={{ fontWeight: 600, color: "#059669" }}
-          />
+            <Statistic
+              title="High Activity"
+              value={
+                activityRows.filter((row) => row.activityLevel === "High")
+                  .length
+              }
+              valueStyle={{ fontWeight: 600, color: "#059669" }}
+            />
         </Card>
         <Card
           bordered={false}
           className="rounded-xl bg-blue-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-          <Statistic
-            title="Moderate Activity"
-            value={
-              mergedRows.filter((row) => row.activityLevel === "Moderate")
-                .length
-            }
-            valueStyle={{ fontWeight: 600, color: "#1d4ed8" }}
+            <Statistic
+              title="Moderate Activity"
+              value={
+                activityRows.filter((row) => row.activityLevel === "Moderate")
+                  .length
+              }
+              valueStyle={{ fontWeight: 600, color: "#1d4ed8" }}
           />
         </Card>
         <Card
@@ -271,13 +253,13 @@ const GroupAdminAccessAnalytics = () => {
           className="rounded-xl bg-amber-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-          <Statistic
-            title="Low Activity"
-            value={
-              mergedRows.filter((row) => row.activityLevel === "Low").length
-            }
-            valueStyle={{ fontWeight: 600, color: "#d97706" }}
-          />
+            <Statistic
+              title="Low Activity"
+              value={
+                activityRows.filter((row) => row.activityLevel === "Low").length
+              }
+              valueStyle={{ fontWeight: 600, color: "#d97706" }}
+            />
         </Card>
         <Card
           bordered={false}
@@ -334,7 +316,7 @@ const GroupAdminAccessAnalytics = () => {
             <Column
               data={redZoneRows.slice(0, 12).map((row) => ({
                 group: compactGroupName(row.groupName),
-                value: row.daysSinceActivity ?? 45,
+                value: row.daysSinceActivity,
               }))}
               xField="group"
               yField="value"
@@ -407,11 +389,9 @@ const GroupAdminAccessAnalytics = () => {
               title: "Inactivity (Days)",
               dataIndex: "daysSinceActivity",
               key: "daysSinceActivity",
-              render: (value: number | null, row: AdminAccessRow) =>
-                row.hasActivity ? (value ?? "—") : "No Activity",
+              render: (value: number) => value,
               sorter: (a, b) =>
-                (a.daysSinceActivity ?? Number.MAX_SAFE_INTEGER) -
-                (b.daysSinceActivity ?? Number.MAX_SAFE_INTEGER),
+                a.daysSinceActivity - b.daysSinceActivity,
             },
             {
               title: "Activity Level",
@@ -422,7 +402,6 @@ const GroupAdminAccessAnalytics = () => {
                 { text: "Moderate", value: "Moderate" },
                 { text: "Low", value: "Low" },
                 { text: "Poor", value: "Poor" },
-                { text: "No Activity", value: "No Activity" },
               ],
               onFilter: (value, row) => row.activityLevel === value,
               render: (value: AccessLevel) => (
