@@ -5,9 +5,7 @@ import { normalizeRole } from ".";
 export const initializeUser = async () => {
   try {
     // Run the query
-    const sub = store.dispatch(
-      apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
-    );
+    const sub = store.dispatch(apiSlice.endpoints.loadUser.initiate(null));
 
     // Get the real payload (throws if error)
     const data = await sub.unwrap(); // { staff: {...} }

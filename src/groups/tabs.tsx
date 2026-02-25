@@ -17,8 +17,6 @@ import UpdateMemberCountModal from "./components/updateMemberCountModal";
 import ChangeManagerModal from "./components/changeManagerModal";
 import {
   useGetAllGroupsQuery,
-  useGetMyCreatedGroupsQuery,
-  useGetMyManagedGroupsQuery,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
@@ -33,6 +31,7 @@ import {
   FiUserCheck,
   FiTrendingUp,
 } from "react-icons/fi";
+import { getUser } from "../utils";
 
 const { Title, Text } = Typography;
 
@@ -50,10 +49,30 @@ const GroupTabs = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") ?? "all";
+  const user = getUser() as Record<string, unknown> | null;
+  const currentStaffId = Number(user?.id ?? user?.user_id ?? user?.staff_id ?? 0);
 
   const { data: allGroups, refetch: refetchAll } = useGetAllGroupsQuery({});
-  const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
-  const { data: managedGroups } = useGetMyManagedGroupsQuery({});
+  const groupRows = useMemo(() => allGroups?.groups ?? [], [allGroups?.groups]);
+  const createdGroupRows = useMemo(
+    () =>
+      currentStaffId
+        ? groupRows.filter(
+            (group: any) => Number(group?.created_by ?? 0) === currentStaffId,
+          )
+        : [],
+    [currentStaffId, groupRows],
+  );
+  const managedGroupRows = useMemo(
+    () =>
+      currentStaffId
+        ? groupRows.filter(
+            (group: any) =>
+              Number(group?.relationship_manager ?? 0) === currentStaffId,
+          )
+        : [],
+    [currentStaffId, groupRows],
+  );
 
   const [updateGroup] = useUpdateGroupMutation();
   const [changeManager] = useChangeRelationshipManagerMutation();
@@ -107,11 +126,11 @@ const GroupTabs = () => {
   };
 
   const summary = useMemo(() => {
-    const total = allGroups?.groups?.length ?? 0;
-    const created = createdGroups?.groups?.length ?? 0;
-    const managed = managedGroups?.groups?.length ?? 0;
+    const total = groupRows.length;
+    const created = createdGroupRows.length;
+    const managed = managedGroupRows.length;
     return { total, created, managed };
-  }, [allGroups?.groups, createdGroups?.groups, managedGroups?.groups]);
+  }, [createdGroupRows.length, groupRows.length, managedGroupRows.length]);
 
   const tabItems = [
     {
@@ -119,7 +138,7 @@ const GroupTabs = () => {
       label: "All Groups",
       children: (
         <GroupTable
-          data={allGroups?.groups || []}
+          data={groupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
         />
@@ -149,7 +168,7 @@ const GroupTabs = () => {
       ),
       children: (
         <GroupTable
-          data={createdGroups?.groups || []}
+          data={createdGroupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
         />
@@ -170,7 +189,7 @@ const GroupTabs = () => {
       ),
       children: (
         <GroupTable
-          data={managedGroups?.groups || []}
+          data={managedGroupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
         />

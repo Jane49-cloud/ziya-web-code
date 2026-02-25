@@ -19,22 +19,17 @@ import {
   FiSearch,
   FiUsers,
 } from "react-icons/fi";
-import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { useNavigate } from "react-router-dom";
 import { formatName, getInitials } from "../../utils";
 
 const { Text, Title } = Typography;
 
-type Staff = {
-  id: number;
-  firstname?: string;
-  lastname?: string;
-};
-
 type GroupRecord = {
   id: string | number;
   name: string;
   relationship_manager?: number;
+  relationship_manager_name?: string | null;
+  admin_name?: string | null;
 };
 
 type GroupTableProps = {
@@ -44,8 +39,6 @@ type GroupTableProps = {
 };
 
 const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
-  const { data: userData, isLoading } = useGetAllUsersQuery(undefined);
-  const staffList: Staff[] = useMemo(() => userData?.staffs ?? [], [userData]);
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -54,25 +47,20 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
     if (!searchText) return data;
 
     return data.filter((group) => {
-      const manager = staffList.find(
-        (staff) => staff.id === group.relationship_manager
-      );
-    const managerName = manager
-      ? formatName(`${manager.firstname ?? ""} ${manager.lastname ?? ""}`)
-          .toLowerCase()
-      : "unassigned";
+      const managerName = formatName(group.relationship_manager_name ?? "")
+        .toLowerCase()
+        .trim();
 
       return (
         (group.name ?? "").toString().toLowerCase().includes(searchText) ||
         managerName.includes(searchText)
       );
     });
-  }, [data, search, staffList]);
+  }, [data, search]);
 
-  const renderManager = (managerId?: number) => {
-    const manager = staffList.find((staff) => staff.id === managerId);
-
-    if (!manager) {
+  const renderManager = (managerName?: string | null) => {
+    const fullName = formatName(managerName ?? "").trim();
+    if (!fullName) {
       return (
         <Space size="small">
           <Avatar
@@ -85,10 +73,6 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         </Space>
       );
     }
-
-    const fullName = formatName(
-      `${manager.firstname ?? ""} ${manager.lastname ?? ""}`
-    );
 
     return (
       <Space size="small">
@@ -135,9 +119,9 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
     },
     {
       title: "Relationship Manager",
-      dataIndex: "relationship_manager",
+      dataIndex: "relationship_manager_name",
       width: "30%",
-      render: (managerId: number) => renderManager(managerId),
+      render: (managerName: string | null) => renderManager(managerName),
     },
     {
       title: "Group Leader",
@@ -242,7 +226,6 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         dataSource={filteredData}
         columns={columns}
         rowKey={(record) => String(record.id)}
-        loading={isLoading}
         bordered
         pagination={{
           pageSize: 10,

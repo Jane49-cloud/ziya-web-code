@@ -4,7 +4,6 @@ import { Form, Input, Button, Typography, Select, Spin } from "antd";
 import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
-import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { formatName } from "../../utils";
 
 const { Title } = Typography;
@@ -24,8 +23,6 @@ interface CreateGroupFormProps {
 const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
   const [form] = Form.useForm<GroupFormValues>();
   const [createGroup, { isLoading: creating }] = useCreateGroupMutation();
-
-  const { isLoading: loadingUsers } = useGetAllUsersQuery({});
 
   const { data: customerData, isLoading: loadingCustomers } =
     useGetAllCustomersQuery({});
@@ -54,7 +51,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
         </Alert>
       )}
 
-      {loadingUsers || loadingCustomers ? (
+      {loadingCustomers ? (
         <div className="text-center py-10">
           <Spin size="large" />
         </div>

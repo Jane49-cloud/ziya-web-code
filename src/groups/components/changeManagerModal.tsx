@@ -19,7 +19,7 @@ const ChangeManagerModal: React.FC<ChangeManagerModalProps> = ({
   onCancel,
   onSubmit,
 }) => {
-  const { data, isLoading } = useGetAllUsersQuery({});
+  const { data, isLoading } = useGetAllUsersQuery({}, { skip: !visible });
   const staffList = data?.staffs || [];
 
   return (

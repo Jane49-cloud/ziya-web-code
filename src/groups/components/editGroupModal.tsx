@@ -21,9 +21,9 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({
   onUpdate,
 }) => {
   const { data: customerData, isLoading: loadingCustomers } =
-    useGetAllCustomersQuery({});
+    useGetAllCustomersQuery({}, { skip: !visible });
   const { data: userData, isLoading: loadingUsers } =
-    useGetAllUsersQuery(undefined);
+    useGetAllUsersQuery(undefined, { skip: !visible });
 
   const customers = customerData?.customers || [];
   const staffList = userData?.staffs || [];

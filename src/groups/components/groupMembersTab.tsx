@@ -31,9 +31,18 @@ interface Props {
 }
 
 const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [searchMembers, setSearchMembers] = useState("");
+  const [searchCustomers, setSearchCustomers] = useState("");
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [customerPage, setCustomerPage] = useState(1);
+
   const { data, isLoading, refetch } = useGetGroupMembersQuery(groupId);
   const { data: allCustomersData, isLoading: customersLoading } =
-    useGetAllCustomersQuery({}, { refetchOnFocus: false });
+    useGetAllCustomersQuery(
+      {},
+      { refetchOnFocus: false, skip: !modalOpen },
+    );
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
 
@@ -42,12 +51,6 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     () => allCustomersData?.customers || [],
     [allCustomersData]
   );
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [searchMembers, setSearchMembers] = useState("");
-  const [searchCustomers, setSearchCustomers] = useState("");
-  const [loadingId, setLoadingId] = useState<number | null>(null);
-  const [customerPage, setCustomerPage] = useState(1);
 
   const pageSize = 20;
 
