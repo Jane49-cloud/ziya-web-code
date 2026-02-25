@@ -177,7 +177,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
                   setShowPaymentModal(true);
                 }}
               >
-                Payment
+                + Payment
               </Tag>
             )}
           </Space>

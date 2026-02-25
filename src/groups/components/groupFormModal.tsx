@@ -21,6 +21,8 @@ import {
   useUpdateGroupLoanMutation,
 } from "../features";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
+import { useGetAllCyclesQuery } from "../../cycles/cycleSlice";
+import { extractCycles } from "../../cycles/utils";
 import dayjs from "dayjs";
 import { formatName } from "../../utils";
 
@@ -45,12 +47,30 @@ const GroupLoanFormModal = ({
     useGetGroupMembersQuery(groupId);
   const { data: loanDefsData, isLoading: defsLoading } =
     useGetLoanDefinitionsByPlatformQuery("web");
+  const { data: cyclesData, isLoading: cyclesLoading } = useGetAllCyclesQuery(undefined);
 
   const members = membersData?.members || [];
   const loanDefs =
     loanDefsData?.loan_definitions?.filter(
       (loanDef: any) => loanDef.status === 1
     ) || [];
+  const cycles = extractCycles(cyclesData);
+  const cycleOptions = cycles
+    .map((cycle) => {
+      const rawValue =
+        cycle.cycle_number ??
+        (typeof cycle.id === "number" ? cycle.id : Number(cycle.id));
+      if (Number.isNaN(Number(rawValue))) {
+        return null;
+      }
+      const cycleValue = Number(rawValue);
+      const cycleName = String(cycle.title ?? "").trim();
+      return {
+        value: cycleValue,
+        label: cycleName || `Cycle ${cycleValue}`,
+      };
+    })
+    .filter((option): option is { value: number; label: string } => Boolean(option));
 
   useEffect(() => {
     if (loan) {
@@ -152,14 +172,20 @@ const GroupLoanFormModal = ({
             <Form.Item
               label="Loan Cycle"
               name="cycle"
-              rules={[{ required: true, message: "Enter cycle" }]}
+              rules={[{ required: true, message: "Select cycle" }]}
             >
-              <InputNumber
-                min={1}
-                className="w-full"
-                placeholder="Cycle"
-                addonAfter="cycles"
-              />
+              {cyclesLoading ? (
+                <Spin />
+              ) : (
+                <Select
+                  className="w-full"
+                  placeholder="Select cycle"
+                  showSearch
+                  optionFilterProp="label"
+                  options={cycleOptions}
+                  notFoundContent="No cycles found"
+                />
+              )}
             </Form.Item>
           </Col>
         </Row>
