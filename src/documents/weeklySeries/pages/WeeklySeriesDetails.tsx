@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, Button, Card, Empty, message, Spin } from "antd";
+import { Alert, Button, Card, Empty, message, Spin, Typography } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -12,6 +12,8 @@ import WeeklySeriesEntryCard from "../components/WeeklySeriesEntryCard";
 import WeeklySeriesEntryModal from "../components/WeeklySeriesEntryModal";
 import type { WeeklySeriesEntry } from "../types";
 import { extractWeeklySeriesDetails } from "../utils";
+
+const { Title, Text } = Typography;
 
 const WeeklySeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,19 +83,21 @@ const WeeklySeriesDetails = () => {
 
   if (isError || !series) {
     return (
-      <div className="p-4">
+      <div className="p-4 md:p-6">
         <Alert
           type="error"
           message="Weekly series not found."
           showIcon
+          className="rounded-xl"
         />
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <Card className="shadow-sm mb-4">
+    <div className="space-y-5 p-4 md:p-6">
+      {/* Series header card */}
+      <Card bordered={false} className="rounded-xl shadow-sm">
         <WeeklySeriesHeader
           title={series.title}
           brief={series.brief}
@@ -102,19 +106,27 @@ const WeeklySeriesDetails = () => {
         />
       </Card>
 
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900">Entries</h3>
+      {/* Entries section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Title level={5} className="!mb-0">
+            Entries
+          </Title>
+          <Text type="secondary" className="text-xs">
+            {entries.length} {entries.length === 1 ? "entry" : "entries"} recorded
+          </Text>
+        </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
           Add Entry
         </Button>
       </div>
 
       {entries.length === 0 ? (
-        <Card className="shadow-sm">
-          <Empty description="No entries yet." />
+        <Card bordered={false} className="rounded-xl shadow-sm">
+          <Empty description="No entries yet. Add the first entry to get started." />
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {entries.map((entry) => (
             <WeeklySeriesEntryCard
               key={entry.id}

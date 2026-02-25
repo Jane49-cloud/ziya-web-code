@@ -178,7 +178,7 @@ export const DocumentsList: React.FC = () => {
 
   return (
     <div className="-mt-4 pt-2">
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm">
         {/* Header */}
         <div className="mb-6 rounded-2xl border border-slate-200/70 bg-gradient-to-r from-white via-sky-50 to-cyan-50 p-4 sm:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -224,12 +224,16 @@ export const DocumentsList: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="mb-6">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-gray-500">
-              Showing {filteredDocuments.length} of {documents.length} documents
-            </div>
-          </div>
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <FileTextOutlined className="text-slate-400" />
+            {filteredDocuments.length} of {documents.length} documents
+          </span>
+          {filterAccessLevel !== "all" && (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 capitalize">
+              {filterAccessLevel}
+            </span>
+          )}
         </div>
 
         {/* Empty */}
@@ -245,42 +249,48 @@ export const DocumentsList: React.FC = () => {
               {filteredDocuments.map((record: Document) => (
                 <div
                   key={record.ID}
-                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="truncate text-base font-semibold text-slate-900">
-                        {record.title}
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {new Date(record?.date_created).toLocaleDateString()}
-                      </p>
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <FileTextOutlined className="text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-slate-900">
+                          {record.title}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {new Date(record?.date_created).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                     <Tag
                       color={getAccessLevelColor(record.access_level ?? "")}
-                      className="capitalize"
+                      className="capitalize shrink-0"
                     >
                       {record.access_level ?? "unknown"}
                     </Tag>
                   </div>
-                  <p className="mb-3 text-sm text-slate-600">
+                  <p className="mb-4 text-xs leading-relaxed text-slate-500 line-clamp-2">
                     {stripHtml(record.content ?? "")}
                   </p>
-                  <div className="mb-3 text-xs text-slate-500">
-                    Author ID: {record.author_id}
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
                     <Button
                       size="small"
+                      type="text"
                       icon={<EyeOutlined />}
                       onClick={() => navigate(`/documents/${record.ID}`)}
+                      className="text-blue-600 hover:bg-blue-50"
                     >
                       View
                     </Button>
                     <Button
                       size="small"
+                      type="text"
                       icon={<EditOutlined />}
                       onClick={() => navigate(`/documents/edit/${record.ID}`)}
+                      className="text-amber-600 hover:bg-amber-50"
                     >
                       Edit
                     </Button>
@@ -294,9 +304,10 @@ export const DocumentsList: React.FC = () => {
                     >
                       <Button
                         size="small"
-                        danger
+                        type="text"
                         icon={<DeleteOutlined />}
                         loading={deleting}
+                        className="text-red-500 hover:bg-red-50"
                       >
                         Delete
                       </Button>
@@ -319,6 +330,7 @@ export const DocumentsList: React.FC = () => {
                   showTotal: (total) => `Total ${total} documents`,
                 }}
                 scroll={{ x: 1000 }}
+                className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
               />
             </div>
           </>

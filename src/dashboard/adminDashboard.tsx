@@ -3,7 +3,7 @@ import {
   Card,
   Row,
   Col,
-  Typography,
+  Typography, //fake comment to trigger pipelines
   Skeleton,
   Space,
   Button,
@@ -75,7 +75,7 @@ const DashboardOverview = () => {
         acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
         return acc;
       },
-      { count: 0, disbursed: 0, outstanding: 0 }
+      { count: 0, disbursed: 0, outstanding: 0 },
     );
   }, [groupLoans]);
 
@@ -140,7 +140,7 @@ const DashboardOverview = () => {
             ? ((item.disbursed - item.outstanding) / item.disbursed) * 100
             : 0,
       })),
-    [groupPerformance]
+    [groupPerformance],
   );
 
   const disbursementShare = useMemo(() => {
@@ -150,11 +150,11 @@ const DashboardOverview = () => {
       const currentTotal = totalsByGroup.get(groupName) ?? 0;
       totalsByGroup.set(
         groupName,
-        currentTotal + toNumber(loan.amount ?? loan.disbursed_amount)
+        currentTotal + toNumber(loan.amount ?? loan.disbursed_amount),
       );
     });
     const sorted = Array.from(totalsByGroup.entries()).sort(
-      (a, b) => b[1] - a[1]
+      (a, b) => b[1] - a[1],
     );
     const top = sorted.slice(0, 5);
     const othersValue = sorted
@@ -189,7 +189,7 @@ const DashboardOverview = () => {
         })
         .sort((a, b) => b.balance - a.balance)
         .slice(0, 5),
-    [wallets]
+    [wallets],
   );
 
   const statsLoading = groupLoansLoading || customersLoading || walletsLoading;
