@@ -29,7 +29,6 @@ import {
 import { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../utils";
 import { Alert } from "../components/Alert";
-import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
@@ -44,7 +43,7 @@ const isSubscriptionActive = (status: unknown) => {
 };
 
 const CustomerManagement: FC = () => {
-  const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
+  const { data, isLoading, isFetching, refetch } = useGetAllCustomersQuery({});
   const customers = data?.customers;
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
@@ -52,7 +51,6 @@ const CustomerManagement: FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const refetchCustomer = useFetchCustomer();
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
@@ -84,7 +82,7 @@ const CustomerManagement: FC = () => {
       await createCustomer(values).unwrap();
       setAlertMessage("Customer created successfully!");
       setAlertType("success");
-      refetchCustomer();
+      refetch();
       setActiveTab("1");
       return true;
     } catch (err: any) {
@@ -101,7 +99,7 @@ const CustomerManagement: FC = () => {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
       setAlertType("success");
-      refetchCustomer();
+      refetch();
       setSelectedCustomer(null);
       setActiveTab("1");
       return true;
@@ -119,7 +117,7 @@ const CustomerManagement: FC = () => {
         `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
       );
       setAlertType("success");
-      refetchCustomer();
+      refetch();
     } catch (err: any) {
       setAlertMessage("Failed to change customer status.");
       setAlertType("danger");
@@ -145,7 +143,7 @@ const CustomerManagement: FC = () => {
         customer_id: customerId,
         ...dates,
       }).unwrap();
-      await refetchCustomer();
+      await refetch();
       setAlertMessage("Subscription created successfully!");
       setAlertType("success");
       setSubscriptionModalOpen(false);

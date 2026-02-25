@@ -19,7 +19,8 @@ export const DocumentViewer: React.FC = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useGetSingleDocumentQuery(id!, {
-    pollingInterval: 3000,
+    pollingInterval: 15000,
+    skipPollingIfUnfocused: true,
     refetchOnFocus: true,
     refetchOnReconnect: true,
   });

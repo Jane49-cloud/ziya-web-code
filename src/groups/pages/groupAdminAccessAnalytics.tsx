@@ -71,7 +71,7 @@ const GroupAdminAccessAnalytics = () => {
 
   const activityRows = useMemo<AdminAccessRow[]>(() => {
     const payload = activityQuery.data as any;
-    const raw = payload?.data;
+    const raw = Array.isArray(payload) ? payload : payload?.data;
     const map = new Map<string, AdminAccessRow>();
 
     if (!Array.isArray(raw)) return [];
@@ -125,7 +125,9 @@ const GroupAdminAccessAnalytics = () => {
 
   const payload = activityQuery.data as any;
   const isActivityPayloadInvalid =
-    Boolean(activityQuery.data) && !Array.isArray(payload?.data);
+    Boolean(activityQuery.data) &&
+    !Array.isArray(payload) &&
+    !Array.isArray(payload?.data);
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();

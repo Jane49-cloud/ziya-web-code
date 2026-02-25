@@ -8,7 +8,6 @@ import { Alert } from "../../components/Alert";
 import { useRegisterMutation } from "../features/authApi";
 import { styles } from "../../styles";
 import { useGetAllRolesQuery } from "../../roles/features/rolesSlice";
-import { useGetAllUsersQuery } from "../../users/features/userSlice";
 
 const initialValues = {
   firstname: "",
@@ -98,7 +97,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
   } = useGetAllRolesQuery({});
   // const [showPassword, setShowPassword] = useState(false);
   const [registerUser, { isLoading, error }] = useRegisterMutation();
-  const { refetch } = useGetAllUsersQuery({});
 
   const formik = useFormik({
     initialValues,
@@ -113,7 +111,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
         if (onUserCreated) {
           onUserCreated();
         }
-        await refetch();
       } catch (err: any) {
         setStatus(err?.data?.error || "An error occurred.");
       } finally {

@@ -4,7 +4,6 @@ import {
   useCreateRoleMutation,
   useUpdateRoleMutation,
 } from "../features/rolesSlice";
-import { useRefetchRoles } from "../util";
 
 interface RoleFormProps {
   roleId?: string;
@@ -18,7 +17,6 @@ export const RoleForm: FC<RoleFormProps> = ({ roleId, roles, onSubmit }) => {
 
   const [createRole, { isLoading: creatingRole }] = useCreateRoleMutation();
   const [updateRole, { isLoading: updatingRole }] = useUpdateRoleMutation();
-  const refetch = useRefetchRoles();
 
   // Fetch role data for editing if roleId is provided
   useEffect(() => {
@@ -58,7 +56,6 @@ export const RoleForm: FC<RoleFormProps> = ({ roleId, roles, onSubmit }) => {
       }
 
       onSubmit();
-      refetch();
     } catch (error) {
       console.error(error);
       notification.error({

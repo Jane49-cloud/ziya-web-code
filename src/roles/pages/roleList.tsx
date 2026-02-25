@@ -16,7 +16,6 @@ export const RoleList: FC<{
   const handleEdit = (roleId: string) => {
     const role = roles?.find((r: { id: string }) => r.id === roleId) || null;
     setSelectedRole(role);
-    refetch();
   };
 
   const handleCloseModal = () => {

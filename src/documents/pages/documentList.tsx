@@ -37,14 +37,7 @@ export const DocumentsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccessLevel, setFilterAccessLevel] = useState<string>("all");
 
-  const { data, isLoading, refetch } = useGetAllDocumentsQuery(
-    {},
-    {
-      pollingInterval: 3000,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
-  );
+  const { data, isLoading, refetch } = useGetAllDocumentsQuery({});
   const [deleteDocument, { isLoading: deleting }] = useDeleteDocumentMutation();
 
   const documents = useMemo(() => data?.documents || [], [data]);
