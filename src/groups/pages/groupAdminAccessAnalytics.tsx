@@ -312,8 +312,8 @@ const GroupAdminAccessAnalytics = () => {
             color={["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#94a3b8"]}
             label={{
               type: "outer",
-              formatter: (datum: { level: string; value: number }) =>
-                `${datum.level}: ${datum.value}`,
+              formatter: (datum?: { level?: string; value?: number }) =>
+                datum?.level ? `${datum.level}: ${datum.value ?? 0}` : "",
             }}
           />
         </Card>
@@ -350,9 +350,9 @@ const GroupAdminAccessAnalytics = () => {
                 },
               }}
               tooltip={{
-                formatter: (datum: { group: string; value: number }) => ({
-                  name: datum.group,
-                  value: `${datum.value} day(s) inactive / no activity`,
+                formatter: (datum?: { group?: string; value?: number }) => ({
+                  name: datum?.group ?? "Unknown Group",
+                  value: `${datum?.value ?? 0} day(s) inactive / no activity`,
                 }),
               }}
             />
