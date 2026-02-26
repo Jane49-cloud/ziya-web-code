@@ -18,8 +18,8 @@ import { formatName, getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
-type AccessLevel = "High" | "Moderate" | "Low" | "Poor";
-type AccessStatus = "Good" | "Fair" | "Poor";
+type AccessLevel = "High" | "Moderate" | "Poor" | "Critical";
+type AccessStatus = "Good" | "Fair" | "Poor" | "Critical";
 
 type AdminAccessRow = {
   key: string;
@@ -27,7 +27,7 @@ type AdminAccessRow = {
   adminName: string;
   lastLogin: string | null;
   lastActivity: string | null;
-  daysSinceActivity: number;
+  daysSinceActivity: number | null;
   activityLevel: AccessLevel;
   accessStatus: AccessStatus;
 };
@@ -35,12 +35,15 @@ type AdminAccessRow = {
 const normalize = (value: string) => value.trim().toLowerCase();
 
 const getLevelFromDays = (
-  daysSinceActivity: number,
+  daysSinceActivity: number | null,
 ): { level: AccessLevel; status: AccessStatus } => {
+  if (daysSinceActivity === null) {
+    return { level: "Critical", status: "Critical" };
+  }
   if (daysSinceActivity <= 3) return { level: "High", status: "Good" };
   if (daysSinceActivity <= 14) return { level: "Moderate", status: "Fair" };
-  if (daysSinceActivity <= 30) return { level: "Low", status: "Poor" };
-  return { level: "Poor", status: "Poor" };
+  if (daysSinceActivity <= 29) return { level: "Poor", status: "Poor" };
+  return { level: "Critical", status: "Critical" };
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -92,8 +95,6 @@ const GroupAdminAccessAnalytics = () => {
         ? Math.max(0, dayjs().diff(activityMoment, "day"))
         : null;
 
-      if (daysSinceActivity === null) return;
-
       const { level, status } = getLevelFromDays(daysSinceActivity);
       const key = normalize(groupName);
       const row: AdminAccessRow = {
@@ -110,8 +111,10 @@ const GroupAdminAccessAnalytics = () => {
       const existing = map.get(key);
       const existingTs = dayjs(
         existing?.lastActivity ?? existing?.lastLogin ?? "",
-      ).valueOf();
-      const rowTs = dayjs(lastActivity ?? lastLogin ?? "").valueOf();
+      ).isValid()
+        ? dayjs(existing?.lastActivity ?? existing?.lastLogin ?? "").valueOf()
+        : -Infinity;
+      const rowTs = activityMoment.isValid() ? activityMoment.valueOf() : -Infinity;
 
       if (!existing || rowTs > existingTs) {
         map.set(key, row);
@@ -143,8 +146,14 @@ const GroupAdminAccessAnalytics = () => {
   const redZoneRows = useMemo(
     () =>
       activityRows
-        .filter((row) => row.accessStatus === "Poor")
-        .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity),
+        .filter(
+          (row) => row.accessStatus === "Poor" || row.accessStatus === "Critical",
+        )
+        .sort(
+          (a, b) =>
+            (b.daysSinceActivity ?? Number.MAX_SAFE_INTEGER) -
+            (a.daysSinceActivity ?? Number.MAX_SAFE_INTEGER),
+        ),
     [activityRows],
   );
 
@@ -252,26 +261,28 @@ const GroupAdminAccessAnalytics = () => {
         </Card>
         <Card
           bordered={false}
-          className="rounded-xl bg-amber-50"
+          className="rounded-xl bg-rose-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
             <Statistic
-              title="Low Activity"
+              title="Poor Activity (15+ days)"
               value={
-                activityRows.filter((row) => row.activityLevel === "Low").length
+                activityRows.filter((row) => row.activityLevel === "Poor").length
               }
-              valueStyle={{ fontWeight: 600, color: "#d97706" }}
+              valueStyle={{ fontWeight: 600, color: "#be123c" }}
             />
         </Card>
         <Card
           bordered={false}
-          className="rounded-xl bg-rose-50"
+          className="rounded-xl bg-violet-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
           <Statistic
-            title="Red Zone Groups"
-            value={redZoneRows.length}
-            valueStyle={{ fontWeight: 600, color: "#e11d48" }}
+            title="Critical (No Activity Record)"
+            value={
+              activityRows.filter((row) => row.activityLevel === "Critical").length
+            }
+            valueStyle={{ fontWeight: 600, color: "#7c3aed" }}
           />
         </Card>
       </div>
@@ -293,11 +304,17 @@ const GroupAdminAccessAnalytics = () => {
             angleField="value"
             colorField="level"
             radius={0.9}
-            color={["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#94a3b8"]}
+            color={["#10b981", "#3b82f6", "#e11d48", "#7c3aed"]}
             label={{
               type: "outer",
               formatter: (datum?: { level?: string; value?: number }) =>
                 datum?.level ? `${datum.level}: ${datum.value ?? 0}` : "",
+            }}
+            tooltip={{
+              formatter: (datum?: { level?: string; value?: number }) => ({
+                name: datum?.level ?? "Unknown",
+                value: datum?.value ?? 0,
+              }),
             }}
           />
         </Card>
@@ -318,7 +335,7 @@ const GroupAdminAccessAnalytics = () => {
             <Column
               data={redZoneRows.slice(0, 12).map((row) => ({
                 group: compactGroupName(row.groupName),
-                value: row.daysSinceActivity,
+                value: row.daysSinceActivity ?? 45,
               }))}
               xField="group"
               yField="value"
@@ -336,7 +353,10 @@ const GroupAdminAccessAnalytics = () => {
               tooltip={{
                 formatter: (datum?: { group?: string; value?: number }) => ({
                   name: datum?.group ?? "Unknown Group",
-                  value: `${datum?.value ?? 0} day(s) inactive / no activity`,
+                  value:
+                    datum?.value === undefined
+                      ? "No activity record (Critical)"
+                      : `${datum.value} day(s) inactive`,
                 }),
               }}
             />
@@ -391,9 +411,11 @@ const GroupAdminAccessAnalytics = () => {
               title: "Inactivity (Days)",
               dataIndex: "daysSinceActivity",
               key: "daysSinceActivity",
-              render: (value: number) => value,
+              render: (value: number | null) =>
+                value === null ? "No record" : value,
               sorter: (a, b) =>
-                a.daysSinceActivity - b.daysSinceActivity,
+                (a.daysSinceActivity ?? Number.MAX_SAFE_INTEGER) -
+                (b.daysSinceActivity ?? Number.MAX_SAFE_INTEGER),
             },
             {
               title: "Activity Level",
@@ -402,8 +424,8 @@ const GroupAdminAccessAnalytics = () => {
               filters: [
                 { text: "High", value: "High" },
                 { text: "Moderate", value: "Moderate" },
-                { text: "Low", value: "Low" },
                 { text: "Poor", value: "Poor" },
+                { text: "Critical", value: "Critical" },
               ],
               onFilter: (value, row) => row.activityLevel === value,
               render: (value: AccessLevel) => (
@@ -413,11 +435,9 @@ const GroupAdminAccessAnalytics = () => {
                       ? "green"
                       : value === "Moderate"
                         ? "blue"
-                        : value === "Low"
-                          ? "orange"
-                          : value === "Poor"
-                            ? "red"
-                            : "default"
+                        : value === "Poor"
+                          ? "red"
+                          : "purple"
                   }
                 >
                   {value}
@@ -432,6 +452,7 @@ const GroupAdminAccessAnalytics = () => {
                 { text: "Good", value: "Good" },
                 { text: "Fair", value: "Fair" },
                 { text: "Poor", value: "Poor" },
+                { text: "Critical", value: "Critical" },
               ],
               onFilter: (value, row) => row.accessStatus === value,
               render: (value: AccessStatus) => (
@@ -441,7 +462,9 @@ const GroupAdminAccessAnalytics = () => {
                       ? "green"
                       : value === "Fair"
                         ? "gold"
-                        : "red"
+                        : value === "Poor"
+                          ? "red"
+                          : "purple"
                   }
                 >
                   {value}
