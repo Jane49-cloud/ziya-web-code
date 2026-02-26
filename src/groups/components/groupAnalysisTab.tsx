@@ -29,6 +29,12 @@ import { formatName } from "../../utils";
 
 interface GroupAnalysisTabProps {
   groupId: number;
+  /**
+   * Minimum outstanding balance (in KES) that qualifies a member as "nearly cleared".
+   * Fetch this from your loan policy / settings API and pass it down.
+   * Falls back to 200 if not provided.
+   */
+  nearlyClearedThreshold?: number;
 }
 
 interface MonthlyDatum {
@@ -94,7 +100,10 @@ const buildMonthlySeries = (
     .map(([month, value]) => ({ month, value }));
 };
 
-const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
+const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
+  groupId,
+  nearlyClearedThreshold = 200,
+}) => {
   const [thresholds, setThresholds] = useState({
     laggingDays: 30,
     highOutstandingRatio: 0.7,
@@ -123,10 +132,13 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
     () => (loansQuery.data?.loans as GenericRecord[] | undefined) ?? [],
     [loansQuery.data?.loans],
   );
-  const payments = useMemo(
-    () => (paymentsQuery.data?.payments as GenericRecord[] | undefined) ?? [],
-    [paymentsQuery.data?.payments],
-  );
+  const payments = useMemo(() => {
+    const raw = paymentsQuery.data as any;
+    if (Array.isArray(raw)) return raw as GenericRecord[];
+    if (Array.isArray(raw?.payments)) return raw.payments as GenericRecord[];
+    if (Array.isArray(raw?.data)) return raw.data as GenericRecord[];
+    return [] as GenericRecord[];
+  }, [paymentsQuery.data]);
   const members = useMemo(
     () => (membersQuery.data?.members as GenericRecord[] | undefined) ?? [],
     [membersQuery.data?.members],
@@ -424,10 +436,13 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
 
   const nearlyClearedMembers = useMemo(() => {
     return [...memberInsights]
-      .filter((member) => member.outstanding > 0 && member.outstanding < 200)
+      .filter(
+        (member) =>
+          member.outstanding > 0 && member.outstanding < nearlyClearedThreshold,
+      )
       .sort((a, b) => a.outstanding - b.outstanding)
       .slice(0, 10);
-  }, [memberInsights]);
+  }, [memberInsights, nearlyClearedThreshold]);
 
   const topContributors = useMemo(() => {
     return [...memberInsights]
@@ -651,49 +666,47 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
         </div>
       ) : (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <Card bordered={false} className="rounded-xl shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <Typography.Title level={4} className="!mb-0">
-                  Group Performance Analytics
-                </Typography.Title>
-                <Typography.Text type="secondary">
-                  Understand repayment health, activity momentum, and member
-                  contribution patterns.
-                </Typography.Text>
-              </div>
-              <Space>
-                <Tag color={Number(wallet?.balance ?? 0) > 0 ? "green" : "red"}>
-                  {Number(wallet?.balance ?? 0) > 0
-                    ? "Funds Available"
-                    : "No Funds"}
-                </Tag>
-                <Tag color="blue">
-                  Funds Balance: {formatCurrency(Number(wallet?.balance ?? 0))}
-                </Tag>
-                <Button
-                  onClick={() =>
-                    downloadCSV(
-                      memberInsights.map((member) => ({
-                        id: member.id,
-                        name: member.name,
-                        totalLoaned: member.totalLoaned,
-                        totalPaid: member.totalPaid,
-                        outstanding: member.outstanding,
-                        lastPayment: member.lastPayment,
-                        daysSincePayment: member.daysSincePayment ?? "",
-                        riskLevel: member.riskLevel,
-                      })),
-                      `group-${groupId}-member-analytics.csv`,
-                    )
-                  }
-                >
-                  Export CSV
-                </Button>
-                <Button onClick={() => window.print()}>Export PDF</Button>
-              </Space>
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
+            <div>
+              <Typography.Title level={4} className="!mb-0">
+                Group Performance Analytics
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Understand repayment health, activity momentum, and member
+                contribution patterns.
+              </Typography.Text>
             </div>
-          </Card>
+            <Space>
+              <Tag color={Number(wallet?.balance ?? 0) > 0 ? "green" : "red"}>
+                {Number(wallet?.balance ?? 0) > 0
+                  ? "Funds Available"
+                  : "No Funds"}
+              </Tag>
+              <Tag color="blue">
+                Funds Balance: {formatCurrency(Number(wallet?.balance ?? 0))}
+              </Tag>
+              <Button
+                onClick={() =>
+                  downloadCSV(
+                    memberInsights.map((member) => ({
+                      id: member.id,
+                      name: member.name,
+                      totalLoaned: member.totalLoaned,
+                      totalPaid: member.totalPaid,
+                      outstanding: member.outstanding,
+                      lastPayment: member.lastPayment,
+                      daysSincePayment: member.daysSincePayment ?? "",
+                      riskLevel: member.riskLevel,
+                    })),
+                    `group-${groupId}-member-analytics.csv`,
+                  )
+                }
+              >
+                Export CSV
+              </Button>
+              <Button onClick={() => window.print()}>Print Report</Button>
+            </Space>
+          </div>
 
           <Card bordered={false} className="rounded-xl shadow-sm">
             <Row gutter={[16, 16]}>
@@ -935,7 +948,9 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({ groupId }) => {
                   Nearly Cleared Balances
                 </Typography.Title>
                 {nearlyClearedMembers.length === 0 ? (
-                  <Empty description="No members below KES 200 outstanding" />
+                  <Empty
+                    description={`No members below KES ${nearlyClearedThreshold.toLocaleString()} outstanding`}
+                  />
                 ) : (
                   <Table
                     dataSource={nearlyClearedMembers}

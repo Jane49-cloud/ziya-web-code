@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Children, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Modal,
   Form,
@@ -15,6 +15,7 @@ import {
   Card,
 } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
+import type { Dayjs } from "dayjs";
 import {
   useCreateGroupLoanMutation,
   useGetGroupMembersQuery,
@@ -28,6 +29,16 @@ import { formatName } from "../../utils";
 
 const { Text } = Typography;
 
+interface GroupLoanFormModalProps {
+  visible: boolean;
+  onClose: () => void;
+  groupId: number;
+  loan?: any;
+  refetch: () => void;
+  onWalletRefresh?: () => void;
+  issuedBy: number | null;
+}
+
 const GroupLoanFormModal = ({
   visible,
   onClose,
@@ -36,7 +47,7 @@ const GroupLoanFormModal = ({
   refetch,
   onWalletRefresh,
   issuedBy,
-}: any) => {
+}: GroupLoanFormModalProps) => {
   const [form] = Form.useForm();
   const isEditing = !!loan;
 
@@ -119,20 +130,15 @@ const GroupLoanFormModal = ({
 
   const filterOptionsByLabel = (
     input: string,
-    option?: DefaultOptionType
+    option?: DefaultOptionType,
   ): boolean => {
-    const optionLabel = Children.toArray(option?.children as React.ReactNode)
-      .map((child) => {
-        if (typeof child === "string" || typeof child === "number") {
-          return String(child);
-        }
-        return "";
-      })
-      .join("")
-      .toLowerCase();
-
-    return optionLabel.includes(input.toLowerCase());
+    return String(option?.children ?? "")
+      .toLowerCase()
+      .includes(input.toLowerCase());
   };
+
+  const disableFutureDates = (current: Dayjs) =>
+    current && current.isAfter(dayjs(), "day");
 
   return (
     <Modal
@@ -224,6 +230,7 @@ const GroupLoanFormModal = ({
               <DatePicker
                 className="w-full"
                 format="YYYY-MM-DD"
+                disabledDate={disableFutureDates}
                 popupClassName="group-modal-date-picker-dropdown"
                 placement="bottomLeft"
               />

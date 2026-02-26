@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useGetGroupPaymentsQuery } from "../features";
 import {
@@ -11,8 +10,8 @@ import {
   Row,
   Col,
 } from "antd";
-import { useState } from "react";
-import moment from "moment";
+import { useMemo, useState } from "react";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { formatName } from "../../utils";
 
@@ -25,14 +24,23 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
     pollingInterval: 180000,
   });
 
-  const payments = data?.payments || [];
+  const payments = useMemo(() => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.payments)) return data.payments;
+    if (Array.isArray((data as any)?.data)) return (data as any).data;
+    return [];
+  }, [data]);
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const navigate = useNavigate();
 
-  const sortedPayments = [...payments].sort((a, b) =>
-    sortOrder === "ascend"
-      ? new Date(a.date_paid).getTime() - new Date(b.date_paid).getTime()
-      : new Date(b.date_paid).getTime() - new Date(a.date_paid).getTime()
+  const sortedPayments = useMemo(
+    () =>
+      [...payments].sort((a, b) =>
+        sortOrder === "ascend"
+          ? new Date(a.date_paid).getTime() - new Date(b.date_paid).getTime()
+          : new Date(b.date_paid).getTime() - new Date(a.date_paid).getTime(),
+      ),
+    [payments, sortOrder],
   );
 
   const totalPaid = sortedPayments.reduce((sum, payment) => {
@@ -57,14 +65,16 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
         ) || "Unnamed Customer",
     },
     {
-      title: "Loan Amount",
+      title: "Loan Amount (KES)",
       dataIndex: "loan_amount",
       key: "loan_amount",
+      render: (amount: any) => `KES ${Number(amount).toLocaleString()}`,
     },
     {
-      title: "Loan Balance",
+      title: "Loan Balance (KES)",
       dataIndex: "loan_balance",
       key: "loan_balance",
+      render: (amount: any) => `KES ${Number(amount).toLocaleString()}`,
     },
     {
       title: "Amount Paid (KES)",
@@ -76,7 +86,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
       title: "Date Paid",
       dataIndex: "date_paid",
       key: "date_paid",
-      render: (date: string) => moment(date).format("DD MMM YYYY"),
+      render: (date: string) => dayjs(date).format("DD MMM YYYY"),
     },
     {
       title: "Cycle",

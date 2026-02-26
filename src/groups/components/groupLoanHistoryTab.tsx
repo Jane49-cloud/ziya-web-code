@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import {
   Card,
   Table,
@@ -13,7 +12,7 @@ import {
   Row,
   Col,
 } from "antd";
-import moment from "moment";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useGetGroupLoansQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
@@ -27,14 +26,13 @@ interface GroupLoanHistoryTabProps {
   groupAdminId: number;
 }
 
-const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
+const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
   groupId,
   groupAdminId,
 }) => {
   const staffUserId = useMemo(() => {
     const user = getUser();
     if (!user?.id) return null;
-
     const parsedId = Number(user.id);
     return Number.isNaN(parsedId) ? null : parsedId;
   }, []);
@@ -59,6 +57,32 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
 
   const navigate = useNavigate();
 
+  // Stats always computed from the full dataset — not affected by search/sort
+  const totalLoaned = useMemo(
+    () =>
+      loans.reduce((sum: number, loan: any) => {
+        const amount =
+          typeof loan.amount === "string"
+            ? parseFloat(loan.amount)
+            : loan.amount;
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0),
+    [loans],
+  );
+
+  const totalLoanCount = useMemo(() => loans.length, [loans]);
+
+  const activeLoanCount = useMemo(
+    () =>
+      loans.filter((loan: any) => Number(loan.balance ?? 0) > 0).length,
+    [loans],
+  );
+
+  const averageAmount = useMemo(
+    () => (totalLoanCount ? Math.round(totalLoaned / totalLoanCount) : 0),
+    [totalLoaned, totalLoanCount],
+  );
+
   const filteredLoans = useMemo(() => {
     const needle = searchTerm.trim().toLowerCase();
     if (!needle) return loans;
@@ -71,9 +95,7 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       return (
         recipient.includes(needle) ||
         loanType.includes(needle) ||
-        String(loan.cycle ?? "")
-          .toLowerCase()
-          .includes(needle)
+        String(loan.cycle ?? "").toLowerCase().includes(needle)
       );
     });
   }, [loans, searchTerm]);
@@ -83,111 +105,106 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
       [...filteredLoans].sort((a, b) =>
         sortOrder === "ascend"
           ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          : new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime(),
       ),
     [filteredLoans, sortOrder],
   );
 
-  const totalLoaned = sortedLoans.reduce((sum, loan) => {
-    const amount =
-      typeof loan.amount === "string" ? parseFloat(loan.amount) : loan.amount;
-    return sum + (isNaN(amount) ? 0 : amount);
-  }, 0);
-
   const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
 
-  const columns = [
-    {
-      title: "Recipient",
-      key: "recipient",
-      render: (_: any, record: any) => (
-        <Button
-          type="link"
-          className="p-0"
-          onClick={() => navigate(`/customer/${record.issued_to}`)}
-        >
-          {formatName(
-            `${record.recipient_firstname ?? ""} ${
-              record.recipient_lastname ?? ""
-            }`,
-          )}
-        </Button>
-      ),
-    },
-    {
-      title: "Amount (KES)",
-      dataIndex: "amount",
-      key: "amount",
-      render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
-    },
-    {
-      title: "Balance (KES)",
-      dataIndex: "balance",
-      key: "balance",
-      render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
-    },
-    {
-      title: "Loan Type",
-      dataIndex: "loan_type_name",
-      key: "loan_type",
-      render: (type: string) => type || "N/A",
-    },
-    {
-      title: "Cycle",
-      dataIndex: "cycle",
-      key: "cycle",
-    },
-    {
-      title: "Issued On",
-      dataIndex: "date_issued",
-      key: "date_issued",
-      render: (_: string, record: any) => {
-        const date = record.date_issued ?? record.created_at;
-        return date ? moment(date).format("DD MMM YYYY") : "—";
+  const columns = useMemo(
+    () => [
+      {
+        title: "Recipient",
+        key: "recipient",
+        render: (_: any, record: any) => (
+          <Button
+            type="link"
+            className="p-0"
+            onClick={() => navigate(`/customer/${record.issued_to}`)}
+          >
+            {formatName(
+              `${record.recipient_firstname ?? ""} ${
+                record.recipient_lastname ?? ""
+              }`,
+            )}
+          </Button>
+        ),
       },
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_: any, record: any) => {
-        const isPaid = Number(record?.balance ?? 0) <= 0;
+      {
+        title: "Amount (KES)",
+        dataIndex: "amount",
+        key: "amount",
+        render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
+      },
+      {
+        title: "Balance (KES)",
+        dataIndex: "balance",
+        key: "balance",
+        render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
+      },
+      {
+        title: "Loan Type",
+        dataIndex: "loan_type_name",
+        key: "loan_type",
+        render: (type: string) => type || "N/A",
+      },
+      {
+        title: "Cycle",
+        dataIndex: "cycle",
+        key: "cycle",
+      },
+      {
+        title: "Issued On",
+        dataIndex: "date_issued",
+        key: "date_issued",
+        render: (_: string, record: any) => {
+          const date = record.date_issued ?? record.created_at;
+          return date ? dayjs(date).format("DD MMM YYYY") : "—";
+        },
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        render: (_: any, record: any) => {
+          const isPaid = Number(record?.balance ?? 0) <= 0;
 
-        return (
-          <Space>
-            <Tag
-              color="blue"
-              className="cursor-pointer"
-              onClick={() => {
-                setEditLoan(record);
-                setShowLoanModal(true);
-              }}
-            >
-              Edit
-            </Tag>
-            {isPaid ? (
-              <Tag className="cursor-not-allowed opacity-70" color="green">
-                Paid
-              </Tag>
-            ) : (
+          return (
+            <Space>
               <Tag
-                color="gold"
+                color="blue"
                 className="cursor-pointer"
                 onClick={() => {
-                  setSelectedLoan(record);
-                  setShowPaymentModal(true);
+                  setEditLoan(record);
+                  setShowLoanModal(true);
                 }}
               >
-                + Payment
+                Edit
               </Tag>
-            )}
-          </Space>
-        );
+              {isPaid ? (
+                <Tag className="cursor-not-allowed opacity-70" color="green">
+                  Paid
+                </Tag>
+              ) : (
+                <Tag
+                  color="gold"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelectedLoan(record);
+                    setShowPaymentModal(true);
+                  }}
+                >
+                  + Payment
+                </Tag>
+              )}
+            </Space>
+          );
+        },
       },
-    },
-  ];
-
-  const activeLoans = sortedLoans.length;
-  const averageAmount = activeLoans ? Math.round(totalLoaned / activeLoans) : 0;
+    ],
+    [navigate],
+  );
 
   return (
     <Card bordered={false} className="rounded-xl shadow-sm">
@@ -214,32 +231,57 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
         </div>
 
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-blue-50" styles={{ body: { padding: '14px 18px' } }}>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-blue-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Total Amount Issued"
                 value={totalLoaned}
                 formatter={(value) => formatCurrency(value as number)}
-                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#1d4ed8' }}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#1d4ed8" }}
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-emerald-50" styles={{ body: { padding: '14px 18px' } }}>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-slate-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
+              <Statistic
+                title="Total Loans Given"
+                value={totalLoanCount}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#475569" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-emerald-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Active Loans"
-                value={activeLoans}
-                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#059669' }}
+                value={activeLoanCount}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#059669" }}
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-amber-50" styles={{ body: { padding: '14px 18px' } }}>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-amber-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Average Ticket Size"
                 value={averageAmount}
                 formatter={(value) => formatCurrency(value as number)}
-                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#d97706' }}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#d97706" }}
               />
             </Card>
           </Col>
@@ -275,7 +317,6 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
         />
       </Space>
 
-      {/* Loan Modal */}
       {showLoanModal && (
         <GroupLoanFormModal
           visible={showLoanModal}
@@ -287,7 +328,6 @@ const GroupLoanHistoryTab: React.FC<GroupLoanHistoryTabProps> = ({
         />
       )}
 
-      {/* Payment Modal */}
       {showPaymentModal && selectedLoan && (
         <GroupPaymentFormModal
           visible={showPaymentModal}

@@ -84,7 +84,11 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
           <Title level={4} className="!mb-0">
             Wallet Overview
           </Title>
-          <Button onClick={() => setWalletModalVisible(true)} type="primary">
+          <Button
+            onClick={() => setWalletModalVisible(true)}
+            type="primary"
+            disabled={!wallet || isLoading}
+          >
             Edit Wallet
           </Button>
         </div>
