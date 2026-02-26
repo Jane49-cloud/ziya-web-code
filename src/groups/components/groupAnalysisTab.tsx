@@ -470,6 +470,44 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
     return Math.round(avg);
   }, [loanTrend]);
 
+  const chartNarratives = useMemo(() => {
+    const loanUp =
+      loanTrend.length > 1 &&
+      (loanTrend.at(-1)?.value ?? 0) >= (loanTrend[0]?.value ?? 0);
+    const paymentUp =
+      paymentTrend.length > 1 &&
+      (paymentTrend.at(-1)?.value ?? 0) >= (paymentTrend[0]?.value ?? 0);
+    const positiveNetMonths = netTrend.filter((item) => item.value >= 0).length;
+    const mostlyPositiveNet =
+      netTrend.length > 0 && positiveNetMonths / netTrend.length >= 0.6;
+    const topContributorsTotal = topContributors.reduce(
+      (sum, item) => sum + item.value,
+      0,
+    );
+    const top3Share =
+      topContributorsTotal > 0
+        ? topContributors
+            .slice(0, 3)
+            .reduce((sum, item) => sum + item.value, 0) / topContributorsTotal
+        : 0;
+
+    return {
+      loan: loanUp
+        ? "This graph shows lending momentum improving over time."
+        : "This graph shows lending momentum flattening or slowing.",
+      payment: paymentUp
+        ? "This graph shows collections strengthening over time."
+        : "This graph shows collections softening and needs follow-up.",
+      net: mostlyPositiveNet
+        ? "This graph shows inflows generally keeping pace with outflows."
+        : "This graph shows outflows frequently outpacing inflows.",
+      contributors:
+        top3Share >= 0.65
+          ? "This graph shows repayments concentrated among a few members."
+          : "This graph shows repayments spread across members.",
+    };
+  }, [loanTrend, paymentTrend, netTrend, topContributors]);
+
   const isInitialLoading =
     (loansQuery.isLoading && !loansQuery.data) ||
     (paymentsQuery.isLoading && !paymentsQuery.data);
@@ -482,35 +520,44 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
         loanTrend.length === 0 ? (
           <Empty description="No loan activity yet" />
         ) : (
-          <Area
-            data={loanTrend}
-            xField="month"
-            yField="value"
-            padding={[20, 24, 40, 50]}
-            area={{
-              style: {
-                fill: "l(270) 0:#60a5fa 1:#2563eb",
-              },
-            }}
-            line={{ color: "#1d4ed8", size: 2 }}
-            tooltip={{
-              formatter: (datum: MonthlyDatum) => ({
-                name: "Amount",
-                value: `KES ${datum.value.toLocaleString()}`,
-              }),
-            }}
-            axis={{
-              x: {
-                label: {
-                  autoRotate: true,
-                  autoHide: true,
-                  autoEllipsis: true,
-                  formatter: (value: string) =>
-                    dayjs(value, "YYYY-MM").format("MMM YY"),
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Card bordered={false} className="bg-blue-50">
+              <Typography.Text>
+                {chartNarratives.loan} It helps you track when disbursement
+                pace accelerates or cools across periods.
+              </Typography.Text>
+            </Card>
+            <Area
+              data={loanTrend}
+              xField="month"
+              yField="value"
+              height={300}
+              padding={[20, 24, 40, 50]}
+              area={{
+                style: {
+                  fill: "l(270) 0:#60a5fa 1:#2563eb",
                 },
-              },
-            }}
-          />
+              }}
+              line={{ color: "#1d4ed8", size: 2 }}
+              tooltip={{
+                formatter: (datum: MonthlyDatum) => ({
+                  name: "Amount",
+                  value: `KES ${datum.value.toLocaleString()}`,
+                }),
+              }}
+              axis={{
+                x: {
+                  label: {
+                    autoRotate: true,
+                    autoHide: true,
+                    autoEllipsis: true,
+                    formatter: (value: string) =>
+                      dayjs(value, "YYYY-MM").format("MMM YY"),
+                  },
+                },
+              }}
+            />
+          </Space>
         ),
     },
     {
@@ -520,31 +567,40 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
         paymentTrend.length === 0 ? (
           <Empty description="No payment activity yet" />
         ) : (
-          <Column
-            data={paymentTrend}
-            xField="month"
-            yField="value"
-            columnStyle={{ radius: [6, 6, 0, 0] }}
-            padding={[20, 24, 40, 40]}
-            color="#10b981"
-            tooltip={{
-              formatter: (datum: MonthlyDatum) => ({
-                name: "Amount",
-                value: `KES ${datum.value.toLocaleString()}`,
-              }),
-            }}
-            axis={{
-              x: {
-                label: {
-                  autoRotate: true,
-                  autoHide: true,
-                  autoEllipsis: true,
-                  formatter: (value: string) =>
-                    dayjs(value, "YYYY-MM").format("MMM YY"),
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Card bordered={false} className="bg-emerald-50">
+              <Typography.Text>
+                {chartNarratives.payment} Use it to spot whether repayment
+                behavior is becoming more consistent or unstable.
+              </Typography.Text>
+            </Card>
+            <Column
+              data={paymentTrend}
+              xField="month"
+              yField="value"
+              height={300}
+              columnStyle={{ radius: [6, 6, 0, 0] }}
+              padding={[20, 24, 40, 40]}
+              color="#10b981"
+              tooltip={{
+                formatter: (datum: MonthlyDatum) => ({
+                  name: "Amount",
+                  value: `KES ${datum.value.toLocaleString()}`,
+                }),
+              }}
+              axis={{
+                x: {
+                  label: {
+                    autoRotate: true,
+                    autoHide: true,
+                    autoEllipsis: true,
+                    formatter: (value: string) =>
+                      dayjs(value, "YYYY-MM").format("MMM YY"),
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </Space>
         ),
     },
     {
@@ -554,33 +610,42 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
         netTrend.length === 0 ? (
           <Empty description="Not enough activity" />
         ) : (
-          <Column
-            data={netTrend}
-            xField="month"
-            yField="value"
-            columnStyle={{ radius: [6, 6, 0, 0] }}
-            padding={[20, 24, 40, 40]}
-            color={(datum: { value: number }) =>
-              datum.value >= 0 ? "#22c55e" : "#f43f5e"
-            }
-            tooltip={{
-              formatter: (datum: MonthlyDatum) => ({
-                name: "Net",
-                value: `KES ${datum.value.toLocaleString()}`,
-              }),
-            }}
-            axis={{
-              x: {
-                label: {
-                  autoRotate: true,
-                  autoHide: true,
-                  autoEllipsis: true,
-                  formatter: (value: string) =>
-                    dayjs(value, "YYYY-MM").format("MMM YY"),
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Card bordered={false} className="bg-slate-100">
+              <Typography.Text>
+                {chartNarratives.net} This view makes pressure periods visible
+                when group lending and recovery are out of balance.
+              </Typography.Text>
+            </Card>
+            <Column
+              data={netTrend}
+              xField="month"
+              yField="value"
+              height={300}
+              columnStyle={{ radius: [6, 6, 0, 0] }}
+              padding={[20, 24, 40, 40]}
+              color={(datum: { value: number }) =>
+                datum.value >= 0 ? "#22c55e" : "#f43f5e"
+              }
+              tooltip={{
+                formatter: (datum: MonthlyDatum) => ({
+                  name: "Net",
+                  value: `KES ${datum.value.toLocaleString()}`,
+                }),
+              }}
+              axis={{
+                x: {
+                  label: {
+                    autoRotate: true,
+                    autoHide: true,
+                    autoEllipsis: true,
+                    formatter: (value: string) =>
+                      dayjs(value, "YYYY-MM").format("MMM YY"),
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </Space>
         ),
     },
     {
@@ -590,21 +655,30 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
         topContributors.length === 0 ? (
           <Empty description="No payments yet" />
         ) : (
-          <Column
-            data={topContributors}
-            xField="member"
-            yField="value"
-            columnStyle={{ radius: [6, 6, 0, 0] }}
-            padding={[20, 24, 60, 60]}
-            color="#8b5cf6"
-            xAxis={{ label: { autoRotate: true } }}
-            tooltip={{
-              formatter: (datum: { member: string; value: number }) => ({
-                name: datum.member,
-                value: `KES ${datum.value.toLocaleString()}`,
-              }),
-            }}
-          />
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Card bordered={false} className="bg-violet-50">
+              <Typography.Text>
+                {chartNarratives.contributors} This helps identify whether
+                repayment risk is distributed or dependent on a small subset.
+              </Typography.Text>
+            </Card>
+            <Column
+              data={topContributors}
+              xField="member"
+              yField="value"
+              height={300}
+              columnStyle={{ radius: [6, 6, 0, 0] }}
+              padding={[20, 24, 60, 60]}
+              color="#8b5cf6"
+              xAxis={{ label: { autoRotate: true } }}
+              tooltip={{
+                formatter: (datum: { member: string; value: number }) => ({
+                  name: datum.member,
+                  value: `KES ${datum.value.toLocaleString()}`,
+                }),
+              }}
+            />
+          </Space>
         ),
     },
   ];
@@ -985,11 +1059,11 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
             </Col>
           </Row>
 
-          <Row gutter={[12, 12]}>
-            <Col xs={24} lg={16}>
+          <Row gutter={[12, 12]} className="items-stretch">
+            <Col xs={24} lg={16} className="flex">
               <Card
                 bordered={false}
-                className="rounded-xl bg-slate-50"
+                className="rounded-xl bg-slate-50 h-full w-full"
                 styles={{ body: { padding: "12px 16px" } }}
               >
                 <Tabs
@@ -999,61 +1073,58 @@ const GroupAnalysisTab: React.FC<GroupAnalysisTabProps> = ({
                 />
               </Card>
             </Col>
-            <Col xs={24} lg={8}>
+            <Col xs={24} lg={8} className="flex">
               <Card
                 bordered={false}
-                className="rounded-xl bg-slate-50"
+                className="rounded-xl bg-slate-50 h-full w-full"
                 styles={{ body: { padding: "12px 16px" } }}
               >
-                <Typography.Title level={5} className="!mb-3">
-                  Loan Status Mix
-                </Typography.Title>
-                {loanMix.length === 0 ? (
-                  <Empty description="No loan portfolio yet" />
-                ) : (
-                  <Pie
-                    data={loanMix}
-                    angleField="value"
-                    colorField="status"
-                    radius={0.85}
-                    color={["#22c55e", "#f59e0b"]}
-                    label={{
-                      type: "spider",
-                      formatter: (datum: { status: string; value: number }) =>
-                        `${datum.status}: ${datum.value}`,
-                    }}
-                    padding={[10, 24, 10, 24]}
-                  />
-                )}
-              </Card>
-
-              <Card
-                bordered={false}
-                className="rounded-xl bg-slate-50 mt-3"
-                styles={{ body: { padding: "12px 16px" } }}
-              >
-                <Typography.Title level={5} className="!mb-1">
-                  Trend-based Projection
-                </Typography.Title>
-                <Typography.Text type="secondary" className="block mb-3">
-                  Based on the last 3 months of activity.
-                </Typography.Text>
-                <Space direction="vertical" size={8}>
-                  <Statistic
-                    title="Next-Month Payments"
-                    value={projectedPayments}
-                    formatter={(value) =>
-                      `KES ${(value as number).toLocaleString()}`
-                    }
-                  />
-                  <Statistic
-                    title="Next-Month Loan Issuance"
-                    value={projectedLoans}
-                    formatter={(value) =>
-                      `KES ${(value as number).toLocaleString()}`
-                    }
-                  />
-                </Space>
+                <div className="flex h-full flex-col">
+                  <Typography.Title level={5} className="!mb-3">
+                    Loan Status Mix
+                  </Typography.Title>
+                  {loanMix.length === 0 ? (
+                    <Empty description="No loan portfolio yet" />
+                  ) : (
+                    <Pie
+                      data={loanMix}
+                      angleField="value"
+                      colorField="status"
+                      height={220}
+                      radius={0.72}
+                      color={["#22c55e", "#f59e0b"]}
+                      label={{
+                        type: "spider",
+                        formatter: (datum: { status: string; value: number }) =>
+                          `${datum.status}: ${datum.value}`,
+                      }}
+                      padding={[6, 14, 6, 14]}
+                    />
+                  )}
+                  <Divider className="my-3" />
+                  <Typography.Title level={5} className="!mb-1">
+                    Trend-based Projection
+                  </Typography.Title>
+                  <Typography.Text type="secondary" className="block mb-3">
+                    Based on the last 3 months of activity.
+                  </Typography.Text>
+                  <Space direction="vertical" size={8}>
+                    <Statistic
+                      title="Next-Month Payments"
+                      value={projectedPayments}
+                      formatter={(value) =>
+                        `KES ${(value as number).toLocaleString()}`
+                      }
+                    />
+                    <Statistic
+                      title="Next-Month Loan Issuance"
+                      value={projectedLoans}
+                      formatter={(value) =>
+                        `KES ${(value as number).toLocaleString()}`
+                      }
+                    />
+                  </Space>
+                </div>
               </Card>
             </Col>
           </Row>
