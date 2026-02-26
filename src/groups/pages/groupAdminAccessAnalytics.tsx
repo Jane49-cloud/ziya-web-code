@@ -34,6 +34,14 @@ type AdminAccessRow = {
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
+const LEVEL_COLORS: Record<AccessLevel, string> = {
+  High: "#10b981",
+  Moderate: "#3b82f6",
+  Poor: "#f59e0b",
+  Critical: "#ef4444",
+};
+const LEVEL_ORDER: AccessLevel[] = ["High", "Moderate", "Poor", "Critical"];
+
 const getLevelFromDays = (
   daysSinceActivity: number | null,
 ): { level: AccessLevel; status: AccessStatus } => {
@@ -162,10 +170,15 @@ const GroupAdminAccessAnalytics = () => {
     activityRows.forEach((row) => {
       counts.set(row.activityLevel, (counts.get(row.activityLevel) ?? 0) + 1);
     });
-    return Array.from(counts.entries()).map(([level, value]) => ({
-      level,
-      value,
-    }));
+    const total = activityRows.length || 1;
+    return LEVEL_ORDER.map((level) => {
+      const value = counts.get(level) ?? 0;
+      return {
+        level,
+        value,
+        percent: value / total,
+      };
+    }).filter((entry) => entry.value > 0);
   }, [activityRows]);
 
   if (activityQuery.isLoading && !activityRows.length) {
@@ -242,7 +255,7 @@ const GroupAdminAccessAnalytics = () => {
                 activityRows.filter((row) => row.activityLevel === "High")
                   .length
               }
-              valueStyle={{ fontWeight: 600, color: "#059669" }}
+              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.High }}
             />
         </Card>
         <Card
@@ -256,12 +269,12 @@ const GroupAdminAccessAnalytics = () => {
                 activityRows.filter((row) => row.activityLevel === "Moderate")
                   .length
               }
-              valueStyle={{ fontWeight: 600, color: "#1d4ed8" }}
+              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Moderate }}
           />
         </Card>
         <Card
           bordered={false}
-          className="rounded-xl bg-rose-50"
+          className="rounded-xl bg-orange-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
             <Statistic
@@ -269,12 +282,12 @@ const GroupAdminAccessAnalytics = () => {
               value={
                 activityRows.filter((row) => row.activityLevel === "Poor").length
               }
-              valueStyle={{ fontWeight: 600, color: "#be123c" }}
+              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Poor }}
             />
         </Card>
         <Card
           bordered={false}
-          className="rounded-xl bg-violet-50"
+          className="rounded-xl bg-red-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
           <Statistic
@@ -282,7 +295,7 @@ const GroupAdminAccessAnalytics = () => {
             value={
               activityRows.filter((row) => row.activityLevel === "Critical").length
             }
-            valueStyle={{ fontWeight: 600, color: "#7c3aed" }}
+            valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Critical }}
           />
         </Card>
       </div>
@@ -303,17 +316,29 @@ const GroupAdminAccessAnalytics = () => {
             data={levelDistribution}
             angleField="value"
             colorField="level"
-            radius={0.9}
-            color={["#10b981", "#3b82f6", "#e11d48", "#7c3aed"]}
+            height={220}
+            radius={0.8}
+            padding={[8, 10, 8, 10]}
+            scale={{
+              color: {
+                domain: LEVEL_ORDER,
+                range: LEVEL_ORDER.map((level) => LEVEL_COLORS[level]),
+              },
+            }}
             label={{
               type: "outer",
               formatter: (datum?: { level?: string; value?: number }) =>
                 datum?.level ? `${datum.level}: ${datum.value ?? 0}` : "",
             }}
             tooltip={{
-              formatter: (datum?: { level?: string; value?: number }) => ({
+              title: (datum?: { level?: string }) => datum?.level ?? "Level",
+              formatter: (datum?: {
+                level?: string;
+                value?: number;
+                percent?: number;
+              }) => ({
                 name: datum?.level ?? "Unknown",
-                value: datum?.value ?? 0,
+                value: `${datum?.value ?? 0} group(s) (${((datum?.percent ?? 0) * 100).toFixed(1)}%)`,
               }),
             }}
           />
@@ -335,14 +360,28 @@ const GroupAdminAccessAnalytics = () => {
             <Column
               data={redZoneRows.slice(0, 12).map((row) => ({
                 group: compactGroupName(row.groupName),
+                fullGroup: row.groupName,
                 value: row.daysSinceActivity ?? 45,
+                level: row.activityLevel,
               }))}
               xField="group"
               yField="value"
-              height={240}
+              colorField="level"
+              height={220}
               padding={[16, 16, 40, 40]}
-              color={() => "#ef4444"}
-              columnStyle={{ radius: [6, 6, 0, 0], fill: "#ef4444" }}
+              scale={{
+                color: {
+                  domain: ["Poor", "Critical", "Moderate", "High"],
+                  range: [
+                    LEVEL_COLORS.Poor,
+                    LEVEL_COLORS.Critical,
+                    LEVEL_COLORS.Moderate,
+                    LEVEL_COLORS.High,
+                  ],
+                },
+              }}
+              legend={false}
+              columnStyle={{ radius: [6, 6, 0, 0] }}
               axis={{
                 x: {
                   label: false,
@@ -351,13 +390,23 @@ const GroupAdminAccessAnalytics = () => {
                 },
               }}
               tooltip={{
-                formatter: (datum?: { group?: string; value?: number }) => ({
-                  name: datum?.group ?? "Unknown Group",
-                  value:
+                title: (datum?: { fullGroup?: string; group?: string }) =>
+                  datum?.fullGroup ?? datum?.group ?? "Group",
+                formatter: (datum?: {
+                  fullGroup?: string;
+                  group?: string;
+                  value?: number;
+                  level?: AccessLevel;
+                }) => {
+                  const inactivityText =
                     datum?.value === undefined
                       ? "No activity record (Critical)"
-                      : `${datum.value} day(s) inactive`,
-                }),
+                      : `${datum.value} day(s) inactive`;
+                  return {
+                    name: datum?.fullGroup ?? datum?.group ?? "Unknown Group",
+                    value: `${inactivityText} | ${datum?.level ?? "Unknown"}`,
+                  };
+                },
               }}
             />
           )}
@@ -436,8 +485,8 @@ const GroupAdminAccessAnalytics = () => {
                       : value === "Moderate"
                         ? "blue"
                         : value === "Poor"
-                          ? "red"
-                          : "purple"
+                          ? "orange"
+                          : "red"
                   }
                 >
                   {value}
