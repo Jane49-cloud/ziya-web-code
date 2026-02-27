@@ -37,18 +37,10 @@ export const DocumentsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccessLevel, setFilterAccessLevel] = useState<string>("all");
 
-  const { data, isLoading, refetch } = useGetAllDocumentsQuery(
-    {},
-    {
-      pollingInterval: 3000,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
-  );
+  const { data, isLoading, refetch } = useGetAllDocumentsQuery({});
   const [deleteDocument, { isLoading: deleting }] = useDeleteDocumentMutation();
 
   const documents = useMemo(() => data?.documents || [], [data]);
-  console.log("Documents:", documents);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc: any) => {
@@ -178,43 +170,43 @@ export const DocumentsList: React.FC = () => {
   ];
 
   return (
-    <div className="py-6 px-4">
-      <Card className="shadow-sm border-slate-200">
+    <div className="-mt-4 pt-2">
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Documents</h1>
-            <p className="text-sm text-gray-600">
-              Manage and organize your documents
-            </p>
+        <div className="mb-6 rounded-2xl border border-slate-200/70 bg-gradient-to-r from-white via-sky-50 to-cyan-50 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="mb-1 text-2xl font-bold text-gray-900">Documents</h1>
+              <p className="text-sm text-gray-600">
+                Manage and organize your documents
+              </p>
+            </div>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => navigate("/documents/create")}
+              className="bg-primary hover:bg-hover md:self-start"
+            >
+              Create Document
+            </Button>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => navigate("/documents/create")}
-            className="bg-primary hover:bg-hover"
-          >
-            Create Document
-          </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_220px]">
           <Search
             placeholder="Search documents..."
             prefix={<SearchOutlined />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             size="large"
-            className="md:w-96"
             allowClear
           />
           <Select
             size="large"
             value={filterAccessLevel}
             onChange={setFilterAccessLevel}
-            className="md:w-48"
           >
             <Option value="all">All Access Levels</Option>
             <Option value="public">Public</Option>
@@ -225,33 +217,116 @@ export const DocumentsList: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="mb-6">
-          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-            <div className="text-xs text-gray-500 mt-2">
-              Showing {filteredDocuments.length} of {documents.length} documents
-            </div>
-          </div>
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <FileTextOutlined className="text-slate-400" />
+            {filteredDocuments.length} of {documents.length} documents
+          </span>
+          {filterAccessLevel !== "all" && (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 capitalize">
+              {filterAccessLevel}
+            </span>
+          )}
         </div>
 
-        {/* Table */}
+        {/* Empty */}
         {filteredDocuments.length === 0 && !isLoading ? (
           <Empty
             description="No documents found"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
-          <Table
-            columns={columns}
-            dataSource={filteredDocuments}
-            rowKey="ID"
-            loading={isLoading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} documents`,
-            }}
-            scroll={{ x: 1000 }}
-          />
+          <>
+            {/* Mobile list */}
+            <div className="grid gap-3 md:hidden">
+              {filteredDocuments.map((record: Document) => (
+                <div
+                  key={record.ID}
+                  className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <FileTextOutlined className="text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-slate-900">
+                          {record.title}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {new Date(record?.date_created).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Tag
+                      color={getAccessLevelColor(record.access_level ?? "")}
+                      className="capitalize shrink-0"
+                    >
+                      {record.access_level ?? "unknown"}
+                    </Tag>
+                  </div>
+                  <p className="mb-4 text-xs leading-relaxed text-slate-500 line-clamp-2">
+                    {stripHtml(record.content ?? "")}
+                  </p>
+                  <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<EyeOutlined />}
+                      onClick={() => navigate(`/documents/${record.ID}`)}
+                      className="text-blue-600 hover:bg-blue-50"
+                    >
+                      View
+                    </Button>
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={() => navigate(`/documents/edit/${record.ID}`)}
+                      className="text-amber-600 hover:bg-amber-50"
+                    >
+                      Edit
+                    </Button>
+                    <Popconfirm
+                      title="Delete Document"
+                      description="Are you sure you want to delete this document?"
+                      onConfirm={() => handleDelete(record.ID)}
+                      okText="Delete"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true, loading: deleting }}
+                    >
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        loading={deleting}
+                        className="text-red-500 hover:bg-red-50"
+                      >
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table
+                columns={columns}
+                dataSource={filteredDocuments}
+                rowKey="ID"
+                loading={isLoading}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Total ${total} documents`,
+                }}
+                scroll={{ x: 1000 }}
+                className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
+              />
+            </div>
+          </>
         )}
       </Card>
     </div>

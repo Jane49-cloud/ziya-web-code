@@ -92,7 +92,7 @@ export const EditDocumentForm: React.FC = () => {
     setHasConflict(false);
     setAutoSaveState("saved");
     setLastAutoSaveAt(
-      document.updated_at ? new Date(document.updated_at) : null
+      document.updated_at ? new Date(document.updated_at) : null,
     );
     hasInitializedRef.current = true;
   }, [document, editor, form]);
@@ -206,14 +206,14 @@ export const EditDocumentForm: React.FC = () => {
     hasConflict,
   ]);
 
-  const handleSubmit = async (_values: any) => {
+  const handleSubmit = async () => {
     try {
       const saved = await performSave("manual");
       if (saved) {
         message.success("Document updated successfully!");
         navigate(`/documents/${id}`);
       }
-    } catch (_error: any) {
+    } catch {
       // performSave handles errors
     }
   };
@@ -254,7 +254,7 @@ export const EditDocumentForm: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="-mt-4 min-h-screen ">
       <Form
         form={form}
         layout="vertical"
@@ -262,8 +262,8 @@ export const EditDocumentForm: React.FC = () => {
         className="min-h-screen flex flex-col"
       >
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-            <div className="max-w-5xl mx-auto flex items-center gap-3 px-4 py-3">
+          <header className="sticky top-0 z-30 mb-2 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
               <Button
                 icon={<ArrowLeftOutlined />}
                 onClick={() => navigate(`/documents/${id}`)}
@@ -304,7 +304,7 @@ export const EditDocumentForm: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
                 <div className="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
                   <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
                     Auto-save on
@@ -313,7 +313,7 @@ export const EditDocumentForm: React.FC = () => {
                 </div>
                 <Form.Item
                   name="access_level"
-                  className="mb-0 w-40"
+                  className="mb-0 w-full sm:w-40"
                   rules={[
                     { required: true, message: "Please select access level" },
                   ]}
@@ -328,7 +328,7 @@ export const EditDocumentForm: React.FC = () => {
 
                 <Button
                   icon={<Share2 size={16} />}
-                  className="rounded-full"
+                  className="hidden rounded-full sm:inline-flex"
                   onClick={() => message.info("Sharing controls coming soon")}
                 >
                   Share
@@ -346,71 +346,70 @@ export const EditDocumentForm: React.FC = () => {
                 </Button>
               </div>
             </div>
+            <div className="border-t border-slate-200 bg-white px-4 py-2">
+              <EditorToolbar editor={editor} />
+            </div>
           </header>
 
-          <div className="flex-1">
-            <div className="max-w-5xl mx-auto px-4">
-              {hasConflict && (
-                <div className="pt-4">
-                  <Alert
-                    type="warning"
-                    showIcon
-                    message="This document was updated elsewhere."
-                    description="You can reload the latest version or keep editing your current copy."
-                    action={
-                      <div className="flex gap-2">
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            if (!document || !editor) return;
-                            editor.commands.setContent(document.content || "");
-                            form.setFieldsValue({
-                              title: document.title,
-                              access_level: document.access_level,
-                            });
-                            lastSavedContentRef.current =
-                              document.content || "";
-                            lastSavedMetaRef.current = {
-                              title: document.title || "",
-                              access_level: document.access_level || "",
-                            };
-                            lastRemoteUpdatedAtRef.current =
-                              document.updated_at ??
-                              document.date_created ??
-                              "";
-                            setIsDirty(false);
-                            setHasConflict(false);
-                            setAutoSaveState("saved");
-                            setLastAutoSaveAt(
-                              document.updated_at
-                                ? new Date(document.updated_at)
-                                : null
-                            );
-                          }}
-                        >
-                          Reload latest
-                        </Button>
-                        <Button
-                          size="small"
-                          type="text"
-                          onClick={() => setHasConflict(false)}
-                        >
-                          Keep editing
-                        </Button>
-                      </div>
-                    }
-                  />
-                </div>
-              )}
-              <div className="sticky top-[84px] z-20">
-                <div className="rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                  <EditorToolbar editor={editor} />
-                </div>
-              </div>
-
-              <div className="py-6 flex justify-center">
-                <div className="doc-page w-full rounded-[24px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
-                  <div className="px-6 sm:px-8 lg:px-10 py-6 sm:py-8 lg:py-10">
+          <div className="flex-1 pb-8 sm:pb-10 bg-white">
+            <div className="mx-auto w-full">
+              <div className="bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
+                {hasConflict && (
+                  <div className="border-b border-slate-200 bg-amber-50/50 px-3 py-3 sm:px-4">
+                    <Alert
+                      type="warning"
+                      showIcon
+                      message="This document was updated elsewhere."
+                      description="You can reload the latest version or keep editing your current copy."
+                      action={
+                        <div className="flex gap-2">
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              if (!document || !editor) return;
+                              editor.commands.setContent(
+                                document.content || "",
+                              );
+                              form.setFieldsValue({
+                                title: document.title,
+                                access_level: document.access_level,
+                              });
+                              lastSavedContentRef.current =
+                                document.content || "";
+                              lastSavedMetaRef.current = {
+                                title: document.title || "",
+                                access_level: document.access_level || "",
+                              };
+                              lastRemoteUpdatedAtRef.current =
+                                document.updated_at ??
+                                document.date_created ??
+                                "";
+                              setIsDirty(false);
+                              setHasConflict(false);
+                              setAutoSaveState("saved");
+                              setLastAutoSaveAt(
+                                document.updated_at
+                                  ? new Date(document.updated_at)
+                                  : null,
+                              );
+                            }}
+                          >
+                            Reload latest
+                          </Button>
+                          <Button
+                            size="small"
+                            type="text"
+                            onClick={() => setHasConflict(false)}
+                          >
+                            Keep editing
+                          </Button>
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
+                <div className="doc-page w-full">
+                  <div className="px-4 pt-8 pb-6">
                     <EditorContent editor={editor} />
                   </div>
                 </div>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useGetGroupPaymentsQuery } from "../features";
 import {
@@ -11,8 +10,8 @@ import {
   Row,
   Col,
 } from "antd";
-import { useState } from "react";
-import moment from "moment";
+import { useMemo, useState } from "react";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { formatName } from "../../utils";
 
@@ -22,17 +21,26 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
   const { data, isLoading, isFetching } = useGetGroupPaymentsQuery(groupId, {
     refetchOnFocus: true,
     refetchOnReconnect: true,
-    pollingInterval: 30000,
+    pollingInterval: 180000,
   });
 
-  const payments = data?.payments || [];
+  const payments = useMemo(() => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.payments)) return data.payments;
+    if (Array.isArray((data as any)?.data)) return (data as any).data;
+    return [];
+  }, [data]);
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const navigate = useNavigate();
 
-  const sortedPayments = [...payments].sort((a, b) =>
-    sortOrder === "ascend"
-      ? new Date(a.date_paid).getTime() - new Date(b.date_paid).getTime()
-      : new Date(b.date_paid).getTime() - new Date(a.date_paid).getTime()
+  const sortedPayments = useMemo(
+    () =>
+      [...payments].sort((a, b) =>
+        sortOrder === "ascend"
+          ? new Date(a.date_paid).getTime() - new Date(b.date_paid).getTime()
+          : new Date(b.date_paid).getTime() - new Date(a.date_paid).getTime(),
+      ),
+    [payments, sortOrder],
   );
 
   const totalPaid = sortedPayments.reduce((sum, payment) => {
@@ -57,14 +65,16 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
         ) || "Unnamed Customer",
     },
     {
-      title: "Loan Amount",
+      title: "Loan Amount (KES)",
       dataIndex: "loan_amount",
       key: "loan_amount",
+      render: (amount: any) => `KES ${Number(amount).toLocaleString()}`,
     },
     {
-      title: "Loan Balance",
+      title: "Loan Balance (KES)",
       dataIndex: "loan_balance",
       key: "loan_balance",
+      render: (amount: any) => `KES ${Number(amount).toLocaleString()}`,
     },
     {
       title: "Amount Paid (KES)",
@@ -76,7 +86,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
       title: "Date Paid",
       dataIndex: "date_paid",
       key: "date_paid",
-      render: (date: string) => moment(date).format("DD MMM YYYY"),
+      render: (date: string) => dayjs(date).format("DD MMM YYYY"),
     },
     {
       title: "Cycle",
@@ -104,7 +114,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
     : 0;
 
   return (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -127,27 +137,33 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Total Received"
-              value={totalPaid}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-emerald-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Total Received"
+                value={totalPaid}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#059669' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Transactions"
-              value={totalTransactions}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-blue-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Transactions"
+                value={totalTransactions}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#1d4ed8' }}
+              />
+            </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Statistic
-              title="Average Ticket"
-              value={averagePayment}
-              formatter={(value) => formatCurrency(value as number)}
-              valueStyle={{ fontSize: 20 }}
-            />
+            <Card bordered={false} className="rounded-xl bg-slate-50" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title="Average Ticket"
+                value={averagePayment}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600 }}
+              />
+            </Card>
           </Col>
         </Row>
 
@@ -159,6 +175,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
           pagination={{ pageSize: 6, showSizeChanger: true }}
           scroll={{ x: 900 }}
           size="middle"
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-emerald-50/30"
         />
       </Space>
     </Card>

@@ -7,11 +7,10 @@ import {
   useDeleteBusinessMutation,
 } from "../features/customerSlice";
 import CustomerBusinessForm from "./customerBusinessForm";
-import { refetchCustomerBusiness } from "../util";
 import { Business } from "../../types/common";
 
 const CustomerBusinessList = ({ customerId }: any) => {
-  const { data, isLoading } = useGetBusinessesByCustomerQuery(customerId);
+  const { data, isLoading, refetch } = useGetBusinessesByCustomerQuery(customerId);
   const rawBusinesses = data?.customerBusinesses;
 
   const businesses: Business[] = Array.isArray(rawBusinesses)
@@ -24,12 +23,11 @@ const CustomerBusinessList = ({ customerId }: any) => {
   const [deleteBusiness] = useDeleteBusinessMutation();
   const [editBusiness, setEditBusiness] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const refetch = refetchCustomerBusiness(customerId);
 
   const handleDelete = async (id: any) => {
     try {
       await deleteBusiness(id).unwrap();
-      refetch();
+      await refetch();
       message.success("Business deleted successfully!");
     } catch (error) {
       message.error("Failed to delete business.");
@@ -111,6 +109,7 @@ const CustomerBusinessList = ({ customerId }: any) => {
         }}
         customerId={customerId}
         business={editBusiness}
+        onSaved={refetch}
       />
     </Card>
   );

@@ -3,7 +3,7 @@ import {
   Card,
   Row,
   Col,
-  Typography,
+  Typography, //fake comment to trigger pipelines
   Skeleton,
   Space,
   Button,
@@ -35,7 +35,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useGetAllGroupLoansQuery } from "../Loans/features/loanSlice";
 import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
-import { useGetAllGroupWalletsQuery } from "../groups/features";
+import { useGetAllGroupWalletsQuery, useGetAllGroupsQuery } from "../groups/features";
 
 const { Title, Text } = Typography;
 
@@ -58,6 +58,7 @@ const DashboardOverview = () => {
     useGetAllCustomersQuery({});
   const { data: walletsData, isLoading: walletsLoading } =
     useGetAllGroupWalletsQuery({});
+  const { data: groupsData, isLoading: groupsLoading } = useGetAllGroupsQuery({});
 
   const groupLoansRaw = groupLoansData?.loans as GroupLoan[] | undefined;
   const customersRaw = customersData?.customers as Customer[] | undefined;
@@ -66,6 +67,7 @@ const DashboardOverview = () => {
   const groupLoans = useMemo(() => groupLoansRaw ?? [], [groupLoansRaw]);
   const customers = useMemo(() => customersRaw ?? [], [customersRaw]);
   const wallets = useMemo(() => walletsRaw ?? [], [walletsRaw]);
+  const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
 
   const loanAggregates = useMemo(() => {
     return groupLoans.reduce(
@@ -75,7 +77,7 @@ const DashboardOverview = () => {
         acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
         return acc;
       },
-      { count: 0, disbursed: 0, outstanding: 0 }
+      { count: 0, disbursed: 0, outstanding: 0 },
     );
   }, [groupLoans]);
 
@@ -95,6 +97,7 @@ const DashboardOverview = () => {
     totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
   const activeGroupCount = useMemo(() => {
+    if (groups.length) return groups.length;
     const unique = new Set<string>();
     groupLoans.forEach((loan, index) => {
       const identifier =
@@ -102,7 +105,7 @@ const DashboardOverview = () => {
       unique.add(String(identifier));
     });
     return unique.size;
-  }, [groupLoans]);
+  }, [groupLoans, groups.length]);
 
   const groupPerformance = useMemo(() => {
     const collection = new Map<
@@ -140,7 +143,7 @@ const DashboardOverview = () => {
             ? ((item.disbursed - item.outstanding) / item.disbursed) * 100
             : 0,
       })),
-    [groupPerformance]
+    [groupPerformance],
   );
 
   const disbursementShare = useMemo(() => {
@@ -150,11 +153,11 @@ const DashboardOverview = () => {
       const currentTotal = totalsByGroup.get(groupName) ?? 0;
       totalsByGroup.set(
         groupName,
-        currentTotal + toNumber(loan.amount ?? loan.disbursed_amount)
+        currentTotal + toNumber(loan.amount ?? loan.disbursed_amount),
       );
     });
     const sorted = Array.from(totalsByGroup.entries()).sort(
-      (a, b) => b[1] - a[1]
+      (a, b) => b[1] - a[1],
     );
     const top = sorted.slice(0, 5);
     const othersValue = sorted
@@ -189,10 +192,13 @@ const DashboardOverview = () => {
         })
         .sort((a, b) => b.balance - a.balance)
         .slice(0, 5),
-    [wallets]
+    [wallets],
   );
 
-  const statsLoading = groupLoansLoading || customersLoading || walletsLoading;
+  const loansLoadingState = groupLoansLoading;
+  const customersLoadingState = customersLoading;
+  const walletsLoadingState = walletsLoading;
+  const groupsLoadingState = groupsLoading;
 
   const outstandingColumns = [
     {
@@ -272,6 +278,7 @@ const DashboardOverview = () => {
       gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       trend: "+12%",
       trendUp: true,
+      loading: groupsLoadingState,
     },
     {
       key: "customers",
@@ -282,6 +289,7 @@ const DashboardOverview = () => {
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       trend: "+8%",
       trendUp: true,
+      loading: customersLoadingState,
     },
     {
       key: "disbursed",
@@ -292,6 +300,7 @@ const DashboardOverview = () => {
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
       trend: "+24%",
       trendUp: true,
+      loading: loansLoadingState,
     },
     {
       key: "outstanding",
@@ -302,6 +311,7 @@ const DashboardOverview = () => {
       gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
       trend: "-5%",
       trendUp: false,
+      loading: loansLoadingState,
     },
   ];
 
@@ -379,7 +389,7 @@ const DashboardOverview = () => {
                 minHeight: "160px",
               }}
             >
-              {statsLoading ? (
+              {card.loading ? (
                 <div className="p-5">
                   <Skeleton active paragraph={{ rows: 2 }} />
                 </div>
@@ -451,7 +461,7 @@ const DashboardOverview = () => {
               </div>
               <RiseOutlined className="text-xl text-indigo-500" />
             </div>
-            {statsLoading ? (
+            {loansLoadingState ? (
               <Skeleton active paragraph={{ rows: 6 }} />
             ) : disbursementShare.some((item) => item.value > 0) ? (
               <div className="space-y-4">
@@ -568,7 +578,7 @@ const DashboardOverview = () => {
                 View All →
               </Link>
             </div>
-            {statsLoading ? (
+            {loansLoadingState ? (
               <Skeleton active paragraph={{ rows: 6 }} />
             ) : outstandingTable.length ? (
               <Table
@@ -607,7 +617,7 @@ const DashboardOverview = () => {
                 Latest member onboarding activity
               </Text>
             </div>
-            {customersLoading ? (
+            {customersLoadingState ? (
               <Skeleton active paragraph={{ rows: 5 }} />
             ) : recentCustomers.length ? (
               <List
@@ -697,7 +707,7 @@ const DashboardOverview = () => {
                 View All →
               </Link>
             </div>
-            {walletsLoading ? (
+            {walletsLoadingState ? (
               <Skeleton active paragraph={{ rows: 4 }} />
             ) : walletSnapshot.length ? (
               <List

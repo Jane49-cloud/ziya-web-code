@@ -29,15 +29,21 @@ import {
 import { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../utils";
 import { Alert } from "../components/Alert";
-import { useFetchCustomer } from "./util";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
+const isSubscriptionActive = (status: unknown) => {
+  if (typeof status === "string") {
+    return status.toLowerCase() === "active";
+  }
+  return Number(status) === 1;
+};
+
 const CustomerManagement: FC = () => {
-  const { data, isLoading, isFetching } = useGetAllCustomersQuery({});
+  const { data, isLoading, isFetching, refetch } = useGetAllCustomersQuery({});
   const customers = data?.customers;
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
@@ -45,7 +51,6 @@ const CustomerManagement: FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const refetchCustomer = useFetchCustomer();
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
@@ -77,7 +82,7 @@ const CustomerManagement: FC = () => {
       await createCustomer(values).unwrap();
       setAlertMessage("Customer created successfully!");
       setAlertType("success");
-      refetchCustomer();
+      refetch();
       setActiveTab("1");
       return true;
     } catch (err: any) {
@@ -94,7 +99,7 @@ const CustomerManagement: FC = () => {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
       setAlertType("success");
-      refetchCustomer();
+      refetch();
       setSelectedCustomer(null);
       setActiveTab("1");
       return true;
@@ -112,7 +117,7 @@ const CustomerManagement: FC = () => {
         `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
       );
       setAlertType("success");
-      refetchCustomer();
+      refetch();
     } catch (err: any) {
       setAlertMessage("Failed to change customer status.");
       setAlertType("danger");
@@ -138,7 +143,7 @@ const CustomerManagement: FC = () => {
         customer_id: customerId,
         ...dates,
       }).unwrap();
-      await refetchCustomer();
+      await refetch();
       setAlertMessage("Subscription created successfully!");
       setAlertType("success");
       setSubscriptionModalOpen(false);
@@ -157,7 +162,7 @@ const CustomerManagement: FC = () => {
   const customerMetrics = useMemo(() => {
     const total = normalizedCustomers.length;
     const active = normalizedCustomers.filter(
-      (customer: any) => customer.subscription_status === 1
+      (customer: any) => isSubscriptionActive(customer.subscription_status)
     ).length;
     const inactive = total - active;
     return { total, active, inactive };
@@ -180,9 +185,9 @@ const CustomerManagement: FC = () => {
       const matchesStatus =
         subscriptionFilter === "all" ||
         (subscriptionFilter === "active" &&
-          customer.subscription_status === 1) ||
+          isSubscriptionActive(customer.subscription_status)) ||
         (subscriptionFilter === "inactive" &&
-          customer.subscription_status !== 1);
+          !isSubscriptionActive(customer.subscription_status));
 
       return matchesSearch && matchesStatus;
     });
@@ -287,15 +292,22 @@ const CustomerManagement: FC = () => {
       key: "subscription_status",
       align: "center" as const,
       render: (status: number) => (
-        <Tag color={status === 1 ? "success" : "default"}>
-          {status === 1 ? "Active" : "Inactive"}
+        <Tag color={isSubscriptionActive(status) ? "success" : "default"}>
+          {isSubscriptionActive(status) ? "Active" : "Inactive"}
         </Tag>
       ),
     },
     {
-      title: "Last Login",
+      title: "Last Access",
       dataIndex: "last_login",
       key: "last_login",
+      sorter: (a: any, b: any) => {
+        const aTime = a?.last_login ? moment(a.last_login).valueOf() : 0;
+        const bTime = b?.last_login ? moment(b.last_login).valueOf() : 0;
+        return aTime - bTime;
+      },
+      defaultSortOrder: "descend",
+      sortDirections: ["descend", "ascend"],
       render: (value: string) =>
         value ? (
           <Tooltip title={moment(value).format("YYYY-MM-DD HH:mm:ss")}>

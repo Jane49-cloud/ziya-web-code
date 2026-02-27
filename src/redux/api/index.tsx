@@ -35,7 +35,7 @@ const baseQueryWithAuth = async (
     console.log("status", result.error.status);
     localStorage.removeItem("ziya-access");
     localStorage.removeItem("ziya-profile");
-    localStorage.clear();
+    localStorage.removeItem("ziya-role");
     if (window.location.pathname !== "/auth/login") {
       window.location.href = "/auth/login";
     }
@@ -65,6 +65,8 @@ export const apiSlice = createApi({
     "Tasks",
     "Blogs",
     "Documents",
+    "Cycles",
+    "WeeklySeries",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

@@ -31,7 +31,7 @@ export interface UserProfile {
 }
 
 export const UserProfilePage: React.FC = () => {
-  const { data, refetch } = useLoadUserQuery(null);
+  const { data } = useLoadUserQuery(null);
   const staffData = data?.staff?.staffData;
   const [user, setUser] = useState<UserProfile | null>(getUser());
 
@@ -41,10 +41,6 @@ export const UserProfilePage: React.FC = () => {
       localStorage.setItem("ziya-profile", JSON.stringify(staffData));
     }
   }, [staffData]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
 
   const fullName = useMemo(() => {
     const fallbackFirst = staffData?.firstname ?? "";

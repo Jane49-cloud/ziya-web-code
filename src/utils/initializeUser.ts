@@ -1,13 +1,11 @@
 import { apiSlice } from "../redux/api";
 import { store } from "../redux/store";
-import { formatName } from ".";
+import { normalizeRole } from ".";
 
 export const initializeUser = async () => {
   try {
     // Run the query
-    const sub = store.dispatch(
-      apiSlice.endpoints.loadUser.initiate({}, { forceRefetch: true })
-    );
+    const sub = store.dispatch(apiSlice.endpoints.loadUser.initiate(null));
 
     // Get the real payload (throws if error)
     const data = await sub.unwrap(); // { staff: {...} }
@@ -25,8 +23,9 @@ export const initializeUser = async () => {
         data.staff?.role ??
         data.staff?.staffData?.role ??
         "";
-      if (detectedRole) {
-        localStorage.setItem("ziya-role", formatName(detectedRole));
+      const normalizedRole = normalizeRole(detectedRole);
+      if (normalizedRole) {
+        localStorage.setItem("ziya-role", normalizedRole);
       }
     }
 

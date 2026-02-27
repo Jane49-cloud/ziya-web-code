@@ -12,7 +12,6 @@ const { Title } = Typography;
 const AllGroupActivities: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useGetAllGroupActivitiesQuery({});
-  console.log("All Group Activities Data:", data);
 
   const columns = [
     {

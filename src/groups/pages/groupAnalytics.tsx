@@ -144,11 +144,14 @@ const GroupAnalyticsPage = () => {
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   };
 
   if (isLoading && groupMetrics.length === 0) {
@@ -174,8 +177,12 @@ const GroupAnalyticsPage = () => {
 
   return (
     <div className="space-y-3">
-      <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 16 }}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <Card
+        bordered={false}
+        className="rounded-xl shadow-smß"
+        styles={{ body: { padding: "16px 20px" } }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 ">
           <div>
             <Title level={4} className="!mb-1">
               Group Analytics
@@ -197,18 +204,18 @@ const GroupAnalyticsPage = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-3 my-3">
         <Card
           bordered={false}
-          className="bg-blue-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-blue-50"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic title="Total Groups" value={summary.totalGroups} />
         </Card>
         <Card
           bordered={false}
-          className="bg-emerald-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-emerald-50"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic
             title="Total Wallet Balance"
@@ -218,8 +225,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="bg-amber-50"
-          bodyStyle={{ padding: 14 }}
+          className="rounded-xl bg-amber-50"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <Statistic
             title="Loans Out Value"
@@ -232,8 +239,8 @@ const GroupAnalyticsPage = () => {
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -266,8 +273,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -303,8 +310,8 @@ const GroupAnalyticsPage = () => {
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -328,7 +335,8 @@ const GroupAnalyticsPage = () => {
                 key: "coverage",
                 render: (value: number) => {
                   const pct = Math.round(value * 100);
-                  const color = pct < 40 ? "red" : pct < 70 ? "orange" : "green";
+                  const color =
+                    pct < 40 ? "red" : pct < 70 ? "orange" : "green";
                   return <Tag color={color}>{pct}%</Tag>;
                 },
               },
@@ -343,8 +351,8 @@ const GroupAnalyticsPage = () => {
         </Card>
         <Card
           bordered={false}
-          className="shadow-sm"
-          bodyStyle={{ padding: 12 }}
+          className="rounded-xl shadow-sm"
+          styles={{ body: { padding: "12px 16px" } }}
         >
           <div className="flex items-center justify-between mb-2">
             <Title level={5} className="!mb-0">
@@ -368,7 +376,8 @@ const GroupAnalyticsPage = () => {
                 key: "utilization",
                 render: (value: number) => {
                   const pct = Math.round(value * 100);
-                  const color = pct > 80 ? "red" : pct > 60 ? "orange" : "green";
+                  const color =
+                    pct > 80 ? "red" : pct > 60 ? "orange" : "green";
                   return <Tag color={color}>{pct}%</Tag>;
                 },
               },

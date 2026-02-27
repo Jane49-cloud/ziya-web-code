@@ -4,7 +4,6 @@ import { Form, Input, Button, Typography, Select, Spin } from "antd";
 import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
-import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { formatName } from "../../utils";
 
 const { Title } = Typography;
@@ -12,7 +11,6 @@ const { Option } = Select;
 
 interface GroupFormValues {
   name: string;
-  // bio: string;
   relationship_manager: number;
   admin: number;
   total_members: number;
@@ -25,10 +23,6 @@ interface CreateGroupFormProps {
 const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
   const [form] = Form.useForm<GroupFormValues>();
   const [createGroup, { isLoading: creating }] = useCreateGroupMutation();
-  // const user = getUser();
-
-  const { isLoading: loadingUsers } = useGetAllUsersQuery({});
-  // const staffList = userData?.staffs || [];
 
   const { data: customerData, isLoading: loadingCustomers } =
     useGetAllCustomersQuery({});
@@ -38,12 +32,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
 
   const onFinish = async (values: GroupFormValues) => {
     try {
-      const payload = {
-        ...values,
-        // created_by: user?.id,
-      };
-
-      await createGroup(payload).unwrap();
+      await createGroup(values).unwrap();
       form.resetFields();
       setStatus(null);
       if (onSuccess) onSuccess();
@@ -62,7 +51,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
         </Alert>
       )}
 
-      {loadingUsers || loadingCustomers ? (
+      {loadingCustomers ? (
         <div className="text-center py-10">
           <Spin size="large" />
         </div>
@@ -80,24 +69,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
           >
             <Input />
           </Form.Item>
-
-          {/* <Form.Item label="Bio" name="bio" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
-          </Form.Item> */}
-
-          {/* <Form.Item
-            label="Relationship Manager (Staff)"
-            name="relationship_manager"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Select a staff">
-              {staffList.map((staff: any) => (
-                <Option key={staff.id} value={staff.id}>
-                  {staff.firstname} {staff.lastname}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item> */}
 
           <Form.Item
             label="Admin (Customer)"
@@ -128,14 +99,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
               ))}
             </Select>
           </Form.Item>
-
-          {/* <Form.Item
-            label="Total Members"
-            name="total_members"
-            rules={[{ required: true }]}
-          >
-            <InputNumber className="w-full" min={1} />
-          </Form.Item> */}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={creating} block>

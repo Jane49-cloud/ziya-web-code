@@ -9,32 +9,29 @@ import {
   Card,
   Badge,
   Space,
-  Tooltip,
 } from "antd";
+import { useSearchParams } from "react-router-dom";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
 import ChangeManagerModal from "./components/changeManagerModal";
 import {
   useGetAllGroupsQuery,
-  useGetMyCreatedGroupsQuery,
-  useGetMyManagedGroupsQuery,
-  // useDeleteGroupMutation,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
 } from "./features";
 import CreateGroupForm from "./components/groupForm";
-import { useNavigate } from "react-router-dom";
 import GroupAnalyticsPage from "./pages/groupAnalytics";
+import GroupAdminAccessAnalytics from "./pages/groupAdminAccessAnalytics";
 import {
-  FiActivity,
   FiPlusCircle,
   FiLayers,
   FiUsers,
   FiUserCheck,
   FiTrendingUp,
 } from "react-icons/fi";
+import { getUser } from "../utils";
 
 const { Title, Text } = Typography;
 
@@ -50,15 +47,33 @@ const GroupTabs = () => {
     member: false,
   });
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "all";
+  const user = getUser() as Record<string, unknown> | null;
+  const currentStaffId = Number(user?.id ?? user?.user_id ?? user?.staff_id ?? 0);
 
   const { data: allGroups, refetch: refetchAll } = useGetAllGroupsQuery({});
-  const { data: createdGroups } = useGetMyCreatedGroupsQuery({});
-  const { data: managedGroups } = useGetMyManagedGroupsQuery({});
+  const groupRows = useMemo(() => allGroups?.groups ?? [], [allGroups?.groups]);
+  const createdGroupRows = useMemo(
+    () =>
+      currentStaffId
+        ? groupRows.filter(
+            (group: any) => Number(group?.created_by ?? 0) === currentStaffId,
+          )
+        : [],
+    [currentStaffId, groupRows],
+  );
+  const managedGroupRows = useMemo(
+    () =>
+      currentStaffId
+        ? groupRows.filter(
+            (group: any) =>
+              Number(group?.relationship_manager ?? 0) === currentStaffId,
+          )
+        : [],
+    [currentStaffId, groupRows],
+  );
 
-  const navigate = useNavigate();
-
-  // const [deleteGroup] = useDeleteGroupMutation();
   const [updateGroup] = useUpdateGroupMutation();
   const [changeManager] = useChangeRelationshipManagerMutation();
   const [updateMemberCount] = useUpdateGroupMemberCountMutation();
@@ -99,11 +114,6 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  // const onChangeMembers = (group: any) => {
-  //   setSelectedGroup(group);
-  //   setModals((prev) => ({ ...prev, member: true }));
-  // };
-
   const onMemberSubmit = async () => {
     const values = await memberForm.validateFields();
     await updateMemberCount({
@@ -115,18 +125,12 @@ const GroupTabs = () => {
     refetchAll();
   };
 
-  // const onDelete = async (id: any) => {
-  //   await deleteGroup(id);
-  //   message.success("Group deleted");
-  //   refetchAll();
-  // };
-
   const summary = useMemo(() => {
-    const total = allGroups?.groups?.length ?? 0;
-    const created = createdGroups?.groups?.length ?? 0;
-    const managed = managedGroups?.groups?.length ?? 0;
+    const total = groupRows.length;
+    const created = createdGroupRows.length;
+    const managed = managedGroupRows.length;
     return { total, created, managed };
-  }, [allGroups?.groups, createdGroups?.groups, managedGroups?.groups]);
+  }, [createdGroupRows.length, groupRows.length, managedGroupRows.length]);
 
   const tabItems = [
     {
@@ -134,18 +138,20 @@ const GroupTabs = () => {
       label: "All Groups",
       children: (
         <GroupTable
-          data={allGroups?.groups || []}
+          data={groupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
     {
       key: "create",
       label: "Create Group",
-      children: <CreateGroupForm onSuccess={() => setActiveTab("all")} />,
+      children: (
+        <CreateGroupForm
+          onSuccess={() => setSearchParams({ tab: "all" }, { replace: true })}
+        />
+      ),
     },
     {
       key: "created",
@@ -162,11 +168,9 @@ const GroupTabs = () => {
       ),
       children: (
         <GroupTable
-          data={createdGroups?.groups || []}
+          data={createdGroupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
@@ -185,11 +189,9 @@ const GroupTabs = () => {
       ),
       children: (
         <GroupTable
-          data={managedGroups?.groups || []}
+          data={managedGroupRows}
           onEdit={onEdit}
           onChangeManager={onChangeManager}
-          // onChangeMembers={onChangeMembers}
-          // onDelete={onDelete}
         />
       ),
     },
@@ -202,6 +204,16 @@ const GroupTabs = () => {
         </Space>
       ),
       children: <GroupAnalyticsPage />,
+    },
+    {
+      key: "admin-access",
+      label: (
+        <Space size={6}>
+          Admin Tracker
+          <FiUserCheck />
+        </Space>
+      ),
+      children: <GroupAdminAccessAnalytics />,
     },
   ];
 
@@ -219,18 +231,10 @@ const GroupTabs = () => {
         </div>
 
         <Space wrap>
-          <Tooltip title="See timeline of actions across all groups">
-            <Button
-              onClick={() => navigate("/activities/all")}
-              icon={<FiActivity />}
-            >
-              View Group Activity
-            </Button>
-          </Tooltip>
           <Button
             type="primary"
             icon={<FiPlusCircle />}
-            onClick={() => setActiveTab("create")}
+            onClick={() => setSearchParams({ tab: "create" }, { replace: true })}
           >
             Create Group
           </Button>
@@ -238,44 +242,44 @@ const GroupTabs = () => {
       </div>
 
       {/* summary */}
-      <Card bordered={false} className="shadow-sm rounded-xl   mb-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FiLayers />
+      <Card bordered={false} className="rounded-xl shadow-sm mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
+                <FiLayers size={18} />
               </div>
               <div>
-                <Text type="secondary">Total Groups</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Total Groups</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.total}
                 </div>
               </div>
             </Space>
           </div>
 
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FiUsers />
+          <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
+                <FiUsers size={18} />
               </div>
               <div>
-                <Text type="secondary">Created by Me</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Created by Me</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.created}
                 </div>
               </div>
             </Space>
           </div>
 
-          <div className="rounded-lg border border-[rgba(0,0,0,0.06)] bg-white px-4 py-3">
-            <Space align="start" size={12}>
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiUserCheck />
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-5 py-4">
+            <Space align="start" size={14}>
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                <FiUserCheck size={18} />
               </div>
               <div>
-                <Text type="secondary">Managed by Me</Text>
-                <div className="text-2xl font-semibold leading-tight">
+                <Text type="secondary" className="text-xs">Managed by Me</Text>
+                <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.managed}
                 </div>
               </div>
@@ -287,7 +291,7 @@ const GroupTabs = () => {
       {/* ---------- Tabs ---------- */}
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key)}
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
         items={tabItems}
         type="card"
         size="large"
@@ -300,19 +304,19 @@ const GroupTabs = () => {
       <EditGroupModal
         visible={modals.edit}
         form={form}
-        onCancel={() => setModals({ ...modals, edit: false })}
+        onCancel={() => { form.resetFields(); setModals({ ...modals, edit: false }); }}
         onUpdate={onUpdate}
       />
       <ChangeManagerModal
         visible={modals.manager}
         form={managerForm}
-        onCancel={() => setModals({ ...modals, manager: false })}
+        onCancel={() => { managerForm.resetFields(); setModals({ ...modals, manager: false }); }}
         onSubmit={onManagerSubmit}
       />
       <UpdateMemberCountModal
         visible={modals.member}
         form={memberForm}
-        onCancel={() => setModals({ ...modals, member: false })}
+        onCancel={() => { memberForm.resetFields(); setModals({ ...modals, member: false }); }}
         onSubmit={onMemberSubmit}
       />
     </div>

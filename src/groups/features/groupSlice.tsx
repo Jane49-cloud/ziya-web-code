@@ -134,10 +134,18 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
     updateGroupWallet: builder.mutation({
-      query: ({ id, ...body }) => ({
-        url: `/groups/wallet/${id}`,
+      query: ({
+        id,
+        amount,
+        op,
+      }: {
+        id: number;
+        amount: number;
+        op: "inc" | "dec";
+      }) => ({
+        url: `/groups/wallet/${id}?op=${op}`,
         method: "PUT",
-        body,
+        body: { amount },
       }),
       invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
     }),
@@ -149,6 +157,13 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
     getGroupActivitiesByGroup: builder.query({
       query: (groupId) => `/group-activities/group/${groupId}`,
+    }),
+    getGroupAdminActivity: builder.query({
+      query: (groupId: number) => ({
+        url: `/groups/admin/activity/${groupId}`,
+        method: "GET",
+      }),
+      providesTags: (_res, _err, groupId) => [{ type: "Groups", id: groupId }],
     }),
 
     // group loans

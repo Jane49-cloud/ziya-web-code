@@ -95,6 +95,11 @@ export const sidebarItems: SidebarItem[] = [
         path: "/loans",
         allowedRoles: STAFF_ROLES,
       },
+      {
+        title: "Cycles",
+        path: "/loan-cycles",
+        allowedRoles: STAFF_ROLES,
+      },
     ],
   },
   {
@@ -123,7 +128,7 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
     title: "Documents",
-    icon: "file",
+    icon: "note-2",
     path: "/documents",
     allowedRoles: ALL_ROLES,
   },

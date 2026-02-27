@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Children, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Modal,
   Form,
@@ -15,16 +15,29 @@ import {
   Card,
 } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
+import type { Dayjs } from "dayjs";
 import {
   useCreateGroupLoanMutation,
   useGetGroupMembersQuery,
   useUpdateGroupLoanMutation,
 } from "../features";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
+import { useGetAllCyclesQuery } from "../../cycles/cycleSlice";
+import { extractCycles } from "../../cycles/utils";
 import dayjs from "dayjs";
 import { formatName } from "../../utils";
 
 const { Text } = Typography;
+
+interface GroupLoanFormModalProps {
+  visible: boolean;
+  onClose: () => void;
+  groupId: number;
+  loan?: any;
+  refetch: () => void;
+  onWalletRefresh?: () => void;
+  issuedBy: number | null;
+}
 
 const GroupLoanFormModal = ({
   visible,
@@ -34,7 +47,7 @@ const GroupLoanFormModal = ({
   refetch,
   onWalletRefresh,
   issuedBy,
-}: any) => {
+}: GroupLoanFormModalProps) => {
   const [form] = Form.useForm();
   const isEditing = !!loan;
 
@@ -45,12 +58,30 @@ const GroupLoanFormModal = ({
     useGetGroupMembersQuery(groupId);
   const { data: loanDefsData, isLoading: defsLoading } =
     useGetLoanDefinitionsByPlatformQuery("web");
+  const { data: cyclesData, isLoading: cyclesLoading } = useGetAllCyclesQuery(undefined);
 
   const members = membersData?.members || [];
   const loanDefs =
     loanDefsData?.loan_definitions?.filter(
       (loanDef: any) => loanDef.status === 1
     ) || [];
+  const cycles = extractCycles(cyclesData);
+  const cycleOptions = cycles
+    .map((cycle) => {
+      const rawValue =
+        cycle.cycle_number ??
+        (typeof cycle.id === "number" ? cycle.id : Number(cycle.id));
+      if (Number.isNaN(Number(rawValue))) {
+        return null;
+      }
+      const cycleValue = Number(rawValue);
+      const cycleName = String(cycle.title ?? "").trim();
+      return {
+        value: cycleValue,
+        label: cycleName || `Cycle ${cycleValue}`,
+      };
+    })
+    .filter((option): option is { value: number; label: string } => Boolean(option));
 
   useEffect(() => {
     if (loan) {
@@ -99,20 +130,15 @@ const GroupLoanFormModal = ({
 
   const filterOptionsByLabel = (
     input: string,
-    option?: DefaultOptionType
+    option?: DefaultOptionType,
   ): boolean => {
-    const optionLabel = Children.toArray(option?.children as React.ReactNode)
-      .map((child) => {
-        if (typeof child === "string" || typeof child === "number") {
-          return String(child);
-        }
-        return "";
-      })
-      .join("")
-      .toLowerCase();
-
-    return optionLabel.includes(input.toLowerCase());
+    return String(option?.children ?? "")
+      .toLowerCase()
+      .includes(input.toLowerCase());
   };
+
+  const disableFutureDates = (current: Dayjs) =>
+    current && current.isAfter(dayjs(), "day");
 
   return (
     <Modal
@@ -152,14 +178,20 @@ const GroupLoanFormModal = ({
             <Form.Item
               label="Loan Cycle"
               name="cycle"
-              rules={[{ required: true, message: "Enter cycle" }]}
+              rules={[{ required: true, message: "Select cycle" }]}
             >
-              <InputNumber
-                min={1}
-                className="w-full"
-                placeholder="Cycle"
-                addonAfter="cycles"
-              />
+              {cyclesLoading ? (
+                <Spin />
+              ) : (
+                <Select
+                  className="w-full"
+                  placeholder="Select cycle"
+                  showSearch
+                  optionFilterProp="label"
+                  options={cycleOptions}
+                  notFoundContent="No cycles found"
+                />
+              )}
             </Form.Item>
           </Col>
         </Row>
@@ -198,6 +230,7 @@ const GroupLoanFormModal = ({
               <DatePicker
                 className="w-full"
                 format="YYYY-MM-DD"
+                disabledDate={disableFutureDates}
                 popupClassName="group-modal-date-picker-dropdown"
                 placement="bottomLeft"
               />

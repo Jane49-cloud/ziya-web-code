@@ -1,0 +1,57 @@
+import { Button, Popconfirm, Space, Table, Tag } from "antd";
+import type { Cycle } from "../types";
+import { getCycleKey } from "../utils";
+
+const { Column } = Table;
+
+interface CycleTableProps {
+  cycles: Cycle[];
+  isLoading: boolean;
+  onEdit: (cycle: Cycle) => void;
+  onDelete: (cycle: Cycle) => void;
+}
+
+const CycleTable = ({ cycles, isLoading, onEdit, onDelete }: CycleTableProps) => (
+  <Table
+    dataSource={cycles}
+    loading={isLoading}
+    rowKey={(record, index) => getCycleKey(record, index)}
+    pagination={{ pageSize: 10 }}
+    bordered
+  >
+    <Column title="Title" dataIndex="title" key="title" />
+    <Column
+      title="Cycle"
+      dataIndex="cycle_number"
+      key="cycle_number"
+      render={(value: number | undefined) =>
+        value ? <Tag color="blue">{value}</Tag> : "N/A"
+      }
+    />
+    <Column title="Created By" dataIndex="creator_name" key="creator_name" />
+    <Column title="Updated By" dataIndex="updater_name" key="updater_name" />
+    <Column
+      title="Actions"
+      key="actions"
+      render={(_value: unknown, record: Cycle) => (
+        <Space size="middle">
+          <Button type="link" onClick={() => onEdit(record)}>
+            Edit
+          </Button>
+          <Popconfirm
+            title="Delete this cycle?"
+            onConfirm={() => onDelete(record)}
+            okText="Delete"
+            cancelText="Cancel"
+          >
+            <Button type="link" danger>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
+      )}
+    />
+  </Table>
+);
+
+export default CycleTable;

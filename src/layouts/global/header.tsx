@@ -7,7 +7,6 @@ import { useLoadUserQuery } from "../../redux/api";
 import {
   clearZiyaSession,
   customAvatar,
-  getUser,
   triggerLogoutNotice,
 } from "../../utils";
 import { navLinks } from "../../routing/routes";
@@ -40,28 +39,20 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   const {
     data,
-    refetch: refetchUserDetails,
     isLoading,
   } = useLoadUserQuery(null, { skip: !token });
 
-  const [user, setUser] = useState(getUser());
   const role = localStorage.getItem("ziya-role") || "";
   const userData = data?.staff;
 
   useEffect(() => {
     if (userData && !isLoading) {
-      setUser(userData?.staffData);
       localStorage.setItem("ziya-profile", JSON.stringify(userData));
     }
-  }, [userData, isLoading, user]);
-
-  useEffect(() => {
-    if (token) refetchUserDetails();
-  }, [token, refetchUserDetails]);
+  }, [userData, isLoading]);
 
   const handleLogout = () => {
     clearZiyaSession();
-    refetchUserDetails();
     triggerLogoutNotice();
     navigate("/auth/login");
   };

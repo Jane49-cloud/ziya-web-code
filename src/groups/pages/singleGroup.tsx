@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Card, Spin, Typography, Table, Button, Tabs, Space } from "antd";
 import { FiArrowLeft } from "react-icons/fi";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useGetGroupByIdQuery } from "../features";
 import GroupMembersTab from "../components/groupMembersTab";
 import GroupWalletTab from "../components/wallet";
@@ -21,10 +21,11 @@ const SingleGroupPage: React.FC = () => {
     skip: !groupId,
   });
 
-  const [activeTab, setActiveTab] = useState<string>("overview");
-  const [visitedTabs, setVisitedTabs] = useState<Record<string, boolean>>({
-    overview: true,
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "overview";
+  const [visitedTabs, setVisitedTabs] = useState<Record<string, boolean>>(() => ({
+    [searchParams.get("tab") ?? "overview"]: true,
+  }));
 
   const group = data?.group;
 
@@ -94,7 +95,7 @@ const SingleGroupPage: React.FC = () => {
   }
 
   const renderPlaceholder = (title: string, subtitle?: string) => (
-    <Card bordered={false} className="shadow-sm">
+    <Card bordered={false} className="rounded-xl shadow-sm">
       <Space
         direction="vertical"
         align="center"
@@ -139,12 +140,13 @@ const SingleGroupPage: React.FC = () => {
             </Space>
           </Card>
         ) : (
-          <Card bordered={false} className="shadow-sm">
+          <Card bordered={false} className="rounded-xl shadow-sm">
             <Table
               columns={columns}
               dataSource={groupDetails}
               pagination={false}
               rowKey="key"
+              className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold"
             />
           </Card>
         ),
@@ -223,7 +225,7 @@ const SingleGroupPage: React.FC = () => {
         items={tabItems}
         activeKey={activeTab}
         onChange={(key) => {
-          setActiveTab(key);
+          setSearchParams({ tab: key }, { replace: true });
           setVisitedTabs((prev) =>
             prev[key] ? prev : { ...prev, [key]: true }
           );

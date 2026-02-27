@@ -45,7 +45,7 @@ export const CreateDocumentForm: React.FC = () => {
 
     try {
       const payload = {
-        author_id: authorId, // FIXED: directly from logged-in user
+        author_id: authorId,
         title: values.title,
         content: content,
         access_level: values.access_level,
@@ -61,7 +61,7 @@ export const CreateDocumentForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="-mt-4 min-h-screen bg-slate-100">
       <Form
         form={form}
         layout="vertical"
@@ -69,8 +69,8 @@ export const CreateDocumentForm: React.FC = () => {
         className="min-h-screen flex flex-col"
       >
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-            <div className="max-w-5xl mx-auto flex items-center gap-4 px-4 py-3">
+          <header className="sticky top-0 z-30 mb-2 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div className="mx-auto flex w-full flex-wrap items-center gap-3 px-4 py-3">
               <Button
                 icon={<ArrowLeftOutlined />}
                 className="rounded-full"
@@ -106,10 +106,10 @@ export const CreateDocumentForm: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
                 <Form.Item
                   name="access_level"
-                  className="mb-0 w-40"
+                  className="mb-0 w-full sm:w-40"
                   initialValue="staff"
                   rules={[
                     { required: true, message: "Please select access level" },
@@ -130,7 +130,7 @@ export const CreateDocumentForm: React.FC = () => {
                 <Button
                   icon={<Share2 size={16} />}
                   type="default"
-                  className="rounded-full"
+                  className="hidden rounded-full sm:inline-flex"
                   onClick={() => message.info("Sharing controls coming soon")}
                 >
                   Share
@@ -147,19 +147,16 @@ export const CreateDocumentForm: React.FC = () => {
                 </Button>
               </div>
             </div>
+            <div className="border-t border-slate-200 bg-white px-4 py-2">
+              <EditorToolbar editor={editor} />
+            </div>
           </header>
 
-          <div className="flex-1">
-            <div className="max-w-5xl mx-auto px-4">
-              <div className="sticky top-[84px] z-20">
-                <div className="rounded-full border border-slate-200 bg-whites px-3 py-2 shadow-sm mt-2">
-                  <EditorToolbar editor={editor} />
-                </div>
-              </div>
-
-              <div className="py-8 flex justify-center">
-                <div className="doc-page w-full rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
-                  <div className="px-12 py-12">
+          <div className="flex-1 pb-8 sm:pb-10">
+            <div className="mx-auto w-full">
+              <div className="bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
+                <div className="doc-page w-full">
+                  <div className="px-4 pt-8 pb-6">
                     <EditorContent editor={editor} />
                   </div>
                 </div>

@@ -18,8 +18,20 @@ import {
   useUpdateGroupLoanPaymentMutation,
 } from "../features";
 import dayjs from "dayjs";
+import type { Dayjs } from "dayjs";
 
 const { Text } = Typography;
+
+interface GroupPaymentFormModalProps {
+  visible: boolean;
+  onClose: () => void;
+  groupId: number;
+  loan: any;
+  payment?: any;
+  refetch: () => void;
+  onWalletRefresh?: () => void;
+  approved_by: number | null;
+}
 
 const GroupPaymentFormModal = ({
   visible,
@@ -30,7 +42,7 @@ const GroupPaymentFormModal = ({
   refetch,
   onWalletRefresh,
   approved_by,
-}: any) => {
+}: GroupPaymentFormModalProps) => {
   const [form] = Form.useForm();
   const isEditing = !!payment;
 
@@ -50,6 +62,9 @@ const GroupPaymentFormModal = ({
       form.setFieldsValue({ date_paid: dayjs().startOf("day") });
     }
   }, [payment, form]);
+
+  const disableFutureDates = (current: Dayjs) =>
+    current && current.isAfter(dayjs(), "day");
 
   const handleSubmit = async () => {
     try {
@@ -129,6 +144,7 @@ const GroupPaymentFormModal = ({
               <DatePicker
                 className="w-full"
                 format="YYYY-MM-DD"
+                disabledDate={disableFutureDates}
                 popupClassName="group-modal-date-picker-dropdown"
                 placement="bottomLeft"
               />
