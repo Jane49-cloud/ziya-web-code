@@ -1,8 +1,69 @@
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 import { pulseHighlights } from "../constants";
+import { useGetAllGroupWalletsQuery } from "../../groups/features";
 
-const HomeHighlights: React.FC = () => {
+type GroupWallet = {
+  balance?: number;
+  loans_out_value?: number;
+  total_loans_counts?: number;
+};
+
+const formatCompact = (n: number) => {
+  if (n >= 1_000_000) return `KES ${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `KES ${(n / 1_000).toFixed(1)}K`;
+  return `KES ${n.toLocaleString()}`;
+};
+
+const HomeHighlights = () => {
+  const { data, isLoading } = useGetAllGroupWalletsQuery({});
+
+  const wallets = useMemo(
+    () => (data?.wallets as GroupWallet[] | undefined) ?? [],
+    [data?.wallets],
+  );
+
+  const metrics = useMemo(() => {
+    const totalGroups = wallets.length;
+    const totalLoansOut = wallets.reduce(
+      (s, w) => s + Number(w.loans_out_value ?? 0),
+      0,
+    );
+    const totalLoanCount = wallets.reduce(
+      (s, w) => s + Number(w.total_loans_counts ?? 0),
+      0,
+    );
+    const totalBalance = wallets.reduce(
+      (s, w) => s + Number(w.balance ?? 0),
+      0,
+    );
+
+    return [
+      {
+        id: "active-groups",
+        label: "Active groups",
+        value: isLoading ? "—" : totalGroups.toLocaleString(),
+        trend: "live" as const,
+        caption: "groups across all programs",
+      },
+      {
+        id: "loans-deployed",
+        label: "Loans deployed",
+        value: isLoading ? "—" : formatCompact(totalLoansOut),
+        trend: "live" as const,
+        caption: "outstanding across all group wallets",
+      },
+      {
+        id: "network-loans",
+        label: "Network loans",
+        value: isLoading ? "—" : totalLoanCount.toLocaleString(),
+        trend: "live" as const,
+        caption: "total loans tracked across all groups",
+      },
+    ];
+  }, [wallets, isLoading]);
+
   return (
     <section
       id="home-highlights"
@@ -33,9 +94,9 @@ const HomeHighlights: React.FC = () => {
             </Link>
           </div>
 
-          {/* Metrics */}
+          {/* Live Metrics */}
           <div className="relative mt-10 grid gap-4 sm:grid-cols-3">
-            {pulseHighlights.metrics.map((item) => (
+            {metrics.map((item) => (
               <div
                 key={item.id}
                 className="group rounded-2xl border border-[#ecf1f8] bg-[#f9fbff] px-5 py-4 shadow-[0_10px_26px_rgba(17,55,95,0.08)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_36px_rgba(17,55,95,0.12)]"
@@ -47,11 +108,11 @@ const HomeHighlights: React.FC = () => {
                   {item.label}
                 </div>
 
-                <p className="mt-3 text-3xl font-semibold leading-none text-[#0f2a4a]">
+                <p className="mt-3 text-xl font-semibold leading-none text-[#0f2a4a]">
                   {item.value}
                 </p>
 
-                <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-[#1f3047]/55">
+                <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-emerald-500">
                   {item.trend}
                 </p>
 
