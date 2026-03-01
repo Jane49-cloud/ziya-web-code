@@ -13,7 +13,7 @@ import { navLinks } from "../../routing/routes";
 
 function useOutsideClick(
   ref: React.RefObject<HTMLElement>,
-  handler: () => void
+  handler: () => void,
 ) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,10 +37,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const token = localStorage.getItem("ziya-access");
   const navigate = useNavigate();
 
-  const {
-    data,
-    isLoading,
-  } = useLoadUserQuery(null, { skip: !token });
+  const { data, isLoading } = useLoadUserQuery(null, { skip: !token });
 
   const role = localStorage.getItem("ziya-role") || "";
   const userData = data?.staff;
@@ -64,23 +61,25 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   return (
     <IconContext.Provider value={{ className: "text-gray-600" }}>
-      {/* Top border accent */}
       <div className="sticky top-0 z-40">
-        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-amber-400" />
-        <header className="backdrop-blur supports-[backdrop-filter]:bg-white/85 bg-white/95 border-b border-gray-200 shadow-[0_1px_0_0_rgba(0,0,0,0.02)]">
-          <div className="mx-auto container px-2">
-            <div className="flex h-[3.75rem] items-center justify-between gap-3">
-              {/* Sidebar Toggle (mobile) */}
+        {/* Brand gradient accent */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-[#32c5f4] via-[#8ad7ff] to-[#ecbe1d]" />
+
+        <header className="border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/85">
+          <div className="container mx-auto px-3 sm:px-4">
+            <div className="flex h-16 items-center justify-between gap-4">
+
+              {/* Mobile: sidebar toggle */}
               <button
                 onClick={toggleSidebar}
-                className="lg:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition"
+                className="inline-flex items-center justify-center rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32c5f4] lg:hidden"
                 aria-label="Toggle Sidebar"
               >
                 <FiMenu className="h-5 w-5" />
               </button>
 
-              {/* Navigation Links */}
-              <nav className="hidden lg:flex items-center gap-1">
+              {/* Desktop nav links */}
+              <nav className="hidden items-center gap-0.5 lg:flex">
                 {navLinks
                   .filter((link) => link.allowedRoles.includes(userRole as any))
                   .map(({ to, label }) => (
@@ -89,49 +88,53 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       to={to}
                       className={({ isActive }) =>
                         [
-                          "relative px-4 py-2 rounded-lg text-base font-medium transition",
-                          "hover:bg-gray-100 hover:text-gray-900",
-                          isActive ? "text-[#ecbe1d]" : "text-gray-700",
+                          "relative px-3.5 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
+                          isActive
+                            ? "text-[#0f2a4a]"
+                            : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
                         ].join(" ")
                       }
                     >
                       {({ isActive }) => (
                         <>
                           {label}
-                          {/* active underline */}
-                          <span
-                            className={[
-                              "pointer-events-none absolute left-3 right-3 -bottom-[2px] h-0.5 rounded",
-                              isActive ? "bg-[#ecbe1d]" : "bg-transparent",
-                            ].join(" ")}
-                          />
+                          {/* Gradient dot indicator */}
+                          {isActive && (
+                            <span
+                              className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
+                              style={{
+                                background:
+                                  "linear-gradient(90deg, #32c5f4, #ecbe1d)",
+                              }}
+                            />
+                          )}
                         </>
                       )}
                     </NavLink>
                   ))}
               </nav>
 
-              {/* Right: Profile */}
-              <div className="relative" ref={profileRef}>
+              {/* Right: profile */}
+              <div className="relative ml-auto" ref={profileRef}>
                 <button
                   onClick={() => setProfileDropdownOpen((p) => !p)}
-                  className="group flex items-center gap-3 h-11 pl-2 pr-3 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition"
+                  className="group flex h-11 items-center gap-2.5 rounded-xl border border-transparent pl-2 pr-3 transition hover:border-gray-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32c5f4]"
                   aria-haspopup="true"
                   aria-expanded={isProfileDropdownOpen ? "true" : "false"}
                 >
-                  <div className="rounded-full ring-2 ring-gray-200 group-hover:ring-blue-400 transition">
+                  <div className="rounded-full ring-2 ring-gray-200 transition group-hover:ring-[#32c5f4]">
                     {customAvatar(fullName)}
                   </div>
-                  <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-semibold text-gray-800 leading-tight capitalize">
+                  <div className="hidden flex-col items-start sm:flex">
+                    <span className="text-sm font-semibold capitalize leading-tight text-gray-800">
                       {isLoading ? "Loading…" : fullName}
                     </span>
-                    <span className="text-[11px] text-gray-500 leading-tight capitalize">
+                    <span className="text-[11px] capitalize leading-tight text-gray-400">
                       {userRole || "—"}
                     </span>
                   </div>
                   <FiChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                    className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
                       isProfileDropdownOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -141,40 +144,38 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div
                   className={[
                     "absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-xl",
-                    "transition-all duration-200 ease-out origin-top-right z-50",
+                    "z-50 origin-top-right transition-all duration-200 ease-out",
                     isProfileDropdownOpen
-                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
+                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none -translate-y-2 scale-95 opacity-0",
                   ].join(" ")}
                   role="menu"
                   aria-orientation="vertical"
-                  aria-labelledby="user-menu"
                 >
                   {/* User summary */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="truncate text-sm font-semibold text-gray-800 capitalize">
+                  <div className="border-b border-gray-100 px-4 py-3">
+                    <p className="truncate text-sm font-semibold capitalize text-gray-800">
                       {fullName}
                     </p>
-                    <p className="mt-0.5 text-xs text-gray-500 capitalize">
+                    <p className="mt-0.5 text-xs capitalize text-gray-400">
                       {userRole || "—"}
                     </p>
                   </div>
 
-                  {/* Items */}
                   <div className="py-1">
                     <NavLink
                       to="/profile"
                       onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                       role="menuitem"
                     >
-                      <FiUser className="h-4 w-4 text-gray-500" />
+                      <FiUser className="h-4 w-4 text-gray-400" />
                       <span>My Profile</span>
                     </NavLink>
                     <button
                       onClick={handleLogout}
                       role="menuitem"
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-500 transition-colors hover:bg-red-50"
                     >
                       <FiLogOut className="h-4 w-4" />
                       <span>Logout</span>
@@ -182,7 +183,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                   </div>
                 </div>
               </div>
-              {/* /Right */}
             </div>
           </div>
         </header>

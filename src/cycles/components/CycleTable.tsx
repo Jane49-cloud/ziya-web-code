@@ -17,6 +17,7 @@ const CycleTable = ({ cycles, isLoading, onEdit, onDelete }: CycleTableProps) =>
     loading={isLoading}
     rowKey={(record, index) => getCycleKey(record, index)}
     pagination={{ pageSize: 10 }}
+    scroll={{ x: 600 }}
     bordered
   >
     <Column title="Title" dataIndex="title" key="title" />
