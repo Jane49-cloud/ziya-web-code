@@ -422,6 +422,7 @@ const GroupAdminAccessAnalytics = () => {
           dataSource={filteredRows}
           rowKey="key"
           size="middle"
+          scroll={{ x: 900 }}
           pagination={{ pageSize: 10, showSizeChanger: true }}
           className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
           columns={[
