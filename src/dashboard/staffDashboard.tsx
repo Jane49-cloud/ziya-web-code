@@ -57,8 +57,10 @@ const StaffDashboard: React.FC = () => {
 
   const outstandingBalance = totalLoanedAmount - totalRepaid;
 
-  // Recent customers (last 5)
-  const recentCustomers = customers.slice(0, 5);
+  // Recent customers (last 5, sorted by id descending = most recently added)
+  const recentCustomers = [...customers]
+    .sort((a: Customer, b: Customer) => b.id - a.id)
+    .slice(0, 5);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">

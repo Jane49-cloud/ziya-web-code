@@ -3,7 +3,7 @@ import {
   Card,
   Row,
   Col,
-  Typography, //fake comment to trigger pipelines
+  Typography,
   Skeleton,
   Space,
   Button,
@@ -20,7 +20,6 @@ import {
   WalletOutlined,
   LineChartOutlined,
   UserOutlined,
-  ArrowUpOutlined,
   TrophyOutlined,
   RiseOutlined,
 } from "@ant-design/icons";
@@ -50,6 +49,12 @@ const formatCurrency = (value: number) =>
   `KES ${value.toLocaleString(undefined, {
     maximumFractionDigits: value % 1 === 0 ? 0 : 2,
   })}`;
+
+const capitalizeName = (name: string) =>
+  name
+    .split(" ")
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(" ");
 
 const DashboardOverview = () => {
   const { data: groupLoansData, isLoading: groupLoansLoading } =
@@ -85,12 +90,7 @@ const DashboardOverview = () => {
     const disbursed = loanAggregates.disbursed;
     const outstanding = loanAggregates.outstanding;
     const repaid = Math.max(disbursed - outstanding, 0);
-    return {
-      disbursed,
-      outstanding,
-      repaid,
-      loansCount: loanAggregates.count,
-    };
+    return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
   }, [loanAggregates]);
 
   const repaymentRate =
@@ -114,10 +114,7 @@ const DashboardOverview = () => {
     >();
     groupLoans.forEach((loan) => {
       const groupName = loan.group_name ?? "Unnamed Group";
-      const entry = collection.get(groupName) ?? {
-        disbursed: 0,
-        outstanding: 0,
-      };
+      const entry = collection.get(groupName) ?? { disbursed: 0, outstanding: 0 };
       entry.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
       entry.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
       collection.set(groupName, entry);
@@ -146,32 +143,62 @@ const DashboardOverview = () => {
     [groupPerformance],
   );
 
+  const recoveryPipeline = useMemo(
+    () =>
+      outstandingTable
+        .filter((item) => item.outstanding > 0)
+        .sort(
+          (a, b) =>
+            b.outstanding - a.outstanding || a.completion - b.completion,
+        )
+        .slice(0, 8),
+    [outstandingTable],
+  );
+
   const disbursementShare = useMemo(() => {
-    const totalsByGroup = new Map<string, number>();
+    const groupStats = new Map<string, { disbursed: number; outstanding: number }>();
     groupLoans.forEach((loan) => {
       const groupName = loan.group_name ?? "Unnamed Group";
-      const currentTotal = totalsByGroup.get(groupName) ?? 0;
-      totalsByGroup.set(
-        groupName,
-        currentTotal + toNumber(loan.amount ?? loan.disbursed_amount),
-      );
+      const current = groupStats.get(groupName) ?? { disbursed: 0, outstanding: 0 };
+      current.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
+      current.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
+      groupStats.set(groupName, current);
     });
-    const sorted = Array.from(totalsByGroup.entries()).sort(
-      (a, b) => b[1] - a[1],
-    );
-    const top = sorted.slice(0, 5);
-    const othersValue = sorted
-      .slice(5)
-      .reduce((sum, [, value]) => sum + value, 0);
-    const chartData = top.map(([name, value]) => ({ name, value }));
-    if (othersValue > 0) {
-      chartData.push({ name: "Others", value: othersValue });
-    }
-    return chartData;
+
+    return Array.from(groupStats.entries())
+      .map(([name, stats]) => {
+        const recovered = Math.max(stats.disbursed - stats.outstanding, 0);
+        const recoveryRate = stats.disbursed > 0 ? recovered / stats.disbursed : 0;
+        return {
+          name,
+          value: recovered,
+          disbursed: stats.disbursed,
+          recoveryRate,
+          // blend repayment quality and size to avoid tiny-loan outliers
+          score: recovered * recoveryRate,
+        };
+      })
+      .filter((row) => row.disbursed > 0 && row.value > 0)
+      .sort((a, b) => b.score - a.score || b.recoveryRate - a.recoveryRate)
+      .slice(0, 6);
   }, [groupLoans]);
 
   const navigate = useNavigate();
-  const recentCustomers = useMemo(() => customers.slice(0, 6), [customers]);
+
+  const recentCustomers = useMemo(
+    () =>
+      [...customers]
+        .sort((a, b) => Number(b.id ?? 0) - Number(a.id ?? 0))
+        .slice(0, 6),
+    [customers],
+  );
+
+  const portfolioUtilization = useMemo(() => {
+    const totalBalance = wallets.reduce((s, w) => s + toNumber(w.balance), 0);
+    const totalOut = wallets.reduce((s, w) => s + toNumber(w.loans_out_value), 0);
+    const total = totalBalance + totalOut;
+    return total > 0 ? (totalOut / total) * 100 : 0;
+  }, [wallets]);
 
   const walletSnapshot = useMemo<WalletSnapshotItem[]>(
     () =>
@@ -186,8 +213,7 @@ const DashboardOverview = () => {
               `Group ${wallet.group_id ?? wallet.groupId ?? ""}`,
             balance: toNumber(wallet.balance),
             loansOut: toNumber(wallet.loans_out_value),
-            loanCount:
-              wallet.total_loans_counts ?? wallet.total_loans_count ?? 0,
+            loanCount: wallet.total_loans_counts ?? wallet.total_loans_count ?? 0,
           };
         })
         .sort((a, b) => b.balance - a.balance)
@@ -205,17 +231,18 @@ const DashboardOverview = () => {
       title: "Group",
       dataIndex: "groupName",
       key: "groupName",
+      width: 140,
       render: (value: string) => (
         <Space size="small">
           <Avatar
-            size={32}
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
+            size={24}
+            style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}
           >
             {value?.charAt(0)?.toUpperCase() ?? "G"}
           </Avatar>
-          <span className="font-medium text-slate-800 text-sm">{value}</span>
+          <span className="block max-w-[78px] truncate text-[11px] font-medium text-slate-800">
+            {value}
+          </span>
         </Space>
       ),
     },
@@ -224,8 +251,9 @@ const DashboardOverview = () => {
       dataIndex: "disbursed",
       key: "disbursed",
       align: "right" as const,
+      width: 105,
       render: (value: number) => (
-        <span className="font-medium text-slate-700 text-sm">
+        <span className="text-[11px] font-medium text-slate-700">
           {formatCurrency(value)}
         </span>
       ),
@@ -235,10 +263,11 @@ const DashboardOverview = () => {
       dataIndex: "outstanding",
       key: "outstanding",
       align: "right" as const,
+      width: 135,
       render: (value: number) => (
         <Tag
           color={value > 0 ? "error" : "success"}
-          className="!m-0 !px-3 !py-1 font-medium rounded-full text-xs"
+          className="!m-0 !rounded-full !px-2 !py-0 text-[10px] font-medium"
         >
           {formatCurrency(value)}
         </Tag>
@@ -248,19 +277,18 @@ const DashboardOverview = () => {
       title: "Recovery",
       dataIndex: "completion",
       key: "completion",
+      width: 130,
       render: (value: number) => (
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-[118px] items-center gap-1.5">
           <Progress
             percent={Math.round(value)}
             size="small"
-            strokeColor={{
-              "0%": "#10b981",
-              "100%": "#059669",
-            }}
+            showInfo={false}
+            strokeColor={{ "0%": "#10b981", "100%": "#059669" }}
             trailColor="#e2e8f0"
-            className="flex-1"
+            className="min-w-[72px] flex-1"
           />
-          <span className="text-xs font-medium text-slate-600 min-w-[36px]">
+          <span className="min-w-[26px] text-[10px] font-medium text-slate-600">
             {Math.round(value)}%
           </span>
         </div>
@@ -276,8 +304,8 @@ const DashboardOverview = () => {
       helper: "Borrowing collectives",
       icon: <TeamOutlined />,
       gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      trend: "+12%",
-      trendUp: true,
+      trend: undefined as string | undefined,
+      trendUp: undefined as boolean | undefined,
       loading: groupsLoadingState,
     },
     {
@@ -287,19 +315,19 @@ const DashboardOverview = () => {
       helper: "Registered members",
       icon: <UserOutlined />,
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      trend: "+8%",
-      trendUp: true,
+      trend: undefined as string | undefined,
+      trendUp: undefined as boolean | undefined,
       loading: customersLoadingState,
     },
     {
       key: "disbursed",
       title: "Total Disbursed",
       value: formatCurrency(totals.disbursed),
-      helper: `${totals.loansCount.toLocaleString()} active loans`,
+      helper: `${totals.loansCount.toLocaleString()} loans`,
       icon: <DollarCircleOutlined />,
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      trend: "+24%",
-      trendUp: true,
+      trend: `${repaymentRate.toFixed(1)}% repaid` as string | undefined,
+      trendUp: true as boolean | undefined,
       loading: loansLoadingState,
     },
     {
@@ -309,10 +337,19 @@ const DashboardOverview = () => {
       helper: `Recovery ${repaymentRate.toFixed(1)}%`,
       icon: <WalletOutlined />,
       gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-      trend: "-5%",
-      trendUp: false,
+      trend: `${portfolioUtilization.toFixed(1)}% deployed` as string | undefined,
+      trendUp: (portfolioUtilization < 80) as boolean | undefined,
       loading: loansLoadingState,
     },
+  ];
+
+  const avatarColors = [
+    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+    "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
   ];
 
   return (
@@ -377,17 +414,14 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stat Cards */}
       <Row gutter={[16, 16]} className="mb-6">
         {statCards.map((card) => (
           <Col key={card.key} xs={24} sm={12} xl={6}>
             <Card
               className="group relative overflow-hidden rounded-xl border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              bodyStyle={{ padding: 0, height: "100%" }}
-              style={{
-                background: "white",
-                minHeight: "160px",
-              }}
+              styles={{ body: { padding: 0, height: "100%" } }}
+              style={{ background: "white", minHeight: "156px" }}
             >
               {card.loading ? (
                 <div className="p-5">
@@ -395,39 +429,45 @@ const DashboardOverview = () => {
                 </div>
               ) : (
                 <>
+                  {/* Subtle bg tint */}
                   <div
-                    className="absolute inset-0 opacity-5 transition-opacity duration-300 group-hover:opacity-10"
+                    className="absolute inset-0 opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.08]"
+                    style={{ background: card.gradient }}
+                  />
+                  {/* Left accent bar */}
+                  <div
+                    className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
                     style={{ background: card.gradient }}
                   />
                   <div className="relative p-5">
                     <div
-                      className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl text-xl text-white shadow-md"
+                      className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg text-white shadow-md"
                       style={{ background: card.gradient }}
                     >
                       {card.icon}
                     </div>
-                    <div className="space-y-1.5">
-                      <Text className="block text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    <div className="space-y-1">
+                      <Text className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
                         {card.title}
                       </Text>
-                      <div className="text-2xl font-bold text-slate-800 leading-tight">
+                      <div className="text-[22px] font-bold leading-tight text-slate-800">
                         {card.value}
                       </div>
                       <div className="flex items-center justify-between pt-1">
-                        <Text className="text-xs text-slate-400">
+                        <Text className="text-[11px] text-slate-400">
                           {card.helper}
                         </Text>
-                        <span
-                          className={`flex items-center gap-1 text-xs font-semibold ${
-                            card.trendUp ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          <ArrowUpOutlined
-                            rotate={card.trendUp ? 0 : 180}
-                            className="text-[10px]"
-                          />
-                          {card.trend}
-                        </span>
+                        {card.trend !== undefined && (
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              card.trendUp
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {card.trend}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -439,24 +479,21 @@ const DashboardOverview = () => {
       </Row>
 
       {/* Charts Row */}
-      <Row gutter={[16, 16]} className="mb-6">
-        {/* Disbursement Share */}
-        <Col xs={24} xl={12}>
+      <Row gutter={[16, 16]} className="mb-6 items-stretch">
+        {/* Top Repaying Groups */}
+        <Col xs={24} xl={10} className="flex">
           <Card
-            className="rounded-xl border-0 shadow-md"
-            bodyStyle={{
-              padding: 24,
-              height: "100%",
-            }}
-            style={{ minHeight: "480px" }}
+            className="h-full w-full rounded-xl border-0 shadow-md"
+            styles={{ body: { padding: 24, height: "100%" } }}
+            style={{ minHeight: "400px" }}
           >
             <div className="mb-5 flex items-start justify-between">
               <div>
                 <Title level={4} className="!mb-1 !text-slate-800">
-                  Disbursement Distribution
+                  Top Repaying Groups
                 </Title>
                 <Text className="text-xs text-slate-500">
-                  Portfolio allocation across top performing groups
+                  Ranked by recovered value and repayment consistency
                 </Text>
               </div>
               <RiseOutlined className="text-xl text-indigo-500" />
@@ -464,103 +501,75 @@ const DashboardOverview = () => {
             {loansLoadingState ? (
               <Skeleton active paragraph={{ rows: 6 }} />
             ) : disbursementShare.some((item) => item.value > 0) ? (
-              <div className="space-y-4">
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <defs>
-                      {palette.map((color, i) => (
-                        <linearGradient
-                          key={i}
-                          id={`gradient-${i}`}
-                          x1="0"
-                          y1="0"
-                          x2="1"
-                          y2="1"
-                        >
-                          <stop offset="0%" stopColor={color} />
-                          <stop
-                            offset="100%"
-                            stopColor={color}
-                            stopOpacity={0.8}
-                          />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <Pie
-                      data={disbursementShare}
-                      dataKey="value"
-                      innerRadius={60}
-                      outerRadius={95}
-                      paddingAngle={3}
-                      strokeWidth={2}
-                      stroke="#fff"
-                    >
-                      {disbursementShare.map((entry, index) => (
-                        <Cell
-                          key={entry.name}
-                          fill={`url(#gradient-${index % palette.length})`}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip
-                      contentStyle={{
-                        background: "rgba(0,0,0,0.8)",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "8px 12px",
-                        fontSize: "12px",
-                      }}
-                      itemStyle={{ color: "#fff" }}
-                      formatter={(value: number) => formatCurrency(value)}
-                    />
-                    <Legend
-                      wrapperStyle={{ paddingTop: "16px", fontSize: "12px" }}
-                      iconType="circle"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-2">
-                  {disbursementShare.slice(0, 4).map((item, index) => (
-                    <div
-                      key={item.name}
-                      className="flex items-center justify-between rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 p-3 transition-all hover:shadow-sm"
-                    >
-                      <Space size="small">
-                        <span
-                          className="inline-flex h-2.5 w-2.5 rounded-full shadow-sm"
-                          style={{
-                            background: palette[index % palette.length],
-                          }}
-                        />
-                        <Text className="font-medium text-slate-700 text-xs">
-                          {item.name}
-                        </Text>
-                      </Space>
-                      <Text className="text-xs font-bold text-slate-800">
-                        {formatCurrency(item.value)}
-                      </Text>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <defs>
+                    {palette.map((color, i) => (
+                      <linearGradient
+                        key={i}
+                        id={`grad-${i}`}
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                      >
+                        <stop offset="0%" stopColor={color} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0.75} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <Pie
+                    data={disbursementShare}
+                    dataKey="value"
+                    innerRadius={70}
+                    outerRadius={110}
+                    paddingAngle={3}
+                    strokeWidth={2}
+                    stroke="#fff"
+                  >
+                    {disbursementShare.map((entry, index) => (
+                      <Cell
+                        key={entry.name}
+                        fill={`url(#grad-${index % palette.length})`}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip
+                    contentStyle={{
+                      background: "rgba(0,0,0,0.8)",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "8px 12px",
+                      fontSize: "12px",
+                    }}
+                    itemStyle={{ color: "#fff" }}
+                    formatter={(
+                      value: number,
+                      _name: string,
+                      item: { payload?: { recoveryRate?: number } },
+                    ) => {
+                      const rate = Math.round((item?.payload?.recoveryRate ?? 0) * 100);
+                      return [`${formatCurrency(value)} (${rate}% repaid)`, "Recovered"];
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "16px", fontSize: "12px" }}
+                    iconType="circle"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             ) : (
-              <Empty
-                description="No disbursement data available"
-                className="my-16"
-              />
+              <Empty description="No repayment performance data available" className="my-16" />
             )}
           </Card>
         </Col>
 
         {/* Recovery Pipeline */}
-        <Col xs={24} xl={12}>
+        <Col xs={24} xl={14} className="flex">
           <Card
-            className="rounded-xl border-0 shadow-md"
-            bodyStyle={{
-              padding: 24,
-              height: "100%",
-            }}
-            style={{ minHeight: "480px" }}
+            className="h-full w-full rounded-xl border-0 shadow-md"
+            styles={{ body: { padding: 24, height: "100%" } }}
+            style={{ minHeight: "400px" }}
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -568,7 +577,7 @@ const DashboardOverview = () => {
                   Recovery Pipeline
                 </Title>
                 <Text className="text-xs text-slate-500">
-                  High-priority collection targets
+                  Groups with highest outstanding exposure and weaker recovery
                 </Text>
               </div>
               <Link
@@ -580,13 +589,14 @@ const DashboardOverview = () => {
             </div>
             {loansLoadingState ? (
               <Skeleton active paragraph={{ rows: 6 }} />
-            ) : outstandingTable.length ? (
+            ) : recoveryPipeline.length ? (
               <Table
-                dataSource={outstandingTable.slice(0, 5)}
+                dataSource={recoveryPipeline}
                 columns={outstandingColumns}
                 pagination={false}
                 rowKey="key"
-                scroll={{ x: true }}
+                tableLayout="fixed"
+                scroll={{ x: 540 }}
                 className="recovery-table"
                 rowClassName="hover:bg-slate-50 transition-colors"
                 size="small"
@@ -604,9 +614,7 @@ const DashboardOverview = () => {
         <Col xs={24} lg={12}>
           <Card
             className="rounded-xl border-0 shadow-md"
-            bodyStyle={{
-              padding: 24,
-            }}
+            styles={{ body: { padding: 24 } }}
             style={{ minHeight: "380px" }}
           >
             <div className="mb-5">
@@ -624,7 +632,7 @@ const DashboardOverview = () => {
                 itemLayout="horizontal"
                 dataSource={recentCustomers}
                 renderItem={(customer: Customer, index) => {
-                  const fullName = [
+                  const rawName = [
                     customer.firstname,
                     customer.middlename,
                     customer.lastname,
@@ -632,18 +640,11 @@ const DashboardOverview = () => {
                     .filter(Boolean)
                     .join(" ")
                     .trim();
+                  const displayName = rawName
+                    ? capitalizeName(rawName)
+                    : "Unnamed Customer";
                   const phone = customer.phone_number ?? "No phone provided";
-                  const initial = (fullName || phone || "C")
-                    .charAt(0)
-                    .toUpperCase();
-                  const avatarGradients = [
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-                    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                    "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
-                  ];
+                  const initial = displayName.charAt(0).toUpperCase();
                   return (
                     <List.Item className="!border-b-slate-100 !py-3 transition-colors hover:bg-slate-50">
                       <List.Item.Meta
@@ -652,24 +653,20 @@ const DashboardOverview = () => {
                             size={40}
                             style={{
                               background:
-                                avatarGradients[index % avatarGradients.length],
+                                avatarColors[index % avatarColors.length],
                             }}
                             className="shadow-sm"
                           >
-                            <span className="text-base font-bold">
-                              {initial}
-                            </span>
+                            <span className="text-sm font-bold">{initial}</span>
                           </Avatar>
                         }
                         title={
                           <span className="text-sm font-semibold text-slate-800">
-                            {fullName || "Unnamed Customer"}
+                            {displayName}
                           </span>
                         }
                         description={
-                          <Text className="text-xs text-slate-500">
-                            {phone}
-                          </Text>
+                          <Text className="text-xs text-slate-500">{phone}</Text>
                         }
                       />
                     </List.Item>
@@ -686,9 +683,7 @@ const DashboardOverview = () => {
         <Col xs={24} lg={12}>
           <Card
             className="rounded-xl border-0 shadow-md"
-            bodyStyle={{
-              padding: 24,
-            }}
+            styles={{ body: { padding: 24 } }}
             style={{ minHeight: "380px" }}
           >
             <div className="mb-5 flex items-center justify-between">
@@ -717,7 +712,13 @@ const DashboardOverview = () => {
                   <List.Item className="!border-b-slate-100 !py-3 transition-colors hover:bg-slate-50">
                     <List.Item.Meta
                       avatar={
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-base font-bold text-white shadow-sm">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold text-white shadow-sm"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #34d399, #22d3ee)",
+                          }}
+                        >
                           {item.groupName.charAt(0).toUpperCase()}
                         </div>
                       }
@@ -730,7 +731,7 @@ const DashboardOverview = () => {
                         <div className="mt-1 space-y-0.5 text-xs">
                           <div className="flex items-center gap-2">
                             <span className="text-slate-500">Balance:</span>
-                            <span className="font-semibold text-emerald-600">
+                            <span className="font-semibold text-indigo-600">
                               {formatCurrency(item.balance)}
                             </span>
                           </div>
@@ -745,7 +746,7 @@ const DashboardOverview = () => {
                     />
                     <Tag
                       color="processing"
-                      className="!m-0 !rounded-full !px-3 !py-1 font-medium text-xs"
+                      className="!m-0 !rounded-full !px-3 !py-1 text-xs font-medium"
                     >
                       {item.loanCount} loans
                     </Tag>
@@ -790,16 +791,23 @@ const DashboardOverview = () => {
           opacity: 1;
         }
         .recovery-table .ant-table-thead > tr > th {
-          background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+          background: #f8fafc;
           font-weight: 600;
           color: #334155;
-          border-bottom: 2px solid #e2e8f0;
-          padding: 12px 16px;
-          font-size: 13px;
+          border-bottom: 1px solid #e2e8f0;
+          font-size: 10px;
+          padding-top: 8px;
+          padding-bottom: 8px;
+          padding-left: 8px;
+          padding-right: 8px;
         }
         .recovery-table .ant-table-tbody > tr > td {
           border-bottom: 1px solid #f1f5f9;
-          padding: 12px 16px;
+          font-size: 11px;
+          padding-top: 8px;
+          padding-bottom: 8px;
+          padding-left: 8px;
+          padding-right: 8px;
         }
       `}</style>
     </div>

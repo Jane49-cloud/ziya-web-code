@@ -34,11 +34,6 @@ const HomeHighlights = () => {
       (s, w) => s + Number(w.total_loans_counts ?? 0),
       0,
     );
-    const totalBalance = wallets.reduce(
-      (s, w) => s + Number(w.balance ?? 0),
-      0,
-    );
-
     return [
       {
         id: "active-groups",
