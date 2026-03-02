@@ -17,12 +17,12 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { StatisticItem } from "../types/statistics";
+import { StaffStats } from "../types/statistics";
 import { normalizeStatData, formatNumber, formatCurrency } from "../utils";
 import { StatCard } from "./statCard";
 
 interface StaffStatsTabProps {
-  data: StatisticItem[];
+  data: StaffStats;
   loading: boolean;
 }
 
@@ -38,29 +38,29 @@ export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
   data,
   loading,
 }) => {
-  const stats = useMemo(() => normalizeStatData(data), [data]);
+  const stats = useMemo(() => normalizeStatData(data ?? []), [data]);
 
   const performanceData = useMemo(
     () => [
       {
         name: "Activity",
-        value: stats.highest_activity?.current_value || 0,
-        staffId: stats.highest_activity?.staff_id || 0,
+        value: stats.highest_activity?.current_value ?? 0,
+        staffId: stats.highest_activity?.staff_id ?? 0,
       },
       {
         name: "Tasks Completed",
-        value: stats.most_tasks_completed?.current_value || 0,
-        staffId: stats.most_tasks_completed?.staff_id || 0,
+        value: stats.most_tasks_completed?.current_value ?? 0,
+        staffId: stats.most_tasks_completed?.staff_id ?? 0,
       },
       {
         name: "Users Added",
-        value: stats.most_users_added?.current_value || 0,
-        staffId: stats.most_users_added?.staff_id || 0,
+        value: stats.most_users_added?.current_value ?? 0,
+        staffId: stats.most_users_added?.staff_id ?? 0,
       },
       {
         name: "Users Managed",
-        value: stats.most_users_managed?.current_value || 0,
-        staffId: stats.most_users_managed?.staff_id || 0,
+        value: stats.most_users_managed?.current_value ?? 0,
+        staffId: stats.most_users_managed?.staff_id ?? 0,
       },
     ],
     [stats]
@@ -104,7 +104,6 @@ export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={8}>
           <StatCard
@@ -138,7 +137,6 @@ export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
         </Col>
       </Row>
 
-      {/* Performance Chart */}
       <Row gutter={[16, 16]}>
         <Col xs={24}>
           <Card
@@ -160,19 +158,13 @@ export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
                   }}
                 />
                 <Legend />
-                <Bar
-                  dataKey="value"
-                  fill="#6366f1"
-                  radius={[8, 8, 0, 0]}
-                  name="Count"
-                />
+                <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} name="Count" />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </Col>
       </Row>
 
-      {/* Leaderboard */}
       <Row gutter={[16, 16]}>
         <Col xs={24}>
           <Card
@@ -214,20 +206,17 @@ export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
                     description={
                       <div className="flex items-center justify-between mt-1">
                         <div className="flex items-center gap-3">
-                          <Avatar
-                            size={32}
-                            className="bg-slate-700 font-semibold"
-                          >
-                            {item.stat?.staff_id || "?"}
+                          <Avatar size={32} className="bg-slate-700 font-semibold">
+                            {item.stat?.staff_id ?? "?"}
                           </Avatar>
                           <div>
                             <div className="text-xs text-slate-500">
-                              Staff ID: {item.stat?.staff_id || "N/A"}
+                              Staff ID: {item.stat?.staff_id ?? "N/A"}
                             </div>
                             <div className="text-sm font-semibold text-slate-700">
                               {item.title.includes("Money")
-                                ? formatCurrency(item.stat?.current_value || 0)
-                                : formatNumber(item.stat?.current_value || 0)}
+                                ? formatCurrency(item.stat?.current_value ?? 0)
+                                : formatNumber(item.stat?.current_value ?? 0)}
                             </div>
                           </div>
                         </div>

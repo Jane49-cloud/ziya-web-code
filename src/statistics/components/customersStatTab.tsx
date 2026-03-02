@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from "react";
 import { Row, Col, Card } from "antd";
 import {
@@ -6,7 +5,9 @@ import {
   UsersRound,
   TrendingUp,
   DollarSign,
-  ArrowRightLeft,
+  CheckCircle,
+  UserX,
+  Users,
 } from "lucide-react";
 import {
   PieChart,
@@ -21,16 +22,15 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { StatisticItem } from "../types/statistics";
-import { normalizeStatData, formatNumber, formatCurrency } from "../utils";
+import { CustomerStats } from "../types/statistics";
+import { formatNumber } from "../utils";
 import { StatCard } from "./statCard";
 
 interface CustomerStatsTabProps {
-  data: StatisticItem[];
+  data: CustomerStats;
   loading: boolean;
 }
 
-// Clean, soft gradients
 const GRADIENTS = [
   "linear-gradient(135deg, #8293ee 0%, #b7a6f6 100%)",
   "linear-gradient(135deg, #f4a9c4 0%, #f7b57e 100%)",
@@ -38,131 +38,114 @@ const GRADIENTS = [
   "linear-gradient(135deg, #b7a6f6 0%, #8293ee 100%)",
   "linear-gradient(135deg, #f7b57e 0%, #ffe0a3 100%)",
   "linear-gradient(135deg, #8ad4b8 0%, #6fbfa5 100%)",
+  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
 ];
 
-const CHART_COLORS = ["#6f7fd6", "#9b91d9", "red", "#d8a878", "#75b3a0"];
+const CHART_COLORS = ["#6f7fd6", "#9b91d9", "#ef4444", "#d8a878", "#75b3a0"];
 
 export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
   data,
   loading,
 }) => {
-  const stats = useMemo(() => normalizeStatData(data), [data]);
-
   const statCards = useMemo(
     () => [
       {
-        stat: stats.new_customers,
+        value: data?.new_customers ?? 0,
         title: "New Customers",
         icon: <UserPlus size={20} />,
-        formatter: formatNumber,
         gradient: GRADIENTS[0],
       },
       {
-        stat: stats.active_last_week,
+        value: data?.active_last_week ?? 0,
         title: "Active Last Week",
         icon: <TrendingUp size={20} />,
-        formatter: formatNumber,
         gradient: GRADIENTS[1],
       },
       {
-        stat: stats.customers_in_groups,
+        value: data?.customers_in_groups ?? 0,
         title: "In Groups",
         icon: <UsersRound size={20} />,
-        formatter: formatNumber,
         gradient: GRADIENTS[2],
       },
       {
-        stat: stats.customers_with_loans,
-        title: "With Loans",
+        value: data?.customers_with_active_loans ?? 0,
+        title: "With Active Loans",
         icon: <DollarSign size={20} />,
-        formatter: formatNumber,
         gradient: GRADIENTS[3],
       },
       {
-        stat: stats.p2p_count_last_week,
-        title: "P2P Transactions (Week)",
-        icon: <ArrowRightLeft size={20} />,
-        formatter: formatNumber,
+        value: data?.customers_with_paid_loans ?? 0,
+        title: "With Paid Loans",
+        icon: <CheckCircle size={20} />,
         gradient: GRADIENTS[4],
       },
       {
-        stat: stats.p2p_value_last_week,
-        title: "P2P Value (Week)",
-        icon: <DollarSign size={20} />,
-        formatter: formatCurrency,
+        value: data?.customers_not_in_groups ?? 0,
+        title: "Not in Groups",
+        icon: <Users size={20} />,
         gradient: GRADIENTS[5],
       },
+      {
+        value: data?.customers_without_loans ?? 0,
+        title: "Without Loans",
+        icon: <UserX size={20} />,
+        gradient: GRADIENTS[6],
+      },
+      {
+        value: data?.active_last_month ?? 0,
+        title: "Active Last Month",
+        icon: <TrendingUp size={20} />,
+        gradient: GRADIENTS[7],
+      },
     ],
-    [stats]
+    [data]
   );
 
   const distributionData = useMemo(
     () => [
-      {
-        name: "In Groups",
-        value: stats.customers_in_groups?.current_value || 0,
-      },
-      {
-        name: "Not in Groups",
-        value: stats.customers_not_in_groups?.current_value || 0,
-      },
+      { name: "In Groups", value: data?.customers_in_groups ?? 0 },
+      { name: "Not in Groups", value: data?.customers_not_in_groups ?? 0 },
     ],
-    [stats]
+    [data]
   );
 
   const loanDistributionData = useMemo(
     () => [
-      {
-        name: "With Loans",
-        value: stats.customers_with_loans?.current_value || 0,
-      },
-      {
-        name: "Without Loans",
-        value: stats.customers_without_loans?.current_value || 0,
-      },
-      {
-        name: "Unpaid Loans",
-        value: stats.customers_with_unpaid_loans?.current_value || 0,
-      },
+      { name: "Active Loans", value: data?.customers_with_active_loans ?? 0 },
+      { name: "Paid Loans", value: data?.customers_with_paid_loans ?? 0 },
+      { name: "Without Loans", value: data?.customers_without_loans ?? 0 },
     ],
-    [stats]
+    [data]
   );
 
   const activityData = useMemo(
     () => [
-      {
-        name: "Active Last Week",
-        value: stats.active_last_week?.current_value || 0,
-      },
-      {
-        name: "Active Last Month",
-        value: stats.active_last_month?.current_value || 0,
-      },
-      { name: "New Customers", value: stats.new_customers?.current_value || 0 },
+      { name: "Active Last Week", value: data?.active_last_week ?? 0 },
+      { name: "Active Last Month", value: data?.active_last_month ?? 0 },
+      { name: "New Customers", value: data?.new_customers ?? 0 },
     ],
-    [stats]
+    [data]
   );
 
   return (
     <div className="space-y-6">
-      {/* Stat Cards */}
       <Row gutter={[16, 16]}>
         {statCards.slice(0, 4).map((card, i) => (
           <Col key={i} xs={24} sm={12} lg={6}>
-            <StatCard {...card} loading={loading} />
+            <StatCard {...card} formatter={formatNumber} loading={loading} />
           </Col>
         ))}
       </Row>
 
       <Row gutter={[16, 16]}>
         {statCards.slice(4).map((card, i) => (
-          <Col key={i} xs={24} sm={12}>
-            <StatCard {...card} loading={loading} />
+          <Col key={i} xs={24} sm={12} lg={6}>
+            <StatCard {...card} formatter={formatNumber} loading={loading} />
           </Col>
         ))}
       </Row>
 
-      {/* Charts */}
       <Row gutter={[16, 16]}>
         {[
           { title: "Customer Distribution", data: distributionData },
@@ -200,7 +183,6 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
           </Col>
         ))}
 
-        {/* Activity Bar Chart */}
         <Col xs={24}>
           <Card
             title="Activity Overview"
@@ -213,11 +195,7 @@ export const CustomerStatsTab: React.FC<CustomerStatsTabProps> = ({
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
                 <YAxis stroke="#64748b" fontSize={12} />
                 <Tooltip formatter={(value: number) => formatNumber(value)} />
-                <Bar
-                  dataKey="value"
-                  fill={CHART_COLORS[1]} // softer bar color
-                  radius={[8, 8, 0, 0]}
-                />
+                <Bar dataKey="value" fill={CHART_COLORS[1]} radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
