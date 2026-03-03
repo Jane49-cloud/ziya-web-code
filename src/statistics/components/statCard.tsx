@@ -10,7 +10,8 @@ import {
 } from "../utils";
 
 interface StatCardProps {
-  stat: StatisticItem;
+  stat?: StatisticItem;
+  value?: number;
   title: string;
   formatter?: (value: number) => string;
   icon?: React.ReactNode;
@@ -20,6 +21,7 @@ interface StatCardProps {
 
 export const StatCard: React.FC<StatCardProps> = ({
   stat,
+  value,
   title,
   formatter = (val) => val.toLocaleString(),
   icon,
@@ -34,9 +36,10 @@ export const StatCard: React.FC<StatCardProps> = ({
     );
   }
 
-  const change = calculateChange(stat.current_value, stat.previous_value);
-  const trendIcon = getTrendIcon(change);
-  const trendColor = getTrendColor(change);
+  const displayValue = stat ? stat.current_value : (value ?? 0);
+  const change = stat ? calculateChange(stat.current_value, stat.previous_value) : 0;
+  const trendIcon = stat ? getTrendIcon(change) : null;
+  const trendColor = stat ? getTrendColor(change) : "";
 
   return (
     <Card
@@ -67,26 +70,28 @@ export const StatCard: React.FC<StatCardProps> = ({
 
         {/* Value */}
         <div className="mb-2 text-2xl font-bold text-slate-900">
-          {formatter(stat.current_value)}
+          {formatter(displayValue)}
         </div>
 
-        {/* Trend and Update Time */}
-        <div className="flex items-center justify-between">
-          <div
-            className={`flex items-center gap-1 text-xs font-semibold ${trendColor}`}
-          >
-            {trendIcon === "up" && <TrendingUp size={14} />}
-            {trendIcon === "down" && <TrendingDown size={14} />}
-            {trendIcon === "neutral" && <Minus size={14} />}
-            <span>
-              {change > 0 ? "+" : ""}
-              {change.toFixed(1)}%
+        {/* Trend and Update Time — only when StatisticItem is provided */}
+        {stat && (
+          <div className="flex items-center justify-between">
+            <div
+              className={`flex items-center gap-1 text-xs font-semibold ${trendColor}`}
+            >
+              {trendIcon === "up" && <TrendingUp size={14} />}
+              {trendIcon === "down" && <TrendingDown size={14} />}
+              {trendIcon === "neutral" && <Minus size={14} />}
+              <span>
+                {change > 0 ? "+" : ""}
+                {change.toFixed(1)}%
+              </span>
+            </div>
+            <span className="text-xs text-slate-400">
+              {formatRelativeTime(stat.last_update)}
             </span>
           </div>
-          <span className="text-xs text-slate-400">
-            {formatRelativeTime(stat.last_update)}
-          </span>
-        </div>
+        )}
       </div>
     </Card>
   );

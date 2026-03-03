@@ -21,7 +21,12 @@ import {
   useGetGeneralStatQuery,
 } from "../features/statSlice";
 
-import { StatisticItem } from "../types/statistics";
+import {
+  CustomerStats,
+  LoanStats,
+  GeneralStats,
+  StaffStats,
+} from "../types/statistics";
 
 const StatisticsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -58,7 +63,7 @@ const StatisticsPage: React.FC = () => {
       children: (
         <div className="p-6">
           <GeneralStatsTab
-            data={(general.data as StatisticItem[]) || []}
+            data={(general.data as GeneralStats) ?? ({} as GeneralStats)}
             loading={general.isLoading}
           />
         </div>
@@ -75,7 +80,7 @@ const StatisticsPage: React.FC = () => {
       children: (
         <div className="p-6">
           <CustomerStatsTab
-            data={(customer.data as StatisticItem[]) || []}
+            data={(customer.data as CustomerStats) ?? ({} as CustomerStats)}
             loading={customer.isLoading}
           />
         </div>
@@ -92,7 +97,7 @@ const StatisticsPage: React.FC = () => {
       children: (
         <div className="p-6">
           <LoanStatsTab
-            data={(loan.data as StatisticItem[]) || []}
+            data={(loan.data as LoanStats) ?? ({} as LoanStats)}
             loading={loan.isLoading}
           />
         </div>
@@ -109,7 +114,7 @@ const StatisticsPage: React.FC = () => {
       children: (
         <div className="p-6">
           <StaffStatsTab
-            data={(staff.data as StatisticItem[]) || []}
+            data={(staff.data as StaffStats) ?? []}
             loading={staff.isLoading}
           />
         </div>
