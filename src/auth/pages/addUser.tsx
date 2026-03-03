@@ -16,7 +16,7 @@ const initialValues = {
   email: "",
   country_code: "",
   phone_number: "",
-  user_role: "agent",
+  role_id: "",
 };
 
 const addUserSchema = Yup.object().shape({
@@ -37,7 +37,7 @@ const addUserSchema = Yup.object().shape({
   country_code: Yup.string().required("Country code is required"),
   phone_number: Yup.string().required("Phone number is required"),
 
-  user_role: Yup.string().required("User role is required"),
+  role_id: Yup.string().required("User role is required"),
 });
 
 type AddUserProps = {
@@ -103,7 +103,11 @@ export function AddUser({ onUserCreated }: AddUserProps) {
     validationSchema: addUserSchema,
     onSubmit: async (values, { setStatus, setSubmitting, resetForm }) => {
       try {
-        const response = await registerUser(values).unwrap();
+        const payload = {
+          ...values,
+          role_id: Number(values.role_id),
+        };
+        const response = await registerUser(payload).unwrap();
 
         setStatus(response.message || "User added successfully!");
         resetForm();
@@ -233,18 +237,18 @@ export function AddUser({ onUserCreated }: AddUserProps) {
             {/* User Role */}
             <div>
               <label
-                htmlFor="user_role"
+                htmlFor="role_id"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
                 User Role
               </label>
               {/* Render the roles dynamically */}
               <select
-                id="user_role"
-                {...formik.getFieldProps("user_role")}
+                id="role_id"
+                {...formik.getFieldProps("role_id")}
                 className={clsx(
                   "form-control block w-full rounded-md border px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
-                  formik.touched.user_role && formik.errors.user_role
+                  formik.touched.role_id && formik.errors.role_id
                     ? "border-red-500 focus:ring-red-200"
                     : "border-gray-300 focus:ring-indigo-200"
                 )}
@@ -254,7 +258,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                 {!rolesLoading &&
                   !rolesError &&
                   rolesData?.roles?.map((role: any) => (
-                    <option key={role.id} value={role.name}>
+                    <option key={role.id} value={role.id}>
                       {role.name}
                     </option>
                   ))}
@@ -263,9 +267,9 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               {rolesError && (
                 <p className="text-red-500">Error loading roles.</p>
               )}
-              {formik.touched.user_role && formik.errors.user_role && (
+              {formik.touched.role_id && formik.errors.role_id && (
                 <div className="mt-1 text-xs text-red-500">
-                  {formik.errors.user_role}
+                  {formik.errors.role_id}
                 </div>
               )}
             </div>
