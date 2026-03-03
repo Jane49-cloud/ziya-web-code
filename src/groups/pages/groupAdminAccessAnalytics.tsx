@@ -25,6 +25,8 @@ type AdminAccessRow = {
   key: string;
   groupName: string;
   adminName: string;
+  adminPhoneNumber: string | null;
+  relationshipOfficerName: string | null;
   lastLogin: string | null;
   lastActivity: string | null;
   daysSinceActivity: number | null;
@@ -94,6 +96,12 @@ const GroupAdminAccessAnalytics = () => {
       const adminName = formatName(
         String(entry?.admin_name ?? "Unknown Admin"),
       );
+      const adminPhoneNumber = entry?.admin_phone_number
+        ? String(entry.admin_phone_number)
+        : null;
+      const relationshipOfficerName = entry?.relationship_manager_name
+        ? formatName(String(entry.relationship_manager_name))
+        : null;
       const lastLogin = entry?.last_login ? String(entry.last_login) : null;
       const lastActivity = entry?.last_activity
         ? String(entry.last_activity)
@@ -109,6 +117,8 @@ const GroupAdminAccessAnalytics = () => {
         key: `${key}-${index}`,
         groupName,
         adminName,
+        adminPhoneNumber,
+        relationshipOfficerName,
         lastLogin,
         lastActivity,
         daysSinceActivity,
@@ -144,7 +154,14 @@ const GroupAdminAccessAnalytics = () => {
     const needle = search.trim().toLowerCase();
     if (!needle) return activityRows;
     return activityRows.filter((row) =>
-      [row.groupName, row.adminName, row.activityLevel, row.accessStatus]
+      [
+        row.groupName,
+        row.adminName,
+        row.adminPhoneNumber ?? "",
+        row.relationshipOfficerName ?? "",
+        row.activityLevel,
+        row.accessStatus,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(needle),
@@ -437,6 +454,22 @@ const GroupAdminAccessAnalytics = () => {
               dataIndex: "adminName",
               key: "adminName",
               sorter: (a, b) => a.adminName.localeCompare(b.adminName),
+            },
+            {
+              title: "Admin Phone",
+              dataIndex: "adminPhoneNumber",
+              key: "adminPhoneNumber",
+              render: (value: string | null) => value || "—",
+            },
+            {
+              title: "Relationship Officer",
+              dataIndex: "relationshipOfficerName",
+              key: "relationshipOfficerName",
+              render: (value: string | null) => value || "—",
+              sorter: (a, b) =>
+                (a.relationshipOfficerName ?? "").localeCompare(
+                  b.relationshipOfficerName ?? "",
+                ),
             },
             {
               title: "Last Login",
