@@ -105,9 +105,19 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "id",
+      width: "12%",
+      defaultSortOrder: "ascend" as const,
+      sorter: (a: GroupRecord, b: GroupRecord) => Number(a.id) - Number(b.id),
+      render: (value: string | number) => <Text code>{value}</Text>,
+    },
+    {
       title: "Group Name",
       dataIndex: "name",
-      width: "30%",
+      width: "28%",
+      sorter: (a: GroupRecord, b: GroupRecord) =>
+        String(a.name ?? "").localeCompare(String(b.name ?? "")),
       render: (value: string) => (
         <Space size="small">
           <FiUsers className="text-blue-500" size={16} />
@@ -121,12 +131,18 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       title: "Relationship Manager",
       dataIndex: "relationship_manager_name",
       width: "30%",
+      sorter: (a: GroupRecord, b: GroupRecord) =>
+        formatName(a.relationship_manager_name ?? "").localeCompare(
+          formatName(b.relationship_manager_name ?? ""),
+        ),
       render: (managerName: string | null) => renderManager(managerName),
     },
     {
       title: "Group Leader",
       dataIndex: "admin_name",
-      width: "25%",
+      width: "20%",
+      sorter: (a: GroupRecord, b: GroupRecord) =>
+        formatName(a.admin_name ?? "").localeCompare(formatName(b.admin_name ?? "")),
       render: (value: string) =>
         value ? (
           <Tag
@@ -227,6 +243,8 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         columns={columns}
         rowKey={(record) => String(record.id)}
         bordered
+        sortDirections={["ascend", "descend"]}
+        showSorterTooltip={{ target: "sorter-icon" }}
         pagination={{
           pageSize: 10,
           showSizeChanger: true,

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { Form, Input, Button, Typography, Select, Spin } from "antd";
+import { Form, Button, Typography, Select, Spin } from "antd";
 import { Alert } from "../../components/Alert";
 import { useCreateGroupMutation } from "../features";
 import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
@@ -10,10 +10,7 @@ const { Title } = Typography;
 const { Option } = Select;
 
 interface GroupFormValues {
-  name: string;
-  relationship_manager: number;
   admin: number;
-  total_members: number;
 }
 
 interface CreateGroupFormProps {
@@ -62,14 +59,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSuccess }) => {
           onFinish={onFinish}
           autoComplete="off"
         >
-          <Form.Item
-            label="Group Name"
-            name="name"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-
           <Form.Item
             label="Admin (Customer)"
             name="admin"
