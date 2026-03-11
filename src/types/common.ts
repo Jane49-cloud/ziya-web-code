@@ -1,0 +1,27 @@
+export interface Business {
+  id: number;
+  customer_id: number;
+  name: string;
+  business_type: string;
+  registration_number: string;
+  pin_number: string;
+  sector: string;
+  monthly_revenue: string;
+  date_created: string | null;
+  date_updated: string | null;
+  deleted_at: string | null;
+}
+
+export interface Loan {
+  id: number;
+  customer_id: number;
+  loan_definition_id: number;
+  amount: number;
+  currency: string;
+  approved_on: string;
+  approved_by: number;
+  loan_definition_status: number;
+  // ... other fields ...
+}
+// If you need to use 'file-saver' without types, you can declare a minimal module as follows:
+// declare module "file-saver";
