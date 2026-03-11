@@ -14,11 +14,17 @@ import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { formatName } from "../../utils";
+import GroupPaymentFormModal from "./groupPaymentFormModal";
 
 const { Title, Text } = Typography;
 
 const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
-  const { data, isLoading, isFetching } = useGetGroupPaymentsQuery(groupId, {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetGroupPaymentsQuery(groupId, {
     refetchOnFocus: true,
     refetchOnReconnect: true,
     pollingInterval: 180000,
@@ -31,6 +37,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
     return [];
   }, [data]);
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const navigate = useNavigate();
 
   const sortedPayments = useMemo(
@@ -97,13 +104,22 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
       title: "Actions",
       key: "actions",
       render: (_: any, record: any) => (
-        <Button
-          type="link"
-          size="small"
-          onClick={() => navigate(`/customer/${record.customer_id}`)}
-        >
-          View customer
-        </Button>
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            onClick={() => setSelectedPayment(record)}
+          >
+            Edit
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => navigate(`/customer/${record.customer_id}`)}
+          >
+            View customer
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -178,6 +194,23 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
           className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-emerald-50/30"
         />
       </Space>
+
+      {selectedPayment && (
+        <GroupPaymentFormModal
+          visible={Boolean(selectedPayment)}
+          onClose={() => setSelectedPayment(null)}
+          groupId={groupId}
+          loan={{
+            id: selectedPayment.loan_id,
+            issued_to:
+              selectedPayment.customer_id ?? selectedPayment.issued_to,
+            cycle: selectedPayment.cycle,
+          }}
+          payment={selectedPayment}
+          refetch={refetch}
+          approved_by={null}
+        />
+      )}
     </Card>
   );
 };
