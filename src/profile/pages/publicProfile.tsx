@@ -32,11 +32,11 @@ const PublicProfile: React.FC = () => {
     data: roleData,
     isLoading: roleLoading,
     refetch: refetchRole,
-  } = useGetStaffRoleQuery(id, {
-    skip: !id,
+  } = useGetStaffRoleQuery(user?.role, {
+    skip: !user?.role,
   });
 
-  const userRole = roleData;
+  const userRole = roleData?.role;
 
   if (isLoading) {
     return (
@@ -181,6 +181,7 @@ const PublicProfile: React.FC = () => {
         <Card
           bordered={false}
           className="shadow-sm mb-6 bg-gradient-to-br from-blue-50 to-indigo-50"
+          style={{ marginTop: 5 }}
         >
           <div className="flex items-start justify-between">
             <div>
