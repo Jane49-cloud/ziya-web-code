@@ -24,16 +24,17 @@ const PublicProfile: React.FC = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, refetch } = useGetUserByIdQuery(id);
+  const user = data?.staff;
   const {
     data: roleData,
     isLoading: roleLoading,
-  } = useGetStaffRoleQuery(id, {
-    skip: !id,
+    refetch: refetchRole,
+  } = useGetStaffRoleQuery(user?.role, {
+    skip: !user?.role,
   });
 
-  const user = data?.staff;
-  const userRole = roleData;
-  // console.log("User Role:", roleData);
+  const userRole = roleData?.role;
+  console.log("User Role:", userRole);
 
   if (isLoading) {
     return (
@@ -61,7 +62,7 @@ const PublicProfile: React.FC = () => {
   } = user;
 
   const fullName = formatName(
-    `${firstname ?? ""} ${middlename ?? ""} ${lastname ?? ""}`.trim()
+    `${firstname ?? ""} ${middlename ?? ""} ${lastname ?? ""}`.trim(),
   );
 
   const staffDetails = [
@@ -110,59 +111,66 @@ const PublicProfile: React.FC = () => {
     return status === 1 ? "success" : "default";
   };
 
+  const handleProfileUpdateSuccess = () => {
+    refetch();
+    refetchRole();
+  };
+
   return (
     <div className="py-6">
       {/* Profile Header */}
       <Card bordered={false} className="shadow-sm mb-6">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <Button type="link" onClick={() => navigate("/staff")}
+            <Button
+              type="link"
+              onClick={() => navigate("/staff")}
               className="px-0 text-[#1677ff]"
             >
               ← Back to Staff
             </Button>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 flex justify-center items-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100">
-              {customAvatar(fullName)}
-            </div>
-            <div>
-              <h2 className="text-3xl font-semibold text-gray-900">
-                {fullName}
-              </h2>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <p className="text-gray-500">{email}</p>
-                {roleLoading ? (
-                  <Spin size="small" />
-                ) : userRole ? (
-                  <Tag
-                    color="blue"
-                    className="capitalize px-3 py-1"
-                    icon={<UserOutlined />}
-                  >
-                    {userRole.name}
-                  </Tag>
-                ) : (
-                  <Tag color="default" icon={<InfoCircleOutlined />}>
-                    No role assigned
-                  </Tag>
-                )}
+            <div className="flex items-center space-x-6">
+              <div className="w-24 h-24 flex justify-center items-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100">
+                {customAvatar(fullName)}
               </div>
+              <div>
+                <h2 className="text-3xl font-semibold text-gray-900">
+                  {fullName}
+                </h2>
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <p className="text-gray-500">{email}</p>
+                  {roleLoading ? (
+                    <Spin size="small" />
+                  ) : userRole ? (
+                    <Tag
+                      color="blue"
+                      className="capitalize px-3 py-1"
+                      icon={<UserOutlined />}
+                    >
+                      {userRole.name}
+                    </Tag>
+                  ) : (
+                    <Tag color="default" icon={<InfoCircleOutlined />}>
+                      No role assigned
+                    </Tag>
+                  )}
+                </div>
 
-              <div className="mt-3 space-y-1">
-                <p className="flex items-center text-gray-600 text-sm">
-                  <FaPhoneAlt className="mr-2 text-gray-400" />
-                  {country_code} {phone_number}
-                </p>
-                <p className="flex items-center text-gray-600 text-sm">
-                  <FaEnvelope className="mr-2 text-gray-400" />
-                  {email}
-                </p>
+                <div className="mt-3 space-y-1">
+                  <p className="flex items-center text-gray-600 text-sm">
+                    <FaPhoneAlt className="mr-2 text-gray-400" />
+                    {country_code} {phone_number}
+                  </p>
+                  <p className="flex items-center text-gray-600 text-sm">
+                    <FaEnvelope className="mr-2 text-gray-400" />
+                    {email}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </Card>
 
@@ -256,7 +264,10 @@ const PublicProfile: React.FC = () => {
 
         <Tabs.TabPane tab="Update Details" key="4">
           <Card bordered={false} className="shadow-sm">
-            <AccountTab user={user} onUpdateSuccess={refetch} />
+            <AccountTab
+              user={user}
+              onUpdateSuccess={handleProfileUpdateSuccess}
+            />
           </Card>
         </Tabs.TabPane>
       </Tabs>

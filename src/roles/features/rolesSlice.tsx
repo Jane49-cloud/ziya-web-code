@@ -19,9 +19,10 @@ export const rolesApi = apiSlice.injectEndpoints({
     }),
 
     updateRole: builder.mutation({
-      query: ({ roleId, staffId }) => ({
-        url: `/staff/role/${staffId}/role/${roleId}`,
+      query: ({ staffId, role_id }) => ({
+        url: `/staff/role/update/${staffId}`,
         method: "PUT",
+        body: { role_id },
       }),
     }),
 
