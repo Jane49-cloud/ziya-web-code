@@ -1,4 +1,10 @@
-import { UserRole, ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
+import {
+  UserRole,
+  ALL_ROLES,
+  STAFF_ROLES,
+  ADMIN_DEV,
+  STAFF_MANAGEMENT_ROLES,
+} from "../utils/roles";
 
 // header
 export interface HeaderLink {
@@ -67,7 +73,7 @@ export const sidebarItems: SidebarItem[] = [
     title: "Users",
     icon: "users",
     dropdown: [
-      { title: "Staff", path: "/staff", allowedRoles: ADMIN_DEV },
+      { title: "Staff", path: "/staff", allowedRoles: STAFF_MANAGEMENT_ROLES },
       {
         title: "Customers",
         path: "/customers",

@@ -69,28 +69,31 @@ const GroupPaymentFormModal = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const payload = {
-        amount: values.amount,
-        cycle: loan.cycle,
-        loan_id: loan.id,
-        customer_id: loan.issued_to,
-        group_id: groupId,
-        approved_by: approved_by ?? null,
-        date_paid: values.date_paid
-          ? values.date_paid
-              .startOf("day")
-              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
-          : undefined,
-      };
+      const date_paid = values.date_paid
+        ? values.date_paid.startOf("day").format("YYYY-MM-DD[T]HH:mm:ss[Z]")
+        : undefined;
 
       if (isEditing) {
         await updatePayment({
           paymentId: payment.id,
-          updatedData: payload,
+          updatedData: {
+            amount: values.amount,
+            cycle: loan.cycle,
+            approved_by: approved_by ?? null,
+            date_paid,
+          },
         }).unwrap();
         message.success("Payment updated successfully");
       } else {
-        await createPayment(payload).unwrap();
+        await createPayment({
+          amount: values.amount,
+          cycle: loan.cycle,
+          loan_id: loan.id,
+          customer_id: loan.issued_to,
+          group_id: groupId,
+          approved_by: approved_by ?? null,
+          date_paid,
+        }).unwrap();
         message.success("Payment created successfully");
       }
 

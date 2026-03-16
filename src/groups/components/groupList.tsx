@@ -23,10 +23,17 @@ import { useNavigate } from "react-router-dom";
 import { formatName, getInitials } from "../../utils";
 
 const { Text, Title } = Typography;
+const GROUP_TAG_COLORS: Record<string, string> = {
+  active: "green",
+  archived: "default",
+  dev: "geekblue",
+  testing: "gold",
+};
 
 type GroupRecord = {
   id: string | number;
   name: string;
+  tags?: string | null;
   relationship_manager?: number;
   relationship_manager_name?: string | null;
   admin_name?: string | null;
@@ -53,7 +60,8 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
       return (
         (group.name ?? "").toString().toLowerCase().includes(searchText) ||
-        managerName.includes(searchText)
+        managerName.includes(searchText) ||
+        String(group.tags ?? "").toLowerCase().includes(searchText)
       );
     });
   }, [data, search]);
@@ -130,7 +138,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
     {
       title: "Relationship Manager",
       dataIndex: "relationship_manager_name",
-      width: "30%",
+      width: "24%",
       sorter: (a: GroupRecord, b: GroupRecord) =>
         formatName(a.relationship_manager_name ?? "").localeCompare(
           formatName(b.relationship_manager_name ?? ""),
@@ -138,9 +146,29 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       render: (managerName: string | null) => renderManager(managerName),
     },
     {
+      title: "Tag",
+      dataIndex: "tags",
+      width: "14%",
+      sorter: (a: GroupRecord, b: GroupRecord) =>
+        String(a.tags ?? "").localeCompare(String(b.tags ?? "")),
+      render: (value: string | null) =>
+        value ? (
+          <Tag
+            color={GROUP_TAG_COLORS[value.toLowerCase()] ?? "blue"}
+            className="px-3 py-1 text-sm font-medium"
+          >
+            {value}
+          </Tag>
+        ) : (
+          <Tag color="default" className="px-3 py-1 text-sm">
+            Unset
+          </Tag>
+        ),
+    },
+    {
       title: "Group Leader",
       dataIndex: "admin_name",
-      width: "20%",
+      width: "18%",
       sorter: (a: GroupRecord, b: GroupRecord) =>
         formatName(a.admin_name ?? "").localeCompare(formatName(b.admin_name ?? "")),
       render: (value: string) =>
@@ -229,7 +257,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         <Input
           allowClear
           prefix={<FiSearch className="text-gray-400" />}
-          placeholder="Search by group name or manager..."
+          placeholder="Search by group name, manager, or tag..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           size="large"

@@ -42,9 +42,11 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
       }
 
       const payload = {
-        id: role.id,
-        name: values.name,
-        description: values.description || "",
+        roleId: role.id,
+        roleData: {
+          name: values.name,
+          description: values.description || "",
+        },
       };
 
       console.log("🚀 Sending Payload:", payload);
