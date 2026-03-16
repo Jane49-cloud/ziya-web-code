@@ -13,12 +13,25 @@ import {
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
-import { formatName } from "../../utils";
+import { formatName, getUser } from "../../utils";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 
 const { Title, Text } = Typography;
 
-const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
+const GroupPaymentHistoryTab = ({
+  groupId,
+  groupAdminId,
+}: {
+  groupId: number;
+  groupAdminId: number;
+}) => {
+  const staffUserId = useMemo(() => {
+    const user = getUser();
+    if (!user?.id) return null;
+    const parsedId = Number(user.id);
+    return Number.isNaN(parsedId) ? null : parsedId;
+  }, []);
+
   const {
     data,
     isLoading,
@@ -208,7 +221,7 @@ const GroupPaymentHistoryTab = ({ groupId }: { groupId: number }) => {
           }}
           payment={selectedPayment}
           refetch={refetch}
-          approved_by={null}
+          approved_by={staffUserId ?? groupAdminId ?? null}
         />
       )}
     </Card>

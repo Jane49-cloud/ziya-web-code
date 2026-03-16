@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { customAvatar, formatName } from "../../utils";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
@@ -17,19 +17,16 @@ import { UserOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useGetUserByIdQuery } from "../../users/features/userSlice";
 import ResetPasswordForm from "../../users/staff/components/resetPassword";
 import { useGetStaffRoleQuery } from "../../roles/features/rolesSlice";
-import { AssignRoleModal } from "../components/assignRoleModel";
 import AccountTab from "./account";
 
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
   const navigate = useNavigate();
 
   const { data, isLoading, refetch } = useGetUserByIdQuery(id);
   const {
     data: roleData,
     isLoading: roleLoading,
-    refetch: refetchRole,
   } = useGetStaffRoleQuery(id, {
     skip: !id,
   });
@@ -66,11 +63,6 @@ const PublicProfile: React.FC = () => {
   const fullName = formatName(
     `${firstname ?? ""} ${middlename ?? ""} ${lastname ?? ""}`.trim()
   );
-
-  const handleRoleUpdateSuccess = () => {
-    refetchRole();
-    refetch();
-  };
 
   const staffDetails = [
     {
@@ -170,17 +162,6 @@ const PublicProfile: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Assign/Update Role Button */}
-          <Button
-            type="primary"
-            icon={<UserOutlined />}
-            onClick={() => setShowAssignRoleModal(true)}
-            size="large"
-            className="md:self-start"
-          >
-            {userRole ? "Update Role" : "Assign Role"}
-          </Button>
         </div>
         </div>
       </Card>
@@ -279,15 +260,6 @@ const PublicProfile: React.FC = () => {
           </Card>
         </Tabs.TabPane>
       </Tabs>
-
-      {/* Assign Role Modal */}
-      <AssignRoleModal
-        visible={showAssignRoleModal}
-        onClose={() => setShowAssignRoleModal(false)}
-        staffId={Number(id)}
-        staffName={fullName}
-        onSuccess={handleRoleUpdateSuccess}
-      />
     </div>
   );
 };

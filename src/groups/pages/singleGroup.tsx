@@ -184,7 +184,7 @@ const SingleGroupPage: React.FC = () => {
       label: renderTabLabel("Payments", "Collections"),
       children: renderDeferred(
         "payments",
-        <GroupPaymentHistoryTab groupId={groupId} />,
+        <GroupPaymentHistoryTab groupId={groupId} groupAdminId={group?.admin} />,
         "Open to view payment activity."
       ),
     },

@@ -5,14 +5,14 @@ export const rolesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllRoles: builder.query({
       query: () => ({
-        url: "/role-definitions/get/all",
+        url: "/staff/roles/all",
         method: "GET",
       }),
     }),
 
     createRole: builder.mutation({
       query: (newRole) => ({
-        url: "/roles/definitions/create",
+        url: "/staff/role/create",
         method: "POST",
         body: newRole,
       }),
@@ -35,7 +35,7 @@ export const rolesApi = apiSlice.injectEndpoints({
 
     getStaffRole: builder.query({
       query: (id) => ({
-        url: `/staff/role/${id}`,
+        url: `/staff/role/fetch/${id}`,
         method: "GET",
       }),
     }),
