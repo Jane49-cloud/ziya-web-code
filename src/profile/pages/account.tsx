@@ -7,22 +7,28 @@ import { Alert } from "../../components/Alert";
 import {
   useGetAllRolesQuery,
   useGetStaffRoleQuery,
-  useUpdateRoleMutation,
 } from "../../roles/features/rolesSlice";
 
 interface AccountTabProps {
   user: any;
   setUser?: React.Dispatch<React.SetStateAction<any>>;
   onUpdateSuccess?: () => void;
+  canEditRole?: boolean;
 }
 
-const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
+const AccountTab: React.FC<AccountTabProps> = ({
+  user,
+  onUpdateSuccess,
+  canEditRole = false,
+}) => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
-  const [updateRole, { isLoading: isUpdatingRole }] = useUpdateRoleMutation();
   const [form] = Form.useForm();
-  const { data: rolesData, isLoading: rolesLoading } = useGetAllRolesQuery({});
+  const { data: rolesData, isLoading: rolesLoading } = useGetAllRolesQuery(
+    {},
+    { skip: !canEditRole },
+  );
   const { data: currentRole } = useGetStaffRoleQuery(user?.id, {
-    skip: !user?.id,
+    skip: !user?.id || !canEditRole,
   });
 
   // State for showing alert messages
@@ -35,14 +41,13 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
   useEffect(() => {
     form.setFieldsValue({
       ...user,
-      role_id: currentRole?.id ? String(currentRole.id) : undefined,
+      role_id:
+        canEditRole && currentRole?.id ? String(currentRole.id) : undefined,
     });
-  }, [currentRole?.id, form, user]);
+  }, [canEditRole, currentRole?.id, form, user]);
 
   const handleSaveChanges = async (values: any) => {
     try {
-      const nextRoleId = values.role_id ? Number(values.role_id) : null;
-      const currentRoleId = currentRole?.id ? Number(currentRole.id) : null;
       const payload = {
         id: user?.id,
         userData: {
@@ -52,16 +57,13 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
           email: values.email,
           country_code: values.country_code,
           phone_number: values.phone_number,
+          ...(canEditRole && values.role_id
+            ? { role_id: Number(values.role_id) }
+            : {}),
         },
       };
 
       await updateUser(payload).unwrap();
-      if (nextRoleId && nextRoleId !== currentRoleId) {
-        await updateRole({
-          staffId: user?.id,
-          role_id: nextRoleId,
-        }).unwrap();
-      }
 
       // Show success alert message
       setColor("success");
@@ -150,28 +152,26 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
             <Input />
           </Form.Item>
 
-          <Form.Item
-            label="User Role"
-            name="role_id"
-            rules={[{ required: true, message: "User role is required!" }]}
-          >
-            <Select
-              placeholder="Select role"
-              loading={rolesLoading}
-              options={(rolesData?.roles ?? []).map((role: any) => ({
-                value: String(role.id),
-                label: role.name,
-              }))}
-            />
-          </Form.Item>
+          {canEditRole && (
+            <Form.Item
+              label="User Role"
+              name="role_id"
+              rules={[{ required: true, message: "User role is required!" }]}
+            >
+              <Select
+                placeholder="Select role"
+                loading={rolesLoading}
+                options={(rolesData?.roles ?? []).map((role: any) => ({
+                  value: String(role.id),
+                  label: role.name,
+                }))}
+              />
+            </Form.Item>
+          )}
         </div>
 
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isLoading || isUpdatingRole}
-        >
-          {isLoading || isUpdatingRole ? "Saving..." : "Save Changes"}
+        <Button type="primary" htmlType="submit" loading={isLoading}>
+          {isLoading ? "Saving..." : "Save Changes"}
         </Button>
       </Form>
     </div>
