@@ -42,7 +42,10 @@ export const RoleForm: FC<RoleFormProps> = ({ roleId, roles, onSubmit }) => {
 
     try {
       if (currentRoleId) {
-        await updateRole({ id: currentRoleId, role: rolePayload }).unwrap();
+        await updateRole({
+          roleId: currentRoleId,
+          roleData: rolePayload,
+        }).unwrap();
         notification.success({
           message: "Role Updated Successfully",
           description: "The role has been updated.",
