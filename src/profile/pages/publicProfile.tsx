@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { customAvatar, formatName } from "../../utils";
+import { customAvatar, formatName, getRole } from "../../utils";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import {
   Tabs,
@@ -25,16 +25,18 @@ const PublicProfile: React.FC = () => {
 
   const { data, isLoading, refetch } = useGetUserByIdQuery(id);
   const user = data?.staff;
+  const currentViewerRole = getRole();
+  const canEditRole =
+    currentViewerRole === "admin" || currentViewerRole === "support";
   const {
     data: roleData,
     isLoading: roleLoading,
     refetch: refetchRole,
-  } = useGetStaffRoleQuery(user?.role, {
-    skip: !user?.role,
+  } = useGetStaffRoleQuery(id, {
+    skip: !id,
   });
 
-  const userRole = roleData?.role;
-  console.log("User Role:", userRole);
+  const userRole = roleData;
 
   if (isLoading) {
     return (
@@ -267,6 +269,7 @@ const PublicProfile: React.FC = () => {
             <AccountTab
               user={user}
               onUpdateSuccess={handleProfileUpdateSuccess}
+              canEditRole={canEditRole}
             />
           </Card>
         </Tabs.TabPane>
