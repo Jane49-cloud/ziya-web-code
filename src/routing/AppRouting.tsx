@@ -21,7 +21,7 @@ import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
 import SingleGroupPage from "../groups/pages/singleGroup";
 
-// import AllGroupWalletsPage from "../wallets";
+// import AllGroup WalletsPage from "../wallets";
 import AllGroupWalletsPage from "../wallets/walletTabs";
 import GroupActivitiesByGroup from "../groups/activities/groupActivity";
 import AllGroupActivities from "../groups/activities/groupsActivities";
