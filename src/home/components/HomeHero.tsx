@@ -229,7 +229,7 @@ const HomeHero: React.FC<HomeHeroProps> = ({ firstName, roleLabel }) => {
                 >
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
                   <PlusCircle className="h-5 w-5" />
-                  <span>Open document</span>
+                  <span>Open documents</span>
                 </Link>
 
                 <Link

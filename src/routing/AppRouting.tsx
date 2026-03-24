@@ -20,12 +20,17 @@ import { getRole } from "../utils";
 import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
 import SingleGroupPage from "../groups/pages/singleGroup";
-import AllGroupWalletsPage from "../wallets";
+
+// import AllGroupWalletsPage from "../wallets";
+import AllGroupWalletsPage from "../wallets/walletTabs";
 import GroupActivitiesByGroup from "../groups/activities/groupActivity";
 import AllGroupActivities from "../groups/activities/groupsActivities";
 import UserGroupActivities from "../groups/activities/userGroupActivities";
 import ZiyaPrivacyPolicy from "../privacy/privacyPolicy";
 import AccountDeletion from "../privacy/delete-account";
+
+//....
+import SingleGroupTransactionsPage from "../wallets/components/singleGroupTransactions";
 
 // role groups
 import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
@@ -156,6 +161,10 @@ const AppRouting = (): ReactElement => {
             <Route path="/activities/all" element={<AllGroupActivities />} />
             <Route path="/analysis" element={<StatisticsPage />} />
 
+
+//====
+            <Route path="/wallets/transactions/group/:groupId" element={<SingleGroupTransactionsPage />} />
+
             <Route
               path="/activities/user/:id"
               element={<UserGroupActivities />}
@@ -167,7 +176,7 @@ const AppRouting = (): ReactElement => {
           </Route>
         </Route>
       </Routes>
-    </Suspense>
+    </Suspense >
   );
 };
 
