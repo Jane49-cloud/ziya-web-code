@@ -203,6 +203,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
         customer_id: number;
         cycle: number;
         approved_by?: number | null;
+        date_paid?: string;
       }) => ({
         url: "/group-loan-payments/create",
         method: "POST",
@@ -221,21 +222,17 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }: {
         paymentId: number;
         updatedData: {
-          group_id: number;
-          loan_id: number;
           amount: number;
-          customer_id: number;
           cycle: number;
+          approved_by: number | null;
+          date_paid?: string;
         };
       }) => ({
         url: `/group-loan-payments/${paymentId}`,
         method: "PUT",
         body: updatedData,
       }),
-      invalidatesTags: (_res, _err, { updatedData }) => [
-        { type: "GroupLoanPayments", id: updatedData.group_id },
-        { type: "GroupLoans", id: updatedData.group_id },
-      ],
+      invalidatesTags: [{ type: "GroupLoanPayments" }, { type: "GroupLoans" }],
     }),
 
     deleteGroupLoanPayment: builder.mutation({

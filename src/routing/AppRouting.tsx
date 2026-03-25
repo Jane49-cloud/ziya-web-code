@@ -33,7 +33,12 @@ import AccountDeletion from "../privacy/delete-account";
 import SingleGroupTransactionsPage from "../wallets/components/singleGroupTransactions";
 
 // role groups
-import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV } from "../utils/roles";
+import {
+  ALL_ROLES,
+  STAFF_ROLES,
+  ADMIN_DEV,
+  STAFF_MANAGEMENT_ROLES,
+} from "../utils/roles";
 // import AnalysisModule from "../analysis";
 import HomePage from "../home";
 import AdminTasksPage from "../tasks/pages/adminTasks";
@@ -109,7 +114,6 @@ const AppRouting = (): ReactElement => {
             <Route path="/groups/:id" element={<SingleGroupPage />} />
             <Route path="/create-group" element={<CreateGroupPage />} />
             <Route path="/profile" element={<UserProfilePage />} />
-            <Route path="/add-user" element={<AddUser />} />
 
             <Route path="/documents" element={<DocumentsList />} />
             <Route path="/documents/create" element={<CreateDocumentForm />} />
@@ -140,14 +144,21 @@ const AppRouting = (): ReactElement => {
         {/* Admin & Dev only */}
         <Route element={<PrivateRoutes allowedRoles={ADMIN_DEV} />}>
           <Route element={<Layout children={undefined} />}>
-            <Route path="/staff" element={<Staff />} />
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-categories" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
           </Route>
         </Route>
 
-        {/* Staff roles (admin, dev, relationship-manager) */}
+        {/* Staff management (admin, dev, support) */}
+        <Route element={<PrivateRoutes allowedRoles={STAFF_MANAGEMENT_ROLES} />}>
+          <Route element={<Layout children={undefined} />}>
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/add-user" element={<AddUser />} />
+          </Route>
+        </Route>
+
+        {/* Staff roles (admin, dev, relationship-manager, staff, support) */}
         <Route element={<PrivateRoutes allowedRoles={STAFF_ROLES} />}>
           <Route element={<Layout children={undefined} />}>
             <Route path="/customers" element={<CustomerManagement />} />

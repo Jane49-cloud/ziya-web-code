@@ -1,19 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button } from "antd";
+import { Form, Input, Button, Select } from "antd";
 import { useUpdateUserMutation } from "../../users/features/userSlice";
 import { Alert } from "../../components/Alert";
+import {
+  useGetAllRolesQuery,
+  useGetStaffRoleQuery,
+} from "../../roles/features/rolesSlice";
 
 interface AccountTabProps {
   user: any;
   setUser?: React.Dispatch<React.SetStateAction<any>>;
   onUpdateSuccess?: () => void;
+  canEditRole?: boolean;
 }
 
-const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
+const AccountTab: React.FC<AccountTabProps> = ({
+  user,
+  onUpdateSuccess,
+  canEditRole = false,
+}) => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [form] = Form.useForm();
+  const { data: rolesData, isLoading: rolesLoading } = useGetAllRolesQuery(
+    {},
+    { skip: !canEditRole },
+  );
+  const { data: currentRole } = useGetStaffRoleQuery(user?.id, {
+    skip: !user?.id || !canEditRole,
+  });
 
   // State for showing alert messages
   const [serverStatus, setServerStatus] = useState("");
@@ -23,15 +39,27 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
 
   // Set form values when the user prop changes
   useEffect(() => {
-    form.setFieldsValue(user);
-  }, [user, form]);
+    form.setFieldsValue({
+      ...user,
+      role_id:
+        canEditRole && currentRole?.id ? String(currentRole.id) : undefined,
+    });
+  }, [canEditRole, currentRole?.id, form, user]);
 
   const handleSaveChanges = async (values: any) => {
     try {
       const payload = {
         id: user?.id,
         userData: {
-          ...values,
+          firstname: values.firstname,
+          middlename: values.middlename,
+          lastname: values.lastname,
+          email: values.email,
+          country_code: values.country_code,
+          phone_number: values.phone_number,
+          ...(canEditRole && values.role_id
+            ? { role_id: Number(values.role_id) }
+            : {}),
         },
       };
 
@@ -123,6 +151,23 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, onUpdateSuccess }) => {
           >
             <Input />
           </Form.Item>
+
+          {canEditRole && (
+            <Form.Item
+              label="User Role"
+              name="role_id"
+              rules={[{ required: true, message: "User role is required!" }]}
+            >
+              <Select
+                placeholder="Select role"
+                loading={rolesLoading}
+                options={(rolesData?.roles ?? []).map((role: any) => ({
+                  value: String(role.id),
+                  label: role.name,
+                }))}
+              />
+            </Form.Item>
+          )}
         </div>
 
         <Button type="primary" htmlType="submit" loading={isLoading}>

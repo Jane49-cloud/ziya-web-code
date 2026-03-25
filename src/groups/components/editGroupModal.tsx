@@ -6,6 +6,7 @@ import { useGetAllUsersQuery } from "../../users/features/userSlice";
 import { formatName } from "../../utils";
 
 const { Option } = Select;
+const GROUP_TAG_OPTIONS = ["active", "archived", "dev", "testing"];
 
 interface EditGroupModalProps {
   visible: boolean;
@@ -91,6 +92,20 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({
             rules={[{ required: true }]}
           >
             <InputNumber className="w-full" min={1} />
+          </Form.Item>
+
+          <Form.Item
+            name="tags"
+            label="Tag"
+            rules={[{ required: true, message: "Select a tag" }]}
+          >
+            <Select placeholder="Select tag">
+              {GROUP_TAG_OPTIONS.map((tag) => (
+                <Option key={tag} value={tag}>
+                  {tag}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       )}
