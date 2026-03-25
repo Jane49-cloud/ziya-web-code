@@ -676,3 +676,17 @@ const GroupAdminAccessAnalytics = () => {
 };
 
 export default GroupAdminAccessAnalytics;
+
+
+
+ // {
+        //     title: "Customer ID",
+        //     dataIndex: "customer_id",
+        //     key: "customer_id",
+        //     width: 110,
+        //     render: (value) => (
+        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
+        //             {value ?? "—"}
+        //         </span>
+        //     ),
+        // },

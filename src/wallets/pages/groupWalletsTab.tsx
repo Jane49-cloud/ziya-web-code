@@ -235,7 +235,7 @@ const GroupWalletsTab = () => {
                         Group Wallets
                     </Title>
                     <Paragraph className="!mb-0 text-gray-500">
-                        Group wallet balances, loans, capital, and subscription standing.
+                        Group wallet balances, loans, capital and subscription standing.
                     </Paragraph>
                 </div>
 

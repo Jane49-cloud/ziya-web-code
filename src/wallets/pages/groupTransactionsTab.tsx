@@ -232,10 +232,10 @@ const WalletTransactionsTab = () => {
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <Title level={4} className="!mb-1">
-                        Wallet Transactions
+                        Group Wallet Transactions
                     </Title>
                     <Paragraph className="!mb-0 text-gray-500">
-                        Group transaction activity across group wallets.
+                        Transaction activity across group wallets.
                     </Paragraph>
                 </div>
 

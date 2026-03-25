@@ -9,7 +9,7 @@ export const {
     useGetSingleGroupWalletQuery,
     useGetAllGroupTransactionsQuery,
     useGetSingleGroupTransactionsQuery,  /////
-    useCreatePersonalWalletDepositMutation,
-    useCreateGroupWalletDepositMutation,
+    // useCreatePersonalWalletDepositMutation,
+    // useCreateGroupWalletDepositMutation,
 
 } = WalletSlice;
