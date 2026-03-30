@@ -57,8 +57,8 @@ export const extractManagedCustomers = (
           typeof candidate?.subscription_status === "number"
             ? candidate.subscription_status
             : typeof candidate?.subscriptionStatus === "number"
-            ? candidate.subscriptionStatus
-            : null,
+              ? candidate.subscriptionStatus
+              : null,
         groupName: group?.name,
       });
     });

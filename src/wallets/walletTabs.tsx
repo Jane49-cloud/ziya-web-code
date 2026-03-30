@@ -5,16 +5,19 @@ import { useSearchParams } from "react-router-dom";
 
 import WalletSummaryCards from "./components/walletSummaryCards";
 import GroupWalletsTab from "./pages/groupWalletsTab";
-import WalletTransactionsTab from "./pages/groupTransactionsTab";
-// import WalletDepositsTab from "../components/walletDepositsTab";
 import PersonalWalletsTab from "./pages/personalWalletsTab";
-import PersonalTransactionsTab from "./pages/personalTransactionsTab";
+
+// import WalletTransactionsTab from "./pages/groupTransactionsTab";
+// import WalletDepositsTab from "../components/walletDepositsTab";
+
+// import PersonalTransactionsTab from "./pages/personalTransactionsTab";
 import {
     useGetGroupWalletsQuery,
-    useGetAllGroupTransactionsQuery,
-
     useGetPersonalWalletsQuery,
-    useGetAllCustomerTransactionsQuery
+    // useGetAllGroupTransactionsQuery,
+
+
+    // useGetAllCustomerTransactionsQuery
 } from "./features";
 
 const { Title, Text } = Typography;
@@ -24,44 +27,39 @@ const WalletTabs = () => {
     const activeTab = searchParams.get("tab") ?? "group-wallets";
 
     const { data: walletsResponse } = useGetGroupWalletsQuery({});
-    const { data: transactionsResponse } = useGetAllGroupTransactionsQuery({});
     const { data: personalWalletResponse } = useGetPersonalWalletsQuery({});
-    const { data: personalTransactionsResponse } = useGetAllCustomerTransactionsQuery({});
 
     const walletRows = useMemo(
         () => walletsResponse?.wallets ?? [],
         [walletsResponse?.wallets]
     );
 
-    const transactionRows = useMemo(
-        () => transactionsResponse?.transactions ?? [],
-        [transactionsResponse?.transactions]
-    );
+
 
     const personalWalletRows = useMemo(
         () => personalWalletResponse?.wallets ?? [],
         [personalWalletResponse?.wallets]
     );
 
-    const personalTransactionRows = useMemo(
-        () => personalTransactionsResponse?.transactions ?? [],
-        [personalTransactionsResponse?.transactions]
-    )
+
 
     const summary = useMemo(() => {
-        const totalWallets = walletRows.length;
-        const totalBalance = walletRows.reduce(
-            (sum: number, item: any) => sum + Number(item?.balance ?? 0),
-            0
-        );
-        const totalTransactions = transactionRows.length;
+        const totalGroupWallets = walletRows.length;
+        const totalPersonalWallets = personalWalletRows.length;
+
+        const totalBalance =
+            [...walletRows, ...personalWalletRows].reduce(
+                (sum: number, item: any) => sum + Number(item?.balance ?? 0),
+                0
+            );
 
         return {
-            totalWallets,
+            totalGroupWallets,
+            totalPersonalWallets,
             totalBalance,
-            totalTransactions,
+            // totalTransactions,
         };
-    }, [walletRows, transactionRows]);
+    }, [walletRows, personalWalletRows]);
 
 
 
@@ -71,7 +69,7 @@ const WalletTabs = () => {
             label: (
                 <Space size={6}>
                     Group Wallets
-                    <Badge count={summary.totalWallets} showZero color="#2563eb" overflowCount={9999} />
+                    <Badge count={summary.totalGroupWallets} showZero color="#2563eb" overflowCount={9999} />
                 </Space>
             ),
             children: <GroupWalletsTab />,
@@ -86,36 +84,7 @@ const WalletTabs = () => {
             ),
             children: <PersonalWalletsTab />,
         },
-        {
-            key: "group-transactions",
-            label: (
-                <Space size={6}>
-                    Group Transactions
-                    <Badge count={summary.totalTransactions} showZero color="#10b981" overflowCount={9999} />
-                </Space>
-            ),
-            children: <WalletTransactionsTab />,
-        },
-        {
-            key: "Personal-Transactions",
-            label: (
-                <Space size={6}>
-                    Personal Transactions
-                    <Badge count={personalTransactionRows.length} showZero color="#7c3aed" overflowCount={9999} />
-                </Space>
-            ),
-            children: <PersonalTransactionsTab />,
-        },
-        // {
-        //     key: "deposits",
-        //     label: (
-        //         <Space size={6}>
-        //             Deposit
-        //             <FiDownload />
-        //         </Space>
-        //     ),
-        //     children: <WalletDepositsTab />,
-        // },
+
     ];
 
     return (
@@ -125,7 +94,7 @@ const WalletTabs = () => {
                     Wallet Management
                 </Title>
                 <Text type="secondary">
-                    Manage group wallets, transaction activity, and deposits at a glance.
+                    Manage group and personal wallets at a glance.
                 </Text>
             </div>
 

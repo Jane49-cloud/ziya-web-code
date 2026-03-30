@@ -29,8 +29,12 @@ import UserGroupActivities from "../groups/activities/userGroupActivities";
 import ZiyaPrivacyPolicy from "../privacy/privacyPolicy";
 import AccountDeletion from "../privacy/delete-account";
 
-//....
-import SingleGroupTransactionsPage from "../wallets/components/singleGroupTransactions";
+//....Transactions
+import SingleGroupTransactionsPage from "../transactions/components/singleGroupTransactions";
+
+import TransactionsIndex from "../transactions";
+import WalletTransactionsTab from "../transactions/pages/groupTransactions";
+import PersonalTransactionsTab from "../transactions/pages/personalTransactions";
 
 // role groups
 import {
@@ -147,6 +151,16 @@ const AppRouting = (): ReactElement => {
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-categories" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
+
+            {/* <Route path="/group-transactions" element={<WalletTransactionsTab />} />
+            <Route path="/personal-transactions" element={<PersonalTransactionsTab />} /> */}
+
+            <Route path="/transactions" element={<TransactionsIndex />}>
+              <Route index element={<Navigate to="group" replace />} />
+              <Route path="group" element={<WalletTransactionsTab />} />
+              <Route path="personal" element={<PersonalTransactionsTab />} />
+            </Route>
+
           </Route>
         </Route>
 
@@ -174,7 +188,7 @@ const AppRouting = (): ReactElement => {
 
 
 //====
-            <Route path="/wallets/transactions/group/:groupId" element={<SingleGroupTransactionsPage />} />
+            <Route path="/transactions/group/:groupId" element={<SingleGroupTransactionsPage />} />
 
             <Route
               path="/activities/user/:id"

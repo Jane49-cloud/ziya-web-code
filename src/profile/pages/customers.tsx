@@ -24,9 +24,17 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
   loading,
   fetching,
 }) => {
+  // const friendlyRole = useMemo(() => {
+  //   if (!roleName) return "team member";
+  //   return roleName.replace(/-/g, " ");
+  // }, [roleName]);
+
+
   const friendlyRole = useMemo(() => {
-    if (!roleName) return "team member";
-    return roleName.replace(/-/g, " ");
+    if (typeof roleName !== "string") return "team member";
+    const normalized = roleName.trim();
+    if (!normalized) return "team member";
+    return normalized.replace(/-/g, " ");
   }, [roleName]);
 
   const managedCustomers = useMemo<ManagedCustomer[]>(() => {

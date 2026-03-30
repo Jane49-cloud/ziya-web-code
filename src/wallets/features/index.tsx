@@ -4,12 +4,14 @@ export const {
     useGetGroupWalletsQuery,
     useGetPersonalWalletsQuery,
     useGetSinglePersonalWalletQuery,
-    useGetSingleCustomerTransactionsQuery,
-    useGetAllCustomerTransactionsQuery,
     useGetSingleGroupWalletQuery,
-    useGetAllGroupTransactionsQuery,
-    useGetSingleGroupTransactionsQuery,  /////
+    useCreateGroupWalletDepositMutation,
+    // useGetSingleCustomerTransactionsQuery,
+    // useGetAllCustomerTransactionsQuery,
+
+    // useGetAllGroupTransactionsQuery,
+    // useGetSingleGroupTransactionsQuery,  /////
     // useCreatePersonalWalletDepositMutation,
-    // useCreateGroupWalletDepositMutation,
+
 
 } = WalletSlice;

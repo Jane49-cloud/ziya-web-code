@@ -26,23 +26,7 @@ export const WalletSlice = apiSlice.injectEndpoints({
             providesTags: (_result, _error, customerId) => [{ type: "Wallets", id: `personal-customer-${customerId}`, }],
         }),
 
-        getSingleCustomerTransactions: builder.query({
-            query: (customerId: number) => ({
-                url: `/personal-wallets/transactions/customer/${customerId}`,
-                method: "GET",
-            }),
-            providesTags: (_result, _error, customerId) => [
-                { type: "WalletTransactions", id: `customer-${customerId}` },
-            ],
-        }),
 
-        getAllCustomerTransactions: builder.query({
-            query: () => ({
-                url: "/personal-wallets/transactions/all",
-                method: "GET",
-            }),
-            providesTags: [{ type: "WalletTransactions" }],
-        }),
 
         getSingleGroupWallet: builder.query({
             query: (id: number) => ({
@@ -52,23 +36,7 @@ export const WalletSlice = apiSlice.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: "Wallets", id }],
         }),
 
-        getAllGroupTransactions: builder.query({
-            query: () => ({
-                url: "/group-wallets/transactions/all",
-                method: "GET",
-            }),
-            providesTags: [{ type: "WalletTransactions" }],
-        }),
-        //-----
-        getSingleGroupTransactions: builder.query({
-            query: (groupId: number) => ({
-                url: `/group-wallets/transactions/${groupId}`,
-                method: "GET",
-            }),
-            providesTags: (_result, _error, groupId) => [
-                { type: "WalletTransactions", id: `group-${groupId}` },
-            ],
-        }),
+
 
         // createPersonalWalletDeposit: builder.mutation({
         //     query: (payload) => ({
@@ -79,13 +47,13 @@ export const WalletSlice = apiSlice.injectEndpoints({
         //     invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
         // }),
 
-        // createGroupWalletDeposit: builder.mutation({
-        //     query: (payload) => ({
-        //         url: "/group-wallets/deposit",
-        //         method: "POST",
-        //         body: payload,
-        //     }),
-        //     invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
-        // }),
+        createGroupWalletDeposit: builder.mutation({
+            query: (payload) => ({
+                url: "/group-wallets/deposit",
+                method: "POST",
+                body: payload,
+            }),
+            invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
+        }),
     }),
 });

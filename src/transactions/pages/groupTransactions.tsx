@@ -2,13 +2,13 @@
 import { Card, Empty, Input, Table, Tag, Typography, Button, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { FiUsers, FiMoreVertical, FiEye, FiEdit2 } from "react-icons/fi";
 import { useGetAllGroupTransactionsQuery } from "../features";
-import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
+import { formatName } from "../../utils";
 
 type GroupWalletTransaction = {
     id: string | number;
@@ -30,31 +30,19 @@ const formatCurrency = (value: number | string | undefined) => {
     return `KES ${numeric.toLocaleString()}`;
 };
 
-// const formatDate = (value?: string) => {
+
+
+
+
+// const formatDateTime = (value?: string | null) => {
 //     if (!value) return "—";
-//     const date = new Date(value);
-//     if (Number.isNaN(date.getTime())) return "—";
-
-//     const day = date.getDate().toString().padStart(2, "0");
-//     const month = date.toLocaleString("en-GB", { month: "short" });
-//     const year = date.getFullYear();
-//     const hours = date.getHours().toString().padStart(2, "0");
-//     const minutes = date.getMinutes().toString().padStart(2, "0");
-
-//     return `${day} ${month} ${year}, ${hours}:${minutes}`;
+//     const parsed = dayjs(value);
+//     return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
 // };
-
-
-
-const formatDateTime = (value?: string | null) => {
-    if (!value) return "—";
-    const parsed = dayjs(value);
-    return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
-};
 
 const formatFullName = (firstname?: string, lastname?: string) => {
     const fullName = `${firstname ?? ""} ${lastname ?? ""}`.trim();
-    return fullName || "—";
+    return fullName ? formatName(fullName) : "—";
 };
 
 
@@ -66,8 +54,9 @@ const WalletTransactionsTab = () => {
     });
 
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const { data, isLoading, isFetching } = useGetAllGroupTransactionsQuery({});
+    const { data, isLoading, isFetching, refetch } = useGetAllGroupTransactionsQuery({});
     const rows = useMemo(() => data?.transactions ?? [], [data?.transactions]);
 
     const filteredRows = useMemo(() => {
@@ -82,10 +71,10 @@ const WalletTransactionsTab = () => {
                 item.admin_lastname,
                 item.admin_phone_number,
                 item.type,
-                item.source,
+                // item.source,
                 item.amount,
-                item.reference_code,
-                item.date_created,
+                // item.reference_code,
+                // item.date_created,
             ]
                 .map((value) => (value ?? "").toString().toLowerCase())
                 .some((value) => value.includes(needle))
@@ -94,10 +83,11 @@ const WalletTransactionsTab = () => {
 
 
     const handleViewGroup = (record: GroupWalletTransaction) => {
-        navigate(`/wallets/transactions/group/${record.group_id}`, {
+        navigate(`/transactions/group/${record.group_id}`, {
             state: {
+                from: "/transactions?tab=group",
                 groupId: record.group_id,
-                groupName: record.group_name,
+                groupName: formatName(record.group_name) || "-",
                 adminName: `${record.admin_firstname ?? ""} ${record.admin_lastname ?? ""}`.trim(),
                 adminPhone: record.admin_phone_number,
 
@@ -105,36 +95,37 @@ const WalletTransactionsTab = () => {
         });
     };
 
-    const handleEditGroup = (record: GroupWalletTransaction) => {
-        console.log("Edit group:", record.group_id);
+    // const handleEditGroup = (record: GroupWalletTransaction) => {
+    //     console.log("Edit group:", record.group_id);
 
-        /// itafanywa  hii pia
-    };
+    //     /// itafanywa  hii pia
+    // };
 
 
     const columns: ColumnsType<GroupWalletTransaction> = [
-        {
-            title: "Group ID",
-            dataIndex: "group_id",
-            key: "group_id",
-            width: 120,
-            render: (value) => (
-                <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-                    {value ?? "—"}
-                </span>
-            ),
-        },
+        // {
+        //     title: "Group ID",
+        //     dataIndex: "group_id",
+        //     key: "group_id",
+        //     width: 120,
+        //     render: (value) => (
+        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
+        //             {value ?? "—"}
+        //         </span>
+        //     ),
+        // },
         {
             title: "Group Name",
             dataIndex: "group_name",
             key: "group_name",
             width: 240,
             render: (value) => (
-                <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+                <div className="inline-flex max-w-full items-center gap-2  px-3 py-2">
                     <span className="text-blue-600">
                         <FiUsers size={16} />
                     </span>
-                    <span className="truncate font-medium text-slate-500">{value || "—"}</span>
+                    <span className="truncate font-medium text-slate-600">
+                        {formatName(value) || "—"}</span>
                 </div>
             ),
         },
@@ -152,7 +143,15 @@ const WalletTransactionsTab = () => {
             render: (value) => value || "—",
         },
         {
-            title: "Type",
+            title: "Amount",
+            dataIndex: "amount",
+            key: "amount",
+            width: 120,
+            align: "left",
+            render: (value) => formatCurrency(value),
+        },
+        {
+            title: "Transaction Type",
             dataIndex: "type",
             key: "type",
             width: 120,
@@ -162,39 +161,32 @@ const WalletTransactionsTab = () => {
                 </Tag>
             ),
         },
+        // {
+        //     title: "Source",
+        //     dataIndex: "source",
+        //     key: "source",
+        //     width: 140,
+        //     render: (value) => value || "—",
+        // },
+
+        // {
+        //     title: "Reference Code",
+        //     dataIndex: "reference_code",
+        //     key: "reference_code",
+        //     width: 260,
+        //     ellipsis: true,
+        //     render: (value) => value || "—",
+        // },
+        // {
+        //     title: "Date Created",
+        //     dataIndex: "date_created",
+        //     key: "date_created",
+        //     width: 180,
+        //     render: (value) => formatDateTime(value),
+        // },
         {
-            title: "Source",
-            dataIndex: "source",
-            key: "source",
-            width: 140,
-            render: (value) => value || "—",
-        },
-        {
-            title: "Amount",
-            dataIndex: "amount",
-            key: "amount",
-            width: 120,
-            align: "right",
-            render: (value) => formatCurrency(value),
-        },
-        {
-            title: "Reference Code",
-            dataIndex: "reference_code",
-            key: "reference_code",
-            width: 260,
-            ellipsis: true,
-            render: (value) => value || "—",
-        },
-        {
-            title: "Date Created",
-            dataIndex: "date_created",
-            key: "date_created",
-            width: 180,
-            render: (value) => formatDateTime(value),
-        },
-        {
-            title: "Views",
-            key: "views",
+            title: "Actions",
+            key: "actions",
             width: 90,
             align: "center",
             fixed: "right",
@@ -206,12 +198,12 @@ const WalletTransactionsTab = () => {
                         icon: <FiEye size={14} />,
                         onClick: () => handleViewGroup(record),
                     },
-                    {
-                        key: "edit",
-                        label: "Edit",
-                        icon: <FiEdit2 size={14} />,
-                        onClick: () => handleEditGroup(record),
-                    },
+                    // {
+                    //     key: "edit",
+                    //     label: "Edit",
+                    //     icon: <FiEdit2 size={14} />,
+                    //     onClick: () => handleEditGroup(record),
+                    // },
                 ];
 
                 return (
@@ -226,6 +218,13 @@ const WalletTransactionsTab = () => {
             },
         }
     ];
+
+    useEffect(() => {
+        if (location.state?.refreshGroupTransactions) {
+            refetch();
+            navigate(location.pathname + location.search, { replace: true, state: null });
+        }
+    }, [location, navigate, refetch]);
 
     return (
         <Card bordered={false} className="rounded-xl shadow-sm">
@@ -260,7 +259,8 @@ const WalletTransactionsTab = () => {
                 loading={isLoading || isFetching}
                 bordered
                 size="middle"
-                scroll={{ x: 1650 }}
+                // scroll={{ x: 700 }}
+                scroll={{ x: "max-content" }}
                 pagination={{
                     ...pagination,
                     showSizeChanger: true,

@@ -21,6 +21,7 @@ import {
 import PersonalWalletDetailsDrawer, {
     type PersonalWalletDetails,
 } from "../components/personalWalletDetailsDrawer";
+import { formatName } from "../../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -77,8 +78,9 @@ const PersonalWalletsTab = () => {
                 item.customer_id,
                 item.firstname,
                 item.lastname,
-                item.phone_number,
                 item.balance,
+                item.phone_number,
+
             ]
                 .map((value) => (value ?? "").toString().toLowerCase())
                 .some((value) => value.includes(needle))
@@ -96,17 +98,17 @@ const PersonalWalletsTab = () => {
     };
 
     const columns: ColumnsType<PersonalWallet> = [
-        {
-            title: "Wallet ID",
-            dataIndex: "id",
-            key: "id",
-            width: 110,
-            render: (value) => (
-                <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-400">
-                    {value ?? "—"}
-                </span>
-            ),
-        },
+        // {
+        //     title: "Wallet ID",
+        //     dataIndex: "id",
+        //     key: "id",
+        //     width: 110,
+        //     render: (value) => (
+        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-400">
+        //             {value ?? "—"}
+        //         </span>
+        //     ),
+        // },
         // {
         //     title: "Customer ID",
         //     dataIndex: "customer_id",
@@ -123,15 +125,23 @@ const PersonalWalletsTab = () => {
             key: "customer_name",
             width: 260,
             render: (_value, record) => (
-                <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+                <div className="inline-flex max-w-full items-center gap-2  px-3 py-2">
                     <span className="text-blue-600">
                         <FiUser size={16} />
                     </span>
-                    <span className="truncate font-medium text-slate-400">
-                        {getFullName(record)}
+                    <span className="truncate font-medium tracking-wide">
+                        {formatName(getFullName(record))}
                     </span>
                 </div>
             ),
+        },
+        {
+            title: "Balance",
+            dataIndex: "balance",
+            key: "balance",
+            width: 170,
+            align: "left",
+            render: (value) => <Text>{formatCurrency(value)}</Text>,
         },
         {
             title: "Phone Number",
@@ -140,17 +150,10 @@ const PersonalWalletsTab = () => {
             width: 180,
             render: (value) => value || "—",
         },
+
         {
-            title: "Balance",
-            dataIndex: "balance",
-            key: "balance",
-            width: 170,
-            align: "right",
-            render: (value) => <Text strong>{formatCurrency(value)}</Text>,
-        },
-        {
-            title: "Views",
-            key: "views",
+            title: "Action",
+            key: "action",
             width: 90,
             align: "center",
             fixed: "right",
@@ -189,7 +192,7 @@ const PersonalWalletsTab = () => {
                             Personal Wallets
                         </Title>
                         <Paragraph className="!mb-0 text-gray-400">
-                            Customer wallet balances and personal wallet account information.
+                            Personal wallet account information.
                         </Paragraph>
                     </div>
 
@@ -214,7 +217,8 @@ const PersonalWalletsTab = () => {
                     loading={isLoading || isFetching}
                     bordered
                     size="middle"
-                    scroll={{ x: 1000 }}
+                    // scroll={{ x: 1000 }}
+                    scroll={{ x: "max-content" }}
                     pagination={{
                         ...pagination,
                         showSizeChanger: true,

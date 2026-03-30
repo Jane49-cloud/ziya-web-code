@@ -7,6 +7,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 
 import { useGetSingleGroupTransactionsQuery } from "../features";
+import { formatName } from "../../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -38,7 +39,7 @@ const formatDateTime = (value?: string | null) => {
 
 const formatFullName = (firstname?: string, lastname?: string) => {
     const fullName = `${firstname ?? ""} ${lastname ?? ""}`.trim();
-    return fullName || "—";
+    return fullName ? formatName(fullName) : "—";
 };
 
 const SingleGroupTransactionsPage = () => {
@@ -53,10 +54,12 @@ const SingleGroupTransactionsPage = () => {
 
     const routeState = location.state as
         | {
+            from?: string;
             groupId?: number;
             groupName?: string;
             adminName?: string;
             adminPhone?: string;
+            refreshGroupTransactions?: boolean;
         }
         | undefined;
 
@@ -69,10 +72,20 @@ const SingleGroupTransactionsPage = () => {
         }
     );
 
+    const [hasChanges, setHasChanges] = useState(false);
+
     const rows = useMemo(() => data?.transactions ?? [], [data?.transactions]);
 
     const groupName =
-        rows[0]?.group_name || routeState?.groupName || `Group ${groupId}`;
+        formatName(rows[0]?.group_name) ||
+        routeState?.groupName ||
+        `Group ${groupId}`;
+
+    const handleBack = () => {
+        navigate(routeState?.from || "/transactions?tab=group", {
+            state: hasChanges ? { refreshGroupTransactions: true } : null,
+        });
+    };
 
     const adminName =
         formatFullName(rows[0]?.admin_firstname, rows[0]?.admin_lastname) !== "—"
@@ -124,6 +137,14 @@ const SingleGroupTransactionsPage = () => {
             render: (value) => value || "—",
         },
         {
+            title: "Amount",
+            dataIndex: "amount",
+            key: "amount",
+            width: 120,
+            align: "left",
+            render: (value) => formatCurrency(value),
+        },
+        {
             title: "Type",
             dataIndex: "type",
             key: "type",
@@ -141,14 +162,7 @@ const SingleGroupTransactionsPage = () => {
             width: 140,
             render: (value) => value || "—",
         },
-        {
-            title: "Amount",
-            dataIndex: "amount",
-            key: "amount",
-            width: 120,
-            align: "right",
-            render: (value) => formatCurrency(value),
-        },
+
         {
             title: "Reference Code",
             dataIndex: "reference_code",
@@ -170,7 +184,7 @@ const SingleGroupTransactionsPage = () => {
         <div className="space-y-6 p-6">
             <div>
                 <Button
-                    onClick={() => navigate("/wallets?tab=transactions")}  ///=====
+                    onClick={handleBack}
                     icon={<FiArrowLeft />}
                     className="!mb-4"
                 >

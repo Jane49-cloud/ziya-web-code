@@ -13,7 +13,7 @@ import type { MenuProps } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState } from "react";
 import { FiEye, FiMoreVertical, FiUser } from "react-icons/fi";
-import dayjs from "dayjs";
+import { formatName } from "../../utils";
 
 import {
     useGetAllCustomerTransactionsQuery,
@@ -45,14 +45,12 @@ const formatCurrency = (value: number | string | undefined | null) => {
     return `KES ${numeric.toLocaleString()}`;
 };
 
-const formatDateTime = (value?: string | null) => {
-    if (!value) return "—";
-    const parsed = dayjs(value);
-    return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
-};
 
-const getFullName = (record: Partial<AllCustomerTransactionRow>) =>
-    `${record.firstname ?? ""} ${record.lastname ?? ""}`.trim() || "—";
+
+const getFullName = (record: Partial<AllCustomerTransactionRow>) => {
+    const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`.trim();
+    return fullName ? formatName(fullName) : "—";
+};
 
 const getTypeColor = (type?: string) => {
     const normalized = (type ?? "").toLowerCase();
@@ -140,27 +138,27 @@ const PersonalTransactionsTab = () => {
     };
 
     const columns: ColumnsType<AllCustomerTransactionRow> = [
-        {
-            title: "Transaction ID",
-            dataIndex: "id",
-            key: "id",
-            width: 120,
-            render: (value) => (
-                <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-                    {value ?? "—"}
-                </span>
-            ),
-        },
+        // {
+        //     title: "Transaction ID",
+        //     dataIndex: "id",
+        //     key: "id",
+        //     width: 120,
+        //     render: (value) => (
+        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
+        //             {value ?? "—"}
+        //         </span>
+        //     ),
+        // },
         {
             title: "Customer Name",
             key: "customer_name",
             width: 240,
             render: (_value, record) => (
-                <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+                <div className="inline-flex max-w-full items-center gap-2  px-3 py-2">
                     <span className="text-blue-600">
                         <FiUser size={16} />
                     </span>
-                    <span className="truncate font-medium text-slate-500">
+                    <span className="truncate font-medium text-slate-600">
                         {getFullName(record)}
                     </span>
                 </div>
@@ -178,7 +176,7 @@ const PersonalTransactionsTab = () => {
             dataIndex: "amount",
             key: "amount",
             width: 150,
-            align: "right",
+            align: "left",
             render: (value) => formatCurrency(value),
         },
         {
@@ -192,37 +190,37 @@ const PersonalTransactionsTab = () => {
                 </Tag>
             ),
         },
-        {
-            title: "Source",
-            dataIndex: "source",
-            key: "source",
-            width: 140,
-            render: (value) => value || "—",
-        },
-        {
-            title: "Reference Code",
-            dataIndex: "reference_code",
-            key: "reference_code",
-            width: 220,
-            render: (value) => (
-                <span className="font-mono text-sm text-slate-500" title={value}>
+        // {
+        //     title: "Source",
+        //     dataIndex: "source",
+        //     key: "source",
+        //     width: 140,
+        //     render: (value) => value || "—",
+        // },
+        // {
+        //     title: "Reference Code",
+        //     dataIndex: "reference_code",
+        //     key: "reference_code",
+        //     width: 220,
+        //     render: (value) => (
+        //         <span className="font-mono text-sm text-slate-500" title={value}>
 
 
-                    {value || "—"}
-                </span>
-            ),
-        },
+        //             {value || "—"}
+        //         </span>
+        //     ),
+        // },
 
+        // {
+        //     title: "Date Created",
+        //     dataIndex: "date_created",
+        //     key: "date_created",
+        //     width: 180,
+        //     render: (value) => formatDateTime(value),
+        // },
         {
-            title: "Date Created",
-            dataIndex: "date_created",
-            key: "date_created",
-            width: 180,
-            render: (value) => formatDateTime(value),
-        },
-        {
-            title: "Views",
-            key: "views",
+            title: "Actions",
+            key: "actions",
             width: 90,
             align: "center",
             fixed: "right",
@@ -285,7 +283,8 @@ const PersonalTransactionsTab = () => {
                     loading={isLoading || isFetching}
                     bordered
                     size="middle"
-                    scroll={{ x: 1400 }}
+                    // scroll={{ x: 700 }}
+                    scroll={{ x: "max-content" }}
                     pagination={{
                         ...pagination,
                         showSizeChanger: true,
