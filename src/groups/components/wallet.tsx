@@ -18,22 +18,23 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
   const [walletModalVisible, setWalletModalVisible] = useState(false);
   const [updateWallet] = useUpdateGroupWalletMutation();
 
-  const wallet = data?.wallet;
+  // const wallet = data?.wallet;
+  const wallet = data;
 
   const walletData = wallet
     ? [
-        { key: "1", label: "Balance", value: `KES ${wallet.balance}` },
-        {
-          key: "2",
-          label: "Loans Out Value",
-          value: `KES ${wallet.loans_out_value}`,
-        },
-        {
-          key: "3",
-          label: "Total Loans Count",
-          value: wallet.total_loans_counts,
-        },
-      ]
+      { key: "1", label: "Balance", value: `KES ${wallet.balance}` },
+      {
+        key: "2",
+        label: "Loans Out Value",
+        value: `KES ${wallet.loans_out_value}`,
+      },
+      {
+        key: "3",
+        label: "Total Loans Count",
+        value: wallet.total_loans_counts,
+      },
+    ]
     : [];
 
   const columns = [
@@ -44,6 +45,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
   const handleUpdate = async (values: { amount: number; op: "inc" | "dec" }) => {
     try {
       await updateWallet({ id: groupId, ...values }).unwrap();
+      // await updateWallet({ id: wallet.id, ...values }).unwrap(); use this if id used is wallet ID 
       message.success("Wallet updated successfully");
       setWalletModalVisible(false);
       refetch(); // Refresh after update
@@ -55,26 +57,26 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
 
   const summaryStats = wallet
     ? [
-        {
-          title: "Available Balance",
-          value: Number(wallet.balance ?? 0),
-          bg: "bg-blue-50",
-          color: "#1d4ed8",
-        },
-        {
-          title: "Loans Out Value",
-          value: Number(wallet.loans_out_value ?? 0),
-          bg: "bg-amber-50",
-          color: "#d97706",
-        },
-        {
-          title: "Total Loans Count",
-          value: Number(wallet.total_loans_counts ?? 0),
-          isCount: true,
-          bg: "bg-emerald-50",
-          color: "#059669",
-        },
-      ]
+      {
+        title: "Available Balance",
+        value: Number(wallet.balance ?? 0),
+        bg: "bg-blue-50",
+        color: "#1d4ed8",
+      },
+      {
+        title: "Loans Out Value",
+        value: Number(wallet.loans_out_value ?? 0),
+        bg: "bg-amber-50",
+        color: "#d97706",
+      },
+      {
+        title: "Total Loans Count",
+        value: Number(wallet.total_loans_counts ?? 0),
+        isCount: true,
+        bg: "bg-emerald-50",
+        color: "#059669",
+      },
+    ]
     : [];
 
   return (

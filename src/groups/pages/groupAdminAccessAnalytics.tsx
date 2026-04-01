@@ -266,27 +266,27 @@ const GroupAdminAccessAnalytics = () => {
           className="rounded-xl bg-emerald-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-            <Statistic
-              title="High Activity"
-              value={
-                activityRows.filter((row) => row.activityLevel === "High")
-                  .length
-              }
-              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.High }}
-            />
+          <Statistic
+            title="High Activity"
+            value={
+              activityRows.filter((row) => row.activityLevel === "High")
+                .length
+            }
+            valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.High }}
+          />
         </Card>
         <Card
           bordered={false}
           className="rounded-xl bg-blue-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-            <Statistic
-              title="Moderate Activity"
-              value={
-                activityRows.filter((row) => row.activityLevel === "Moderate")
-                  .length
-              }
-              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Moderate }}
+          <Statistic
+            title="Moderate Activity"
+            value={
+              activityRows.filter((row) => row.activityLevel === "Moderate")
+                .length
+            }
+            valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Moderate }}
           />
         </Card>
         <Card
@@ -294,13 +294,13 @@ const GroupAdminAccessAnalytics = () => {
           className="rounded-xl bg-orange-50"
           styles={{ body: { padding: "14px 18px" } }}
         >
-            <Statistic
-              title="Poor Activity (15+ days)"
-              value={
-                activityRows.filter((row) => row.activityLevel === "Poor").length
-              }
-              valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Poor }}
-            />
+          <Statistic
+            title="Poor Activity (15+ days)"
+            value={
+              activityRows.filter((row) => row.activityLevel === "Poor").length
+            }
+            valueStyle={{ fontWeight: 600, color: LEVEL_COLORS.Poor }}
+          />
         </Card>
         <Card
           bordered={false}

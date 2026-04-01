@@ -20,12 +20,21 @@ import { getRole } from "../utils";
 import GroupsPage from "../groups/pages";
 import CreateGroupPage from "../groups/pages/newGroup";
 import SingleGroupPage from "../groups/pages/singleGroup";
-import AllGroupWalletsPage from "../wallets";
+
+// import AllGroup WalletsPage from "../wallets";
+import AllGroupWalletsPage from "../wallets/walletTabs";
 import GroupActivitiesByGroup from "../groups/activities/groupActivity";
 import AllGroupActivities from "../groups/activities/groupsActivities";
 import UserGroupActivities from "../groups/activities/userGroupActivities";
 import ZiyaPrivacyPolicy from "../privacy/privacyPolicy";
 import AccountDeletion from "../privacy/delete-account";
+
+//....Transactions
+import SingleGroupTransactionsPage from "../transactions/components/singleGroupTransactions";
+
+import TransactionsIndex from "../transactions";
+import WalletTransactionsTab from "../transactions/pages/groupTransactions";
+import PersonalTransactionsTab from "../transactions/pages/personalTransactions";
 
 // role groups
 import {
@@ -142,6 +151,16 @@ const AppRouting = (): ReactElement => {
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-categories" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
+
+            {/* <Route path="/group-transactions" element={<WalletTransactionsTab />} />
+            <Route path="/personal-transactions" element={<PersonalTransactionsTab />} /> */}
+
+            <Route path="/transactions" element={<TransactionsIndex />}>
+              <Route index element={<Navigate to="group" replace />} />
+              <Route path="group" element={<WalletTransactionsTab />} />
+              <Route path="personal" element={<PersonalTransactionsTab />} />
+            </Route>
+
           </Route>
         </Route>
 
@@ -167,6 +186,10 @@ const AppRouting = (): ReactElement => {
             <Route path="/activities/all" element={<AllGroupActivities />} />
             <Route path="/analysis" element={<StatisticsPage />} />
 
+
+//====
+            <Route path="/transactions/group/:groupId" element={<SingleGroupTransactionsPage />} />
+
             <Route
               path="/activities/user/:id"
               element={<UserGroupActivities />}
@@ -178,7 +201,7 @@ const AppRouting = (): ReactElement => {
           </Route>
         </Route>
       </Routes>
-    </Suspense>
+    </Suspense >
   );
 };
 

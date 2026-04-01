@@ -52,10 +52,10 @@ const GroupAnalyticsPage = () => {
     wallets.forEach((wallet: any) => {
       const key = String(
         wallet?.group_id ??
-          wallet?.groupId ??
-          wallet?.group ??
-          wallet?.id ??
-          "",
+        wallet?.groupId ??
+        wallet?.group ??
+        wallet?.id ??
+        "",
       );
       if (key) map.set(key, wallet);
     });

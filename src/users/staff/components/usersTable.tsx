@@ -28,9 +28,8 @@ export function UsersTable({ users }: UsersTableProps) {
   // Filter users based on search text (searching in name, email, and phone)
   const needle = searchText.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
-    const rawName = `${user.firstname} ${user.middlename || ""} ${
-      user.lastname || ""
-    }`.trim();
+    const rawName = `${user.firstname} ${user.middlename || ""} ${user.lastname || ""
+      }`.trim();
     const fullName = formatName(rawName).toLowerCase();
     const email = user.email.toLowerCase();
     const phone = `${user.country_code} ${user.phone_number}`.toLowerCase();
@@ -54,9 +53,8 @@ export function UsersTable({ users }: UsersTableProps) {
       dataIndex: "name",
       key: "name",
       render: (_: any, record: UserData) => {
-        const fullNameRaw = `${record.firstname} ${
-          record.middlename || ""
-        }`.trim();
+        const fullNameRaw = `${record.firstname} ${record.middlename || ""
+          }`.trim();
         const fullName = formatName(fullNameRaw);
         return (
           <Space>

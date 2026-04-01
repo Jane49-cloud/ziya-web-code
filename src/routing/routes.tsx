@@ -118,8 +118,43 @@ export const sidebarItems: SidebarItem[] = [
     title: "Wallets",
     icon: "wallet",
     path: "/wallets",
-    allowedRoles: STAFF_ROLES,
+    allowedRoles: ["admin", "dev"],
   },
+
+  // {
+  //   title: "Transactions",
+  //   icon: "arrows-circle",
+  //   dropdown: [
+  //     {
+  //       title: "Group",
+  //       path: "/group-transactions",
+  //       allowedRoles: ["admin", "dev"],
+  //     },
+  //     {
+  //       title: "Personal",
+  //       path: "/personal-transactions",
+  //       allowedRoles: ["admin", "dev"],
+  //     },
+  //   ],
+  // },
+
+  {
+    title: "Transactions",
+    icon: "arrows-circle",
+    dropdown: [
+      {
+        title: "Group",
+        path: "/transactions/group",
+        allowedRoles: ["admin", "dev"],
+      },
+      {
+        title: "Personal",
+        path: "/transactions/personal",
+        allowedRoles: ["admin", "dev"],
+      },
+    ],
+  },
+
   {
     title: "Tasks",
     icon: "check-circle",

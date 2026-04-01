@@ -45,9 +45,8 @@ export const UserProfilePage: React.FC = () => {
   const fullName = useMemo(() => {
     const fallbackFirst = staffData?.firstname ?? "";
     const fallbackLast = staffData?.lastname ?? "";
-    return `${user?.firstname ?? fallbackFirst} ${
-      user?.lastname ?? fallbackLast
-    }`
+    return `${user?.firstname ?? fallbackFirst} ${user?.lastname ?? fallbackLast
+      }`
       .trim()
       .replace(/\s+/g, " ");
   }, [staffData?.firstname, staffData?.lastname, user?.firstname, user?.lastname]);
@@ -63,6 +62,7 @@ export const UserProfilePage: React.FC = () => {
     return "Team";
   }, [fullName, staffData?.firstname, user?.firstname]);
 
+  //option of normalizing at source
   const roleName = data?.staff?.userRole?.name ?? user?.role ?? "Ziya staff";
   const normalizedRole = roleName?.toLowerCase?.() ?? "";
   const managesGroups =

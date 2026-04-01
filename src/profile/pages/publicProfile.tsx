@@ -25,9 +25,11 @@ const PublicProfile: React.FC = () => {
 
   const { data, isLoading, refetch } = useGetUserByIdQuery(id);
   const user = data?.staff;
+
+  // admin = dev
   const currentViewerRole = getRole();
   const canEditRole =
-    currentViewerRole === "admin" || currentViewerRole === "support";
+    currentViewerRole === "admin" || currentViewerRole === "support" || currentViewerRole === "dev";
   const {
     data: roleData,
     isLoading: roleLoading,
