@@ -72,7 +72,7 @@ const SingleGroupTransactionsPage = () => {
         }
     );
 
-    const [hasChanges, setHasChanges] = useState(false);
+    const [hasChanges] = useState(false);
 
     const rows = useMemo(() => data?.transactions ?? [], [data?.transactions]);
 

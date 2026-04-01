@@ -3,7 +3,7 @@ import { Card, Empty, Input, Table, Tag, Typography, Button, Dropdown } from "an
 import type { MenuProps } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState, useEffect } from "react";
-import { FiUsers, FiMoreVertical, FiEye, FiEdit2 } from "react-icons/fi";
+import { FiUsers, FiMoreVertical, FiEye } from "react-icons/fi";
 import { useGetAllGroupTransactionsQuery } from "../features";
 import { useNavigate, useLocation } from "react-router-dom";
 
