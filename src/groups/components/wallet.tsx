@@ -3,7 +3,7 @@ import {
   useGetGroupWalletQuery,
   useUpdateGroupWalletMutation,
 } from "../features";
-import { Card, Table, Typography, Spin, Button, message, Row, Col, Statistic, Space } from "antd";
+import { Card, Table, Typography, Spin, message, Row, Col, Statistic, Space } from "antd";
 import EditWalletModal from "./editWalletModel";
 
 const { Title } = Typography;
@@ -86,13 +86,13 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
           <Title level={4} className="!mb-0">
             Wallet Overview
           </Title>
-          <Button
+          {/* <Button
             onClick={() => setWalletModalVisible(true)}
             type="primary"
             disabled={!wallet || isLoading}
           >
             Edit Wallet
-          </Button>
+          </Button> */}
         </div>
 
         {isLoading && !wallet ? (

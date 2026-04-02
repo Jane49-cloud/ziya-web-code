@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-    Button,
+
     Card,
-    Dropdown,
+
     Empty,
     Input,
     Table,
     Tag,
     Typography,
+    Tooltip,
 } from "antd";
-import type { MenuProps } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState } from "react";
-import { FiEye, FiMoreVertical, FiUser } from "react-icons/fi";
+import { FiEye, FiUser } from "react-icons/fi";
 import { formatName } from "../../utils";
 
 import {
@@ -219,31 +219,44 @@ const PersonalTransactionsTab = () => {
         //     render: (value) => formatDateTime(value),
         // },
         {
-            title: "Actions",
+            title: "Action",
             key: "actions",
             width: 90,
             align: "center",
-            fixed: "right",
-            render: (_value, record) => {
-                const items: MenuProps["items"] = [
-                    {
-                        key: "view",
-                        label: "View",
-                        icon: <FiEye size={14} />,
-                        onClick: () => handleViewCustomer(record),
-                    },
-                ];
+            render: (_value, record) => (
+                <div className="flex w-full justify-center">
+                    <Tooltip title="View Transaction Details">
+                        <button
+                            type="button"
+                            onClick={() => handleViewCustomer(record)}
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                        >
+                            <FiEye size={16} />
+                        </button>
+                    </Tooltip>
+                </div>
+            ),
 
-                return (
-                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-                        <Button
-                            type="text"
-                            icon={<FiMoreVertical size={18} />}
-                            className="flex items-center justify-center"
-                        />
-                    </Dropdown>
-                );
-            },
+            // render: (_value, record) => {
+            //     const items: MenuProps["items"] = [
+            //         {
+            //             key: "view",
+            //             label: "View",
+            //             icon: <FiEye size={14} />,
+            //             onClick: () => handleViewCustomer(record),
+            //         },
+            //     ];
+
+            //     return (
+            //         <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            //             <Button
+            //                 type="text"
+            //                 icon={<FiMoreVertical size={18} />}
+            //                 className="flex items-center justify-center"
+            //             />
+            //         </Dropdown>
+            //     );
+            // },
         },
     ];
 
