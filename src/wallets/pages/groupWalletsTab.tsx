@@ -144,7 +144,7 @@ const GroupWalletsTab = () => {
             },
         },
         {
-            title: "Action",
+            title: "Actions",
             key: "views",
             width: 60,
             align: "center",

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card, Empty, Input, Table, Tag, Typography, Button, Dropdown } from "antd";
-import type { MenuProps } from "antd";
+import { Card, Empty, Input, Table, Tag, Typography, Tooltip, } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState, useEffect } from "react";
-import { FiUsers, FiMoreVertical, FiEye } from "react-icons/fi";
+import { FiUsers, FiEye } from "react-icons/fi";
 import { useGetAllGroupTransactionsQuery } from "../features";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -185,37 +184,50 @@ const WalletTransactionsTab = () => {
         //     render: (value) => formatDateTime(value),
         // },
         {
-            title: "Actions",
+            title: "Action",
             key: "actions",
             width: 90,
             align: "center",
-            fixed: "right",
-            render: (_value, record) => {
-                const items: MenuProps["items"] = [
-                    {
-                        key: "view",
-                        label: "View",
-                        icon: <FiEye size={14} />,
-                        onClick: () => handleViewGroup(record),
-                    },
-                    // {
-                    //     key: "edit",
-                    //     label: "Edit",
-                    //     icon: <FiEdit2 size={14} />,
-                    //     onClick: () => handleEditGroup(record),
-                    // },
-                ];
+            render: (_value, record) => (
+                <div className="flex w-full justify-center">
+                    <Tooltip title="View Transaction Details">
+                        <button
+                            type="button"
+                            onClick={() => handleViewGroup(record)}
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                        >
+                            <FiEye size={16} />
+                        </button>
+                    </Tooltip>
+                </div>
 
-                return (
-                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-                        <Button
-                            type="text"
-                            icon={<FiMoreVertical size={18} />}
-                            className="flex items-center justify-center"
-                        />
-                    </Dropdown>
-                );
-            },
+            ),
+            // render: (_value, record) => {
+            //     const items: MenuProps["items"] = [
+            //         {
+            //             key: "view",
+            //             label: "View",
+            //             icon: <FiEye size={14} />,
+            //             onClick: () => handleViewGroup(record),
+            //         },
+            //         // {
+            //         //     key: "edit",
+            //         //     label: "Edit",
+            //         //     icon: <FiEdit2 size={14} />,
+            //         //     onClick: () => handleEditGroup(record),
+            //         // },
+            //     ];
+
+            //     return (
+            //         <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            //             <Button
+            //                 type="text"
+            //                 icon={<FiMoreVertical size={18} />}
+            //                 className="flex items-center justify-center"
+            //             />
+            //         </Dropdown>
+            //     );
+            // },
         }
     ];
 

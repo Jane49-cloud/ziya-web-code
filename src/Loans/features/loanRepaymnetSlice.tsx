@@ -17,9 +17,10 @@ export const loanPaymentsSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    //error to handle
     getLoanPaymentsByLoanId: builder.query({
-      query: (customerLoanId) => ({
-        url: `/group-loan-payments/loan/${customerLoanId}`,
+      query: (loanId) => ({
+        url: `/group-loan-payments/loan/${loanId}`,
         method: "GET",
       }),
     }),

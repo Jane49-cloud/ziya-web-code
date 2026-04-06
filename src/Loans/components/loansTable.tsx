@@ -63,9 +63,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
-      const rawName = `${item?.recipient_firstname ?? ""} ${
-        item?.recipient_lastname ?? ""
-      }`
+      const rawName = `${item?.recipient_firstname ?? ""} ${item?.recipient_lastname ?? ""
+        }`
         .trim()
         .replace(/\s+/g, " ");
       const fullName = formatName(rawName);
@@ -115,9 +114,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     ];
 
     const rows = filteredData.map((item) => {
-      const recipientRaw = `${item?.recipient_firstname ?? ""} ${
-        item?.recipient_lastname ?? ""
-      }`
+      const recipientRaw = `${item?.recipient_firstname ?? ""} ${item?.recipient_lastname ?? ""
+        }`
         .trim()
         .replace(/\s+/g, " ");
       const recipient = formatName(recipientRaw);
@@ -209,9 +207,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       key: "recipient",
       // width: 150,
       render: (_, record) => {
-        const rawName = `${record?.recipient_firstname ?? ""} ${
-          record?.recipient_lastname ?? ""
-        }`
+        const rawName = `${record?.recipient_firstname ?? ""} ${record?.recipient_lastname ?? ""
+          }`
           .trim()
           .replace(/\s+/g, " ");
         const fullName = rawName ? formatName(rawName) : "Unnamed Customer";
@@ -279,9 +276,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                 status={isPaid ? "success" : "processing"}
                 text={
                   <span
-                    className={`text-xs font-medium ${
-                      isPaid ? "text-green-700" : "text-blue-700"
-                    }`}
+                    className={`text-xs font-medium ${isPaid ? "text-green-700" : "text-blue-700"
+                      }`}
                   >
                     {isPaid ? "Fully Paid" : "Active"}
                   </span>
@@ -333,9 +329,8 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500">Balance:</span>
               <span
-                className={`font-medium ${
-                  balance > 0 ? "text-red-600" : "text-green-600"
-                }`}
+                className={`font-medium ${balance > 0 ? "text-red-600" : "text-green-600"
+                  }`}
               >
                 KES {balance.toLocaleString()}
               </span>
