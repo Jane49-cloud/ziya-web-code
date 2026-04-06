@@ -14,8 +14,8 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
 
   // Safe memoized payments array
   const payments: PaymentType[] = useMemo(() => {
-    return Array.isArray(data?.payments) ? data.payments : [];
-  }, [data?.payments]);
+    return Array.isArray(data?.payment) ? data.payment : [];
+  }, [data?.payment]);
 
   const totalPaid = useMemo(() => {
     return payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
