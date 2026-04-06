@@ -57,6 +57,8 @@ import { DocumentsList } from "../documents/pages/documentList";
 import { DocumentViewer } from "../documents/pages/documentViewer";
 import { EditDocumentForm } from "../documents/pages/editDocument";
 import HomeLoading from "../components/common/homeLoading";
+import SubscriptionsPage from "../subscriptions";
+import GroupSubscriptionDetailsPage from "../subscriptions/pages/groupSubscriptionDetails";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
@@ -183,6 +185,11 @@ const AppRouting = (): ReactElement => {
             <Route path="/staff/:id" element={<PublicProfile />} />
             <Route path="/customer/:id" element={<CustomerPage />} />
             <Route path="/wallets" element={<AllGroupWalletsPage />} />
+            <Route path="/subscriptions" element={<SubscriptionsPage />} />
+            <Route
+              path="/subscriptions/group/:groupId"
+              element={<GroupSubscriptionDetailsPage />}
+            />
             <Route path="/activities/all" element={<AllGroupActivities />} />
             <Route path="/analysis" element={<StatisticsPage />} />
 

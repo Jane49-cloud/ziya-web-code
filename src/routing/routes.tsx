@@ -43,6 +43,11 @@ export const navLinks = [
     label: "Groups",
     allowedRoles: ALL_ROLES,
   },
+  {
+    to: "/subscriptions",
+    label: "Subscriptions",
+    allowedRoles: STAFF_ROLES,
+  },
 ];
 
 // sidebar
@@ -112,6 +117,12 @@ export const sidebarItems: SidebarItem[] = [
     title: "Groups",
     icon: "users",
     path: "/groups",
+    allowedRoles: STAFF_ROLES,
+  },
+  {
+    title: "Subscriptions",
+    icon: "dollar",
+    path: "/subscriptions",
     allowedRoles: STAFF_ROLES,
   },
   {
