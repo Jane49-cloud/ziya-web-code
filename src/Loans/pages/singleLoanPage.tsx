@@ -12,7 +12,7 @@ import {
 } from "react-icons/fa";
 import LoanRepaymentHistory from "../../customer/pages/LoanRepaymentHistory";
 import { useGetUserByIdQuery } from "../../users/features/userSlice";
-import { formatDate } from "../../utils";
+import { formatDate, formatName } from "../../utils";
 
 interface LoanType {
   id: number;
@@ -59,8 +59,17 @@ const SingleLoanPage = () => {
 
   const fullName =
     loan?.recipient_firstname || loan?.recipient_lastname
-      ? `${loan?.recipient_firstname ?? ""} ${loan?.recipient_lastname ?? ""}`
+      ? formatName(
+          `${loan?.recipient_firstname ?? ""} ${loan?.recipient_lastname ?? ""}`,
+        )
       : "N/A";
+
+  const formattedGroupName = formatName(loan?.group_name ?? "") || "N/A";
+  const approvingUserName = approvingUser
+    ? formatName(
+        `${approvingUser.firstname ?? ""} ${approvingUser.lastname ?? ""}`,
+      ) || "Group Admin"
+    : "Group Admin";
 
   const summaryCards = summaryCardsFactory(
     formattedAmount,
@@ -76,7 +85,7 @@ const SingleLoanPage = () => {
     },
     {
       title: "Group",
-      value: loan?.group_name ?? "N/A",
+      value: formattedGroupName,
       icon: <HiOutlineUsers className="text-lg" />,
     },
     {
@@ -88,9 +97,7 @@ const SingleLoanPage = () => {
       title: "Approved By",
       value: isUserLoading
         ? "Loading..."
-        : approvingUser
-        ? `${approvingUser.firstname} ${approvingUser.lastname}`
-        : "Group Admin",
+        : approvingUserName,
       icon: <FaUserCheck className="text-lg" />,
     },
   ];

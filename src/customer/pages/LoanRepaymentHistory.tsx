@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Table, Spin, Card } from "antd";
 import { useGetLoanPaymentsByLoanIdQuery } from "../../Loans/features/loanRepaymnetSlice";
-import { formatDate } from "../../utils";
+import { formatDate, formatName } from "../../utils";
 import { LoanRepaymentHistoryProps, PaymentType } from "../@types/common";
 
 const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
@@ -44,10 +44,17 @@ const LoanRepaymentHistory: React.FC<LoanRepaymentHistoryProps> = ({
           title="Customer Name"
           key="customer_name"
           render={(_, record: PaymentType) =>
-            `${record.customer_firstname} ${record.customer_lastname}`
+            formatName(
+              `${record.customer_firstname ?? ""} ${record.customer_lastname ?? ""}`,
+            ) || "N/A"
           }
         />
-        <Table.Column title="Group" dataIndex="group_name" key="group_name" />
+        <Table.Column
+          title="Group"
+          dataIndex="group_name"
+          key="group_name"
+          render={(value: string) => formatName(value) || "N/A"}
+        />
         <Table.Column title="Cycle" dataIndex="cycle" key="cycle" />
         <Table.Column title="Amount Paid" dataIndex="amount" key="amount" />
         <Table.Column

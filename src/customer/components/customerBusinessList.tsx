@@ -11,7 +11,7 @@ import { Business } from "../../types/common";
 
 const CustomerBusinessList = ({ customerId }: any) => {
   const { data, isLoading, refetch } = useGetBusinessesByCustomerQuery(customerId);
-  const rawBusinesses = data?.customerBusinesses;
+  const rawBusinesses = data?.customerBusinesses ?? data?.customerBusiness;
 
   const businesses: Business[] = Array.isArray(rawBusinesses)
     ? rawBusinesses

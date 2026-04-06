@@ -1,8 +1,7 @@
 import { FC, useMemo, useState } from "react";
 import { Card, Typography, Divider, Avatar, Button } from "antd";
 import { EditOutlined } from "@ant-design/icons";
-import { formatDate } from "../../utils";
-import { getInitials } from "../../utils";
+import { formatDate, formatName, getInitials } from "../../utils";
 import CustomerForm from "../components/customerForm";
 
 const { Text } = Typography;
@@ -43,15 +42,24 @@ const CustomerTabs: FC<CustomerTabsProps> = ({
   onCustomerUpdated,
 }) => {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const fullName = useMemo(
+    () =>
+      formatName(
+        `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${
+          customer.lastname ?? ""
+        }`
+          .replace(/\s+/g, " ")
+          .trim(),
+      ) || "Unnamed Customer",
+    [customer.firstname, customer.lastname, customer.middlename],
+  );
 
   const customerData = useMemo(
     () => [
       {
         key: "1",
         label: "Full Name",
-        value: `${customer.firstname} ${customer.middlename || ""} ${
-          customer.lastname
-        }`.trim(),
+        value: fullName,
       },
       {
         key: "2",
@@ -91,7 +99,7 @@ const CustomerTabs: FC<CustomerTabsProps> = ({
         value: new Date(customer.date_updated).toLocaleString(),
       },
     ],
-    [customer]
+    [customer, fullName]
   );
 
   return (
@@ -102,17 +110,11 @@ const CustomerTabs: FC<CustomerTabsProps> = ({
           <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <Avatar size={56} className="bg-blue-600 font-semibold">
-                {getInitials(
-                  `${customer.firstname} ${customer.middlename || ""} ${
-                    customer.lastname
-                  }`
-                )}
+                {getInitials(fullName)}
               </Avatar>
               <div>
                 <Text className="block text-lg font-semibold text-gray-900">
-                  {`${customer.firstname} ${customer.middlename || ""} ${
-                    customer.lastname
-                  }`.replace(/\s+/g, " ").trim()}
+                  {fullName}
                 </Text>
                 <Text type="secondary" className="mt-1 block text-sm">
                   {customer.email || "No email on file"}

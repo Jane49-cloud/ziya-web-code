@@ -1,296 +1,153 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Spin,
-  DatePicker,
-  Card,
-  message,
-} from "antd";
+import { Button, Card, Empty, Spin, Table, Tag } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  useCreateLoanMutation,
-  useUpdateLoanMutation,
-  useGetLoansByCustomerIdQuery,
-} from "../../Loans/features/loanSlice";
+import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
+import { formatDate, formatName } from "../../utils";
 
-import { formatDate, getUser } from "../../utils";
-import { useGetBusinessesByCustomerQuery } from "../features/customerSlice";
-import dayjs from "dayjs";
-import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
-import { Business } from "../../types/common";
-
-const { Option } = Select;
-
-interface LoanType {
+type CustomerLoanRecord = {
   id: number;
-  amount: number;
-  currency: string;
-  approved_on?: string;
-  customer_id: number;
-  loan_definition_id: number;
-  approved_by: number;
-  customer_business_id: number;
-}
+  group_id?: number;
+  group_name?: string;
+  issued_to?: number;
+  issued_by?: number;
+  recipient_firstname?: string;
+  recipient_lastname?: string;
+  cycle?: number;
+  loan_type?: number;
+  loan_type_name?: string;
+  amount?: number;
+  balance?: number;
+  date_issued?: string;
+  created_at?: string;
+};
 
 interface CustomerLoansListProps {
   customerId: number;
 }
 
-const CustomerLoansList: React.FC<CustomerLoansListProps> = ({
-  customerId,
-}) => {
-  const [form] = Form.useForm();
-  const { data, isLoading, refetch } = useGetLoansByCustomerIdQuery(customerId);
-  const { data: loanDefinitionsData } =
-    useGetLoanDefinitionsByPlatformQuery("web");
-  const [createLoan, { isLoading: isCreating }] = useCreateLoanMutation();
-  const [updateLoan, { isLoading: isUpdating }] = useUpdateLoanMutation();
-  const { data: businessData } = useGetBusinessesByCustomerQuery(customerId);
+const toCurrency = (value?: number) => `Ksh ${Number(value ?? 0).toLocaleString()}`;
 
-  const rawBusinesses = businessData?.customerBusinesses;
+const getRecipientName = (record: CustomerLoanRecord) =>
+  formatName(
+    `${record.recipient_firstname ?? ""} ${record.recipient_lastname ?? ""}`.trim(),
+  ) || "N/A";
 
-  const businesses: Business[] = Array.isArray(rawBusinesses)
-    ? rawBusinesses
-    : rawBusinesses
-    ? [rawBusinesses]
-    : [];
-
-  const user = getUser();
+const CustomerLoansList: React.FC<CustomerLoansListProps> = ({ customerId }) => {
   const navigate = useNavigate();
+  const { data, isLoading } = useGetLoansByCustomerIdQuery(customerId, {
+    skip: !customerId,
+  });
 
-  const loans: LoanType[] = data?.loans || [];
-  const loanDefinitions =
-    loanDefinitionsData?.loanDefinitions?.filter(
-      (loanDef: any) => loanDef.status === 1
-    ) || [];
+  const loans: CustomerLoanRecord[] = useMemo(
+    () => (Array.isArray(data?.loans) ? data.loans : []),
+    [data?.loans],
+  );
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedLoan, setSelectedLoan] = useState<LoanType | null>(null);
+  const columns: ColumnsType<CustomerLoanRecord> = [
+    {
+      title: "Loan ID",
+      dataIndex: "id",
+      key: "id",
+      sorter: (a, b) => Number(a.id) - Number(b.id),
+    },
+    {
+      title: "Recipient",
+      key: "recipient",
+      sorter: (a, b) => getRecipientName(a).localeCompare(getRecipientName(b)),
+      render: (_, record) => getRecipientName(record),
+    },
+    {
+      title: "Group",
+      dataIndex: "group_name",
+      key: "group_name",
+      sorter: (a, b) =>
+        formatName(a.group_name ?? "").localeCompare(formatName(b.group_name ?? "")),
+      render: (value: string) => formatName(value) || "N/A",
+    },
+    {
+      title: "Cycle",
+      dataIndex: "cycle",
+      key: "cycle",
+      sorter: (a, b) => Number(a.cycle ?? 0) - Number(b.cycle ?? 0),
+      render: (value?: number) => value ?? "N/A",
+    },
+    {
+      title: "Loan Type",
+      dataIndex: "loan_type_name",
+      key: "loan_type_name",
+      sorter: (a, b) =>
+        String(a.loan_type_name ?? "").localeCompare(String(b.loan_type_name ?? "")),
+      render: (value?: string) => formatName(value ?? "") || "N/A",
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      sorter: (a, b) => Number(a.amount ?? 0) - Number(b.amount ?? 0),
+      render: (value?: number) => toCurrency(value),
+    },
+    {
+      title: "Balance",
+      dataIndex: "balance",
+      key: "balance",
+      sorter: (a, b) => Number(a.balance ?? 0) - Number(b.balance ?? 0),
+      render: (value?: number) => (
+        <Tag color={Number(value ?? 0) > 0 ? "orange" : "green"}>
+          {toCurrency(value)}
+        </Tag>
+      ),
+    },
+    {
+      title: "Date Issued",
+      dataIndex: "date_issued",
+      key: "date_issued",
+      sorter: (a, b) =>
+        new Date(String(a.date_issued ?? "")).getTime() -
+        new Date(String(b.date_issued ?? "")).getTime(),
+      render: (value?: string) => formatDate(value ?? ""),
+    },
+    {
+      title: "",
+      key: "actions",
+      align: "right",
+      render: (_, record) => (
+        <Button
+          type="link"
+          onClick={() => {
+            localStorage.setItem("selectedLoan", JSON.stringify(record));
+            navigate(`/loans/${record.id}`);
+          }}
+        >
+          View Loan
+        </Button>
+      ),
+    },
+  ];
 
-  const showModal = (loan: LoanType | null = null) => {
-    if (businesses.length === 0) {
-      message.warning(
-        "No businesses found. Please create a customer business first."
-      );
-      return;
-    }
-
-    setSelectedLoan(loan);
-    setIsEditMode(!!loan);
-    setIsModalOpen(true);
-
-    if (loan) {
-      form.setFieldsValue({
-        amount: loan.amount,
-        currency: loan.currency,
-        date_created: loan.approved_on ? dayjs(loan.approved_on) : null,
-        loan_definition_id: loan.loan_definition_id,
-        business_id: loan.customer_business_id,
-        updated_by: user?.id || 0,
-      });
-    } else {
-      form.resetFields();
-      form.setFieldsValue({
-        currency: "KSH",
-      });
-    }
-  };
-
-  const closeModal = () => {
-    form.resetFields();
-    setSelectedLoan(null);
-    setIsEditMode(false);
-    setIsModalOpen(false);
-  };
-
-  const handleSubmitLoan = async (values: any) => {
-    const payload = {
-      amount: values.amount,
-      currency: values.currency,
-      date_created: values.date_created,
-      loan_definition_id: values.loan_definition_id,
-      business_id: values.business_id,
-      approved_by: user?.id || 0,
-      customer_id: customerId,
-    };
-
-    // Only include the allowed fields in the payload when updating
-    if (isEditMode && selectedLoan) {
-      const updatePayload = {
-        id: selectedLoan.id,
-        loan_definition_id: values.loan_definition_id,
-        currency: values.currency,
-        amount: values.amount,
-      };
-
-      try {
-        await updateLoan(updatePayload).unwrap();
-        refetch();
-        closeModal();
-        message.success("Loan updated successfully.");
-      } catch (error) {
-        message.error("Something went wrong. Please try again.");
-        console.error("Loan error:", error);
-      }
-    } else {
-      // Handle creation of new loan
-      try {
-        await createLoan(payload).unwrap();
-        message.success("Loan created successfully.");
-        refetch();
-        closeModal();
-      } catch (error) {
-        message.error("Something went wrong. Please try again.");
-        console.error("Loan error:", error);
-      }
-    }
-  };
-
-  const handleViewLoan = (loan: LoanType) => {
-    localStorage.setItem("selectedLoan", JSON.stringify(loan));
-    navigate(`/loans/${loan.id}`);
-  };
-
-  if (isLoading) return <Spin size="large" />;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <Card>
-      {/* <Button type="primary" onClick={() => showModal()} disabled={isCreating}>
-        {isCreating ? <Spin size="small" /> : "Add Loan"}
-      </Button> */}
-
-      <Table
-        dataSource={loans}
-        rowKey="id"
-        className="overflow-x-auto lg:overflow-x-auto mt-4 "
-        size="small"
-        bordered
-      >
-        <Table.Column
-          title="Cycle"
-          key="cycle"
-          render={(_, __, index) => index + 1}
+      {!loans.length ? (
+        <Empty description="No loans found for this customer" />
+      ) : (
+        <Table
+          dataSource={loans}
+          rowKey="id"
+          columns={columns}
+          bordered
+          size="small"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 960 }}
         />
-        <Table.Column
-          title="Amount"
-          dataIndex="amount"
-          key="amount"
-          render={(amount: number, _record) => `Ksh ${amount}`}
-        />
-        <Table.Column
-          title="Loan Type"
-          dataIndex="loan_definition_name"
-          key="loanType"
-        />
-        <Table.Column title="Group" dataIndex="group_name" key="group_name" />
-        <Table.Column
-          title=" Date Created"
-          dataIndex="date_issued"
-          key="creationDate"
-          render={(date: string) => formatDate(date)}
-        />
-        <Table.Column
-          title="Actions"
-          key="actions"
-          render={(_, record: LoanType) => (
-            <div className="flex gap-2">
-              <Button onClick={() => handleViewLoan(record)}>View Loan</Button>
-              <button
-                // type="default"
-                onClick={() => showModal(record)}
-                className="hidden"
-              >
-                Edit
-              </button>
-            </div>
-          )}
-        />
-      </Table>
-
-      {/* Loan Form Modal */}
-      <Modal
-        title={isEditMode ? "Edit Loan" : "Create Loan"}
-        open={isModalOpen}
-        onCancel={closeModal}
-        footer={null}
-      >
-        <Form form={form} onFinish={handleSubmitLoan} layout="vertical">
-          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
-            <Input type="number" />
-          </Form.Item>
-
-          <Form.Item
-            name="currency"
-            label="Currency"
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Option value="KSH">KSH</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="date_created"
-            label="Date created"
-            rules={[{ required: true }]}
-          >
-            <DatePicker className="w-full" />
-          </Form.Item>
-
-          <Form.Item
-            name="loan_definition_id"
-            label="Loan Definition"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Select Loan Definition">
-              {loanDefinitions.map((loanDef: any) => (
-                <Option key={loanDef.id} value={loanDef.id}>
-                  {loanDef.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="business_id"
-            label="Customer Business"
-            rules={[{ required: true, message: "Please select a business" }]}
-          >
-            <Select placeholder="Select Customer Business">
-              {businesses?.map((business: any) => (
-                <Option key={business.id} value={business.id}>
-                  {business.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="updated_by"
-            initialValue={Number(user?.id) || 0}
-            style={{ display: "none" }}
-          >
-            <Input type="number" />
-          </Form.Item>
-
-          <Button
-            type="primary"
-            htmlType="submit"
-            className="w-full mt-4"
-            loading={isCreating || isUpdating}
-          >
-            {isEditMode ? "Update Loan" : "Create Loan"}
-          </Button>
-        </Form>
-      </Modal>
+      )}
     </Card>
   );
 };

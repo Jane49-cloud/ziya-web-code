@@ -171,16 +171,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
       title: "Loan ID",
       dataIndex: "id",
       key: "id",
-      width: 80,
-      render: (id) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-blue-600">
-              #{id.toString().slice(-2)}
-            </span>
-          </div>
-        </div>
-      ),
+      render: (id) => <span className="font-medium text-gray-800">{id}</span>,
       sorter: (a, b) => a.id - b.id,
     },
     {

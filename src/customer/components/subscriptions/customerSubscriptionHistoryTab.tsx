@@ -1,9 +1,8 @@
 import { Card, Table, Tag, Spin, Empty, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import {
-  useGetCustomerSubscriptionHistoryQuery,
-} from "../../features/customerSlice";
+import { formatName } from "../../../utils";
+import { useGetCustomerSubscriptionHistoryQuery } from "../../features/customerSlice";
 
 interface SubscriptionHistoryProps {
   customerId: number;
@@ -11,27 +10,21 @@ interface SubscriptionHistoryProps {
 
 interface SubscriptionHistoryRecord {
   id: number;
+  customer_id: number;
   subscription_plan: string;
   start_date: string;
   end_date: string;
   amount: number;
-  payment_method: string;
-  payment_date: string;
-  payment_status: number;
-  paid_to: string;
-  staff_id: number;
+  active: boolean;
+  paid: boolean;
+  firstname?: string;
+  lastname?: string;
+  phone_number?: string;
+  group_name?: string;
 }
 
-const paymentStatusTag = (status: number) => {
-  switch (status) {
-    case 1:
-      return <Tag color="green">Paid</Tag>;
-    case 2:
-      return <Tag color="orange">Pending</Tag>;
-    default:
-      return <Tag color="red">Unpaid</Tag>;
-  }
-};
+const getCustomerName = (record: SubscriptionHistoryRecord) =>
+  formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`.trim()) || "N/A";
 
 const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
   customerId,
@@ -46,10 +39,27 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
 
   const columns: ColumnsType<SubscriptionHistoryRecord> = [
     {
+      title: "Customer",
+      key: "customer",
+      render: (_, record) => getCustomerName(record),
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone_number",
+      key: "phone_number",
+      render: (value?: string) => value || "N/A",
+    },
+    {
+      title: "Group",
+      dataIndex: "group_name",
+      key: "group_name",
+      render: (value?: string) => formatName(value ?? "") || "N/A",
+    },
+    {
       title: "Plan",
       dataIndex: "subscription_plan",
       key: "subscription_plan",
-      render: (value: string) => value || "—",
+      render: (value: string) => formatName(value) || "—",
     },
     {
       title: "Start Date",
@@ -70,27 +80,24 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
       render: (value: number) => `KES ${Number(value).toLocaleString()}`,
     },
     {
-      title: "Payment Method",
-      dataIndex: "payment_method",
-      key: "payment_method",
+      title: "Active",
+      dataIndex: "active",
+      key: "active",
+      render: (value: boolean) => (
+        <Tag color={value ? "green" : "default"}>
+          {value ? "Active" : "Inactive"}
+        </Tag>
+      ),
     },
     {
-      title: "Payment Date",
-      dataIndex: "payment_date",
-      key: "payment_date",
-      render: (value: string) => dayjs(value).format("DD MMM YYYY"),
-    },
-    {
-      title: "Status",
-      dataIndex: "payment_status",
-      key: "payment_status",
-      render: (status: number) => paymentStatusTag(status),
-    },
-    {
-      title: "Handled By",
-      dataIndex: "paid_to",
-      key: "paid_to",
-      render: (value: string) => value || `Staff #${customerId}`,
+      title: "Paid",
+      dataIndex: "paid",
+      key: "paid",
+      render: (value: boolean) => (
+        <Tag color={value ? "blue" : "orange"}>
+          {value ? "Paid" : "Unpaid"}
+        </Tag>
+      ),
     },
   ];
 
@@ -119,7 +126,7 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
           Subscription History
         </Typography.Title>
         <Typography.Text type="secondary">
-          Track plan renewals, payment methods, and collection status.
+          Track subscription cycles, activity, and payment status.
         </Typography.Text>
       </div>
       <Table

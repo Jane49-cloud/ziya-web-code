@@ -11,7 +11,6 @@ import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
 import { useCreateSubscriptionMutation } from "../features/customerSlice";
 import { useState, useMemo } from "react";
-import CustomerPerformanceTab from "../components/performance/customerPerformanceTab";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
 
 const CustomerPage = () => {
@@ -210,18 +209,10 @@ const CustomerPage = () => {
         <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Performance" key="4">
-          <CustomerPerformanceTab
-            loans={loans}
-            customerName={fullName}
-            subscriptionStatus={customer.subscription_status}
-            lastLogin={customer.last_login ?? null}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Subscription History" key="5">
+        <Tabs.TabPane tab="Subscription History" key="4">
           <CustomerSubscriptionHistoryTab customerId={customer.id} />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Reset Password" key="6">
+        <Tabs.TabPane tab="Reset Password" key="5">
           <CustomerPasswordReset customerId={customer.id} />
         </Tabs.TabPane>
       </Tabs>
