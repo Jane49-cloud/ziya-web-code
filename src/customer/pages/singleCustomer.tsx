@@ -37,9 +37,8 @@ const CustomerPage = () => {
   const fullName = useMemo(() => {
     if (!customer) return "";
 
-    const rawName = `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${
-      customer.lastname ?? ""
-    }`
+    const rawName = `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${customer.lastname ?? ""
+      }`
       .replace(/\s+/g, " ")
       .trim();
 
@@ -52,10 +51,10 @@ const CustomerPage = () => {
 
   const latestLoan = loans.length
     ? [...loans].sort(
-        (a, b) =>
-          new Date(b.date_created).getTime() -
-          new Date(a.date_created).getTime()
-      )[0]
+      (a, b) =>
+        new Date(b.date_created).getTime() -
+        new Date(a.date_created).getTime()
+    )[0]
     : null;
 
   const balance = latestLoan ? latestLoan.balance : 0;
@@ -124,15 +123,18 @@ const CustomerPage = () => {
             </div>
           </div>
           <div className="flex flex-col items-start gap-4 text-sm text-slate-600 md:items-end md:text-right">
-            <Tag
+
+            {/* Pending, works on changing this to arrears */}
+
+            {/* <Tag
               color={isSubscriptionActive(customer.subscription_status) ? "green" : "red"}
               className="self-start rounded-full px-4 py-1 text-sm md:self-end"
             >
               {isSubscriptionActive(customer.subscription_status)
                 ? "Subscribed"
                 : "Unsubscribed"}
-            </Tag>
-            {!isSubscriptionActive(customer.subscription_status) && (
+            </Tag> */}
+            {/* {!isSubscriptionActive(customer.subscription_status) && (
               <Button
                 type="primary"
                 size="large"
@@ -140,10 +142,10 @@ const CustomerPage = () => {
               >
                 Activate Subscription
               </Button>
-            )}
+            )} */}
             <div className="space-y-1">
               <div>
-                <strong className="text-slate-500">Customer ID:</strong> #{customer.id}
+                <strong className="text-slate-500">Customer ID:</strong> {customer.id}
               </div>
               <div>
                 <strong className="text-slate-500">Joined:</strong> {formatDate(customer.date_created)}
@@ -206,9 +208,9 @@ const CustomerPage = () => {
         <Tabs.TabPane tab="Businesses" key="2">
           <CustomerBusinessList customerId={customer.id} />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Loans" key="3">
+        {/* <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
         <Tabs.TabPane tab="Subscription History" key="4">
           <CustomerSubscriptionHistoryTab customerId={customer.id} />
         </Tabs.TabPane>

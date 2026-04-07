@@ -76,22 +76,8 @@ const GroupWalletsTab = () => {
         setDepositGroup(null);
     };
 
-    // const handleEditGroup = (record: GroupWallet) => {
-    //     console.log("Edit group:", record.group_id);
-    // };
-
     const columns: ColumnsType<GroupWallet> = [
-        // {
-        //     title: "Group ID",
-        //     dataIndex: "group_id",
-        //     key: "group_id",
-        //     width: 60,
-        //     render: (value) => (
-        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-        //             {value ?? "—"}
-        //         </span>
-        //     ),
-        // },
+
         {
             title: "Group Name",
             dataIndex: "group_name",
@@ -186,7 +172,7 @@ const GroupWalletsTab = () => {
                         Group Wallets
                     </Title>
                     <Paragraph className="!mb-0 text-gray-500">
-                        Group wallet balances, loans, capital and subscription standing.
+                        Group wallet balances, loans, capital ...
                     </Paragraph>
                 </div>
 
@@ -197,7 +183,7 @@ const GroupWalletsTab = () => {
 
             <Input.Search
                 allowClear
-                placeholder="Search by group, balance, capital, loans, paid amount or arrears..."
+                placeholder="Search by group name, balance, capital..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onSearch={setSearchTerm}

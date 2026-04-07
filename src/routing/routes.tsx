@@ -125,29 +125,29 @@ export const sidebarItems: SidebarItem[] = [
     path: "/subscriptions",
     allowedRoles: STAFF_ROLES,
   },
+  // {
+  //   title: "Wallets",
+  //   icon: "wallet",
+  //   path: "/wallets",
+  //   allowedRoles: ["admin", "dev"],
+  // },
+
   {
     title: "Wallets",
     icon: "wallet",
-    path: "/wallets",
-    allowedRoles: ["admin", "dev"],
+    dropdown: [
+      {
+        title: "Group Wallets",
+        path: "/wallets/group",
+        allowedRoles: ["admin", "dev"],
+      },
+      {
+        title: "Personal Wallets",
+        path: "/wallets/personal",
+        allowedRoles: ["admin", "dev"],
+      },
+    ],
   },
-
-  // {
-  //   title: "Transactions",
-  //   icon: "arrows-circle",
-  //   dropdown: [
-  //     {
-  //       title: "Group",
-  //       path: "/group-transactions",
-  //       allowedRoles: ["admin", "dev"],
-  //     },
-  //     {
-  //       title: "Personal",
-  //       path: "/personal-transactions",
-  //       allowedRoles: ["admin", "dev"],
-  //     },
-  //   ],
-  // },
 
   {
     title: "Transactions",

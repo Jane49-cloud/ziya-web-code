@@ -23,6 +23,10 @@ import SingleGroupPage from "../groups/pages/singleGroup";
 
 // import AllGroup WalletsPage from "../wallets";
 import AllGroupWalletsPage from "../wallets/walletTabs";
+
+import GroupWalletsTab from "../wallets/pages/groupWalletsTab";
+import PersonalWalletsTab from "../wallets/pages/personalWalletsTab";
+
 import GroupActivitiesByGroup from "../groups/activities/groupActivity";
 import AllGroupActivities from "../groups/activities/groupsActivities";
 import UserGroupActivities from "../groups/activities/userGroupActivities";
@@ -184,7 +188,14 @@ const AppRouting = (): ReactElement => {
             <Route path="/loan-cycles" element={<CyclesPage />} />
             <Route path="/staff/:id" element={<PublicProfile />} />
             <Route path="/customer/:id" element={<CustomerPage />} />
-            <Route path="/wallets" element={<AllGroupWalletsPage />} />
+
+            {/* <Route path="/wallets" element={<AllGroupWalletsPage />} /> */}
+            <Route path="/wallets" element={<AllGroupWalletsPage />}>
+              <Route index element={<Navigate to="group" replace />} />
+              <Route path="group" element={<GroupWalletsTab />} />
+              <Route path="personal" element={<PersonalWalletsTab />} />
+            </Route>
+
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
             <Route
               path="/subscriptions/group/:groupId"
