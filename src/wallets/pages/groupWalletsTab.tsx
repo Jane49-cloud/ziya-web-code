@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card, Empty, Input, Table, Tag, Typography, Button, Dropdown } from "antd";
-import type { MenuProps } from "antd";
+import { Card, Empty, Input, Table, Tag, Typography } from "antd";
+
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState } from "react";
 import {
     FiUsers,
-    FiMoreVertical,
+    FiPlusCircle,
     FiEye,
 } from "react-icons/fi";
 import { useGetGroupWalletsQuery } from "../features/index";
@@ -115,53 +115,80 @@ const GroupWalletsTab = () => {
             render: (value) => formatCurrency(value),
         },
 
-        {
-            title: "Subscription Standing",
-            key: "status",
-            width: 120,
-            render: (_value, record) => {
-                const arrears = Number(record.subscription_arrears ?? 0);
+        // pedding replacing with arrears amount
 
-                if (arrears > 0) {
-                    return <Tag color="red">In Arrears</Tag>;
-                }
+        // {
+        //     title: "Subscription Arrears",
+        //     key: "status",
+        //     width: 120,
+        //     render: (_value) => 
+        // },
 
-                return <Tag color="green">Up to Date</Tag>;
-            },
-        },
         {
             title: "Actions",
             key: "views",
-            width: 60,
+            width: 100,
             align: "center",
             fixed: "right",
             render: (_value, record) => {
-                const items: MenuProps["items"] = [
-                    {
-                        key: "view",
-                        label: "View",
-                        icon: <FiEye size={14} />,
-                        onClick: () => handleViewGroup(record),
-                    },
-                    {
-                        key: "deposit",
-                        label: "deposit",
-                        icon: <FiEye size={14} />,
-                        onClick: () => handleDepositGroup(record),
-                    },
-                ];
-
                 return (
-                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-                        <Button
-                            type="text"
-                            icon={<FiMoreVertical size={18} />}
-                            className="flex items-center justify-center"
-                        />
-                    </Dropdown>
+                    <div className="flex items-center justify-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => handleViewGroup(record)}
+                            className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                            aria-label="View group"
+                            title="View"
+                        >
+                            <FiEye size={16} />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleDepositGroup(record)}
+                            className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                            aria-label="Deposit"
+                            title="Deposit"
+                        >
+                            <FiPlusCircle size={16} />
+                        </button>
+                    </div>
                 );
             },
         },
+        // {
+        //     title: "Actions",
+        //     key: "views",
+        //     width: 60,
+        //     align: "center",
+        //     fixed: "right",
+        //     render: (_value, record) => {
+        //         const items: MenuProps["items"] = [
+        //             {
+        //                 key: "view",
+        //                 label: "View",
+        //                 icon: <FiEye size={14} />,
+        //                 onClick: () => handleViewGroup(record),
+        //             },
+        //             {
+        //                 key: "deposit",
+        //                 label: "deposit",
+        //                 icon: <FiEye size={14} />,
+        //                 onClick: () => handleDepositGroup(record),
+        //             },
+        //         ];
+
+        //         return (
+        //             <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+        //                 <Button
+        //                     type="text"
+        //                     icon={<FiMoreVertical size={18} />}
+        //                     className="flex items-center justify-center"
+        //                 />
+        //             </Dropdown>
+        //         );
+        //     },
+        // },
     ];
 
     return (

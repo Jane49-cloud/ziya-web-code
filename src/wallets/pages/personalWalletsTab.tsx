@@ -141,7 +141,7 @@ const PersonalWalletsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewCustomer(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            className="flex h-8 w-8 items-center justify-center bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600 "
                         >
                             <FiEye size={16} />
                         </button>

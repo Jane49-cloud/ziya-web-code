@@ -40,14 +40,8 @@ const SingleGroupWalletDrawer = ({
 }: SingleGroupWalletDrawerProps) => {
     return (
         <Drawer
-            title="Group Wallet Details"
-            placement="right"
-            width={420}
-            open={open}
-            onClose={onClose}
-        >
-            {group ? (
-                <div className="space-y-4">
+            title={
+                group ? (
                     <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
                         <span className="shrink-0 text-blue-600">
                             <FiUsers size={16} />
@@ -56,6 +50,28 @@ const SingleGroupWalletDrawer = ({
                             {formatName(group.group_name) || "—"}
                         </span>
                     </div>
+                ) : (
+                    "—"
+                )
+
+            }
+
+
+            placement="right"
+            width={420}
+            open={open}
+            onClose={onClose}
+        >
+            {group ? (
+                <div className="space-y-4">
+                    {/* <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+                        <span className="shrink-0 text-blue-600">
+                            <FiUsers size={16} />
+                        </span>
+                        <span className="truncate font-medium text-slate-700">
+                            {formatName(group.group_name) || "—"}
+                        </span>
+                    </div> */}
 
                     <Row gutter={[12, 12]}>
                         <Col span={12}>
@@ -115,13 +131,7 @@ const SingleGroupWalletDrawer = ({
                     </Row>
 
                     <Descriptions column={1} size="small" bordered>
-                        <Descriptions.Item label="Wallet ID">
-                            {group.id ?? "—"}
-                        </Descriptions.Item>
 
-                        <Descriptions.Item label="Group ID">
-                            {group.group_id ?? "—"}
-                        </Descriptions.Item>
 
                         <Descriptions.Item label="Balance">
                             {formatCurrency(group.balance)}
@@ -162,6 +172,15 @@ const SingleGroupWalletDrawer = ({
                                 {getSubscriptionStanding(group)}
                             </Tag>
                         </Descriptions.Item>
+
+                        <Descriptions.Item label="Wallet ID">
+                            {group.id ?? "—"}
+                        </Descriptions.Item>
+
+                        <Descriptions.Item label="Group ID">
+                            {group.group_id ?? "—"}
+                        </Descriptions.Item>
+
                     </Descriptions>
                 </div>
             ) : (
