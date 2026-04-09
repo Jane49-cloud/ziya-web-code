@@ -22,7 +22,7 @@ import {
 import PersonalWalletDetailsDrawer, {
     type PersonalWalletDetails,
 } from "../components/personalWalletDetailsDrawer";
-import { formatName } from "../../utils";
+import { formatCurrency, formatFullName } from "../../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -35,14 +35,6 @@ type PersonalWallet = {
     phone_number: string;
 };
 
-const formatCurrency = (value: number | string | undefined | null) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
-
-const getFullName = (record: Partial<PersonalWallet>) =>
-    `${record.firstname ?? ""} ${record.lastname ?? ""}`.trim() || "—";
 
 const PersonalWalletsTab = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -109,8 +101,8 @@ const PersonalWalletsTab = () => {
                     <span className="text-blue-600">
                         <FiUser size={16} />
                     </span>
-                    <span className="truncate font-medium tracking-wide">
-                        {formatName(getFullName(record))}
+                    <span className="truncate font-medium text-slate-700">
+                        {formatFullName(record.firstname, record.lastname)}
                     </span>
                 </div>
             ),
@@ -141,7 +133,7 @@ const PersonalWalletsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewCustomer(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600 "
+                            className="flex h-8 w-8 items-center justify-center bg-white hover:cursor-pointer text-sky-500 transition hover:bg-sky-50 hover:text-sky-600 "
                         >
                             <FiEye size={16} />
                         </button>
@@ -177,7 +169,7 @@ const PersonalWalletsTab = () => {
 
                 <Input.Search
                     allowClear
-                    placeholder="Search by customer name, phone number..."
+                    placeholder="Search by customer name, phone number, balance..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onSearch={setSearchTerm}

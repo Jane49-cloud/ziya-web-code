@@ -4,10 +4,9 @@ import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState } from "react";
 import { FiArrowLeft, FiUsers } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import dayjs from "dayjs";
 
 import { useGetSingleGroupTransactionsQuery } from "../features";
-import { formatName } from "../../utils";
+import { formatName, formatCurrency, formatDate, formatFullName } from "../../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -25,22 +24,7 @@ type SingleGroupTransaction = {
     admin_phone_number?: string;
 };
 
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
-const formatDateTime = (value?: string | null) => {
-    if (!value) return "—";
-    const parsed = dayjs(value);
-    return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
-};
-
-const formatFullName = (firstname?: string, lastname?: string) => {
-    const fullName = `${firstname ?? ""} ${lastname ?? ""}`.trim();
-    return fullName ? formatName(fullName) : "—";
-};
 
 const SingleGroupTransactionsPage = () => {
     const navigate = useNavigate();
@@ -176,7 +160,7 @@ const SingleGroupTransactionsPage = () => {
             dataIndex: "date_created",
             key: "date_created",
             width: 180,
-            render: (value) => formatDateTime(value),
+            render: (value) => formatDate(value),
         },
     ];
 

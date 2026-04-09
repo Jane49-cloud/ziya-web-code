@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Drawer, Descriptions, Empty, Tag, Row, Col, Statistic } from "antd";
 import { FiUsers } from "react-icons/fi";
-import { formatName } from "../../utils";
+import { formatName, formatCurrency, getSubscriptionStanding, formatNumber } from "../../utils";
 
 export type GroupWallet = {
     id: string | number;
@@ -22,22 +21,15 @@ type SingleGroupWalletDrawerProps = {
     group: GroupWallet | null;
 };
 
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
-const getSubscriptionStanding = (group?: GroupWallet | null) => {
-    const arrears = Number(group?.subscription_arrears ?? 0);
-    return arrears > 0 ? "In Arrears" : "Up to Date";
-};
 
 const SingleGroupWalletDrawer = ({
     open,
     onClose,
     group,
 }: SingleGroupWalletDrawerProps) => {
+    const subscriptionStanding = getSubscriptionStanding(group?.subscription_arrears);
+
     return (
         <Drawer
             title={
@@ -53,10 +45,7 @@ const SingleGroupWalletDrawer = ({
                 ) : (
                     "—"
                 )
-
             }
-
-
             placement="right"
             width={420}
             open={open}
@@ -64,15 +53,6 @@ const SingleGroupWalletDrawer = ({
         >
             {group ? (
                 <div className="space-y-4">
-                    {/* <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
-                        <span className="shrink-0 text-blue-600">
-                            <FiUsers size={16} />
-                        </span>
-                        <span className="truncate font-medium text-slate-700">
-                            {formatName(group.group_name) || "—"}
-                        </span>
-                    </div> */}
-
                     <Row gutter={[12, 12]}>
                         <Col span={12}>
                             <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -115,14 +95,8 @@ const SingleGroupWalletDrawer = ({
                                     </div>
 
                                     <div className="mt-auto">
-                                        <Tag
-                                            color={
-                                                Number(group.subscription_arrears ?? 0) > 0
-                                                    ? "red"
-                                                    : "green"
-                                            }
-                                        >
-                                            {getSubscriptionStanding(group)}
+                                        <Tag color={subscriptionStanding.color}>
+                                            {subscriptionStanding.label}
                                         </Tag>
                                     </div>
                                 </div>
@@ -131,8 +105,6 @@ const SingleGroupWalletDrawer = ({
                     </Row>
 
                     <Descriptions column={1} size="small" bordered>
-
-
                         <Descriptions.Item label="Balance">
                             {formatCurrency(group.balance)}
                         </Descriptions.Item>
@@ -146,7 +118,7 @@ const SingleGroupWalletDrawer = ({
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Total Loan Count">
-                            {Number(group.total_loans_counts ?? 0).toLocaleString()}
+                            {formatNumber(group.total_loans_counts)}
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Subscriptions Total">
@@ -162,14 +134,8 @@ const SingleGroupWalletDrawer = ({
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Subscription Standing">
-                            <Tag
-                                color={
-                                    Number(group.subscription_arrears ?? 0) > 0
-                                        ? "red"
-                                        : "green"
-                                }
-                            >
-                                {getSubscriptionStanding(group)}
+                            <Tag color={subscriptionStanding.color}>
+                                {subscriptionStanding.label}
                             </Tag>
                         </Descriptions.Item>
 
@@ -180,7 +146,6 @@ const SingleGroupWalletDrawer = ({
                         <Descriptions.Item label="Group ID">
                             {group.group_id ?? "—"}
                         </Descriptions.Item>
-
                     </Descriptions>
                 </div>
             ) : (
