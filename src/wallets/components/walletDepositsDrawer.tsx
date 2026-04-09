@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Drawer, Form, InputNumber, message, Typography } from "antd";
 import { FiUsers } from "react-icons/fi";
-import { formatName } from "../../utils";
+import { formatName, formatCurrency } from "../../utils";
 import { useCreateGroupWalletDepositMutation } from "../features";
 
 const { Text } = Typography;
@@ -25,11 +25,6 @@ type DepositFormValues = {
     amount?: number;
 };
 
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
 const GroupDepositDrawer = ({
     open,
@@ -49,9 +44,15 @@ const GroupDepositDrawer = ({
         if (!group) return;
 
         try {
+            const amount = values.amount;
+
+            if (amount == null || amount == undefined) {
+                message.error("Enter deposit amount");
+                return;
+            }
             const payload = {
                 group_id: Number(group.group_id),
-                amount: Number(values.amount ?? 0),
+                amount: Number(amount),
             };
 
             const response: any = await createGroupWalletDeposit(payload).unwrap();

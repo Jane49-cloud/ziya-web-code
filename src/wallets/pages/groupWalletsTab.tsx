@@ -9,21 +9,16 @@ import {
     FiEye,
 } from "react-icons/fi";
 import { useGetGroupWalletsQuery } from "../features/index";
-import { formatName, getRole } from "../../utils";
+import { formatName, getRole, formatCurrency } from "../../utils";
 import SingleGroupWalletDrawer, { type GroupWallet } from "../components/singleGroupWalletDrawer";
 import GroupDepositDrawer from "../components/walletDepositsDrawer";
 
 import { canAccess, type UserRole } from "../../utils/roles";
 
+
 const { Title, Paragraph } = Typography;
 
 
-
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
 const GroupWalletsTab = () => {
 
@@ -142,7 +137,7 @@ const GroupWalletsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewGroup(record)}
-                            className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                            className="flex h-8 w-8 items-center justify-center rounded-md bg-white hover:cursor-pointer text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
                             aria-label="View group"
                             title="View"
                         >
@@ -153,7 +148,7 @@ const GroupWalletsTab = () => {
                             <button
                                 type="button"
                                 onClick={() => handleDepositGroup(record)}
-                                className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                                className="flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
                                 aria-label="Deposit"
                                 title="Deposit"
                             >
@@ -165,39 +160,7 @@ const GroupWalletsTab = () => {
                 );
             },
         },
-        // {
-        //     title: "Actions",
-        //     key: "views",
-        //     width: 60,
-        //     align: "center",
-        //     fixed: "right",
-        //     render: (_value, record) => {
-        //         const items: MenuProps["items"] = [
-        //             {
-        //                 key: "view",
-        //                 label: "View",
-        //                 icon: <FiEye size={14} />,
-        //                 onClick: () => handleViewGroup(record),
-        //             },
-        //             {
-        //                 key: "deposit",
-        //                 label: "deposit",
-        //                 icon: <FiEye size={14} />,
-        //                 onClick: () => handleDepositGroup(record),
-        //             },
-        //         ];
 
-        //         return (
-        //             <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-        //                 <Button
-        //                     type="text"
-        //                     icon={<FiMoreVertical size={18} />}
-        //                     className="flex items-center justify-center"
-        //                 />
-        //             </Dropdown>
-        //         );
-        //     },
-        // },
     ];
 
     return (

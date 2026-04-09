@@ -45,6 +45,21 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
       ],
     }),
 
+
+    getCustomerSubscriptions: builder.query<
+      SubscriptionApiResponse,
+      string | number
+    >({
+      query: (customerId) => ({
+        url: `/subscriptions/customer/${customerId}`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, groupId) => [
+        { type: "Subscriptions", id: `GROUP-${groupId}` },
+      ],
+    }),
+
+
     triggerSubscriptionCollection: builder.mutation<SubscriptionApiResponse, void>({
       query: () => ({
         url: "/subscriptions/collect",
@@ -94,6 +109,9 @@ export const {
   useGetSubscriptionsByGroupQuery,
   useGetAllSubscriptionRevenueQuery,
   useGetGroupSubscriptionRevenueQuery,
+
+  useGetCustomerSubscriptionsQuery,
+
   useTriggerSubscriptionCollectionMutation,
   useTriggerSubscriptionCollectionNotifyMutation,
   useTriggerSubscriptionArrearsMutation,

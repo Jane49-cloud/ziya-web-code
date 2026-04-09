@@ -1,13 +1,10 @@
 import { Card, Space, Typography } from "antd";
 import { FiLayers, FiUser, FiCreditCard } from "react-icons/fi";
+import { formatCurrency } from "../../utils";
 
 const { Text } = Typography;
 
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
+
 
 type Props = {
     summary: {
