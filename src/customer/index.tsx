@@ -24,13 +24,13 @@ import {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
-  useCreateSubscriptionMutation,
+
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../utils";
 import { Alert } from "../components/Alert";
 import { useNavigate } from "react-router-dom";
-import { SubscriptionModal } from "./components/subscriptionModal";
+// import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
@@ -54,11 +54,11 @@ const CustomerManagement: FC = () => {
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
-  const [selectedForSubscription, setSelectedForSubscription] =
-    useState<any>(null);
-  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-  const [createSubscription, { isLoading: creatingSubscription }] =
-    useCreateSubscriptionMutation();
+  // const [selectedForSubscription, setSelectedForSubscription] =
+  //   useState<any>(null);
+  // const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  // const [createSubscription, { isLoading: creatingSubscription }] =
+  //   useCreateSubscriptionMutation();
   const navigate = useNavigate();
   // const { Text, Title } = Typography;
 
@@ -128,31 +128,31 @@ const CustomerManagement: FC = () => {
     navigate(`/customer/${id}`);
   };
 
-  const handleCreateSubscription = async (dates: {
-    start_date: string;
-    end_date: string;
-  }) => {
-    const customerId = selectedForSubscription?.id;
-    if (!customerId) {
-      setAlertMessage("No customer selected for subscription.");
-      setAlertType("danger");
-      return;
-    }
-    try {
-      await createSubscription({
-        customer_id: customerId,
-        ...dates,
-      }).unwrap();
-      await refetch();
-      setAlertMessage("Subscription created successfully!");
-      setAlertType("success");
-      setSubscriptionModalOpen(false);
-      setSelectedForSubscription(null);
-    } catch (err: any) {
-      setAlertMessage(err?.data?.error || "Failed to create subscription.");
-      setAlertType("danger");
-    }
-  };
+  // const handleCreateSubscription = async (dates: {
+  //   start_date: string;
+  //   end_date: string;
+  // }) => {
+  //   const customerId = selectedForSubscription?.id;
+  //   if (!customerId) {
+  //     setAlertMessage("No customer selected for subscription.");
+  //     setAlertType("danger");
+  //     return;
+  //   }
+  //   try {
+  //     await createSubscription({
+  //       customer_id: customerId,
+  //       ...dates,
+  //     }).unwrap();
+  //     await refetch();
+  //     setAlertMessage("Subscription created successfully!");
+  //     setAlertType("success");
+  //     setSubscriptionModalOpen(false);
+  //     setSelectedForSubscription(null);
+  //   } catch (err: any) {
+  //     setAlertMessage(err?.data?.error || "Failed to create subscription.");
+  //     setAlertType("danger");
+  //   }
+  // };
 
   const normalizedCustomers = useMemo(
     () => (customers ? [...customers] : []),
@@ -329,10 +329,10 @@ const CustomerManagement: FC = () => {
           onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
           handleView={handleView}
-          onCreateSubscription={() => {
-            setSelectedForSubscription(customer);
-            setSubscriptionModalOpen(true);
-          }}
+        // onCreateSubscription={() => {
+        //   setSelectedForSubscription(customer);
+        //   setSubscriptionModalOpen(true);
+        // }}
         />
       ),
     },
@@ -548,12 +548,12 @@ const CustomerManagement: FC = () => {
           )}
         </Modal>
 
-        <SubscriptionModal
+        {/* <SubscriptionModal
           open={subscriptionModalOpen}
           onCancel={() => setSubscriptionModalOpen(false)}
           onSubmit={handleCreateSubscription}
           loading={creatingSubscription}
-        />
+        /> */}
       </div>
     </div>
   );

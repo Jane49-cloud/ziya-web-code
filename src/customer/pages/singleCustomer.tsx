@@ -1,11 +1,15 @@
 import { useParams } from "react-router-dom";
-import { Spin, Empty, Tabs, Card, Row, Col, message } from "antd";
+import { Spin, Empty, Tabs, Card, Row, Col, message, Button } from "antd";
 import { FaPhoneAlt, FaIdBadge } from "react-icons/fa";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
 import CustomerTabs from "../tabs/customerTabs";
-import CustomerBusinessList from "../components/customerBusinessList";
+// import CustomerBusinessList from "../components/customerBusinessList";
 // import CustomerLoansList from "./customerLoans";
+
+import { useNavigate } from "react-router-dom";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+
 import { formatDate, formatName, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
@@ -16,7 +20,11 @@ import CustomerWalletTab from "../components/wallet/customerWalletTab";
 import CustomerTransactionsTab from "../components/wallet/customerTransactionsTab";
 
 const CustomerPage = () => {
+
   const { id } = useParams<{ id: string }>();
+
+  const navigate = useNavigate();
+
   const { data: customerData, isLoading: customerLoading, refetch } =
     useGetCustomerByIdQuery(id);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
@@ -98,6 +106,16 @@ const CustomerPage = () => {
 
   return (
     <div className="p-6">
+
+      <div className="mb-4">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate("/customers")}
+        >
+          Back to Customers
+        </Button>
+      </div>
+
       {/* Customer Header */}
       <div className="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-white/60 via-slate-50/50 to-white/10 p-8 shadow-sm backdrop-blur">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -207,9 +225,9 @@ const CustomerPage = () => {
             onCustomerUpdated={() => refetch()}
           />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Businesses" key="2">
+        {/* <Tabs.TabPane tab="Businesses" key="2">
           <CustomerBusinessList customerId={customer.id} />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
         {/* <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
         </Tabs.TabPane> */}

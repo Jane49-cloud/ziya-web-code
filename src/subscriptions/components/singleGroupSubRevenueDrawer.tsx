@@ -121,16 +121,23 @@ export default function SingleGroupSubRevenueDrawer({
             width={980}
             destroyOnClose
             title={
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-3">
                     <Text className="text-[11px] text-center font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Subscription Revenue
                     </Text>
+
                     <Title level={4} className="!mb-0 !text-slate-900">
                         {resolvedGroupName}
                     </Title>
-                    <Text className="text-sm text-slate-500">
-                        Total Revenue: {toCurrency(totalRevenue)}
-                    </Text>
+
+                    <div className="inline-flex w-fit min-w-[220px] flex-col rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 shadow-sm">
+                        <Text className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            Total Revenue
+                        </Text>
+                        <Text className="text-lg font-bold text-slate-900">
+                            {toCurrency(totalRevenue)}
+                        </Text>
+                    </div>
                 </div>
             }
         >
