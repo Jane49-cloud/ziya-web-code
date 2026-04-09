@@ -157,16 +157,6 @@ const AppRouting = (): ReactElement => {
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-categories" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
-
-            {/* <Route path="/group-transactions" element={<WalletTransactionsTab />} />
-            <Route path="/personal-transactions" element={<PersonalTransactionsTab />} /> */}
-
-            <Route path="/transactions" element={<TransactionsIndex />}>
-              <Route index element={<Navigate to="group" replace />} />
-              <Route path="group" element={<WalletTransactionsTab />} />
-              <Route path="personal" element={<PersonalTransactionsTab />} />
-            </Route>
-
           </Route>
         </Route>
 
@@ -189,7 +179,6 @@ const AppRouting = (): ReactElement => {
             <Route path="/staff/:id" element={<PublicProfile />} />
             <Route path="/customer/:id" element={<CustomerPage />} />
 
-            {/* <Route path="/wallets" element={<AllGroupWalletsPage />} /> */}
             <Route path="/wallets" element={<AllGroupWalletsPage />}>
               <Route index element={<Navigate to="group" replace />} />
               <Route path="group" element={<GroupWalletsTab />} />
@@ -205,8 +194,16 @@ const AppRouting = (): ReactElement => {
             <Route path="/analysis" element={<StatisticsPage />} />
 
 
-//====
+            {/* //transaction */}
             <Route path="/transactions/group/:groupId" element={<SingleGroupTransactionsPage />} />
+
+            {/* //wallet */}
+            <Route path="/transactions" element={<TransactionsIndex />}>
+              <Route index element={<Navigate to="group" replace />} />
+              <Route path="group" element={<WalletTransactionsTab />} />
+              <Route path="personal" element={<PersonalTransactionsTab />} />
+            </Route>
+
 
             <Route
               path="/activities/user/:id"

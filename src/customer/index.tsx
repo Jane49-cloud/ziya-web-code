@@ -220,13 +220,13 @@ const CustomerManagement: FC = () => {
 
   const columns: ColumnsType<any> = [
     {
-      title: "#",
+      title: "ID",
       dataIndex: "id",
       key: "id",
       width: 70,
       align: "center" as const,
       render: (value: string | number) => (
-        <span className="text-slate-600 font-mono text-sm">#{value}</span>
+        <span className="text-slate-600 font-mono text-sm">{value}</span>
       ),
     },
     {

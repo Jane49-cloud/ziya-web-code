@@ -1,17 +1,19 @@
 import { useParams } from "react-router-dom";
-import { Spin, Empty, Tabs, Card, Row, Col, Tag, Button, message } from "antd";
+import { Spin, Empty, Tabs, Card, Row, Col, message } from "antd";
 import { FaPhoneAlt, FaIdBadge } from "react-icons/fa";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
 import CustomerTabs from "../tabs/customerTabs";
 import CustomerBusinessList from "../components/customerBusinessList";
-import CustomerLoansList from "./customerLoans";
+// import CustomerLoansList from "./customerLoans";
 import { formatDate, formatName, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
 import { useCreateSubscriptionMutation } from "../features/customerSlice";
 import { useState, useMemo } from "react";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
+import CustomerWalletTab from "../components/wallet/customerWalletTab";
+import CustomerTransactionsTab from "../components/wallet/customerTransactionsTab";
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,12 +29,12 @@ const CustomerPage = () => {
   const customer = customerData?.customer;
   const loans = loanData?.loans || [];
 
-  const isSubscriptionActive = (status: unknown) => {
-    if (typeof status === "string") {
-      return status.toLowerCase() === "active";
-    }
-    return Number(status) === 1;
-  };
+  // const isSubscriptionActive = (status: unknown) => {
+  //   if (typeof status === "string") {
+  //     return status.toLowerCase() === "active";
+  //   }
+  //   return Number(status) === 1;
+  // };
 
   const fullName = useMemo(() => {
     if (!customer) return "";
@@ -217,6 +219,18 @@ const CustomerPage = () => {
         <Tabs.TabPane tab="Reset Password" key="5">
           <CustomerPasswordReset customerId={customer.id} />
         </Tabs.TabPane>
+
+        {/* addeded working on */}
+
+        <Tabs.TabPane tab="Wallet" key="6">
+          <CustomerWalletTab customerId={customer.id} />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Transactions" key="7">
+          <CustomerTransactionsTab customerId={customer.id} />
+        </Tabs.TabPane>
+
+
+
       </Tabs>
 
       <SubscriptionModal

@@ -6,12 +6,7 @@ export const {
     useGetSinglePersonalWalletQuery,
     useGetSingleGroupWalletQuery,
     useCreateGroupWalletDepositMutation,
-    // useGetSingleCustomerTransactionsQuery,
-    // useGetAllCustomerTransactionsQuery,
 
-    // useGetAllGroupTransactionsQuery,
-    // useGetSingleGroupTransactionsQuery,  /////
-    // useCreatePersonalWalletDepositMutation,
 
 
 } = WalletSlice;

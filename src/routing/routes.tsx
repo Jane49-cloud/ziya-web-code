@@ -125,12 +125,6 @@ export const sidebarItems: SidebarItem[] = [
     path: "/subscriptions",
     allowedRoles: STAFF_ROLES,
   },
-  // {
-  //   title: "Wallets",
-  //   icon: "wallet",
-  //   path: "/wallets",
-  //   allowedRoles: ["admin", "dev"],
-  // },
 
   {
     title: "Wallets",
@@ -139,12 +133,12 @@ export const sidebarItems: SidebarItem[] = [
       {
         title: "Group Wallets",
         path: "/wallets/group",
-        allowedRoles: ["admin", "dev"],
+        allowedRoles: STAFF_ROLES,
       },
       {
         title: "Personal Wallets",
         path: "/wallets/personal",
-        allowedRoles: ["admin", "dev"],
+        allowedRoles: STAFF_ROLES,
       },
     ],
   },
@@ -156,12 +150,12 @@ export const sidebarItems: SidebarItem[] = [
       {
         title: "Group",
         path: "/transactions/group",
-        allowedRoles: ["admin", "dev"],
+        allowedRoles: STAFF_ROLES,
       },
       {
         title: "Personal",
         path: "/transactions/personal",
-        allowedRoles: ["admin", "dev"],
+        allowedRoles: STAFF_ROLES,
       },
     ],
   },

@@ -9,9 +9,11 @@ import {
     FiEye,
 } from "react-icons/fi";
 import { useGetGroupWalletsQuery } from "../features/index";
-import { formatName } from "../../utils";
+import { formatName, getRole } from "../../utils";
 import SingleGroupWalletDrawer, { type GroupWallet } from "../components/singleGroupWalletDrawer";
 import GroupDepositDrawer from "../components/walletDepositsDrawer";
+
+import { canAccess, type UserRole } from "../../utils/roles";
 
 const { Title, Paragraph } = Typography;
 
@@ -24,6 +26,10 @@ const formatCurrency = (value: number | string | undefined) => {
 };
 
 const GroupWalletsTab = () => {
+
+    const userRole = getRole() as UserRole | null;
+
+
     const [searchTerm, setSearchTerm] = useState("");
     const [pagination, setPagination] = useState<TablePaginationConfig>({
         current: 1,
@@ -143,15 +149,18 @@ const GroupWalletsTab = () => {
                             <FiEye size={16} />
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => handleDepositGroup(record)}
-                            className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
-                            aria-label="Deposit"
-                            title="Deposit"
-                        >
-                            <FiPlusCircle size={16} />
-                        </button>
+                        {canAccess(["admin", "dev", "finance"], userRole) && (
+                            <button
+                                type="button"
+                                onClick={() => handleDepositGroup(record)}
+                                className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                                aria-label="Deposit"
+                                title="Deposit"
+                            >
+                                <FiPlusCircle size={16} />
+                            </button>
+                        )}
+
                     </div>
                 );
             },
