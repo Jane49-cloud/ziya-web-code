@@ -42,12 +42,12 @@ export function UsersTable({ users }: UsersTableProps) {
   });
 
   const columns: ColumnsType<UserData> = [
-    {
-      title: "#",
-      dataIndex: "id",
-      key: "id",
-      align: "center",
-    },
+    // {
+    //   title: "#",
+    //   dataIndex: "id",
+    //   key: "id",
+    //   align: "center",
+    // },
     {
       title: "Name",
       dataIndex: "name",

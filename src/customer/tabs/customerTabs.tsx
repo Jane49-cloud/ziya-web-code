@@ -45,9 +45,8 @@ const CustomerTabs: FC<CustomerTabsProps> = ({
   const fullName = useMemo(
     () =>
       formatName(
-        `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${
-          customer.lastname ?? ""
-        }`
+        `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${customer.lastname ?? ""
+          }`
           .replace(/\s+/g, " ")
           .trim(),
       ) || "Unnamed Customer",
@@ -167,7 +166,7 @@ const CustomerTabs: FC<CustomerTabsProps> = ({
                   >
                     <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
                       <span className="font-semibold uppercase tracking-wide">
-                        Loan #{loan.id}
+                        Loan {loan.id}
                       </span>
                       <span>{formatDate(loan.date_created)}</span>
                     </div>

@@ -234,7 +234,7 @@ const PublicProfile: React.FC = () => {
         </Tabs.TabPane>
 
         {/* Assigned Customers Tab */}
-        <Tabs.TabPane tab="Assigned Customers" key="2">
+        {/* <Tabs.TabPane tab="Assigned Customers" key="2">
           {user.customers && user.customers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {user.customers.map((customer: any) => (
@@ -258,7 +258,7 @@ const PublicProfile: React.FC = () => {
           ) : (
             <Empty description="No customers assigned yet" />
           )}
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
 
         {/* Reset Password Tab */}
         <Tabs.TabPane tab="Reset Password" key="3">

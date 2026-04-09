@@ -99,28 +99,7 @@ const PersonalWalletsTab = () => {
     };
 
     const columns: ColumnsType<PersonalWallet> = [
-        // {
-        //     title: "Wallet ID",
-        //     dataIndex: "id",
-        //     key: "id",
-        //     width: 110,
-        //     render: (value) => (
-        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-400">
-        //             {value ?? "—"}
-        //         </span>
-        //     ),
-        // },
-        // {
-        //     title: "Customer ID",
-        //     dataIndex: "customer_id",
-        //     key: "customer_id",
-        //     width: 100,
-        //     render: (value) => (
-        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-        //             {value ?? "—"}
-        //         </span>
-        //     ),
-        // },
+
         {
             title: "Customer Name",
             key: "customer_name",
@@ -162,7 +141,7 @@ const PersonalWalletsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewCustomer(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            className="flex h-8 w-8 items-center justify-center bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600 "
                         >
                             <FiEye size={16} />
                         </button>
@@ -170,26 +149,6 @@ const PersonalWalletsTab = () => {
                 </div>
             ),
 
-            // render: (_value, record) => {
-            //     const items: MenuProps["items"] = [
-            //         {
-            //             key: "view",
-            //             label: "View",
-            //             icon: <FiEye size={14} />,
-            //             onClick: () => handleViewCustomer(record),
-            //         },
-            //     ];
-
-            //     return (
-            //         <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-            //             <Button
-            //                 type="text"
-            //                 icon={<FiMoreVertical size={18} />}
-            //                 className="flex items-center justify-center"
-            //             />
-            //         </Dropdown>
-            //     );
-            // },
 
 
         },
@@ -207,7 +166,7 @@ const PersonalWalletsTab = () => {
                             Personal Wallets
                         </Title>
                         <Paragraph className="!mb-0 text-gray-400">
-                            Personal wallet account information.
+                            Personal wallet information.
                         </Paragraph>
                     </div>
 
@@ -218,7 +177,7 @@ const PersonalWalletsTab = () => {
 
                 <Input.Search
                     allowClear
-                    placeholder="Search by customer, phone number, balance or wallet id..."
+                    placeholder="Search by customer name, phone number..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onSearch={setSearchTerm}

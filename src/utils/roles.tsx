@@ -4,7 +4,8 @@ export type UserRole =
   | "relationship-manager"
   | "guest"
   | "staff"
-  | "support";
+  | "support"
+  | "finance";
 
 export function canAccess(
   allowedRoles: UserRole[] | undefined,
@@ -21,13 +22,17 @@ export const ALL_ROLES: UserRole[] = [
   "staff",
   "support",
   "guest",
+  "finance",
 ];
+
 export const STAFF_ROLES: UserRole[] = [
   "admin",
   "dev",
   "relationship-manager",
   "staff",
   "support",
+  "finance",
 ];
+
 export const ADMIN_DEV: UserRole[] = ["admin", "dev"];
 export const STAFF_MANAGEMENT_ROLES: UserRole[] = ["admin", "dev", "support"];

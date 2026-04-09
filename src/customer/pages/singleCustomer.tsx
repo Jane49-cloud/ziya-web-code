@@ -1,17 +1,19 @@
 import { useParams } from "react-router-dom";
-import { Spin, Empty, Tabs, Card, Row, Col, Tag, Button, message } from "antd";
+import { Spin, Empty, Tabs, Card, Row, Col, message } from "antd";
 import { FaPhoneAlt, FaIdBadge } from "react-icons/fa";
 import { useGetCustomerByIdQuery } from "../features/customerSlice";
 import { useGetLoansByCustomerIdQuery } from "../../Loans/features/loanSlice";
 import CustomerTabs from "../tabs/customerTabs";
 import CustomerBusinessList from "../components/customerBusinessList";
-import CustomerLoansList from "./customerLoans";
+// import CustomerLoansList from "./customerLoans";
 import { formatDate, formatName, getInitials } from "../../utils";
 import CustomerPasswordReset from "../components/customerPasswordReset";
 import { SubscriptionModal } from "../components/subscriptionModal";
 import { useCreateSubscriptionMutation } from "../features/customerSlice";
 import { useState, useMemo } from "react";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
+import CustomerWalletTab from "../components/wallet/customerWalletTab";
+import CustomerTransactionsTab from "../components/wallet/customerTransactionsTab";
 
 const CustomerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,19 +29,18 @@ const CustomerPage = () => {
   const customer = customerData?.customer;
   const loans = loanData?.loans || [];
 
-  const isSubscriptionActive = (status: unknown) => {
-    if (typeof status === "string") {
-      return status.toLowerCase() === "active";
-    }
-    return Number(status) === 1;
-  };
+  // const isSubscriptionActive = (status: unknown) => {
+  //   if (typeof status === "string") {
+  //     return status.toLowerCase() === "active";
+  //   }
+  //   return Number(status) === 1;
+  // };
 
   const fullName = useMemo(() => {
     if (!customer) return "";
 
-    const rawName = `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${
-      customer.lastname ?? ""
-    }`
+    const rawName = `${customer.firstname ?? ""} ${customer.middlename ?? ""} ${customer.lastname ?? ""
+      }`
       .replace(/\s+/g, " ")
       .trim();
 
@@ -52,10 +53,10 @@ const CustomerPage = () => {
 
   const latestLoan = loans.length
     ? [...loans].sort(
-        (a, b) =>
-          new Date(b.date_created).getTime() -
-          new Date(a.date_created).getTime()
-      )[0]
+      (a, b) =>
+        new Date(b.date_created).getTime() -
+        new Date(a.date_created).getTime()
+    )[0]
     : null;
 
   const balance = latestLoan ? latestLoan.balance : 0;
@@ -124,15 +125,18 @@ const CustomerPage = () => {
             </div>
           </div>
           <div className="flex flex-col items-start gap-4 text-sm text-slate-600 md:items-end md:text-right">
-            <Tag
+
+            {/* Pending, works on changing this to arrears */}
+
+            {/* <Tag
               color={isSubscriptionActive(customer.subscription_status) ? "green" : "red"}
               className="self-start rounded-full px-4 py-1 text-sm md:self-end"
             >
               {isSubscriptionActive(customer.subscription_status)
                 ? "Subscribed"
                 : "Unsubscribed"}
-            </Tag>
-            {!isSubscriptionActive(customer.subscription_status) && (
+            </Tag> */}
+            {/* {!isSubscriptionActive(customer.subscription_status) && (
               <Button
                 type="primary"
                 size="large"
@@ -140,10 +144,10 @@ const CustomerPage = () => {
               >
                 Activate Subscription
               </Button>
-            )}
+            )} */}
             <div className="space-y-1">
               <div>
-                <strong className="text-slate-500">Customer ID:</strong> #{customer.id}
+                <strong className="text-slate-500">Customer ID:</strong> {customer.id}
               </div>
               <div>
                 <strong className="text-slate-500">Joined:</strong> {formatDate(customer.date_created)}
@@ -206,15 +210,27 @@ const CustomerPage = () => {
         <Tabs.TabPane tab="Businesses" key="2">
           <CustomerBusinessList customerId={customer.id} />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Loans" key="3">
+        {/* <Tabs.TabPane tab="Loans" key="3">
           <CustomerLoansList customerId={customer.id} />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
         <Tabs.TabPane tab="Subscription History" key="4">
           <CustomerSubscriptionHistoryTab customerId={customer.id} />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Reset Password" key="5">
           <CustomerPasswordReset customerId={customer.id} />
         </Tabs.TabPane>
+
+        {/* addeded working on */}
+
+        <Tabs.TabPane tab="Wallet" key="6">
+          <CustomerWalletTab customerId={customer.id} />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Transactions" key="7">
+          <CustomerTransactionsTab customerId={customer.id} />
+        </Tabs.TabPane>
+
+
+
       </Tabs>
 
       <SubscriptionModal
