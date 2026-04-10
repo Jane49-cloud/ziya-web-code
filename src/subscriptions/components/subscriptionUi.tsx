@@ -55,7 +55,7 @@ export const SubscriptionHero = ({
         <Title level={2} className="!mb-2 !text-white">
           {title}
         </Title>
-        <Text className="text-sm text-blue-50/90 md:text-base">{subtitle}</Text>
+        <Text className="text-sm !text-white/80 md:text-base">{subtitle}</Text>
       </div>
       {aside ? <div className="relative">{aside}</div> : null}
     </div>

@@ -182,17 +182,31 @@ export default function AllSubscriptionsTab({
     //     <Tag color="blue">{toDisplayText(record.subscription_plan)}</Tag>
     //   ),
     // },
+    // {
+    //   title: "Active",
+    //   key: "active",
+    //   sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
+    //     Number(Boolean(a.active)) - Number(Boolean(b.active)),
+    //   render: (_: unknown, record: SubscriptionRecord) => (
+    //     <Tag color={record.active ? "green" : "default"}>
+    //       {record.active ? "Active" : "Inactive"}
+    //     </Tag>
+    //   ),
+    // },
+
     {
-      title: "Active",
+      title: "Status",
       key: "active",
       sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
         Number(Boolean(a.active)) - Number(Boolean(b.active)),
       render: (_: unknown, record: SubscriptionRecord) => (
-        <Tag color={record.active ? "green" : "default"}>
-          {record.active ? "Active" : "Inactive"}
+        <Tag color={record.active ? "green" : "orange"}>
+          {record.active ? "Current" : "Expired"}
         </Tag>
       ),
     },
+
+
     {
       title: "Paid",
       key: "paid",
