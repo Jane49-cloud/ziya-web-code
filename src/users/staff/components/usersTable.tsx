@@ -5,6 +5,7 @@ import { Table, Avatar, Space, Button, Card, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../../../utils";
 import { useNavigate } from "react-router-dom";
+import { FiEye } from "react-icons/fi";
 
 interface UserData {
   id: string;
@@ -42,12 +43,12 @@ export function UsersTable({ users }: UsersTableProps) {
   });
 
   const columns: ColumnsType<UserData> = [
-    {
-      title: "#",
-      dataIndex: "id",
-      key: "id",
-      align: "center",
-    },
+    // {
+    //   title: "#",
+    //   dataIndex: "id",
+    //   key: "id",
+    //   align: "center",
+    // },
     {
       title: "Name",
       dataIndex: "name",
@@ -81,11 +82,11 @@ export function UsersTable({ users }: UsersTableProps) {
         <Space>
           <Button
             type="link"
-            style={{ color: "#1677ff" }}
+            icon={<FiEye size={16} className="text-blue-600" />}
             onClick={() => navigate(`/staff/${_record.id}`)}
-          >
-            View
-          </Button>
+          />
+
+
         </Space>
       ),
       align: "center",

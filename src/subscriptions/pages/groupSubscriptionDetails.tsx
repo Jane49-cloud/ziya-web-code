@@ -43,8 +43,8 @@ export default function GroupSubscriptionDetailsPage() {
     formatName(
       String(
         subscriptions[0]?.group_name ??
-          subscriptions[0]?.name ??
-          `Group ${groupId ?? ""}`,
+        subscriptions[0]?.name ??
+        `Group ${groupId ?? ""}`,
       ),
     ) || `Group ${groupId ?? ""}`;
 

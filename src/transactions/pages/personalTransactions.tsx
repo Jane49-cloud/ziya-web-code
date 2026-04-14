@@ -1,19 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-
-    Card,
-
-    Empty,
-    Input,
-    Table,
-    Tag,
-    Typography,
-    Tooltip,
-} from "antd";
+import { Card, Empty, Input, Table, Tag, Typography, Tooltip } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { useMemo, useState } from "react";
 import { FiEye, FiUser } from "react-icons/fi";
-import { formatName } from "../../utils";
+import { getTypeColor, formatCurrency, formatFullName } from "../../utils";
 
 import {
     useGetAllCustomerTransactionsQuery,
@@ -39,25 +29,13 @@ type AllCustomerTransactionRow = {
     phone_number: string;
 };
 
-const formatCurrency = (value: number | string | undefined | null) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
-
-
-const getFullName = (record: Partial<AllCustomerTransactionRow>) => {
-    const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`.trim();
-    return fullName ? formatName(fullName) : "—";
-};
-
-const getTypeColor = (type?: string) => {
-    const normalized = (type ?? "").toLowerCase();
-    if (normalized === "credit") return "green";
-    if (normalized === "debit") return "red";
-    return "default";
-};
+// const getTypeColor = (type?: string) => {
+//     const normalized = (type ?? "").toLowerCase();
+//     if (normalized === "credit") return "green";
+//     if (normalized === "debit") return "red";
+//     return "default";
+// };
 
 const PersonalTransactionsTab = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -109,17 +87,28 @@ const PersonalTransactionsTab = () => {
     const normalizedCustomerTransactions: PersonalCustomerTransaction[] = useMemo(() => {
         const raw = singleCustomerTransactionsResponse?.transactions ?? [];
 
-        return raw.map((item: any) => ({
-            id: Number(item?.id ?? item?.ID ?? 0),
-            customer_id: Number(
-                item?.customer_id ?? item?.CustomerID ?? selectedCustomer?.customer_id ?? 0
-            ),
-            amount: Number(item?.amount ?? item?.Amount ?? 0),
-            type: (item?.type ?? item?.Type ?? "").toString().toLowerCase(),
-            source: item?.source ?? item?.Source ?? "",
-            reference_code: item?.reference_code ?? item?.ReferenceCode ?? "",
-            date_created: item?.date_created ?? item?.DateCreated ?? "",
-        }));
+        return raw.map((item: any) => {
+            const rawId = item?.id ?? item?.ID;
+            const rawCustomerId =
+                item?.customer_id ?? item?.CustomerID ?? selectedCustomer?.customer_id;
+            const rawAmount = item?.amount ?? item?.Amount;
+
+            return {
+                id: rawId === null || rawId === undefined || rawId === ""
+                    ? undefined
+                    : Number(rawId),
+                customer_id: rawCustomerId === null || rawCustomerId === undefined || rawCustomerId === ""
+                    ? undefined
+                    : Number(rawCustomerId),
+                amount: rawAmount === null || rawAmount === undefined || rawAmount === ""
+                    ? undefined
+                    : Number(rawAmount),
+                type: (item?.type ?? item?.Type ?? "").toString().toLowerCase(),
+                source: item?.source ?? item?.Source ?? "",
+                reference_code: item?.reference_code ?? item?.ReferenceCode ?? "",
+                date_created: item?.date_created ?? item?.DateCreated ?? "",
+            };
+        });
     }, [singleCustomerTransactionsResponse?.transactions, selectedCustomer?.customer_id]);
 
     const handleViewCustomer = (record: AllCustomerTransactionRow) => {
@@ -159,7 +148,7 @@ const PersonalTransactionsTab = () => {
                         <FiUser size={16} />
                     </span>
                     <span className="truncate font-medium text-slate-600">
-                        {getFullName(record)}
+                        {formatFullName(record.firstname, record.lastname)}
                     </span>
                 </div>
             ),
@@ -180,7 +169,7 @@ const PersonalTransactionsTab = () => {
             render: (value) => formatCurrency(value),
         },
         {
-            title: "Type",
+            title: "Transaction Type",
             dataIndex: "type",
             key: "type",
             width: 120,
@@ -190,34 +179,7 @@ const PersonalTransactionsTab = () => {
                 </Tag>
             ),
         },
-        // {
-        //     title: "Source",
-        //     dataIndex: "source",
-        //     key: "source",
-        //     width: 140,
-        //     render: (value) => value || "—",
-        // },
-        // {
-        //     title: "Reference Code",
-        //     dataIndex: "reference_code",
-        //     key: "reference_code",
-        //     width: 220,
-        //     render: (value) => (
-        //         <span className="font-mono text-sm text-slate-500" title={value}>
 
-
-        //             {value || "—"}
-        //         </span>
-        //     ),
-        // },
-
-        // {
-        //     title: "Date Created",
-        //     dataIndex: "date_created",
-        //     key: "date_created",
-        //     width: 180,
-        //     render: (value) => formatDateTime(value),
-        // },
         {
             title: "Action",
             key: "actions",
@@ -229,7 +191,7 @@ const PersonalTransactionsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewCustomer(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3]"
                         >
                             <FiEye size={16} />
                         </button>
@@ -237,26 +199,7 @@ const PersonalTransactionsTab = () => {
                 </div>
             ),
 
-            // render: (_value, record) => {
-            //     const items: MenuProps["items"] = [
-            //         {
-            //             key: "view",
-            //             label: "View",
-            //             icon: <FiEye size={14} />,
-            //             onClick: () => handleViewCustomer(record),
-            //         },
-            //     ];
 
-            //     return (
-            //         <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-            //             <Button
-            //                 type="text"
-            //                 icon={<FiMoreVertical size={18} />}
-            //                 className="flex items-center justify-center"
-            //             />
-            //         </Dropdown>
-            //     );
-            // },
         },
     ];
 
@@ -282,7 +225,7 @@ const PersonalTransactionsTab = () => {
 
                 <Input.Search
                     allowClear
-                    placeholder="Search by customer, phone number, source, amount, type or reference code..."
+                    placeholder="Search by customer name, phone, amount or type..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onSearch={setSearchTerm}

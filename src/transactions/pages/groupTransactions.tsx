@@ -5,6 +5,7 @@ import { useMemo, useState, useEffect } from "react";
 import { FiUsers, FiEye } from "react-icons/fi";
 import { useGetAllGroupTransactionsQuery } from "../features";
 import { useNavigate, useLocation } from "react-router-dom";
+import { formatCurrency, formatFullName } from "../../utils";
 
 const { Title, Paragraph } = Typography;
 import { formatName } from "../../utils";
@@ -23,26 +24,7 @@ type GroupWalletTransaction = {
     admin_phone_number?: string;
 };
 
-const formatCurrency = (value: number | string | undefined) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
-
-
-
-
-// const formatDateTime = (value?: string | null) => {
-//     if (!value) return "—";
-//     const parsed = dayjs(value);
-//     return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
-// };
-
-const formatFullName = (firstname?: string, lastname?: string) => {
-    const fullName = `${firstname ?? ""} ${lastname ?? ""}`.trim();
-    return fullName ? formatName(fullName) : "—";
-};
 
 
 const WalletTransactionsTab = () => {
@@ -70,10 +52,10 @@ const WalletTransactionsTab = () => {
                 item.admin_lastname,
                 item.admin_phone_number,
                 item.type,
-                // item.source,
+                item.source,
                 item.amount,
-                // item.reference_code,
-                // item.date_created,
+                item.reference_code,
+                item.date_created,
             ]
                 .map((value) => (value ?? "").toString().toLowerCase())
                 .some((value) => value.includes(needle))
@@ -160,29 +142,7 @@ const WalletTransactionsTab = () => {
                 </Tag>
             ),
         },
-        // {
-        //     title: "Source",
-        //     dataIndex: "source",
-        //     key: "source",
-        //     width: 140,
-        //     render: (value) => value || "—",
-        // },
 
-        // {
-        //     title: "Reference Code",
-        //     dataIndex: "reference_code",
-        //     key: "reference_code",
-        //     width: 260,
-        //     ellipsis: true,
-        //     render: (value) => value || "—",
-        // },
-        // {
-        //     title: "Date Created",
-        //     dataIndex: "date_created",
-        //     key: "date_created",
-        //     width: 180,
-        //     render: (value) => formatDateTime(value),
-        // },
         {
             title: "Action",
             key: "actions",
@@ -194,7 +154,7 @@ const WalletTransactionsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewGroup(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3]"
                         >
                             <FiEye size={16} />
                         </button>
@@ -202,32 +162,7 @@ const WalletTransactionsTab = () => {
                 </div>
 
             ),
-            // render: (_value, record) => {
-            //     const items: MenuProps["items"] = [
-            //         {
-            //             key: "view",
-            //             label: "View",
-            //             icon: <FiEye size={14} />,
-            //             onClick: () => handleViewGroup(record),
-            //         },
-            //         // {
-            //         //     key: "edit",
-            //         //     label: "Edit",
-            //         //     icon: <FiEdit2 size={14} />,
-            //         //     onClick: () => handleEditGroup(record),
-            //         // },
-            //     ];
 
-            //     return (
-            //         <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
-            //             <Button
-            //                 type="text"
-            //                 icon={<FiMoreVertical size={18} />}
-            //                 className="flex items-center justify-center"
-            //             />
-            //         </Dropdown>
-            //     );
-            // },
         }
     ];
 
@@ -257,7 +192,7 @@ const WalletTransactionsTab = () => {
 
             <Input.Search
                 allowClear
-                placeholder="Search by group, admin, phone, type, source, reference code or amount..."
+                placeholder="Search by group name, admin name, phone, type or amount..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onSearch={setSearchTerm}

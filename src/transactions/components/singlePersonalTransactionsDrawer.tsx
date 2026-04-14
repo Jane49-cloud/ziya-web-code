@@ -1,6 +1,7 @@
 import { Descriptions, Drawer, Empty, Row, Col, Spin, Statistic, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import dayjs from "dayjs";
+import { formatCurrency, formatDate, formatFullName, getTypeColor, formatNumber } from "../../utils";
+
 
 export type PersonalCustomerTransaction = {
     id: number;
@@ -27,27 +28,14 @@ type PersonalCustomerTransactionsDrawerProps = {
     onClose: () => void;
 };
 
-const formatCurrency = (value: number | string | undefined | null) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
 
-const formatDateTime = (value?: string | null) => {
-    if (!value) return "—";
-    const parsed = dayjs(value);
-    return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
-};
 
-const getFullName = (customer?: SelectedPersonalCustomer | null) =>
-    `${customer?.firstname ?? ""} ${customer?.lastname ?? ""}`.trim() || "—";
-
-const getTypeColor = (type?: string) => {
-    const normalized = (type ?? "").toLowerCase();
-    if (normalized === "credit") return "green";
-    if (normalized === "debit") return "red";
-    return "default";
-};
+// const getTypeColor = (type?: string) => {
+//     const normalized = (type ?? "").toLowerCase();
+//     if (normalized === "credit") return "green";
+//     if (normalized === "debit") return "red";
+//     return "default";
+// };
 
 const PersonalCustomerTransactionsDrawer = ({
     open,
@@ -56,15 +44,15 @@ const PersonalCustomerTransactionsDrawer = ({
     transactions,
     onClose,
 }: PersonalCustomerTransactionsDrawerProps) => {
-    const totalCredits = transactions.reduce(
-        (sum, item) => sum + ((item.type ?? "").toLowerCase() === "credit" ? Number(item.amount ?? 0) : 0),
-        0
-    );
+    const totalCredits = transactions.reduce((sum, item) => {
+        const isCredit = (item.type ?? "").toLowerCase() === "credit";
+        return sum + (isCredit ? formatNumber(item.amount) ?? 0 : 0);
+    }, 0);
 
-    const totalDebits = transactions.reduce(
-        (sum, item) => sum + ((item.type ?? "").toLowerCase() === "debit" ? Number(item.amount ?? 0) : 0),
-        0
-    );
+    const totalDebits = transactions.reduce((sum, item) => {
+        const isDebit = (item.type ?? "").toLowerCase() === "debit";
+        return sum + (isDebit ? formatNumber(item.amount) ?? 0 : 0);
+    }, 0);
 
     const columns: ColumnsType<PersonalCustomerTransaction> = [
         {
@@ -125,7 +113,7 @@ const PersonalCustomerTransactionsDrawer = ({
             dataIndex: "date_created",
             key: "date_created",
             width: 180,
-            render: (value) => formatDateTime(value),
+            render: (value) => formatDate(value),
         },
     ];
 
@@ -177,7 +165,7 @@ const PersonalCustomerTransactionsDrawer = ({
                                 {customer.customer_id}
                             </Descriptions.Item>
                             <Descriptions.Item label="Customer Name">
-                                {getFullName(customer)}
+                                {formatFullName(customer.firstname, customer.lastname)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Phone Number">
                                 {customer.phone_number || "—"}

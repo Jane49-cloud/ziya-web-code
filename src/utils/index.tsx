@@ -90,3 +90,64 @@ export const formatDate = (dateString: string) => {
     day: "numeric",
   }).format(new Date(dateString));
 };
+
+
+export const formatCurrency = (
+  value: number | string | null | undefined,
+  options?: {
+    fallback?: string;
+    currency?: string;
+  }
+): string => {
+  const { fallback = "—", currency = "KES" } = options ?? {};
+
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return fallback;
+  }
+
+  return `${currency} ${numeric.toLocaleString()}`;
+};
+
+export const formatFullName = (
+  firstname?: string | null,
+  lastname?: string | null,
+  fallback = "—"
+): string => {
+  const fullName = `${firstname ?? ""} ${lastname ?? ""}`.trim();
+  return fullName ? formatName(fullName) : fallback;
+};
+
+export const getTypeColor = (type?: string) => {
+  const normalized = (type ?? "").toLowerCase();
+  if (normalized === "credit") return "green";
+  if (normalized === "debit") return "red";
+  return "default";
+};
+
+export const formatNumber = (
+  value: number | string | null | undefined
+): number | undefined => {
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
+
+  const numeric = Number(value);
+  return Number.isNaN(numeric) ? undefined : numeric;
+};
+
+export const getSubscriptionStanding = (
+  arrears?: number | null
+): { label: string; color: "red" | "green" | "default" } => {
+  if (arrears === null || arrears === undefined) {
+    return { label: "Not available", color: "default" };
+  }
+
+  return arrears > 0
+    ? { label: "In Arrears", color: "red" }
+    : { label: "Up to Date", color: "green" };
+};

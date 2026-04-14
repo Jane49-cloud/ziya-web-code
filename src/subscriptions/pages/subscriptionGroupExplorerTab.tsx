@@ -79,10 +79,10 @@ export default function SubscriptionGroupExplorerTab() {
       render: (_: unknown, record: Record<string, unknown>) =>
         toDisplayText(
           record.value ??
-            record.amount ??
-            record.total ??
-            record.subscription_status ??
-            record.status,
+          record.amount ??
+          record.total ??
+          record.subscription_status ??
+          record.status,
         ),
     },
     {

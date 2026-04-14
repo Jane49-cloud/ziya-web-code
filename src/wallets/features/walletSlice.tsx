@@ -38,15 +38,6 @@ export const WalletSlice = apiSlice.injectEndpoints({
 
 
 
-        // createPersonalWalletDeposit: builder.mutation({
-        //     query: (payload) => ({
-        //         url: "/personal-wallets/deposit",
-        //         method: "POST",
-        //         body: payload,
-        //     }),
-        //     invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
-        // }),
-
         createGroupWalletDeposit: builder.mutation({
             query: (payload) => ({
                 url: "/group-wallets/deposit",

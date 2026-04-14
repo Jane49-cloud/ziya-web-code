@@ -1,4 +1,6 @@
-import { Col, Descriptions, Drawer, Empty, Row, Spin, Statistic, Tag } from "antd";
+import { Col, Descriptions, Drawer, Empty, Row, Spin, Statistic } from "antd";
+import { formatCurrency, formatFullName, formatNumber, getSubscriptionStanding } from "../../utils";
+
 
 export type PersonalWalletDetails = {
     id: number;
@@ -18,14 +20,6 @@ type PersonalWalletDetailsDrawerProps = {
     onClose: () => void;
 };
 
-const formatCurrency = (value: number | string | undefined | null) => {
-    const numeric = Number(value ?? 0);
-    if (Number.isNaN(numeric)) return "KES 0";
-    return `KES ${numeric.toLocaleString()}`;
-};
-
-const getFullName = (record?: Partial<PersonalWalletDetails> | null) =>
-    `${record?.firstname ?? ""} ${record?.lastname ?? ""}`.trim() || "—";
 
 const PersonalWalletDetailsDrawer = ({
     open,
@@ -33,7 +27,7 @@ const PersonalWalletDetailsDrawer = ({
     wallet,
     onClose,
 }: PersonalWalletDetailsDrawerProps) => {
-    const hasArrears = Number(wallet?.arrears ?? 0) > 0;
+    const hasArrears = getSubscriptionStanding(wallet?.arrears);
 
     return (
         <Drawer
@@ -66,7 +60,7 @@ const PersonalWalletDetailsDrawer = ({
                             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <Statistic
                                     title="Total Transactions"
-                                    value={wallet.total_transactions ?? 0}
+                                    value={formatNumber(wallet.total_transactions)}
                                 />
                             </div>
                         </Col>
@@ -83,11 +77,7 @@ const PersonalWalletDetailsDrawer = ({
                         <Col span={12}>
                             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <div className="mb-2 text-xs text-slate-500">Status</div>
-                                {hasArrears ? (
-                                    <Tag color="red">In Arrears</Tag>
-                                ) : (
-                                    <Tag color="green">Up to Date</Tag>
-                                )}
+                                {hasArrears.label}
                             </div>
                         </Col>
                     </Row>
@@ -106,7 +96,7 @@ const PersonalWalletDetailsDrawer = ({
                                 {wallet.customer_id}
                             </Descriptions.Item>
                             <Descriptions.Item label="Customer Name">
-                                {getFullName(wallet)}
+                                {formatFullName(wallet.firstname, wallet.lastname)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Phone Number">
                                 {wallet.phone_number || "—"}
@@ -118,7 +108,7 @@ const PersonalWalletDetailsDrawer = ({
                                 {formatCurrency(wallet.arrears)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Total Transactions">
-                                {wallet.total_transactions ?? 0}
+                                {formatNumber(wallet.total_transactions)}
                             </Descriptions.Item>
                         </Descriptions>
                     </div>
