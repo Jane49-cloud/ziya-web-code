@@ -31,31 +31,30 @@ const SingleGroupPage: React.FC = () => {
 
   const groupDetails = group
     ? [
-        {
-          key: "1",
-          label: "Name",
-          value: formatName(group.name) || "Unnamed Group",
-        },
-        {
-          key: "2",
-          label: "Bio",
-          value: group.bio || "No bio available",
-        },
-        {
-          key: "5",
-          label: "Relationship Manager",
-          value: formatName(
-            `${group.manager?.firstname ?? ""} ${
-              group.manager?.lastname ?? ""
-            }`
-          ),
-        },
-        {
-          key: "6",
-          label: "Admin",
-          value: formatName(group.adminUser?.name || "") || "N/A",
-        },
-      ]
+      {
+        key: "1",
+        label: "Name",
+        value: formatName(group.name) || "Unnamed Group",
+      },
+      {
+        key: "2",
+        label: "Bio",
+        value: group.bio || "No bio available",
+      },
+      {
+        key: "5",
+        label: "Relationship Manager",
+        value: formatName(
+          `${group.manager?.firstname ?? ""} ${group.manager?.lastname ?? ""
+          }`
+        ),
+      },
+      {
+        key: "6",
+        label: "Admin",
+        value: formatName(group.adminUser?.name || "") || "N/A",
+      },
+    ]
     : [];
 
   const columns = [
