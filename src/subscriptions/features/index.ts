@@ -1,8 +1,9 @@
-export {
+import { subscriptionsApi } from "./subscriptionsSlice";
+
+export const {
   useGetAllSubscriptionsQuery,
   useGetSubscriptionsByGroupQuery,
   useGetAllSubscriptionRevenueQuery,
-
   useGetGroupSubscriptionRevenueQuery,
 
   useGetCustomerSubscriptionsQuery,
@@ -11,4 +12,9 @@ export {
   useTriggerSubscriptionCollectionNotifyMutation,
   useTriggerSubscriptionArrearsMutation,
   useTriggerSubscriptionArrearsNotifyMutation,
-} from "./subscriptionsSlice";
+
+  useMarkSubscriptionPaidMutation,
+
+} = subscriptionsApi
+
+

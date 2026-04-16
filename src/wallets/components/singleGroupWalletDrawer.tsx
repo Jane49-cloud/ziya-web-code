@@ -152,7 +152,11 @@ const SingleGroupWalletDrawer = ({
                 <Empty description="No group wallet selected" />
             )}
         </Drawer>
+
+
     );
+
+
 };
 
 export default SingleGroupWalletDrawer;

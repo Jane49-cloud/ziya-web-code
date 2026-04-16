@@ -1,18 +1,12 @@
 import { Drawer, Empty, Table, Tag, Typography } from "antd";
-import { useEffect, useMemo } from "react";
-import { useGetAllSubscriptionsQuery } from "../features";
+import { formatName } from "../../utils";
 import {
-    normalizeSubscriptionCollection,
     toCurrency,
     toDateText,
     toDisplayText,
     type SubscriptionRecord,
 } from "../types";
-import {
-    SubscriptionLoader,
-    subscriptionTableClassName,
-} from "./subscriptionUi";
-import { formatName } from "../../utils";
+import { subscriptionTableClassName } from "./subscriptionUi";
 
 const { Text, Title } = Typography;
 
@@ -21,6 +15,7 @@ type SingleCustomerSubscriptionDrawerProps = {
     onClose: () => void;
     customerId: string | number | null;
     customerName?: string | null;
+    subscriptions: SubscriptionRecord[];
 };
 
 export default function SingleCustomerSubscriptionDrawer({
@@ -28,36 +23,18 @@ export default function SingleCustomerSubscriptionDrawer({
     onClose,
     customerId,
     customerName,
+    subscriptions,
 }: SingleCustomerSubscriptionDrawerProps) {
-    const { data, isLoading, isFetching } = useGetAllSubscriptionsQuery(undefined, {
-        skip: !open || !customerId,
-    });
-
-    const rows = useMemo(() => normalizeSubscriptionCollection(data), [data]);
-
-    const subscriptions = useMemo(() => {
-        if (!customerId) return [];
-        return rows.filter(
-            (record) => String(record.customer_id ?? "") === String(customerId),
-        );
-    }, [rows, customerId]);
-
-    useEffect(() => {
-        if (open && customerId) {
-            console.log(
-                `[subscriptions] customer history payload for ${customerId}`,
-                subscriptions,
-            );
-        }
-    }, [open, customerId, subscriptions]);
-
     const resolvedCustomerName =
-        formatName(
-            String(
-                customerName ??
-                `${subscriptions[0]?.firstname ?? ""} ${subscriptions[0]?.lastname ?? ""}`.trim(),
+        toDisplayText(
+            formatName(
+                String(
+                    customerName ??
+                    `${subscriptions[0]?.firstname ?? ""} ${subscriptions[0]?.lastname ?? ""}`.trim(),
+                ),
             ),
-        ) || `Customer ${customerId ?? ""}`;
+            customerId ? `Customer ${customerId}` : "Customer",
+        );
 
     const customerColumns = [
         {
@@ -66,7 +43,10 @@ export default function SingleCustomerSubscriptionDrawer({
             render: (_: unknown, record: SubscriptionRecord) => (
                 <div className="min-w-0">
                     <div className="font-semibold text-slate-900">
-                        {toDisplayText(formatName(String(record.group_name ?? "")), "Unknown group")}
+                        {toDisplayText(
+                            formatName(String(record.group_name ?? "")),
+                            record.group_id ? `Group ${record.group_id}` : "Unknown group",
+                        )}
                     </div>
                 </div>
             ),
@@ -101,8 +81,7 @@ export default function SingleCustomerSubscriptionDrawer({
         {
             title: "Amount",
             key: "amount",
-            render: (_: unknown, record: SubscriptionRecord) =>
-                toCurrency(record.amount),
+            render: (_: unknown, record: SubscriptionRecord) => toCurrency(record.amount),
         },
         {
             title: "Phone",
@@ -143,18 +122,15 @@ export default function SingleCustomerSubscriptionDrawer({
         >
             {!customerId ? (
                 <Empty description="Missing customer ID" />
-            ) : isLoading && !subscriptions.length ? (
-                <SubscriptionLoader title={`Loading customer ${customerId}`} />
             ) : !subscriptions.length ? (
                 <Empty description="No subscription history for this customer" />
             ) : (
                 <Table
                     rowKey={(record) =>
-                        String(record.id ?? record.customer_id ?? JSON.stringify(record))
+                        String(record.id ?? `${record.customer_id}-${record.group_id}-${record.start_date}`)
                     }
                     columns={customerColumns}
                     dataSource={subscriptions}
-                    loading={isFetching}
                     pagination={{ pageSize: 8, showSizeChanger: true }}
                     scroll={{ x: 900 }}
                     className={subscriptionTableClassName}

@@ -133,7 +133,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: [{ type: "Groups" }],
     }),
 
-    updateGroupWallet: builder.mutation({
+    updateGroupWalleti: builder.mutation({
       query: ({
         id,
         amount,
@@ -149,6 +149,8 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
     }),
+
+
     getAllGroupActivities: builder.query({
       query: () => "/group-activities/all",
     }),
