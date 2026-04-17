@@ -1,18 +1,12 @@
 import { Drawer, Empty, Table, Tag, Typography } from "antd";
-import { useEffect, useMemo } from "react";
-import { useGetSubscriptionsByGroupQuery } from "../features";
+import { formatName } from "../../utils";
 import {
-    normalizeSubscriptionCollection,
     toCurrency,
     toDateText,
     toDisplayText,
     type SubscriptionRecord,
 } from "../types";
-import {
-    SubscriptionLoader,
-    subscriptionTableClassName,
-} from "./subscriptionUi";
-import { formatName } from "../../utils";
+import { subscriptionTableClassName } from "./subscriptionUi";
 
 const { Text, Title } = Typography;
 
@@ -21,75 +15,40 @@ type SingleGroupSubscriptionDrawerProps = {
     onClose: () => void;
     groupId: string | number | null;
     groupName?: string | null;
-    customerId?: string | number | null;
-    customerName?: string | null;
-    phoneNumber?: string | null;
+    subscriptions: SubscriptionRecord[];
 };
+
+const getCustomerName = (record: SubscriptionRecord) =>
+    toDisplayText(
+        formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`.trim()),
+        record.customer_id ? `Customer ${record.customer_id}` : "Unknown customer",
+    );
 
 export default function SingleGroupSubscriptionDrawer({
     open,
     onClose,
     groupId,
     groupName,
-    customerId,
-    customerName,
-    phoneNumber,
+    subscriptions,
 }: SingleGroupSubscriptionDrawerProps) {
-    const { data: groupData, isLoading, isFetching } = useGetSubscriptionsByGroupQuery(
-        groupId ?? "",
-        { skip: !open || !groupId },
-    );
-
-    const subscriptions = useMemo(
-        () => normalizeSubscriptionCollection(groupData),
-        [groupData],
-    );
-
-    useEffect(() => {
-        if (open && groupId) {
-            console.log(
-                `[subscriptions] detail group payload for ${groupId}`,
-                subscriptions,
-            );
-        }
-    }, [open, groupId, subscriptions]);
-
     const resolvedGroupName =
-        formatName(
-            String(
-                groupName ??
-                subscriptions[0]?.group_name ??
-                subscriptions[0]?.name ??
-                `Group ${groupId ?? ""}`,
-            ),
-        ) || `Group ${groupId ?? ""}`;
+        toDisplayText(
+            formatName(String(groupName ?? subscriptions[0]?.group_name ?? "")),
+            groupId ? `Group ${groupId}` : "Group",
+        );
 
     const subscriptionColumns = [
         {
             title: "Customer",
             key: "customer",
-            render: (_: unknown, record: SubscriptionRecord) => {
-                const resolvedName =
-                    formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`.trim()) ||
-                    customerName ||
-                    `Customer ${customerId ?? ""}`;
-
-                const resolvedPhone =
-                    toDisplayText(record.phone_number, "") ||
-                    phoneNumber ||
-                    "No phone";
-
-                return (
-                    <div className="min-w-0">
-                        <div className="font-semibold text-slate-900">
-                            {toDisplayText(resolvedName, "Unknown customer")}
-                        </div>
-                        <Text className="text-xs text-slate-500">
-                            {resolvedPhone}
-                        </Text>
-                    </div>
-                );
-            },
+            render: (_: unknown, record: SubscriptionRecord) => (
+                <div className="min-w-0">
+                    <div className="font-semibold text-slate-900">{getCustomerName(record)}</div>
+                    <Text className="text-xs text-slate-500">
+                        {toDisplayText(record.phone_number, "No phone")}
+                    </Text>
+                </div>
+            ),
         },
         {
             title: "Plan",
@@ -121,8 +80,7 @@ export default function SingleGroupSubscriptionDrawer({
         {
             title: "Amount",
             key: "amount",
-            render: (_: unknown, record: SubscriptionRecord) =>
-                toCurrency(record.amount),
+            render: (_: unknown, record: SubscriptionRecord) => toCurrency(record.amount),
         },
         {
             title: "Start Date",
@@ -157,18 +115,15 @@ export default function SingleGroupSubscriptionDrawer({
         >
             {!groupId ? (
                 <Empty description="Missing group ID" />
-            ) : isLoading && !subscriptions.length ? (
-                <SubscriptionLoader title={`Loading group ${groupId}`} />
             ) : !subscriptions.length ? (
                 <Empty description="No subscription records for this group" />
             ) : (
                 <Table
                     rowKey={(record) =>
-                        String(record.id ?? record.group_id ?? JSON.stringify(record))
+                        String(record.id ?? `${record.group_id}-${record.customer_id}-${record.start_date}`)
                     }
                     columns={subscriptionColumns}
                     dataSource={subscriptions}
-                    loading={isFetching}
                     pagination={{ pageSize: 8, showSizeChanger: true }}
                     scroll={{ x: 900 }}
                     className={subscriptionTableClassName}

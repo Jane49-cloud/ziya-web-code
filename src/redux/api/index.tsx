@@ -70,6 +70,7 @@ export const apiSlice = createApi({
     "Wallets",
     "WalletTransactions",
     "Subscriptions",
+    "Visualization",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

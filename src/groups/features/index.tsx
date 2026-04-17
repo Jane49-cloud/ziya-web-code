@@ -14,7 +14,7 @@ export const {
   useGetGroupMembersQuery,
   useGetGroupWalletQuery,
   useGetAllGroupWalletsQuery,
-  useUpdateGroupWalletMutation,
+  useUpdateGroupWalletiMutation,
   useGetGroupLoansQuery,
   useGetAllGroupActivitiesQuery,
   useGetGroupActivitiesByUserQuery,

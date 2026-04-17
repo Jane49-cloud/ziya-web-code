@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   useGetGroupWalletQuery,
-  useUpdateGroupWalletMutation,
+  useUpdateGroupWalletiMutation,
 } from "../features";
 import { Card, Table, Typography, Spin, message, Row, Col, Statistic, Space } from "antd";
 import EditWalletModal from "./editWalletModel";
@@ -16,7 +16,7 @@ const GroupWalletTab = ({ groupId }: { groupId: number }) => {
     pollingInterval: 180000,
   });
   const [walletModalVisible, setWalletModalVisible] = useState(false);
-  const [updateWallet] = useUpdateGroupWalletMutation();
+  const [updateWallet] = useUpdateGroupWalletiMutation();
 
   // const wallet = data?.wallet;
   const wallet = data;

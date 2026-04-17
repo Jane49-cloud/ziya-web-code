@@ -54,8 +54,8 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
         url: `/subscriptions/customer/${customerId}`,
         method: "GET",
       }),
-      providesTags: (_result, _error, groupId) => [
-        { type: "Subscriptions", id: `GROUP-${groupId}` },
+      providesTags: (_result, _error, customerId) => [
+        { type: "Subscriptions", id: `CUSTOMER-${customerId}` },
       ],
     }),
 
@@ -101,19 +101,27 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
         method: "POST",
       }),
     }),
+
+    //mark-subs
+    markSubscriptionPaid: builder.mutation<
+      SubscriptionApiResponse,
+      string | number
+    >({
+      query: (subscriptionId) => ({
+        url: `/subscriptions/${subscriptionId}/mark-paid`,
+        method: "POST",
+      }),
+      invalidatesTags: [
+        { type: "Subscriptions", id: "LIST" },
+        { type: "Subscriptions", id: "REVENUE" },
+        { type: "Wallets" },
+        { type: "WalletTransactions" },
+      ],
+    }),
+
   }),
+
+
 });
 
-export const {
-  useGetAllSubscriptionsQuery,
-  useGetSubscriptionsByGroupQuery,
-  useGetAllSubscriptionRevenueQuery,
-  useGetGroupSubscriptionRevenueQuery,
 
-  useGetCustomerSubscriptionsQuery,
-
-  useTriggerSubscriptionCollectionMutation,
-  useTriggerSubscriptionCollectionNotifyMutation,
-  useTriggerSubscriptionArrearsMutation,
-  useTriggerSubscriptionArrearsNotifyMutation,
-} = subscriptionsApi;

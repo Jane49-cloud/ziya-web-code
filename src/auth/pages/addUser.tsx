@@ -35,7 +35,12 @@ const addUserSchema = Yup.object().shape({
     .max(50, "Maximum 50 characters")
     .required("Email is required"),
   country_code: Yup.string().required("Country code is required"),
-  phone_number: Yup.string().required("Phone number is required"),
+
+  phone_number: Yup.string()
+    .matches(/^\d+$/, "Phone number must contain only numbers")
+    .min(9, "Phone number is too short")
+    .max(15, "Phone number is too long")
+    .required("Phone number is required"),
 
   role_id: Yup.string().required("User role is required"),
 });
@@ -52,14 +57,16 @@ function FormField({
   formik,
   type = "text",
   placeholder,
+  numbersOnly = false,
 }: {
   id: keyof typeof initialValues;
   label: string;
   type?: string;
   placeholder?: string;
+  numbersOnly?: boolean;
   formik: ReturnType<typeof useFormik<typeof initialValues>>;
 }) {
-  const { touched, errors, getFieldProps } = formik;
+  const { touched, errors, getFieldProps, setFieldValue } = formik;
   const hasError = touched[id] && errors[id];
 
   return (
@@ -75,6 +82,14 @@ function FormField({
         type={type}
         placeholder={placeholder}
         {...getFieldProps(id)}
+        onInput={
+          numbersOnly
+            ? (e) => {
+              const value = e.currentTarget.value.replace(/\D/g, "");
+              setFieldValue(id, value);
+            }
+            : undefined
+        }
         className={clsx(
           "form-control block w-full rounded-md border px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
           hasError
@@ -189,50 +204,9 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               label="Phone Number"
               formik={formik}
               placeholder="e.g. 07123456789"
+              numbersOnly
             />
 
-            {/* Password Field */}
-            {/* <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...formik.getFieldProps("password")}
-                  className={clsx(
-                    "form-control block w-full rounded-md border px-3 py-2 pr-10 text-sm placeholder-gray-400 focus:outline-none focus:ring-2",
-                    formik.touched.password && formik.errors.password
-                      ? "border-red-500 focus:ring-red-200"
-                      : "border-gray-300 focus:ring-indigo-200"
-                  )}
-                />
-                <button
-                  type="button"
-                  onClick={togglePassword}
-                  className="absolute right-2 top-2 text-gray-500 focus:outline-none"
-                >
-                  {showPassword ? (
-                    <KeenIcon
-                      icon="eye-slash"
-                      style="solid"
-                      className="h-5 w-5"
-                    />
-                  ) : (
-                    <KeenIcon icon="eye" style="solid" className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {formik.touched.password && formik.errors.password && (
-                <div className="mt-1 text-xs text-red-500">
-                  {formik.errors.password}
-                </div>
-              )}
-            </div> */}
 
             {/* User Role */}
             <div>

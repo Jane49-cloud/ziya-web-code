@@ -7,6 +7,8 @@ export const {
     useGetSingleGroupWalletQuery,
     useCreateGroupWalletDepositMutation,
 
+    useUpdateGroupWalletMutation,
+
 
 
 } = WalletSlice;
