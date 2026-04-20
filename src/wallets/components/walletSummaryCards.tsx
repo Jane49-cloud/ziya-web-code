@@ -1,6 +1,5 @@
 import { Card, Space, Typography } from "antd";
-import { FiLayers, FiUser, FiCreditCard } from "react-icons/fi";
-import { formatCurrency } from "../../utils";
+import { FiLayers, FiUser } from "react-icons/fi";
 
 const { Text } = Typography;
 
@@ -47,7 +46,7 @@ const WalletSummaryCards = ({ summary }: Props) => {
                     </Space>
                 </div>
 
-                <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 transition-all duration-300 ease-out transform hover:scale-[1.02] hover:shadow-sm ">
+                {/* <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 transition-all duration-300 ease-out transform hover:scale-[1.02] hover:shadow-sm ">
                     <Space align="start" size={14}>
                         <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
                             <FiCreditCard size={18} />
@@ -59,7 +58,7 @@ const WalletSummaryCards = ({ summary }: Props) => {
                             </div>
                         </div>
                     </Space>
-                </div>
+                </div> */}
             </div>
         </Card>
     );
