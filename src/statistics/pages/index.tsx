@@ -1,4 +1,3 @@
-// pages/Statistics/index.tsx
 import React, { useState } from "react";
 import { Tabs, Card, Alert, Spin } from "antd";
 import {
@@ -7,12 +6,14 @@ import {
   DollarSign,
   UserCog,
   TrendingUp,
+  Activity,
 } from "lucide-react";
 
 import { CustomerStatsTab } from "../components/customersStatTab";
 import { GeneralStatsTab } from "../components/generalStatTab";
 import { LoanStatsTab } from "../components/loanStatsTab";
 import { StaffStatsTab } from "../components/staffStatTab";
+import { ActivityTab } from "../components/activityTab";
 
 import {
   useGetCustomerStatQuery,
@@ -28,10 +29,15 @@ import {
   StaffStats,
 } from "../types/statistics";
 
+import { getRole } from "../../utils";
+import { ADMIN_DEV, canAccess, type UserRole } from "../../utils/roles";
+
 const StatisticsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
 
-  // Data queries
+  const userRole = getRole() as UserRole | null;
+  const canViewUserLogs = canAccess(ADMIN_DEV, userRole);
+
   const customer = useGetCustomerStatQuery({});
   const loan = useGetLoanStatQuery({});
   const staff = useGetStaffStatQuery({});
@@ -50,7 +56,6 @@ const StatisticsPage: React.FC = () => {
     general.error
   );
 
-  // Tabs configuration
   const tabItems = [
     {
       key: "general",
@@ -120,12 +125,30 @@ const StatisticsPage: React.FC = () => {
         </div>
       ),
     },
+
+    ...(canViewUserLogs
+      ? [
+        {
+          key: "users-logs",
+          label: (
+            <span className="flex items-center gap-2 px-2">
+              <Activity size={16} />
+              <span className="font-medium">Users' Logs</span>
+            </span>
+          ),
+          children: (
+            <div className="p-6">
+              <ActivityTab />
+            </div>
+          ),
+        },
+      ]
+      : []),
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-6">
           <Card
             className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm"
@@ -156,7 +179,6 @@ const StatisticsPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Error Alert */}
         {hasError && (
           <Alert
             message="Error Loading Statistics"
@@ -168,7 +190,6 @@ const StatisticsPage: React.FC = () => {
           />
         )}
 
-        {/* Tabs */}
         <Card
           className="rounded-xl border border-slate-200 shadow-sm"
           bodyStyle={{ padding: 0 }}
@@ -189,7 +210,6 @@ const StatisticsPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Custom Styles */}
       <style>{`
         .statistics-tabs .ant-tabs-tab {
           padding: 16px 8px;

@@ -34,3 +34,21 @@ export interface GeneralStats {
 export type StaffStats = StatisticItem[];
 
 export type StatCategory = "customers" | "loans" | "staff" | "general";
+
+
+//activities
+export interface ActivityLog {
+  ID: number;
+  StaffID: number;
+  Action: string;
+  Description: string;
+  Source: string;
+  Status: string;
+  ReferenceID: number | null;
+  Metadata: Record<string, unknown>;
+  CreatedAt: string;
+}
+
+export interface ActivitiesResponse {
+  data: ActivityLog[];
+}
