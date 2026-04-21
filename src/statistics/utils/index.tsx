@@ -1,4 +1,5 @@
 import type { StatisticItem } from "../types/statistics";
+import { useState } from "react";
 
 export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("en-KE", {
@@ -59,4 +60,54 @@ export const formatRelativeTime = (dateString: string): string => {
     day: "numeric",
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
+};
+
+export const formatDate = (value?: string) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export const statusColor = (status?: string) => {
+  const value = (status ?? "").toLowerCase();
+  if (value === "success") return "green";
+  if (value === "failed" || value === "error") return "red";
+  if (value === "pending") return "orange";
+  return "default";
+};
+
+
+
+
+// Custom hook for filtering and sorting activity logs
+export const useActivityFilter = () => {
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [dateOrder, setDateOrder] = useState<"latest" | "oldest" | undefined>(
+    "latest"
+  );
+
+  const handleResetFilters = () => {
+    setSearchText("");
+    setStatusFilter(undefined);
+    setDateOrder("latest");
+  };
+
+  return {
+    searchText,
+    setSearchText,
+    statusFilter,
+    setStatusFilter,
+    dateOrder,
+    setDateOrder,
+    handleResetFilters,
+  };
 };

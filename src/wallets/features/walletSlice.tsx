@@ -23,10 +23,8 @@ export const WalletSlice = apiSlice.injectEndpoints({
                 url: `/personal-wallets/customer/${customerId}`,
                 method: "GET",
             }),
-            providesTags: (_result, _error, customerId) => [{ type: "Wallets", id: `personal-customer-${customerId}`, }],
+            providesTags: (_result, _error, customerId) => [{ type: "Wallets", id: `personal-customer-${customerId}` }],
         }),
-
-
 
         getSingleGroupWallet: builder.query({
             query: (id: number) => ({
@@ -36,8 +34,6 @@ export const WalletSlice = apiSlice.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: "Wallets", id }],
         }),
 
-
-
         createGroupWalletDeposit: builder.mutation({
             query: (payload) => ({
                 url: "/group-wallets/deposit",
@@ -46,5 +42,16 @@ export const WalletSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
         }),
+
+        // Update Group Wallet
+        updateGroupWallet: builder.mutation({
+            query: (payload) => ({
+                url: `/group-wallets/update/${payload.id}`,
+                method: "PATCH",
+                body: payload,
+            }),
+            invalidatesTags: ({ id }) => [{ type: "Wallets", id }],
+        }),
     }),
 });
+

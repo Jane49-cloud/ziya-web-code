@@ -37,6 +37,13 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         name={name}
         type={type}
         required={required}
+        onInput={
+          name === "phone_number"
+            ? (e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
+            }
+            : undefined
+        }
         className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
       />
     </div>
@@ -51,7 +58,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {renderInput("firstname", "First Name")}
           {renderInput("lastname", "Last Name")}
-          {renderInput("phone_number", "Phone Number")}
+          {renderInput("phone_number", "Phone Number", "text")}
 
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">
@@ -86,9 +93,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 ${
-              isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
           >
             {isLoading ? "Saving..." : "Save"}
           </button>

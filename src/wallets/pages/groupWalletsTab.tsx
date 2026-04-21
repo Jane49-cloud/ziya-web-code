@@ -7,11 +7,13 @@ import {
     FiUsers,
     FiPlusCircle,
     FiEye,
+    FiEdit,
 } from "react-icons/fi";
 import { useGetGroupWalletsQuery } from "../features/index";
 import { formatName, getRole, formatCurrency } from "../../utils";
 import SingleGroupWalletDrawer, { type GroupWallet } from "../components/singleGroupWalletDrawer";
 import GroupDepositDrawer from "../components/walletDepositsDrawer";
+import UpdateGroupWalletDrawer from "../components/UpdateGroupWalletDrawer";
 
 import { canAccess, type UserRole } from "../../utils/roles";
 
@@ -52,29 +54,36 @@ const GroupWalletsTab = () => {
     }, [rows, searchTerm]);
 
     const [selectedGroup, setSelectedGroup] = useState<GroupWallet | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-    const [depositGroup, setDepositGroup] = useState<GroupWallet | null>(null);
+    const [isSingleDrawerOpen, setIsSingleDrawerOpen] = useState(false);
     const [isDepositDrawerOpen, setIsDepositDrawerOpen] = useState(false);
+
+    const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
 
     const handleViewGroup = (record: GroupWallet) => {
         setSelectedGroup(record);
-        setIsDrawerOpen(true);
+        setIsSingleDrawerOpen(true);
     };
 
     const handleDepositGroup = (record: GroupWallet) => {
-        setDepositGroup(record);
+        setSelectedGroup(record);
         setIsDepositDrawerOpen(true);
     };
 
-    const handleCloseDrawer = () => {
-        setIsDrawerOpen(false);
-        setSelectedGroup(null);
+    //update
+
+
+    const handleUpdateGroup = (record: GroupWallet) => {
+        setSelectedGroup(record);
+        setIsUpdateDrawerOpen(true);
     };
 
-    const handleCloseDepositDrawer = () => {
+
+
+    const handleCloseDrawer = () => {
+        setIsSingleDrawerOpen(false);
         setIsDepositDrawerOpen(false);
-        setDepositGroup(null);
+        setIsUpdateDrawerOpen(false);
+        setSelectedGroup(null);
     };
 
     const columns: ColumnsType<GroupWallet> = [
@@ -128,7 +137,7 @@ const GroupWalletsTab = () => {
         {
             title: "Actions",
             key: "views",
-            width: 100,
+            width: 80,
             align: "center",
             fixed: "right",
             render: (_value, record) => {
@@ -156,10 +165,21 @@ const GroupWalletsTab = () => {
                             </button>
                         )}
 
+                        {canAccess(["admin", "dev", "finance"], userRole) && (
+                            <button
+                                type="button"
+                                onClick={() => handleUpdateGroup(record)}
+                                className="flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer bg-white text-sky-500 transition hover:bg-sky-50 hover:text-sky-600"
+                                aria-label="Update"
+                                title="Update"
+                            >
+                                <FiEdit size={16} />
+                            </button>
+                        )}
                     </div>
                 );
             },
-        },
+        }
 
     ];
 
@@ -210,7 +230,7 @@ const GroupWalletsTab = () => {
             />
 
             <SingleGroupWalletDrawer
-                open={isDrawerOpen}
+                open={isSingleDrawerOpen}
                 onClose={handleCloseDrawer}
                 group={selectedGroup}
             />
@@ -219,10 +239,19 @@ const GroupWalletsTab = () => {
 
             <GroupDepositDrawer
                 open={isDepositDrawerOpen}
-                onClose={handleCloseDepositDrawer}
-                group={depositGroup}
+                onClose={handleCloseDrawer}
+                group={selectedGroup}
+
+            />
+
+            <UpdateGroupWalletDrawer
+                open={isUpdateDrawerOpen}
+                onClose={handleCloseDrawer}
+                group={selectedGroup}
             />
         </Card>
+
+
     );
 };
 

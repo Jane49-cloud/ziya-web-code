@@ -63,6 +63,8 @@ import { EditDocumentForm } from "../documents/pages/editDocument";
 import HomeLoading from "../components/common/homeLoading";
 import SubscriptionsPage from "../subscriptions";
 import GroupSubscriptionDetailsPage from "../subscriptions/pages/groupSubscriptionDetails";
+// visualization
+import VisualizationsPage from "../visualization/visualizationIndex";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
@@ -148,6 +150,9 @@ const AppRouting = (): ReactElement => {
               <Route path=":id" element={<BlogDetailsPage />} />
               <Route path=":id/edit" element={<BlogComposerPage />} />
             </Route>
+
+
+
           </Route>
         </Route>
 
@@ -157,7 +162,14 @@ const AppRouting = (): ReactElement => {
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-categories" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
+
+            {/* visualization */}
+            <Route path="/visualizations" element={<VisualizationsPage />} />
+
           </Route>
+
+
+
         </Route>
 
         {/* Staff management (admin, dev, support) */}

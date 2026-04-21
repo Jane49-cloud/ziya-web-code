@@ -184,4 +184,12 @@ export const sidebarItems: SidebarItem[] = [
     path: "/analysis",
     allowedRoles: STAFF_ROLES,
   },
+
+  // visualization
+  {
+    title: "Visualizations",
+    icon: "chart-line",
+    path: "/visualizations",
+    allowedRoles: ADMIN_DEV,
+  },
 ];
