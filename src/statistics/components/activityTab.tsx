@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Table,
     Tag,
@@ -11,11 +10,18 @@ import {
     Space,
 } from "antd";
 import { ReloadOutlined, EyeOutlined, SearchOutlined } from "@ant-design/icons";
-import { useGetAllUsersActivitiesQuery } from "../features/statSlice";
+import { useLazyGetAllUsersActivitiesQuery } from "../features/statSlice";
 import type { ActivityLog } from "../types/statistics";
 import { formatDate, statusColor } from "../utils/index";
-import { useActivityFilter } from "../utils/index";
 import SingleUserActivityDrawer from "./singleUserActivityDrawer";
+
+const BATCH_SIZE = 100;
+
+const dedupeById = (items: ActivityLog[]) => {
+    const map = new Map<number, ActivityLog>();
+    items.forEach((item) => map.set(item.ID, item));
+    return Array.from(map.values());
+};
 
 export const ActivityTab: React.FC = () => {
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,24 +29,109 @@ export const ActivityTab: React.FC = () => {
         number | string | null
     >(null);
 
-    const { data, isLoading, isFetching, refetch } =
-        useGetAllUsersActivitiesQuery({
-            page: 1,
-            page_size: 100,
-        });
+    const [uiPage, setUiPage] = useState(1);
+    const [uiPageSize, setUiPageSize] = useState(10);
 
-    const {
-        searchText,
-        setSearchText,
-        statusFilter,
-        setStatusFilter,
-        dateOrder,
-        setDateOrder,
+    // cached backend batches
+    const [rows, setRows] = useState<ActivityLog[]>([]);
+    const [backendPage, setBackendPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isBootstrapping, setIsBootstrapping] = useState(false);
 
-    } = useActivityFilter();  // Use custom hook for filtering
 
-    const response = data as { data?: ActivityLog[] } | undefined;
-    const rows = response?.data ?? [];
+    const [searchText, setSearchText] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string | undefined>(
+        undefined
+    );
+    const [dateOrder, setDateOrder] = useState<"latest" | "oldest" | undefined>(
+        undefined
+    );
+
+    const [fetchActivities, { isLoading, isFetching }] =
+        useLazyGetAllUsersActivitiesQuery();
+
+    const handleViewStaffActivities = (staffId: number | string) => {
+        setSelectedStaffId(staffId);
+        setDrawerOpen(true);
+    };
+
+    const loadBatch = async (pageToLoad: number, reset = false) => {
+        const result = await fetchActivities({
+            page: pageToLoad,
+            page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batch = ((result as { data?: ActivityLog[] } | undefined)?.data ??
+            []) as ActivityLog[];
+
+        setRows((prev) => (reset ? batch : dedupeById([...prev, ...batch])));
+        setBackendPage(pageToLoad);
+        setHasMore(batch.length === BATCH_SIZE);
+
+        return batch;
+    };
+
+    const ensureRowsForPage = async (nextUiPage: number, nextUiPageSize: number) => {
+        let workingRows = [...rows];
+        let workingBackendPage = backendPage;
+        let workingHasMore = hasMore;
+
+        const requiredCount = nextUiPage * nextUiPageSize;
+
+        while (workingRows.length < requiredCount && workingHasMore) {
+            const result = await fetchActivities({
+                page: workingBackendPage + 1,
+                page_size: BATCH_SIZE,
+            }).unwrap();
+
+            const batch = ((result as { data?: ActivityLog[] } | undefined)?.data ??
+                []) as ActivityLog[];
+
+            workingRows = dedupeById([...workingRows, ...batch]);
+            workingBackendPage += 1;
+            workingHasMore = batch.length === BATCH_SIZE;
+        }
+
+        setRows(workingRows);
+        setBackendPage(workingBackendPage);
+        setHasMore(workingHasMore);
+    };
+
+    const handleRefresh = async () => {
+        setIsBootstrapping(true);
+        try {
+            setUiPage(1);
+            setRows([]);
+            setBackendPage(0);
+            setHasMore(true);
+            await loadBatch(1, true);
+        } finally {
+            setIsBootstrapping(false);
+        }
+    };
+
+    useEffect(() => {
+        let mounted = true;
+
+        const bootstrap = async () => {
+            if (rows.length > 0 || !mounted) return;
+
+            setIsBootstrapping(true);
+            try {
+                await loadBatch(1, true);
+            } finally {
+                if (mounted) setIsBootstrapping(false);
+            }
+        };
+
+        void bootstrap();
+
+        return () => {
+            mounted = false;
+        };
+        // intentionally only on mount / initial empty state
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const filteredRows = useMemo(() => {
         const query = searchText.trim().toLowerCase();
@@ -135,10 +226,14 @@ export const ActivityTab: React.FC = () => {
         []
     );
 
-    const handleViewStaffActivities = (staffId: number | string) => {
-        setSelectedStaffId(staffId);
-        setDrawerOpen(true);
+    const handleTableChange = async (page: number, pageSize: number) => {
+        await ensureRowsForPage(page, pageSize);
+        setUiPage(page);
+        setUiPageSize(pageSize);
     };
+
+    const progressiveTotal =
+        filteredRows.length + (hasMore && !searchText && !statusFilter ? BATCH_SIZE : 0);
 
     return (
         <>
@@ -153,8 +248,8 @@ export const ActivityTab: React.FC = () => {
 
                     <Button
                         icon={<ReloadOutlined />}
-                        onClick={() => refetch()}
-                        loading={isFetching}
+                        onClick={() => void handleRefresh()}
+                        loading={isFetching || isBootstrapping}
                     >
                         Refresh
                     </Button>
@@ -166,7 +261,10 @@ export const ActivityTab: React.FC = () => {
                         prefix={<SearchOutlined />}
                         placeholder="Search by Staff ID, status, action, source, reference ID"
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => {
+                            setSearchText(e.target.value);
+                            setUiPage(1);
+                        }}
                         style={{ width: 340 }}
                     />
 
@@ -175,7 +273,10 @@ export const ActivityTab: React.FC = () => {
                             allowClear
                             placeholder="Filter by status"
                             value={statusFilter ?? undefined}
-                            onChange={(value) => setStatusFilter(value)}
+                            onChange={(value) => {
+                                setStatusFilter(value);
+                                setUiPage(1);
+                            }}
                             style={{ width: 180 }}
                             options={[
                                 { label: "Success", value: "success" },
@@ -185,7 +286,10 @@ export const ActivityTab: React.FC = () => {
                             ]}
                         />
                         <Button
-                            onClick={() => setStatusFilter(undefined)}
+                            onClick={() => {
+                                setStatusFilter(undefined);
+                                setUiPage(1);
+                            }}
                             disabled={!statusFilter}
                         >
                             Clear
@@ -197,7 +301,10 @@ export const ActivityTab: React.FC = () => {
                             allowClear
                             placeholder="Sort by date"
                             value={dateOrder ?? undefined}
-                            onChange={(value) => setDateOrder(value)}
+                            onChange={(value) => {
+                                setDateOrder(value);
+                                setUiPage(1);
+                            }}
                             style={{ width: 180 }}
                             options={[
                                 { label: "Latest to Oldest", value: "latest" },
@@ -205,7 +312,10 @@ export const ActivityTab: React.FC = () => {
                             ]}
                         />
                         <Button
-                            onClick={() => setDateOrder(undefined)}
+                            onClick={() => {
+                                setDateOrder(undefined);
+                                setUiPage(1);
+                            }}
                             disabled={!dateOrder}
                         >
                             Clear
@@ -216,7 +326,8 @@ export const ActivityTab: React.FC = () => {
                         onClick={() => {
                             setSearchText("");
                             setStatusFilter(undefined);
-                            setDateOrder("latest");
+                            setDateOrder(undefined);
+                            setUiPage(1);
                         }}
                     >
                         Reset All
@@ -227,8 +338,16 @@ export const ActivityTab: React.FC = () => {
                     rowKey="ID"
                     columns={columns}
                     dataSource={filteredRows}
-                    loading={isLoading || isFetching}
-                    pagination={{ pageSize: 10 }}
+                    loading={isLoading || isFetching || isBootstrapping}
+                    pagination={{
+                        current: uiPage,
+                        pageSize: uiPageSize,
+                        total: progressiveTotal,
+                        showSizeChanger: true,
+                        pageSizeOptions: ["10", "20", "50", "100"],
+                        onChange: (page, pageSize) =>
+                            void handleTableChange(page, pageSize),
+                    }}
                     scroll={{ x: 1200 }}
                 />
             </Card>

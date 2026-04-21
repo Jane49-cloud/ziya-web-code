@@ -32,10 +32,21 @@ export const statSlice = apiSlice.injectEndpoints({
     }),
 
     // users activities
+    // getAllUsersActivities: builder.query({
+    //   query: ({ page = 1, page_size = 100 } = {}) => ({
+    //     url: `/staff/activities?page=${page}&page_size=${page_size}`,
+    //     method: "GET",
+    //   }),
+    // }),
+
     getAllUsersActivities: builder.query({
       query: ({ page = 1, page_size = 100 } = {}) => ({
-        url: `/staff/activities?page=${page}&page_size=${page_size}`,
+        url: "/staff/activities",
         method: "GET",
+        params: {
+          page,
+          page_size,
+        },
       }),
     }),
 
@@ -59,6 +70,8 @@ export const {
   useGetGeneralStatQuery,
   //users
   useGetAllUsersActivitiesQuery,
+  useLazyGetAllUsersActivitiesQuery,
+
   useGetSingleUserActivitiesQuery,
   useLazyGetSingleUserActivitiesQuery,
 } = statSlice;
