@@ -1,20 +1,27 @@
 import { apiSlice } from "../../redux/api";
 import type { SubscriptionApiResponse } from "../types";
 
+
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
 export const subscriptionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAllSubscriptions: builder.query<SubscriptionApiResponse, void>({
-      query: () => ({
+    getAllSubscriptions: builder.query<SubscriptionApiResponse, PaginationQuery | void>({
+      query: (params) => ({
         url: "/subscriptions/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
       providesTags: [{ type: "Subscriptions", id: "LIST" }],
     }),
 
-    getSubscriptionsByGroup: builder.query<
-      SubscriptionApiResponse,
-      string | number
-    >({
+    getSubscriptionsByGroup: builder.query<SubscriptionApiResponse, string | number>({
       query: (groupId) => ({
         url: `/subscriptions/group/${groupId}`,
         method: "GET",
@@ -24,10 +31,15 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
       ],
     }),
 
-    getAllSubscriptionRevenue: builder.query<SubscriptionApiResponse, void>({
-      query: () => ({
+
+    getAllSubscriptionRevenue: builder.query<SubscriptionApiResponse, PaginationQuery | void>({
+      query: (params) => ({
         url: "/subscriptions/revenue/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
       providesTags: [{ type: "Subscriptions", id: "REVENUE" }],
     }),

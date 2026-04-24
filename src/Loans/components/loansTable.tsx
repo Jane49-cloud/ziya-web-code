@@ -1,4 +1,12 @@
-import { FC, useState, useMemo } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Table,
   Tag,
@@ -26,11 +34,14 @@ import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
 import type { ColumnsType } from "antd/es/table";
 import { formatDate, customAvatar, formatName } from "../../utils";
+import { useLazyGetAllGroupLoansQuery } from "../features/loanSlice";
 import dayjs from "dayjs";
 
 const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+const BATCH_SIZE = 20;
 
 export interface GroupLoan {
   id: number;
@@ -45,13 +56,60 @@ export interface GroupLoan {
   cycle?: number;
 }
 
-interface Props {
-  data: GroupLoan[];
-  isLoading: boolean;
-}
+const extractGroupLoanRows = (response: any): GroupLoan[] => {
+  if (Array.isArray(response)) return response;
 
-const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
+  if (Array.isArray(response?.loans)) return response.loans;
+
+  if (Array.isArray(response?.group_loans)) return response.group_loans;
+
+  if (Array.isArray(response?.data)) return response.data;
+
+  if (Array.isArray(response?.data?.loans)) return response.data.loans;
+
+  if (Array.isArray(response?.data?.group_loans)) {
+    return response.data.group_loans;
+  }
+
+  return [];
+};
+
+const getGroupLoanCacheKey = (record: GroupLoan) =>
+  String(
+    record.id ??
+    `${record.group_id ?? "group"}-${record.issued_to ?? "customer"}-${record.amount ?? "amount"
+    }-${record.balance ?? "balance"}-${record.date_issued ?? "date"}`,
+  );
+
+const dedupeGroupLoanRows = (items: GroupLoan[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getGroupLoanCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
+const LoanTable: FC = () => {
   const navigate = useNavigate();
+
+  const [fetchGroupLoans, { isFetching }] = useLazyGetAllGroupLoansQuery();
+
+  const rowsRef = useRef<GroupLoan[]>([]);
+
+  const [data, setData] = useState<GroupLoan[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<
@@ -59,45 +117,170 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
   >(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Enhanced filtering logic
+  const isLoading = isBootstrapping || isFetching || isPaginationLoading;
+
+  const syncRows = useCallback((nextRows: GroupLoan[]) => {
+    rowsRef.current = nextRows;
+    setData(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchGroupLoans({
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = extractGroupLoanRows(response);
+
+      const nextRows = reset
+        ? dedupeGroupLoanRows(batchRows)
+        : dedupeGroupLoanRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchGroupLoans, syncRows],
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchGroupLoans({
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = extractGroupLoanRows(response);
+
+        cachedRows = dedupeGroupLoanRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchGroupLoans, hasMore, syncRows],
+  );
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      try {
+        setIsBootstrapping(true);
+        setIsPaginationLoading(true);
+        setUiPage(1);
+        setUiPageSize(5);
+
+        await loadBatch(1, true);
+      } catch (error: any) {
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to load group loans",
+        );
+      } finally {
+        setIsBootstrapping(false);
+        setIsPaginationLoading(false);
+      }
+    };
+
+    bootstrap();
+  }, [loadBatch]);
+
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const search = searchText.toLowerCase();
+
       const rawName = `${item?.recipient_firstname ?? ""} ${item?.recipient_lastname ?? ""
         }`
         .trim()
         .replace(/\s+/g, " ");
+
       const fullName = formatName(rawName);
       const isPaid = Number(item.balance) === 0;
 
-      // Text search
       const matchesSearch =
         !searchText ||
-        item.id.toString().includes(search) ||
+        String(item.id ?? "").includes(search) ||
         item.group_name?.toLowerCase().includes(search) ||
         fullName.toLowerCase().includes(search) ||
         item.amount?.toString().includes(search) ||
         item.balance?.toString().includes(search) ||
         formatDate(item.date_issued)?.toLowerCase().includes(search);
 
-      // Status filter
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "paid" && isPaid) ||
         (statusFilter === "active" && !isPaid) ||
-        (statusFilter === "overdue" && !isPaid); // You can add overdue logic here
+        (statusFilter === "overdue" && !isPaid);
 
-      // Date range filter
+      const hasDateFilter = Boolean(dateRange?.[0] && dateRange?.[1]);
+
       const matchesDateRange =
-        !dateRange ||
-        (dayjs(item.date_issued).isAfter(dayjs(dateRange[0])) &&
-          dayjs(item.date_issued).isBefore(dayjs(dateRange[1])));
+        !hasDateFilter ||
+        (dayjs(item.date_issued).isAfter(dayjs(dateRange?.[0])) &&
+          dayjs(item.date_issued).isBefore(dayjs(dateRange?.[1])));
 
       return matchesSearch && matchesStatus && matchesDateRange;
     });
   }, [data, searchText, statusFilter, dateRange]);
 
-  // Enhanced statistics
+  const hasActiveFilters =
+    Boolean(searchText.trim()) ||
+    statusFilter !== "all" ||
+    Boolean(dateRange?.[0] && dateRange?.[1]);
+
+  useEffect(() => {
+    setUiPage(1);
+  }, [searchText, statusFilter, dateRange]);
+
+  const progressiveTotal = hasActiveFilters
+    ? filteredData.length
+    : data.length + (hasMore ? BATCH_SIZE : 0);
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number,
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+
+    try {
+      setIsPaginationLoading(true);
+
+      if (!hasActiveFilters) {
+        await ensureRowsForPage(targetPage, nextPageSize);
+      }
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error: any) {
+      message.error(
+        error?.data?.message ||
+        error?.message ||
+        "Failed to load more group loans",
+      );
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const handleExportCSV = () => {
     const headers = [
@@ -118,9 +301,11 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         }`
         .trim()
         .replace(/\s+/g, " ");
+
       const recipient = formatName(recipientRaw);
       const isPaid = Number(item.balance) === 0;
       const repaid = Number(item.amount) - Number(item.balance);
+
       const repaymentRate =
         Number(item.amount) > 0
           ? ((repaid / Number(item.amount)) * 100).toFixed(1) + "%"
@@ -143,7 +328,11 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     const csvContent = [headers, ...rows]
       .map((row) => row.map((cell) => `"${cell}"`).join(","))
       .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     saveAs(blob, `group-loans-${dayjs().format("YYYY-MM-DD")}.csv`);
     message.success("CSV exported successfully!");
   };
@@ -162,7 +351,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
 
   const handleDelete = (loan: GroupLoan) => {
     message.warning(
-      `Delete functionality for Loan #${loan.id} would be implemented here`
+      `Delete functionality for Loan #${loan.id} would be implemented here`,
     );
   };
 
@@ -196,23 +385,26 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     {
       title: "Recipient",
       key: "recipient",
-      // width: 150,
       render: (_, record) => {
         const rawName = `${record?.recipient_firstname ?? ""} ${record?.recipient_lastname ?? ""
           }`
           .trim()
           .replace(/\s+/g, " ");
+
         const fullName = rawName ? formatName(rawName) : "Unnamed Customer";
+
         return (
           <div
-            className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors"
+            className="flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-blue-50"
             onClick={() => navigate(`/customer/${record.issued_to}`)}
           >
             <div className="relative">{customAvatar(fullName)}</div>
+
             <div>
-              <div className="font-semibold text-gray-800 hover:text-blue-600 transition-colors">
+              <div className="font-semibold text-gray-800 transition-colors hover:text-blue-600">
                 {fullName}
               </div>
+
               <div className="text-xs text-gray-500">
                 ID: {record.issued_to}
               </div>
@@ -224,9 +416,9 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     {
       title: "Group",
       key: "group",
-      // width: 100,
       render: (_, record) => {
         const groupNameRaw = record.group_name?.trim() ?? "";
+
         const groupName = groupNameRaw
           ? formatName(groupNameRaw.replace(/\s+/g, " "))
           : "Unnamed Group";
@@ -235,11 +427,12 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
           <div className="flex items-center gap-2">
             <div>
               <div
-                className="font-medium text-gray-800 truncate max-w-32"
+                className="max-w-32 truncate font-medium text-gray-800"
                 title={groupName}
               >
                 {groupName}
               </div>
+
               <div className="text-xs text-gray-500">
                 Group ID: {record.group_id}
               </div>
@@ -251,13 +444,14 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     {
       title: "Status & Progress",
       key: "status",
-      // width: 150,
       render: (_, record) => {
         const totalAmount = Number(record.amount);
         const balance = Number(record.balance);
         const repaid = totalAmount - balance;
+
         const progressPercent =
           totalAmount > 0 ? (repaid / totalAmount) * 100 : 0;
+
         const isPaid = balance === 0;
 
         return (
@@ -274,15 +468,19 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                   </span>
                 }
               />
+
               {record.cycle && <Tag color="purple">Cycle {record.cycle}</Tag>}
             </div>
+
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs text-gray-500">Repayment</span>
+
                 <span className="text-xs font-medium">
                   {progressPercent.toFixed(0)}%
                 </span>
               </div>
+
               <Progress
                 percent={progressPercent}
                 size="small"
@@ -297,7 +495,6 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     {
       title: "Financial Details",
       key: "financial",
-      // width: 110,
       render: (_, record) => {
         const totalAmount = Number(record.amount);
         const balance = Number(record.balance);
@@ -305,20 +502,25 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
 
         return (
           <div className="space-y-1">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Loan:</span>
+
               <span className="font-semibold text-blue-600">
                 KES {totalAmount.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center">
+
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Repaid:</span>
+
               <span className="font-medium text-green-600">
                 KES {repaid.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center">
+
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Balance:</span>
+
               <span
                 className={`font-medium ${balance > 0 ? "text-red-600" : "text-green-600"
                   }`}
@@ -333,8 +535,6 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
     {
       title: "Actions",
       key: "actions",
-      // width: 50,
-      // fixed: "right",
       render: (_, record) => (
         <Space>
           <Tooltip title="View Details">
@@ -344,10 +544,10 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
               type="primary"
               ghost
               onClick={() => handleView(record)}
-              className="hover:scale-105 transition-transform"
+              className="transition-transform hover:scale-105"
             />
           </Tooltip>
-          {/* Hide delete button for now */}
+
           <div className="hidden">
             <Tooltip title="Delete Loan">
               <Button
@@ -366,24 +566,22 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Statistics Cards */}
-
-      {/* Main Table Card */}
       <Card
         className="shadow-lg"
         title={
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold text-gray-800">
                 Loans Management
               </span>
+
               <Badge
                 count={filteredData.length}
                 style={{ backgroundColor: "#52c41a" }}
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap my-2 w-full">
+            <div className="my-2 flex w-full flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
               <Search
                 placeholder="Search loans, recipients, groups..."
                 allowClear
@@ -406,7 +604,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
                 icon={<DownloadOutlined />}
                 type="default"
                 onClick={handleExportCSV}
-                className="bg-green-50 border-green-300 text-green-700 hover:bg-green-100"
+                className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
               >
                 Export CSV
               </Button>
@@ -415,7 +613,7 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
         }
         extra={
           showFilters && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-gray-50 rounded-lg">
+            <div className="flex flex-col items-start gap-3 rounded-lg bg-gray-50 p-4 sm:flex-row sm:items-center">
               <Select
                 placeholder="Filter by status"
                 value={statusFilter}
@@ -447,21 +645,25 @@ const LoanTable: FC<Props> = ({ data = [], isLoading }) => {
           )
         }
       >
-        <Table
+        <Table<GroupLoan>
           columns={columns}
           dataSource={filteredData}
           loading={isLoading}
           rowKey="id"
           size="small"
           pagination={{
-            pageSize: 10,
+            current: uiPage,
+            pageSize: uiPageSize,
+            total: progressiveTotal,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} loans`,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            onChange: handlePaginationChange,
+
+
           }}
           className="loan-table"
-          rowClassName="hover:bg-blue-50 transition-colors duration-200"
+          rowClassName="transition-colors duration-200 hover:bg-blue-50"
           bordered
           scroll={{ x: 900 }}
         />

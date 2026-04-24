@@ -1,5 +1,10 @@
 import { apiSlice } from "../../redux/api";
 
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
 export const loansSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createLoan: builder.mutation({
@@ -16,12 +21,27 @@ export const loansSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
-    getAllGroupLoans: builder.query({
-      query: () => ({
+
+
+    // getAllGroupLoans: builder.query({
+    //   query: () => ({
+    //     url: "/group-loans/all",
+    //     method: "GET",
+    //   }),
+    // }),
+
+    getAllGroupLoans: builder.query<any, PaginationQuery | void>({
+      query: (params) => ({
         url: "/group-loans/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
     }),
+
+
 
     getLoansByCustomerId: builder.query({
       query: (customerId) => ({
@@ -56,7 +76,10 @@ export const loansSlice = apiSlice.injectEndpoints({
 
 export const {
   useCreateLoanMutation,
+
   useGetAllLoansQuery,
+  useLazyGetAllGroupLoansQuery,
+
   useGetLoansByCustomerIdQuery,
   useUpdateLoanMutation,
   useDeleteLoanMutation,

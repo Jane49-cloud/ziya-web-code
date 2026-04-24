@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { formatName, getInitials } from "../../utils";
 
 const { Text, Title } = Typography;
+
 const GROUP_TAG_COLORS: Record<string, string> = {
   active: "green",
   archived: "default",
@@ -30,7 +31,7 @@ const GROUP_TAG_COLORS: Record<string, string> = {
   testing: "gold",
 };
 
-type GroupRecord = {
+export type GroupRecord = {
   id: string | number;
   name: string;
   tags?: string | null;
@@ -41,11 +42,25 @@ type GroupRecord = {
 
 type GroupTableProps = {
   data: GroupRecord[];
+  loading?: boolean;
+  page: number;
+  pageSize: number;
+  total: number;
+  onPaginationChange: (page: number, pageSize: number) => void;
   onEdit: (record: GroupRecord) => void;
   onChangeManager: (record: GroupRecord) => void;
 };
 
-const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
+const GroupTable: FC<GroupTableProps> = ({
+  data,
+  loading = false,
+  page,
+  pageSize,
+  total,
+  onPaginationChange,
+  onEdit,
+  onChangeManager,
+}) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -59,15 +74,19 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         .trim();
 
       return (
-        (group.name ?? "").toString().toLowerCase().includes(searchText) ||
+        String(group.name ?? "").toLowerCase().includes(searchText) ||
         managerName.includes(searchText) ||
-        String(group.tags ?? "").toLowerCase().includes(searchText)
+        String(group.tags ?? "").toLowerCase().includes(searchText) ||
+        String(group.admin_name ?? "").toLowerCase().includes(searchText)
       );
     });
   }, [data, search]);
 
+  const effectiveTotal = search.trim() ? filteredData.length : total;
+
   const renderManager = (managerName?: string | null) => {
     const fullName = formatName(managerName ?? "").trim();
+
     if (!fullName) {
       return (
         <Space size="small">
@@ -90,7 +109,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
         >
           {getInitials(fullName)}
         </Avatar>
-        <Text className="capitalize">{fullName || "Unassigned"}</Text>
+        <Text className="capitalize">{fullName}</Text>
       </Space>
     );
   };
@@ -141,7 +160,7 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       width: "24%",
       sorter: (a: GroupRecord, b: GroupRecord) =>
         formatName(a.relationship_manager_name ?? "").localeCompare(
-          formatName(b.relationship_manager_name ?? ""),
+          formatName(b.relationship_manager_name ?? "")
         ),
       render: (managerName: string | null) => renderManager(managerName),
     },
@@ -170,8 +189,10 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       dataIndex: "admin_name",
       width: "18%",
       sorter: (a: GroupRecord, b: GroupRecord) =>
-        formatName(a.admin_name ?? "").localeCompare(formatName(b.admin_name ?? "")),
-      render: (value: string) =>
+        formatName(a.admin_name ?? "").localeCompare(
+          formatName(b.admin_name ?? "")
+        ),
+      render: (value: string | null) =>
         value ? (
           <Tag
             color="gold"
@@ -197,22 +218,11 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
       align: "right" as const,
       render: (_: unknown, record: GroupRecord) => {
         const items = [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <FiEye />,
-          },
-          {
-            key: "edit",
-            label: "Edit Group",
-            icon: <FiEdit />,
-          },
-          {
-            key: "manager",
-            label: "Change Manager",
-            icon: <FiUserCheck />,
-          },
+          { key: "view", label: "View Details", icon: <FiEye /> },
+          { key: "edit", label: "Edit Group", icon: <FiEdit /> },
+          { key: "manager", label: "Change Manager", icon: <FiUserCheck /> },
         ];
+
         return (
           <Dropdown
             trigger={["click"]}
@@ -248,9 +258,9 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
               Search, inspect, and manage existing groups
             </Text>
           </div>
+
           <Tag color="blue" className="px-3 py-1 text-sm font-medium">
-            {filteredData.length}{" "}
-            {filteredData.length === 1 ? "Group" : "Groups"}
+            {filteredData.length} {filteredData.length === 1 ? "Group" : "Groups"}
           </Tag>
         </div>
 
@@ -259,7 +269,12 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
           prefix={<FiSearch className="text-gray-400" />}
           placeholder="Search by group name, manager, or tag..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            if (page !== 1) {
+              onPaginationChange(1, pageSize);
+            }
+          }}
           size="large"
           className="w-full sm:w-96"
           style={{ borderRadius: "8px" }}
@@ -268,17 +283,21 @@ const GroupTable: FC<GroupTableProps> = ({ data, onEdit, onChangeManager }) => {
 
       <Table<GroupRecord>
         dataSource={filteredData}
+        loading={loading}
         columns={columns}
         rowKey={(record) => String(record.id)}
         bordered
         sortDirections={["ascend", "descend"]}
         showSorterTooltip={{ target: "sorter-icon" }}
         pagination={{
-          pageSize: 10,
+          current: page,
+          pageSize,
+          total: effectiveTotal,
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50],
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} of ${total} groups`,
+          onChange: (nextPage, nextPageSize) => {
+            onPaginationChange(nextPage, nextPageSize);
+          },
         }}
         scroll={{ x: 900 }}
         size="middle"

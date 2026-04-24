@@ -1,46 +1,30 @@
-import {
-  Button,
-  Dropdown,
-  Empty,
-  Grid,
-  Input,
-  Space,
-  Table,
-  Tag,
-  Typography,
-  message,
-} from "antd";
+import { Button, Dropdown, Empty, Grid, Input, Space, Table, Tag, Typography, message } from "antd";
 import type { MenuProps } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FiCheckCircle, FiMoreVertical, FiSearch, FiUser, FiUsers } from "react-icons/fi";
 import {
-  FiCheckCircle,
-  FiMoreVertical,
-  FiSearch,
-  FiUser,
-  FiUsers,
-} from "react-icons/fi";
-import {
-  useGetAllSubscriptionsQuery,
+  useLazyGetAllSubscriptionsQuery,
   useMarkSubscriptionPaidMutation,
 } from "../features";
 import { formatName, getRole, normalizeRole } from "../../utils";
+import { normalizeSubscriptionCollection, toCurrency, toDateText, toDisplayText, toNumber, type SubscriptionRecord } from "../types";
 import {
-  normalizeSubscriptionCollection,
-  toCurrency,
-  toDateText,
-  toDisplayText,
-  toNumber,
-  type SubscriptionRecord,
-} from "../types";
-import {
-  SubscriptionLoader, SubscriptionShell, subscriptionTableClassName,
+  SubscriptionLoader,
+  SubscriptionShell,
+  subscriptionTableClassName,
 } from "../components/subscriptionUi";
 import SingleCustomerSubscriptionDrawer from "../components/singleCustomerSubscriptionDrawer";
 import SingleGroupSubscriptionDrawer from "../components/singleGroupSubscriptionDrawer";
-import { ADMIN_DEV_FINANCE, STAFF_ROLES, canAccess, type UserRole } from "../../utils/roles";
-
+import {
+  ADMIN_DEV_FINANCE,
+  STAFF_ROLES,
+  canAccess,
+  type UserRole,
+} from "../../utils/roles";
 
 const { Text, Title } = Typography;
+
+const BATCH_SIZE = 20;
 
 const getCustomerName = (record: SubscriptionRecord) =>
   toDisplayText(
@@ -58,11 +42,29 @@ const getAdminName = (record: SubscriptionRecord) =>
 
 const getRelationshipManagerName = (record: SubscriptionRecord) =>
   toDisplayText(
-    formatName(
-      `${record.rm_firstname ?? ""} ${record.rm_lastname ?? ""}`.trim(),
-    ),
+    formatName(`${record.rm_firstname ?? ""} ${record.rm_lastname ?? ""}`.trim()),
     "Unassigned",
   );
+
+const getSubscriptionCacheKey = (record: SubscriptionRecord) =>
+  String(
+    record.id ??
+    `${record.customer_id ?? "customer"}-${record.group_id ?? "group"}-${record.start_date ?? "start"
+    }-${record.end_date ?? "end"}-${record.amount ?? "amount"}`,
+  );
+
+const dedupeSubscriptionRows = (items: SubscriptionRecord[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getSubscriptionCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
 
 export default function AllSubscriptionsTab({
   enabled = true,
@@ -71,6 +73,7 @@ export default function AllSubscriptionsTab({
 }) {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+
   const [search, setSearch] = useState("");
 
   const rawRole = normalizeRole(getRole());
@@ -99,36 +102,157 @@ export default function AllSubscriptionsTab({
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isGroupDrawerOpen, setIsGroupDrawerOpen] = useState(false);
 
-  const { data, isLoading, isFetching } = useGetAllSubscriptionsQuery(undefined, {
-    skip: !enabled,
-  });
+  const [fetchAllSubscriptions, { isFetching }] =
+    useLazyGetAllSubscriptionsQuery();
 
   const [markSubscriptionPaid, { isLoading: isMarkingPaid }] =
     useMarkSubscriptionPaidMutation();
 
-  const rows = useMemo(() => normalizeSubscriptionCollection(data), [data]);
+  const rowsRef = useRef<SubscriptionRecord[]>([]);
+
+  const [rows, setRows] = useState<SubscriptionRecord[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
+  const syncRows = useCallback((nextRows: SubscriptionRecord[]) => {
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchAllSubscriptions({
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeSubscriptionCollection(response);
+
+      const nextRows = reset
+        ? dedupeSubscriptionRows(batchRows)
+        : dedupeSubscriptionRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchAllSubscriptions, syncRows],
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchAllSubscriptions({
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeSubscriptionCollection(response);
+
+        cachedRows = dedupeSubscriptionRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchAllSubscriptions, hasMore, syncRows],
+  );
 
   useEffect(() => {
-    if (data) {
-      console.log("[subscriptions] all subscriptions payload", data);
+    if (!enabled) return;
+
+    const bootstrap = async () => {
+      try {
+        setIsBootstrapping(true);
+        setIsPaginationLoading(true);
+        setUiPage(1);
+        setUiPageSize(5);
+
+        await loadBatch(1, true);
+      } catch (error: any) {
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to load subscriptions",
+        );
+      } finally {
+        setIsBootstrapping(false);
+        setIsPaginationLoading(false);
+      }
+    };
+
+    bootstrap();
+  }, [enabled, loadBatch]);
+
+  useEffect(() => {
+    setUiPage(1);
+  }, [search]);
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number,
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+    const hasSearch = Boolean(search.trim());
+
+    try {
+      setIsPaginationLoading(true);
+
+      if (!hasSearch) {
+        await ensureRowsForPage(targetPage, nextPageSize);
+      }
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error: any) {
+      message.error(
+        error?.data?.message ||
+        error?.message ||
+        "Failed to load more subscriptions",
+      );
+    } finally {
+      setIsPaginationLoading(false);
     }
-  }, [data]);
+  };
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
+
     if (!needle) return rows;
 
     return rows.filter((row) =>
       Object.values(row).some((value) =>
-        String(value ?? "")
-          .toLowerCase()
-          .includes(needle),
+        String(value ?? "").toLowerCase().includes(needle),
       ),
     );
   }, [rows, search]);
 
   const selectedCustomerRows = useMemo(() => {
     if (!selectedCustomer.customerId) return [];
+
     return rows.filter(
       (row) =>
         row.customer_id != null &&
@@ -138,6 +262,7 @@ export default function AllSubscriptionsTab({
 
   const selectedGroupRows = useMemo(() => {
     if (!selectedGroup.groupId) return [];
+
     return rows.filter(
       (row) =>
         row.group_id != null &&
@@ -145,12 +270,12 @@ export default function AllSubscriptionsTab({
     );
   }, [rows, selectedGroup.groupId]);
 
-
   const handleViewCustomer = (record: SubscriptionRecord) => {
     setSelectedCustomer({
       customerId: (record.customer_id as string | number | null) ?? null,
       customerName: getCustomerName(record),
     });
+
     setIsCustomerDrawerOpen(true);
   };
 
@@ -159,11 +284,13 @@ export default function AllSubscriptionsTab({
       groupId: (record.group_id as string | number | null) ?? null,
       groupName: record.group_name ? String(record.group_name) : null,
     });
+
     setIsGroupDrawerOpen(true);
   };
 
   const handleCloseCustomerDrawer = () => {
     setIsCustomerDrawerOpen(false);
+
     setSelectedCustomer({
       customerId: null,
       customerName: null,
@@ -172,6 +299,7 @@ export default function AllSubscriptionsTab({
 
   const handleCloseGroupDrawer = () => {
     setIsGroupDrawerOpen(false);
+
     setSelectedGroup({
       groupId: null,
       groupName: null,
@@ -184,8 +312,25 @@ export default function AllSubscriptionsTab({
       return;
     }
 
+    if (!record.id) {
+      message.error("Missing subscription ID");
+      return;
+    }
+
     try {
       await markSubscriptionPaid(record.id as string | number).unwrap();
+
+      const updatedRows = rowsRef.current.map((row) =>
+        String(row.id) === String(record.id)
+          ? {
+            ...row,
+            paid: true,
+          }
+          : row,
+      );
+
+      syncRows(updatedRows);
+
       message.success("Subscription marked as paid successfully");
     } catch (error: any) {
       message.error(
@@ -197,8 +342,6 @@ export default function AllSubscriptionsTab({
   };
 
   if (!enabled) return null;
-
-
 
   const allColumns = [
     {
@@ -223,7 +366,9 @@ export default function AllSubscriptionsTab({
         getCustomerName(a).localeCompare(getCustomerName(b)),
       render: (_: unknown, record: SubscriptionRecord) => (
         <div className="min-w-0">
-          <div className="font-semibold text-slate-900">{getCustomerName(record)}</div>
+          <div className="font-semibold text-slate-900">
+            {getCustomerName(record)}
+          </div>
           <Text className="text-xs text-slate-500">
             {toDisplayText(record.phone_number, "No phone")}
           </Text>
@@ -257,7 +402,8 @@ export default function AllSubscriptionsTab({
       key: "amount",
       sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
         toNumber(a.amount) - toNumber(b.amount),
-      render: (_: unknown, record: SubscriptionRecord) => toCurrency(record.amount),
+      render: (_: unknown, record: SubscriptionRecord) =>
+        toCurrency(record.amount),
     },
     {
       title: "Start Date",
@@ -265,7 +411,8 @@ export default function AllSubscriptionsTab({
       sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
         new Date(String(a.start_date ?? "")).getTime() -
         new Date(String(b.start_date ?? "")).getTime(),
-      render: (_: unknown, record: SubscriptionRecord) => toDateText(record.start_date),
+      render: (_: unknown, record: SubscriptionRecord) =>
+        toDateText(record.start_date),
     },
     {
       title: "End Date",
@@ -273,7 +420,8 @@ export default function AllSubscriptionsTab({
       sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
         new Date(String(a.end_date ?? "")).getTime() -
         new Date(String(b.end_date ?? "")).getTime(),
-      render: (_: unknown, record: SubscriptionRecord) => toDateText(record.end_date),
+      render: (_: unknown, record: SubscriptionRecord) =>
+        toDateText(record.end_date),
     },
     {
       title: "Admin",
@@ -292,7 +440,9 @@ export default function AllSubscriptionsTab({
       title: "Relationship Manager",
       key: "relationshipManager",
       sorter: (a: SubscriptionRecord, b: SubscriptionRecord) =>
-        getRelationshipManagerName(a).localeCompare(getRelationshipManagerName(b)),
+        getRelationshipManagerName(a).localeCompare(
+          getRelationshipManagerName(b),
+        ),
       render: (_: unknown, record: SubscriptionRecord) => (
         <div className="min-w-0">
           <div className="text-sm font-medium text-slate-900">
@@ -316,12 +466,14 @@ export default function AllSubscriptionsTab({
             onClick: () => handleViewCustomer(record),
             disabled: !record.customer_id,
           },
-          ...((record.group_id || record.group_name)
+          ...(record.group_id || record.group_name
             ? [
               {
                 key: "group",
                 label: (
-                  <span className="text-[12px]">View Group Subscriptions</span>
+                  <span className="text-[12px]">
+                    View Group Subscriptions
+                  </span>
                 ),
                 icon: <FiUsers size={14} className="text-blue-600" />,
                 onClick: () => handleViewGroup(record),
@@ -334,7 +486,9 @@ export default function AllSubscriptionsTab({
               {
                 key: "mark-paid",
                 label: <span className="text-[12px]">Mark as Paid</span>,
-                icon: <FiCheckCircle size={14} className="text-green-600" />,
+                icon: (
+                  <FiCheckCircle size={14} className="text-green-600" />
+                ),
                 onClick: () => handleMarkSubscriptionPaid(record),
                 disabled: isMarkingPaid,
               },
@@ -363,10 +517,20 @@ export default function AllSubscriptionsTab({
     )
     : allColumns;
 
-  const totalAmount = filteredRows.reduce((sum, row) => sum + toNumber(row.amount), 0);
+  const totalAmount = filteredRows.reduce(
+    (sum, row) => sum + toNumber(row.amount),
+    0,
+  );
+
   const activeCount = filteredRows.filter((row) => Boolean(row.active)).length;
 
-  if (isLoading && !rows.length) {
+  const isSearching = Boolean(search.trim());
+
+  const progressiveTotal = isSearching
+    ? filteredRows.length
+    : rows.length + (hasMore ? BATCH_SIZE : 0);
+
+  if (isBootstrapping && !rows.length) {
     return <SubscriptionLoader title="Loading subscription book" />;
   }
 
@@ -379,19 +543,24 @@ export default function AllSubscriptionsTab({
               Subscription Book
             </Title>
             <Text className="text-sm text-slate-500">
-              Inspect the full subscriptions ledger, revenue state, and group coverage.
+              Inspect the full subscriptions ledger, revenue state, and group
+              coverage.
             </Text>
           </div>
+
           <Space wrap size={12}>
             <Tag color="cyan" className="px-3 py-1.5 text-sm font-medium">
               {filteredRows.length} rows
             </Tag>
+
             <Tag color="green" className="px-3 py-1.5 text-sm font-medium">
               {activeCount} active
             </Tag>
+
             <Tag color="geekblue" className="px-3 py-1.5 text-sm font-medium">
               {toCurrency(totalAmount)}
             </Tag>
+
             <Input
               allowClear
               value={search}
@@ -412,8 +581,16 @@ export default function AllSubscriptionsTab({
             }
             columns={columns}
             dataSource={filteredRows}
-            loading={isFetching}
-            pagination={{ pageSize: 5, showSizeChanger: true }}
+            loading={isFetching || isPaginationLoading}
+            pagination={{
+              current: uiPage,
+              pageSize: uiPageSize,
+              total: progressiveTotal,
+              showSizeChanger: true,
+              pageSizeOptions: ["5", "10", "20", "50"],
+              onChange: handlePaginationChange,
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+            }}
             scroll={{ x: isMobile ? 720 : 1120 }}
             className={subscriptionTableClassName}
           />

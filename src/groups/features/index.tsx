@@ -2,7 +2,10 @@ import { GroupSlice } from "./groupSlice";
 
 export const {
   useCreateGroupMutation,
+
   useGetAllGroupsQuery,
+  useLazyGetAllGroupsQuery,
+
   useGetGroupByIdQuery,
   useSearchGroupsQuery,
   useUpdateGroupMutation,
@@ -13,6 +16,7 @@ export const {
   useGetMyCreatedGroupsQuery,
   useGetGroupMembersQuery,
   useGetGroupWalletQuery,
+
   useGetAllGroupWalletsQuery,
   useUpdateGroupWalletiMutation,
   useGetGroupLoansQuery,

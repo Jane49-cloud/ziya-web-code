@@ -1,5 +1,18 @@
 import { apiSlice } from "../../redux/api";
 
+type GroupPaginationArgs = {
+  page?: number;
+  page_size?: number;
+};
+
+type GroupsResponse = {
+  data?: any[];
+  groups?: any[];
+  page?: number;
+  page_size?: number;
+  message?: string;
+};
+
 export const GroupSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createGroup: builder.mutation({
@@ -11,13 +24,30 @@ export const GroupSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "Groups" }],
     }),
 
-    getAllGroups: builder.query({
-      query: () => ({
-        url: "/groups/get/all",
-        method: "GET",
-      }),
+
+    getAllGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
+      query: (args) => {
+        const { page = 1, page_size = 20 } = args ?? {};
+
+        return {
+          url: "/groups/get/all",
+          method: "GET",
+          params: {
+            page,
+            page_size,
+          },
+        };
+      },
       providesTags: [{ type: "Groups" }],
     }),
+
+    // getAllGroups: builder.query({
+    //   query: () => ({
+    //     url: "/groups/get/all",
+    //     method: "GET",
+    //   }),
+    //   providesTags: [{ type: "Groups" }],
+    // }),
 
     getGroupById: builder.query({
       query: (id: number) => ({
@@ -98,6 +128,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }),
       providesTags: [{ type: "Groups" }],
     }),
+
     getGroupWallet: builder.query({
       query: (id: number) => ({
         url: `/group-wallets/group/${id}`,
