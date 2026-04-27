@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Tabs,
   Table,
@@ -20,11 +20,10 @@ import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
 import {
-  useGetAllCustomersQuery,
+  useLazyGetAllCustomersQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
-
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../utils";
@@ -35,6 +34,42 @@ import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
+const BATCH_SIZE = 20;
+
+const normalizeCustomerCollection = (response: any) => {
+  const value =
+    response?.customers?.data ??
+    response?.customers ??
+    response?.data?.customers ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
+const getCustomerCacheKey = (customer: any) =>
+  String(
+    customer?.id ??
+    customer?.customer_id ??
+    customer?.phone_number ??
+    customer?.identification_number ??
+    JSON.stringify(customer)
+  );
+
+const dedupeCustomerRows = (items: any[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getCustomerCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
 const isSubscriptionActive = (status: unknown) => {
   if (typeof status === "string") {
     return status.toLowerCase() === "active";
@@ -43,35 +78,134 @@ const isSubscriptionActive = (status: unknown) => {
 };
 
 const CustomerManagement: FC = () => {
-  const { data, isLoading, isFetching, refetch } = useGetAllCustomersQuery({});
-  const customers = data?.customers;
+  const [fetchAllCustomers, { isFetching }] = useLazyGetAllCustomersQuery();
+
+  const rowsRef = useRef<any[]>([]);
+
+  const [rows, setRows] = useState<any[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
   const [toggleStatus] = useToggleCustomerStatusMutation();
+
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
+
   // const [selectedForSubscription, setSelectedForSubscription] =
   //   useState<any>(null);
   // const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   // const [createSubscription, { isLoading: creatingSubscription }] =
   //   useCreateSubscriptionMutation();
+
   const navigate = useNavigate();
   // const { Text, Title } = Typography;
 
   type SubscriptionFilter = "all" | "active" | "inactive";
 
-  // Filter state for enhanced table controls
   const [searchText, setSearchText] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] =
     useState<SubscriptionFilter>("all");
-  const [tablePagination, setTablePagination] = useState({
-    current: 1,
-    pageSize: 10,
-  });
+
+  const syncRows = useCallback((nextRows: any[]) => {
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchAllCustomers({
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeCustomerCollection(response);
+
+      const nextRows = reset
+        ? dedupeCustomerRows(batchRows)
+        : dedupeCustomerRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchAllCustomers, syncRows]
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchAllCustomers({
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeCustomerCollection(response);
+
+        cachedRows = dedupeCustomerRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchAllCustomers, hasMore, syncRows]
+  );
+
+  const refreshCustomers = useCallback(async () => {
+    try {
+      setIsBootstrapping(true);
+      setIsPaginationLoading(true);
+      setUiPage(1);
+      setUiPageSize(10);
+      setBackendPage(0);
+      setHasMore(true);
+      syncRows([]);
+
+      await loadBatch(1, true);
+    } catch (error: any) {
+      setAlertMessage(
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        "Failed to load customers."
+      );
+      setAlertType("danger");
+    } finally {
+      setIsBootstrapping(false);
+      setIsPaginationLoading(false);
+    }
+  }, [loadBatch, syncRows]);
+
+  useEffect(() => {
+    refreshCustomers();
+  }, [refreshCustomers]);
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -82,7 +216,7 @@ const CustomerManagement: FC = () => {
       await createCustomer(values).unwrap();
       setAlertMessage("Customer created successfully!");
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
       setActiveTab("1");
       return true;
     } catch (err: any) {
@@ -99,7 +233,7 @@ const CustomerManagement: FC = () => {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
       setSelectedCustomer(null);
       setActiveTab("1");
       return true;
@@ -117,7 +251,7 @@ const CustomerManagement: FC = () => {
         `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
       );
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
     } catch (err: any) {
       setAlertMessage("Failed to change customer status.");
       setAlertType("danger");
@@ -143,7 +277,7 @@ const CustomerManagement: FC = () => {
   //       customer_id: customerId,
   //       ...dates,
   //     }).unwrap();
-  //     await refetch();
+  //     await refreshCustomers();
   //     setAlertMessage("Subscription created successfully!");
   //     setAlertType("success");
   //     setSubscriptionModalOpen(false);
@@ -154,15 +288,12 @@ const CustomerManagement: FC = () => {
   //   }
   // };
 
-  const normalizedCustomers = useMemo(
-    () => (customers ? [...customers] : []),
-    [customers]
-  );
+  const normalizedCustomers = useMemo(() => rows, [rows]);
 
   const customerMetrics = useMemo(() => {
     const total = normalizedCustomers.length;
-    const active = normalizedCustomers.filter(
-      (customer: any) => isSubscriptionActive(customer.subscription_status)
+    const active = normalizedCustomers.filter((customer: any) =>
+      isSubscriptionActive(customer.subscription_status)
     ).length;
     const inactive = total - active;
     return { total, active, inactive };
@@ -170,6 +301,7 @@ const CustomerManagement: FC = () => {
 
   const filteredCustomers = useMemo(() => {
     const search = searchText.trim().toLowerCase();
+
     return normalizedCustomers.filter((customer: any) => {
       const firstName = customer.firstname ?? "";
       const lastName = customer.lastname ?? "";
@@ -194,29 +326,44 @@ const CustomerManagement: FC = () => {
   }, [normalizedCustomers, searchText, subscriptionFilter]);
 
   useEffect(() => {
-    setTablePagination((current) => ({
-      ...current,
-      current: 1,
-    }));
+    setUiPage(1);
   }, [searchText, subscriptionFilter]);
 
-  useEffect(() => {
-    setTablePagination((current) => {
-      const pageSize = current.pageSize ?? 10;
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredCustomers.length / pageSize)
-      );
-      const nextCurrent = Math.min(current.current ?? 1, totalPages);
-      if (nextCurrent === current.current) {
-        return current;
+  const isFiltering =
+    Boolean(searchText.trim()) || subscriptionFilter !== "all";
+
+  const progressiveTotal = isFiltering
+    ? filteredCustomers.length
+    : rows.length + (hasMore ? BATCH_SIZE : 0);
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+
+    try {
+      setIsPaginationLoading(true);
+
+      if (!isFiltering) {
+        await ensureRowsForPage(targetPage, nextPageSize);
       }
-      return {
-        ...current,
-        current: nextCurrent,
-      };
-    });
-  }, [filteredCustomers.length]);
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error: any) {
+      setAlertMessage(
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        "Failed to load more customers."
+      );
+      setAlertType("danger");
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const columns: ColumnsType<any> = [
     {
@@ -371,7 +518,7 @@ const CustomerManagement: FC = () => {
                 <p className="text-slate-500 text-sm mb-1">Total Customers</p>
                 <Statistic
                   value={customerMetrics.total}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -394,7 +541,7 @@ const CustomerManagement: FC = () => {
                 </p>
                 <Statistic
                   value={customerMetrics.active}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -417,7 +564,7 @@ const CustomerManagement: FC = () => {
                 </p>
                 <Statistic
                   value={customerMetrics.inactive}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -487,22 +634,19 @@ const CustomerManagement: FC = () => {
                   dataSource={filteredCustomers}
                   columns={columns}
                   rowKey="id"
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching || isPaginationLoading}
                   size="middle"
                   pagination={{
-                    ...tablePagination,
+                    current: uiPage,
+                    pageSize: uiPageSize,
+                    total: progressiveTotal,
                     showSizeChanger: true,
-                    pageSizeOptions: [10, 20, 50],
-                    total: filteredCustomers.length,
-                    showTotal: (total, range) =>
-                      `${range[0]}-${range[1]} of ${total} customers`,
+                    pageSizeOptions: ["5", "10", "20", "50"],
+                    onChange: (page, pageSize) => {
+                      void handlePaginationChange(page, pageSize);
+                    },
+
                   }}
-                  onChange={(paginationConfig) =>
-                    setTablePagination({
-                      current: paginationConfig.current ?? 1,
-                      pageSize: paginationConfig.pageSize ?? 10,
-                    })
-                  }
                   scroll={{ x: 900 }}
                   bordered
                   locale={{

@@ -7,6 +7,11 @@ type PaginationQuery = {
   page_size?: number;
 };
 
+type CustomerSubscriptionsQuery = PaginationQuery & {
+  customerId: string | number;
+};
+
+
 export const subscriptionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllSubscriptions: builder.query<SubscriptionApiResponse, PaginationQuery | void>({
@@ -57,19 +62,42 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
       ],
     }),
 
-
     getCustomerSubscriptions: builder.query<
       SubscriptionApiResponse,
-      string | number
+      string | number | CustomerSubscriptionsQuery
     >({
-      query: (customerId) => ({
-        url: `/subscriptions/customer/${customerId}`,
-        method: "GET",
-      }),
-      providesTags: (_result, _error, customerId) => [
-        { type: "Subscriptions", id: `CUSTOMER-${customerId}` },
-      ],
+      query: (arg) => {
+        const customerId = typeof arg === "object" ? arg.customerId : arg;
+
+        return {
+          url: `/subscriptions/customer/${customerId}`,
+          method: "GET",
+          params: {
+            page: typeof arg === "object" ? arg.page ?? 1 : 1,
+            page_size: typeof arg === "object" ? arg.page_size ?? 20 : 20,
+          },
+        };
+      },
+      providesTags: (_result, _error, arg) => {
+        const customerId = typeof arg === "object" ? arg.customerId : arg;
+
+        return [{ type: "Subscriptions", id: `CUSTOMER-${customerId}` }];
+      },
     }),
+
+
+    // getCustomerSubscriptions: builder.query<
+    //   SubscriptionApiResponse,
+    //   string | number
+    // >({
+    //   query: (customerId) => ({
+    //     url: `/subscriptions/customer/${customerId}`,
+    //     method: "GET",
+    //   }),
+    //   providesTags: (_result, _error, customerId) => [
+    //     { type: "Subscriptions", id: `CUSTOMER-${customerId}` },
+    //   ],
+    // }),
 
 
     triggerSubscriptionCollection: builder.mutation<SubscriptionApiResponse, void>({

@@ -5,6 +5,10 @@ type PaginationQuery = {
     page_size?: number;
 };
 
+type SingleCustomerTransactionsQuery = PaginationQuery & {
+    customerId: number;
+};
+
 export const transactionSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllGroupTransactions: builder.query<any, PaginationQuery | void>({
@@ -45,15 +49,41 @@ export const transactionSlice = apiSlice.injectEndpoints({
             ],
         }),
 
-        getSingleCustomerTransactions: builder.query<any, number>({
-            query: (customerId) => ({
-                url: `/personal-wallets/transactions/customer/${customerId}`,
-                method: "GET",
-            }),
-            providesTags: (_result, _error, customerId) => [
-                { type: "WalletTransactions", id: `customer-${customerId}` },
-            ],
+        // getSingleCustomerTransactions: builder.query<any, number>({
+        //     query: (customerId) => ({
+        //         url: `/personal-wallets/transactions/customer/${customerId}`,
+        //         method: "GET",
+        //     }),
+        //     providesTags: (_result, _error, customerId) => [
+        //         { type: "WalletTransactions", id: `customer-${customerId}` },
+        //     ],
+        // }),
+
+
+        getSingleCustomerTransactions: builder.query<any, number | SingleCustomerTransactionsQuery>({
+            query: (arg) => {
+                const customerId = typeof arg === "number" ? arg : arg.customerId;
+
+                return {
+                    url: `/personal-wallets/transactions/customer/${customerId}`,
+                    method: "GET",
+                    params: {
+                        page: typeof arg === "number" ? 1 : arg.page ?? 1,
+                        page_size: typeof arg === "number" ? 20 : arg.page_size ?? 20,
+                    },
+                };
+            },
+            providesTags: (_result, _error, arg) => {
+                const customerId = typeof arg === "number" ? arg : arg.customerId;
+
+                return [{ type: "WalletTransactions", id: `customer-${customerId}` }];
+            },
         }),
+
+
+
+
+
     }),
 });
 
