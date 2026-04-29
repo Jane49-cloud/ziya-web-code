@@ -13,6 +13,14 @@ type GroupsResponse = {
   message?: string;
 };
 
+type GroupLoansQuery =
+  | number
+  | {
+    groupId: number;
+    page?: number;
+    page_size?: number;
+  };
+
 export const GroupSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createGroup: builder.mutation({
@@ -41,13 +49,6 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: [{ type: "Groups" }],
     }),
 
-    // getAllGroups: builder.query({
-    //   query: () => ({
-    //     url: "/groups/get/all",
-    //     method: "GET",
-    //   }),
-    //   providesTags: [{ type: "Groups" }],
-    // }),
 
     getGroupById: builder.query({
       query: (id: number) => ({
@@ -111,15 +112,31 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: [{ type: "Groups" }],
     }),
 
-    getGroupMembers: builder.query({
-      query: (groupId: number) => ({
-        url: `/groups/members/${groupId}`,
-        method: "GET",
-      }),
-      providesTags: (_result, _error, groupId) => [
-        { type: "Groups", id: groupId },
-      ],
+
+    getGroupMembers: builder.query<any, GroupLoansQuery>({
+      query: (arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return {
+          url: `/groups/members/${groupId}`,
+          method: "GET",
+          params:
+            typeof arg === "number"
+              ? undefined
+              : {
+                page: arg.page ?? 1,
+                page_size: arg.page_size ?? 20,
+              },
+        };
+      },
+      providesTags: (_result, _error, arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return [{ type: "GroupMembers", id: groupId }];
+      },
     }),
+
+
 
     getMyCreatedGroups: builder.query({
       query: () => ({
@@ -137,23 +154,51 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
-    getGroupPayments: builder.query({
-      query: (groupId: number) => ({
-        url: `/group-loan-payments/group/${groupId}`,
-        method: "GET",
-      }),
-      providesTags: (_res, _err, groupId) => [
-        { type: "GroupLoanPayments", id: groupId },
-      ],
+    getGroupPayments: builder.query<any, GroupLoansQuery>({
+      query: (arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return {
+          url: `/group-loan-payments/group/${groupId}`,
+          method: "GET",
+          params:
+            typeof arg === "number"
+              ? undefined
+              : {
+                page: arg.page ?? 1,
+                page_size: arg.page_size ?? 20,
+              },
+        };
+      },
+      providesTags: (_res, _err, arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return [{ type: "GroupLoanPayments", id: groupId }];
+      },
     }),
-    getGroupLoans: builder.query({
-      query: (groupId: number) => ({
-        url: `/group-loans/group/${groupId}`,
-        method: "GET",
-      }),
-      providesTags: (_res, _err, groupId) => [
-        { type: "GroupLoans", id: groupId },
-      ],
+
+    getGroupLoans: builder.query<any, GroupLoansQuery>({
+      query: (arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return {
+          url: `/group-loans/group/${groupId}`,
+          method: "GET",
+          params:
+            typeof arg === "number"
+              ? undefined
+              : {
+                page: arg.page ?? 1,
+                page_size: arg.page_size ?? 20,
+              },
+        };
+      },
+      providesTags: (_res, _err, arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return [{ type: "GroupLoans", id: groupId }];
+
+      },
     }),
 
     getAllGroupWallets: builder.query({

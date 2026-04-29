@@ -120,6 +120,24 @@ export const customerSlice = apiSlice.injectEndpoints({
       },
     }),
 
+    //search
+    searchCustomers: builder.query<
+      any[],
+      { q: string; membership?: 0 | 1 }
+    >({
+      query: ({ q, membership }) => ({
+        url: "/customers/search",
+        method: "GET",
+        params: {
+          q: q.trim() || "all",
+          ...(membership !== undefined ? { m: membership } : {}),
+        },
+      }),
+      transformResponse: (response: any) => {
+        return Array.isArray(response?.customers) ? response.customers : [];
+      },
+    }),
+
 
   }),
 });
@@ -143,4 +161,9 @@ export const {
 
   useGetCustomerSubscriptionHistoryQuery,
   useLazyGetCustomerSubscriptionHistoryQuery,
+
+
+  //search
+  useLazySearchCustomersQuery,
+
 } = customerSlice;

@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { UsersTable } from "../components/usersTable";
 import { UsersCardGrid } from "../components/userCards";
-import { useLazyGetAllUsersQuery } from "../../features/userSlice";
-import { formatName } from "../../../utils";
+import {
+  useLazyGetAllUsersQuery,
+  useLazySearchStaffQuery,
+} from "../../features/userSlice";
 
 type UserData = {
   id: number;
@@ -50,8 +52,11 @@ export function AllUsers() {
   const [viewMode] = useState<"table" | "card">("table");
 
   const [fetchAllUsers, { isFetching, error }] = useLazyGetAllUsersQuery();
+  const [searchStaff] = useLazySearchStaffQuery();
 
   const rowsRef = useRef<UserData[]>([]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   const [rows, setRows] = useState<UserData[]>([]);
   const [backendPage, setBackendPage] = useState(0);
@@ -61,7 +66,16 @@ export function AllUsers() {
 
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
+
   const [searchText, setSearchText] = useState("");
+  const [searchRows, setSearchRows] = useState<UserData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+
+  const MIN_SEARCH_LENGTH = 4;
+  const SEARCH_DEBOUNCE_MS = 600;
+
+  const isSearchMode = searchText.trim().length >= MIN_SEARCH_LENGTH;
 
   const syncRows = useCallback((nextRows: UserData[]) => {
     rowsRef.current = nextRows;
@@ -148,37 +162,72 @@ export function AllUsers() {
     void refreshUsers();
   }, [refreshUsers]);
 
-  const filteredUsers = useMemo(() => {
-    const needle = searchText.trim().toLowerCase();
-
-    return rows.filter((user) => {
-      const rawName = `${user.firstname ?? ""} ${user.middlename ?? ""} ${user.lastname ?? ""
-        }`.trim();
-
-      const fullName = formatName(rawName).toLowerCase();
-      const email = String(user.email ?? "").toLowerCase();
-      const phone = `${user.country_code ?? ""} ${user.phone_number ?? ""
-        }`.toLowerCase();
-
-      if (!needle) return true;
-
-      return (
-        fullName.includes(needle) ||
-        email.includes(needle) ||
-        phone.includes(needle)
-      );
-    });
-  }, [rows, searchText]);
-
   useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchText(value);
     setUiPage(1);
-  }, [searchText]);
 
-  const isFiltering = Boolean(searchText.trim());
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
 
-  const progressiveTotal = isFiltering
-    ? filteredUsers.length
+    const q = value.trim();
+
+    if (!q) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      setIsSearching(false);
+      return;
+    }
+
+    if (q.length < MIN_SEARCH_LENGTH) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      setIsSearching(false);
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      const requestId = searchRequestIdRef.current + 1;
+      searchRequestIdRef.current = requestId;
+
+      try {
+        setIsSearching(true);
+
+        const response = await searchStaff(q).unwrap();
+        const staffRows = normalizeUsersCollection(response);
+
+        if (requestId === searchRequestIdRef.current) {
+          setSearchRows(staffRows);
+        }
+      } catch {
+        if (requestId === searchRequestIdRef.current) {
+          setSearchRows([]);
+        }
+      } finally {
+        if (requestId === searchRequestIdRef.current) {
+          setIsSearching(false);
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS);
+  };
+
+  const tableUsers = isSearchMode ? searchRows : rows;
+
+  const tableTotal = isSearchMode
+    ? searchRows.length
     : rows.length + (hasMore ? BATCH_SIZE : 0);
+
+  const tableLoading = isSearchMode
+    ? isSearching
+    : isFetching || isPaginationLoading;
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -190,7 +239,7 @@ export function AllUsers() {
     try {
       setIsPaginationLoading(true);
 
-      if (!isFiltering) {
+      if (!isSearchMode) {
         await ensureRowsForPage(targetPage, nextPageSize);
       }
 
@@ -234,17 +283,17 @@ export function AllUsers() {
 
       {viewMode === "table" ? (
         <UsersTable
-          users={filteredUsers}
-          loading={isFetching || isPaginationLoading}
+          users={tableUsers}
+          loading={tableLoading}
           page={uiPage}
           pageSize={uiPageSize}
-          total={progressiveTotal}
+          total={tableTotal}
           searchText={searchText}
-          onSearchChange={setSearchText}
+          onSearchChange={handleSearchChange}
           onPaginationChange={handlePaginationChange}
         />
       ) : (
-        <UsersCardGrid users={filteredUsers} />
+        <UsersCardGrid users={tableUsers} />
       )}
     </div>
   );

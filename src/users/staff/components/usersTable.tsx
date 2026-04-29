@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Table, Avatar, Space, Button, Card, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -43,7 +42,6 @@ export function UsersTable({
   const columns: ColumnsType<UserData> = [
     {
       title: "Name",
-      dataIndex: "name",
       key: "name",
       render: (_: any, record: UserData) => {
         const fullNameRaw = `${record.firstname ?? ""} ${record.middlename ?? ""
@@ -93,10 +91,11 @@ export function UsersTable({
       title="Manage Ziya Staff"
       extra={
         <Input.Search
-          placeholder="Search Staff"
+          placeholder="Search staff"
           value={searchText}
           onChange={(e) => onSearchChange(e.target.value)}
-          style={{ width: 200 }}
+          onSearch={(value) => onSearchChange(value)}
+          style={{ width: 260 }}
           allowClear
         />
       }
@@ -115,7 +114,6 @@ export function UsersTable({
           onChange: (nextPage, nextPageSize) => {
             onPaginationChange(nextPage, nextPageSize);
           },
-
         }}
         loading={loading}
         bordered

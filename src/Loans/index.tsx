@@ -70,7 +70,7 @@ const LoanCategories: FC = () => {
             onToggleStatus={handleToggleLoanStatus}
             // isLoading={isLoading}
             onEdit={setSelectedLoan}
-            // onToggleStatus={handleToggleLoanStatus}
+          // onToggleStatus={handleToggleLoanStatus}
           />
         </Tabs.TabPane>
 

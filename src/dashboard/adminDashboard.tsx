@@ -66,7 +66,7 @@ const DashboardOverview = () => {
     useGetAllCustomersQuery({});
   const { data: walletsData, isLoading: walletsLoading } =
     useGetAllGroupWalletsQuery({});
-  const { data: groupsData, isLoading: groupsLoading } = useGetAllGroupsQuery({});
+  const { data: _, isLoading: groupsLoading } = useGetAllGroupsQuery({});
 
   const backendTotalGroups = toNumber(dashboardStats?.total_groups);
   const backendTotalCustomers = toNumber(dashboardStats?.total_customers);
@@ -82,7 +82,7 @@ const DashboardOverview = () => {
   const groupLoans = useMemo(() => groupLoansRaw ?? [], [groupLoansRaw]);
   const customers = useMemo(() => customersRaw ?? [], [customersRaw]);
   const wallets = useMemo(() => walletsRaw ?? [], [walletsRaw]);
-  const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
+  //const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
 
   const loanAggregates = useMemo(() => {
     return groupLoans.reduce(
@@ -106,16 +106,16 @@ const DashboardOverview = () => {
   const repaymentRate =
     totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
-  const activeGroupCount = useMemo(() => {
-    if (groups.length) return groups.length;
-    const unique = new Set<string>();
-    groupLoans.forEach((loan, index) => {
-      const identifier =
-        loan.group_id ?? loan.group_name ?? loan.id ?? `group-${index}`;
-      unique.add(String(identifier));
-    });
-    return unique.size;
-  }, [groupLoans, groups.length]);
+  // const activeGroupCount = useMemo(() => {
+  //   if (groups.length) return groups.length;
+  //   const unique = new Set<string>();
+  //   groupLoans.forEach((loan, index) => {
+  //     const identifier =
+  //       loan.group_id ?? loan.group_name ?? loan.id ?? `group-${index}`;
+  //     unique.add(String(identifier));
+  //   });
+  //   return unique.size;
+  // }, [groupLoans, groups.length]);
 
   const groupPerformance = useMemo(() => {
     const collection = new Map<
@@ -467,8 +467,8 @@ const DashboardOverview = () => {
                         {card.trend !== undefined && (
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${card.trendUp
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-amber-50 text-amber-700"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
                               }`}
                           >
                             {card.trend}

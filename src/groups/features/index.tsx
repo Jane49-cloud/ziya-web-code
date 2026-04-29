@@ -14,12 +14,18 @@ export const {
   useUpdateGroupMemberCountMutation,
   useGetMyManagedGroupsQuery,
   useGetMyCreatedGroupsQuery,
+
   useGetGroupMembersQuery,
+  useLazyGetGroupMembersQuery,
+
   useGetGroupWalletQuery,
 
   useGetAllGroupWalletsQuery,
   useUpdateGroupWalletiMutation,
+
   useGetGroupLoansQuery,
+  useLazyGetGroupLoansQuery,
+
   useGetAllGroupActivitiesQuery,
   useGetGroupActivitiesByUserQuery,
   useGetGroupActivitiesByGroupQuery,
@@ -28,7 +34,11 @@ export const {
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,
   useCreateGroupLoanPaymentMutation,
+
   useGetGroupPaymentsQuery,
+  useLazyGetGroupPaymentsQuery,
+
+
   useUpdateGroupLoanPaymentMutation,
   useDeleteGroupLoanPaymentMutation,
   useAddGroupMemberMutation,

@@ -294,7 +294,7 @@ const GroupTable: FC<GroupTableProps> = ({
           pageSize,
           total: effectiveTotal,
           showSizeChanger: true,
-          pageSizeOptions: [10, 20, 50],
+          pageSizeOptions: [5, 10, 20, 50],
           onChange: (nextPage, nextPageSize) => {
             onPaginationChange(nextPage, nextPageSize);
           },

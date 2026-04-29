@@ -43,6 +43,21 @@ export const UserSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: "Users", id }],
     }),
+
+    //search
+    searchStaff: builder.query<UserData[], string>({
+      query: (q) => ({
+        url: "/staff/search",
+        method: "GET",
+        params: {
+          q: q.trim(),
+        },
+      }),
+      transformResponse: (response: any) => {
+        return Array.isArray(response?.staffs) ? response.staffs : [];
+      },
+    }),
+
   }),
 });
 
@@ -54,4 +69,8 @@ export const {
   useUpdateUserMutation,
   useGetUserByIdQuery,
   useResetPasswordMutation,
+
+  //search
+  useLazySearchStaffQuery,
+
 } = UserSlice;

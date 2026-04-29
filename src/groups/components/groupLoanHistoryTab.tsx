@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   Table,
@@ -14,17 +14,51 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
-import { useGetGroupLoansQuery } from "../features";
+import { useLazyGetGroupLoansQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 import { formatName, getUser } from "../../utils";
 
 const { Title, Text } = Typography;
 
+const BATCH_SIZE = 20;
+
 interface GroupLoanHistoryTabProps {
   groupId: number;
   groupAdminId: number;
 }
+
+const normalizeGroupLoansCollection = (response: any) => {
+  const value =
+    response?.loans?.data ??
+    response?.loans ??
+    response?.data?.loans ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
+const getGroupLoanCacheKey = (loan: any) =>
+  String(
+    loan?.id ??
+    `${loan?.group_id ?? ""}-${loan?.issued_to ?? ""}-${loan?.cycle ?? ""}-${loan?.amount ?? ""
+    }`
+  );
+
+const dedupeGroupLoanRows = (items: any[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getGroupLoanCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
 
 const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
   groupId,
@@ -33,19 +67,23 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
   const staffUserId = useMemo(() => {
     const user = getUser();
     if (!user?.id) return null;
+
     const parsedId = Number(user.id);
     return Number.isNaN(parsedId) ? null : parsedId;
   }, []);
 
-  const { data, isLoading, isFetching, refetch } = useGetGroupLoansQuery(
-    groupId,
-    {
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-      pollingInterval: 180000,
-    },
-  );
-  const loans = useMemo(() => data?.loans || [], [data?.loans]);
+  const [fetchGroupLoans, { isFetching }] = useLazyGetGroupLoansQuery();
+
+  const rowsRef = useRef<any[]>([]);
+
+  const [loans, setLoans] = useState<any[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
 
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,7 +95,94 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
   const navigate = useNavigate();
 
-  // Stats always computed from the full dataset — not affected by search/sort
+  const syncRows = useCallback((nextRows: any[]) => {
+    rowsRef.current = nextRows;
+    setLoans(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchGroupLoans({
+        groupId,
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeGroupLoansCollection(response);
+
+      const nextRows = reset
+        ? dedupeGroupLoanRows(batchRows)
+        : dedupeGroupLoanRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchGroupLoans, groupId, syncRows]
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchGroupLoans({
+          groupId,
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeGroupLoansCollection(response);
+
+        cachedRows = dedupeGroupLoanRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchGroupLoans, groupId, hasMore, syncRows]
+  );
+
+  const refreshGroupLoans = useCallback(async () => {
+    try {
+      setIsBootstrapping(true);
+      setIsPaginationLoading(true);
+      setUiPage(1);
+      setUiPageSize(10);
+      setBackendPage(0);
+      setHasMore(true);
+      syncRows([]);
+
+      await loadBatch(1, true);
+    } catch (error) {
+      console.error("Failed to load group loans:", error);
+      syncRows([]);
+      setHasMore(false);
+    } finally {
+      setIsBootstrapping(false);
+      setIsPaginationLoading(false);
+    }
+  }, [loadBatch, syncRows]);
+
+  useEffect(() => {
+    void refreshGroupLoans();
+  }, [refreshGroupLoans]);
+
   const totalLoaned = useMemo(
     () =>
       loans.reduce((sum: number, loan: any) => {
@@ -65,35 +190,40 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
           typeof loan.amount === "string"
             ? parseFloat(loan.amount)
             : loan.amount;
+
         return sum + (isNaN(amount) ? 0 : amount);
       }, 0),
-    [loans],
+    [loans]
   );
 
   const totalLoanCount = useMemo(() => loans.length, [loans]);
 
   const activeLoanCount = useMemo(
-    () =>
-      loans.filter((loan: any) => Number(loan.balance ?? 0) > 0).length,
-    [loans],
+    () => loans.filter((loan: any) => Number(loan.balance ?? 0) > 0).length,
+    [loans]
   );
 
   const averageAmount = useMemo(
     () => (totalLoanCount ? Math.round(totalLoaned / totalLoanCount) : 0),
-    [totalLoaned, totalLoanCount],
+    [totalLoaned, totalLoanCount]
   );
 
   const filteredLoans = useMemo(() => {
     const needle = searchTerm.trim().toLowerCase();
+
     if (!needle) return loans;
 
     return loans.filter((loan: any) => {
       const recipient = formatName(
-        `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`,
+        `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
       ).toLowerCase();
+
+      const loanTypeName = String(loan.loan_type_name ?? "").toLowerCase();
       const loanType = String(loan.loan_type ?? "").toLowerCase();
+
       return (
         recipient.includes(needle) ||
+        loanTypeName.includes(needle) ||
         loanType.includes(needle) ||
         String(loan.cycle ?? "").toLowerCase().includes(needle)
       );
@@ -104,12 +234,42 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
     () =>
       [...filteredLoans].sort((a, b) =>
         sortOrder === "ascend"
-          ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          : new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime(),
+          ? new Date(a.created_at ?? a.date_issued).getTime() -
+          new Date(b.created_at ?? b.date_issued).getTime()
+          : new Date(b.created_at ?? b.date_issued).getTime() -
+          new Date(a.created_at ?? a.date_issued).getTime()
       ),
-    [filteredLoans, sortOrder],
+    [filteredLoans, sortOrder]
   );
+
+  const isFiltering = Boolean(searchTerm.trim());
+
+  const progressiveTotal = isFiltering
+    ? sortedLoans.length
+    : loans.length + (hasMore ? BATCH_SIZE : 0);
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+
+    try {
+      setIsPaginationLoading(true);
+
+      if (!isFiltering) {
+        await ensureRowsForPage(targetPage, nextPageSize);
+      }
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error) {
+      console.error("Failed to load more group loans:", error);
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
 
@@ -125,9 +285,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
             onClick={() => navigate(`/customer/${record.issued_to}`)}
           >
             {formatName(
-              `${record.recipient_firstname ?? ""} ${
-                record.recipient_lastname ?? ""
-              }`,
+              `${record.recipient_firstname ?? ""} ${record.recipient_lastname ?? ""
+              }`
             )}
           </Button>
         ),
@@ -182,6 +341,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
               >
                 Edit
               </Tag>
+
               {isPaid ? (
                 <Tag className="cursor-not-allowed opacity-70" color="green">
                   Paid
@@ -203,7 +363,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
         },
       },
     ],
-    [navigate],
+    [navigate]
   );
 
   return (
@@ -219,6 +379,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
               real time.
             </Text>
           </div>
+
           <Button
             type="primary"
             onClick={() => {
@@ -245,6 +406,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
@@ -258,6 +420,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
@@ -271,6 +434,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
@@ -296,11 +460,15 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
             Sort by Date (
             {sortOrder === "ascend" ? "Oldest First" : "Newest First"})
           </Button>
+
           <Input.Search
             allowClear
             placeholder="Search recipient, type, or cycle"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+              setUiPage(1);
+            }}
             className="w-64"
           />
         </Space>
@@ -308,9 +476,18 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
         <Table
           columns={columns}
           dataSource={sortedLoans}
-          loading={isLoading || isFetching}
+          loading={isBootstrapping || isFetching || isPaginationLoading}
           rowKey="id"
-          pagination={{ pageSize: 6, showSizeChanger: true }}
+          pagination={{
+            current: uiPage,
+            pageSize: uiPageSize,
+            total: progressiveTotal,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            onChange: (page, pageSize) => {
+              void handlePaginationChange(page, pageSize);
+            },
+          }}
           scroll={{ x: 900 }}
           size="middle"
           className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
@@ -323,7 +500,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
           onClose={() => setShowLoanModal(false)}
           groupId={groupId}
           loan={editLoan}
-          refetch={refetch}
+          refetch={refreshGroupLoans}
           issuedBy={staffUserId ?? groupAdminId ?? null}
         />
       )}
@@ -334,7 +511,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
           onClose={() => setShowPaymentModal(false)}
           groupId={groupId}
           loan={selectedLoan}
-          refetch={refetch}
+          refetch={refreshGroupLoans}
           approved_by={staffUserId ?? groupAdminId ?? null}
         />
       )}
