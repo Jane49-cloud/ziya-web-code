@@ -7,7 +7,10 @@ export const {
   useLazyGetAllGroupsQuery,
 
   useGetGroupByIdQuery,
+
   useSearchGroupsQuery,
+  useLazySearchGroupsQuery,
+
   useUpdateGroupMutation,
   useDeleteGroupMutation,
   useChangeRelationshipManagerMutation,
@@ -17,6 +20,9 @@ export const {
 
   useGetGroupMembersQuery,
   useLazyGetGroupMembersQuery,
+
+  //search gr memb
+  useLazySearchGroupMembersQuery,
 
   useGetGroupWalletQuery,
 
@@ -29,7 +35,9 @@ export const {
   useGetAllGroupActivitiesQuery,
   useGetGroupActivitiesByUserQuery,
   useGetGroupActivitiesByGroupQuery,
+
   useGetGroupAdminActivityQuery,
+
   useCreateGroupLoanMutation,
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,

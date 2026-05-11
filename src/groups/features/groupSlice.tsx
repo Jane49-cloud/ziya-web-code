@@ -58,13 +58,38 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
-    searchGroups: builder.query({
-      query: ({ field, value }) => ({
-        url: `/groups/search?field=${field}&value=${value}`,
+    // searchGroups: builder.query({
+    //   query: ({ field, value }) => ({
+    //     url: `/groups/search?field=${field}&value=${value}`,
+    //     method: "GET",
+    //   }),
+    //   providesTags: [{ type: "Groups" }],
+    // }),
+
+    // search groups
+    searchGroups: builder.query<any[], { q: string }>({
+      query: ({ q }) => ({
+        url: "/groups/search",
         method: "GET",
+        params: {
+          q: q.trim() || "all",
+        },
       }),
-      providesTags: [{ type: "Groups" }],
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+
+        const rows =
+          response?.groups ??
+          response?.data ??
+          response?.results ??
+          [];
+
+        return Array.isArray(rows) ? rows : [];
+      },
+      providesTags: [{ type: "Groups", id: "SEARCH" }],
     }),
+
+
 
     updateGroup: builder.mutation({
       query: ({ id, updatedData }) => ({
@@ -134,6 +159,35 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
         return [{ type: "GroupMembers", id: groupId }];
       },
+    }),
+
+    // search grp members 
+    searchGroupMembers: builder.query<
+      any[],
+      { groupId: string | number; q: string }
+    >({
+      query: ({ groupId, q }) => ({
+        url: `/groups/members/${groupId}/search`,
+        method: "GET",
+        params: {
+          q: q.trim() || "all",
+        },
+      }),
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+
+        const rows =
+          response?.members ??
+          response?.data?.members ??
+          response?.data ??
+          response?.results ??
+          [];
+
+        return Array.isArray(rows) ? rows : [];
+      },
+      providesTags: (_result, _error, arg) => [
+        { type: "GroupMembers", id: `SEARCH-${arg.groupId}` },
+      ],
     }),
 
 
@@ -236,6 +290,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
     getGroupActivitiesByGroup: builder.query({
       query: (groupId) => `/group-activities/group/${groupId}`,
     }),
+
     getGroupAdminActivity: builder.query({
       query: (groupId: number) => ({
         url: `/groups/admin/activity/${groupId}`,
@@ -243,6 +298,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       }),
       providesTags: (_res, _err, groupId) => [{ type: "Groups", id: groupId }],
     }),
+
 
     // group loans
     createGroupLoan: builder.mutation({

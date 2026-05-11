@@ -1,13 +1,38 @@
-import { Button, Dropdown, Empty, Grid, Input, Space, Table, Tag, Typography, message } from "antd";
+import {
+  Button,
+  Dropdown,
+  Empty,
+  Grid,
+  Input,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { MenuProps } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiCheckCircle, FiMoreVertical, FiSearch, FiUser, FiUsers } from "react-icons/fi";
+import {
+  FiCheckCircle,
+  FiMoreVertical,
+  FiSearch,
+  FiUser,
+  FiUsers,
+} from "react-icons/fi";
 import {
   useLazyGetAllSubscriptionsQuery,
+  useLazySearchSubscriptionsQuery,
   useMarkSubscriptionPaidMutation,
 } from "../features";
 import { formatName, getRole, normalizeRole } from "../../utils";
-import { normalizeSubscriptionCollection, toCurrency, toDateText, toDisplayText, toNumber, type SubscriptionRecord } from "../types";
+import {
+  normalizeSubscriptionCollection,
+  toCurrency,
+  toDateText,
+  toDisplayText,
+  toNumber,
+  type SubscriptionRecord,
+} from "../types";
 import {
   SubscriptionLoader,
   SubscriptionShell,
@@ -25,6 +50,7 @@ import {
 const { Text, Title } = Typography;
 
 const BATCH_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 500;
 
 const getCustomerName = (record: SubscriptionRecord) =>
   toDisplayText(
@@ -75,6 +101,10 @@ export default function AllSubscriptionsTab({
   const isMobile = !screens.md;
 
   const [search, setSearch] = useState("");
+  const [searchRows, setSearchRows] = useState<SubscriptionRecord[]>([]);
+
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   const rawRole = normalizeRole(getRole());
   const userRole: UserRole | null = STAFF_ROLES.includes(rawRole as UserRole)
@@ -105,6 +135,9 @@ export default function AllSubscriptionsTab({
   const [fetchAllSubscriptions, { isFetching }] =
     useLazyGetAllSubscriptionsQuery();
 
+  const [searchSubscriptions, { isFetching: isSearchingSubscriptions }] =
+    useLazySearchSubscriptionsQuery();
+
   const [markSubscriptionPaid, { isLoading: isMarkingPaid }] =
     useMarkSubscriptionPaidMutation();
 
@@ -118,6 +151,8 @@ export default function AllSubscriptionsTab({
 
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
+
+  const isSearchMode = search.trim().length > 0;
 
   const syncRows = useCallback((nextRows: SubscriptionRecord[]) => {
     rowsRef.current = nextRows;
@@ -207,8 +242,55 @@ export default function AllSubscriptionsTab({
   }, [enabled, loadBatch]);
 
   useEffect(() => {
+    if (!enabled) return;
+
+    const q = search.trim();
+
     setUiPage(1);
-  }, [search]);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    if (!q) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      return;
+    }
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchSubscriptions({ q }).unwrap();
+
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows(
+          dedupeSubscriptionRows(
+            Array.isArray(result) ? (result as SubscriptionRecord[]) : [],
+          ),
+        );
+      } catch (error: any) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows([]);
+
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to search subscriptions",
+        );
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [enabled, search, searchSubscriptions]);
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -216,12 +298,11 @@ export default function AllSubscriptionsTab({
   ) => {
     const sizeChanged = nextPageSize !== uiPageSize;
     const targetPage = sizeChanged ? 1 : nextPage;
-    const hasSearch = Boolean(search.trim());
 
     try {
       setIsPaginationLoading(true);
 
-      if (!hasSearch) {
+      if (!isSearchMode) {
         await ensureRowsForPage(targetPage, nextPageSize);
       }
 
@@ -238,37 +319,27 @@ export default function AllSubscriptionsTab({
     }
   };
 
-  const filteredRows = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-
-    if (!needle) return rows;
-
-    return rows.filter((row) =>
-      Object.values(row).some((value) =>
-        String(value ?? "").toLowerCase().includes(needle),
-      ),
-    );
-  }, [rows, search]);
+  const tableRows = isSearchMode ? searchRows : rows;
 
   const selectedCustomerRows = useMemo(() => {
     if (!selectedCustomer.customerId) return [];
 
-    return rows.filter(
+    return tableRows.filter(
       (row) =>
         row.customer_id != null &&
         String(row.customer_id) === String(selectedCustomer.customerId),
     );
-  }, [rows, selectedCustomer.customerId]);
+  }, [tableRows, selectedCustomer.customerId]);
 
   const selectedGroupRows = useMemo(() => {
     if (!selectedGroup.groupId) return [];
 
-    return rows.filter(
+    return tableRows.filter(
       (row) =>
         row.group_id != null &&
         String(row.group_id) === String(selectedGroup.groupId),
     );
-  }, [rows, selectedGroup.groupId]);
+  }, [tableRows, selectedGroup.groupId]);
 
   const handleViewCustomer = (record: SubscriptionRecord) => {
     setSelectedCustomer({
@@ -320,16 +391,19 @@ export default function AllSubscriptionsTab({
     try {
       await markSubscriptionPaid(record.id as string | number).unwrap();
 
-      const updatedRows = rowsRef.current.map((row) =>
-        String(row.id) === String(record.id)
-          ? {
-            ...row,
-            paid: true,
-          }
-          : row,
-      );
+      const patchPaid = (items: SubscriptionRecord[]) =>
+        items.map((row) =>
+          String(row.id) === String(record.id)
+            ? {
+              ...row,
+              paid: true,
+            }
+            : row,
+        );
 
+      const updatedRows = patchPaid(rowsRef.current);
       syncRows(updatedRows);
+      setSearchRows((prev) => patchPaid(prev));
 
       message.success("Subscription marked as paid successfully");
     } catch (error: any) {
@@ -354,7 +428,10 @@ export default function AllSubscriptionsTab({
       render: (_: unknown, record: SubscriptionRecord) => (
         <div className="min-w-0">
           <div className="font-semibold text-slate-600">
-            {toDisplayText(formatName(String(record.group_name ?? "")), "No group")}
+            {toDisplayText(
+              formatName(String(record.group_name ?? "")),
+              "No group",
+            )}
           </div>
         </div>
       ),
@@ -517,17 +594,15 @@ export default function AllSubscriptionsTab({
     )
     : allColumns;
 
-  const totalAmount = filteredRows.reduce(
+  const totalAmount = tableRows.reduce(
     (sum, row) => sum + toNumber(row.amount),
     0,
   );
 
-  const activeCount = filteredRows.filter((row) => Boolean(row.active)).length;
+  const activeCount = tableRows.filter((row) => Boolean(row.active)).length;
 
-  const isSearching = Boolean(search.trim());
-
-  const progressiveTotal = isSearching
-    ? filteredRows.length
+  const progressiveTotal = isSearchMode
+    ? searchRows.length
     : rows.length + (hasMore ? BATCH_SIZE : 0);
 
   if (isBootstrapping && !rows.length) {
@@ -550,7 +625,7 @@ export default function AllSubscriptionsTab({
 
           <Space wrap size={12}>
             <Tag color="cyan" className="px-3 py-1.5 text-sm font-medium">
-              {filteredRows.length} rows
+              {tableRows.length} rows
             </Tag>
 
             <Tag color="green" className="px-3 py-1.5 text-sm font-medium">
@@ -572,16 +647,24 @@ export default function AllSubscriptionsTab({
           </Space>
         </div>
 
-        {!filteredRows.length ? (
-          <Empty description="No subscription records available" />
+        {!tableRows.length ? (
+          <Empty
+            description={
+              isSearchMode
+                ? "No subscriptions match your search"
+                : "No subscription records available"
+            }
+          />
         ) : (
           <Table
             rowKey={(record) =>
               String(record.id ?? record.customer_id ?? JSON.stringify(record))
             }
             columns={columns}
-            dataSource={filteredRows}
-            loading={isFetching || isPaginationLoading}
+            dataSource={tableRows}
+            loading={
+              isFetching || isSearchingSubscriptions || isPaginationLoading
+            }
             pagination={{
               current: uiPage,
               pageSize: uiPageSize,

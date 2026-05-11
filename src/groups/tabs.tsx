@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -28,6 +28,7 @@ import GroupAnalyticsPage from "./pages/groupAnalytics";
 import GroupAdminAccessAnalytics from "./pages/groupAdminAccessAnalytics";
 import {
   useLazyGetAllGroupsQuery,
+  useLazySearchGroupsQuery,
   useUpdateGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
@@ -37,6 +38,7 @@ import { getUser } from "../utils";
 const { Title, Text } = Typography;
 
 const BATCH_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 500;
 
 type GroupRecord = {
   id: string | number;
@@ -51,7 +53,13 @@ type GroupRecord = {
 
 const dedupeById = (items: GroupRecord[]) => {
   const map = new Map<string | number, GroupRecord>();
-  items.forEach((item) => map.set(item.id, item));
+
+  items.forEach((item) => {
+    if (item?.id !== undefined && item?.id !== null) {
+      map.set(item.id, item);
+    }
+  });
+
   return Array.from(map.values());
 };
 
@@ -83,7 +91,18 @@ const GroupTabs = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(false);
 
+  const [searchText, setSearchText] = useState("");
+  const [searchRows, setSearchRows] = useState<GroupRecord[]>([]);
+
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
+
+  const isSearchMode = searchText.trim().length > 0;
+
   const [fetchGroups, { isLoading, isFetching }] = useLazyGetAllGroupsQuery();
+
+  const [searchGroups, { isFetching: isSearching }] =
+    useLazySearchGroupsQuery();
 
   const [updateGroup] = useUpdateGroupMutation();
   const [changeManager] = useChangeRelationshipManagerMutation();
@@ -101,6 +120,7 @@ const GroupTabs = () => {
             (group) => Number(group?.created_by ?? 0) === currentStaffId
           )
           : [];
+
       case "managed":
         return currentStaffId
           ? sourceRows.filter(
@@ -108,6 +128,7 @@ const GroupTabs = () => {
               Number(group?.relationship_manager ?? 0) === currentStaffId
           )
           : [];
+
       case "all":
       default:
         return sourceRows;
@@ -136,6 +157,7 @@ const GroupTabs = () => {
       if (rows.length > 0 || !mounted) return;
 
       setIsBootstrapping(true);
+
       try {
         await loadBatch(1, true);
       } finally {
@@ -149,6 +171,51 @@ const GroupTabs = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const q = searchText.trim();
+
+    setUiPage(1);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    if (!q) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      return;
+    }
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchGroups({ q }).unwrap();
+
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows(dedupeById(Array.isArray(result) ? result : []));
+      } catch (error: any) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows([]);
+
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to search groups"
+        );
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [searchText, searchGroups]);
 
   const ensureRowsForPage = async (
     tabKey: string,
@@ -183,11 +250,17 @@ const GroupTabs = () => {
 
   const handleRefresh = async () => {
     setIsBootstrapping(true);
+
     try {
+      setSearchText("");
+      setSearchRows([]);
+      searchRequestIdRef.current += 1;
+
       setUiPage(1);
       setRows([]);
       setBackendPage(0);
       setHasMore(true);
+
       await loadBatch(1, true);
     } finally {
       setIsBootstrapping(false);
@@ -201,7 +274,9 @@ const GroupTabs = () => {
     const changedSize = nextPageSize !== uiPageSize;
     const targetPage = changedSize ? 1 : nextPage;
 
-    await ensureRowsForPage(activeTab, targetPage, nextPageSize);
+    if (!isSearchMode) {
+      await ensureRowsForPage(activeTab, targetPage, nextPageSize);
+    }
 
     setUiPage(targetPage);
     setUiPageSize(nextPageSize);
@@ -212,16 +287,18 @@ const GroupTabs = () => {
     setSearchParams({ tab: key }, { replace: true });
   };
 
-  const groupRows = useMemo(() => rows, [rows]);
+  const sourceRows = isSearchMode ? searchRows : rows;
+
+  const groupRows = useMemo(() => sourceRows, [sourceRows]);
 
   const createdGroupRows = useMemo(
-    () => getRowsForTab("created", rows),
-    [rows, currentStaffId]
+    () => getRowsForTab("created", sourceRows),
+    [sourceRows, currentStaffId]
   );
 
   const managedGroupRows = useMemo(
-    () => getRowsForTab("managed", rows),
-    [rows, currentStaffId]
+    () => getRowsForTab("managed", sourceRows),
+    [sourceRows, currentStaffId]
   );
 
   const summary = useMemo(() => {
@@ -232,8 +309,8 @@ const GroupTabs = () => {
     };
   }, [groupRows.length, createdGroupRows.length, managedGroupRows.length]);
 
-  const getProgressiveTotal = (length: number) =>
-    length + (hasMore ? BATCH_SIZE : 0);
+  const getTableTotal = (length: number) =>
+    isSearchMode ? length : length + (hasMore ? BATCH_SIZE : 0);
 
   const onEdit = (group: GroupRecord) => {
     setSelectedGroup(group);
@@ -315,6 +392,9 @@ const GroupTabs = () => {
     }
   };
 
+  const tableLoading =
+    isLoading || isFetching || isSearching || isBootstrapping;
+
   const tabItems = [
     {
       key: "all",
@@ -322,10 +402,13 @@ const GroupTabs = () => {
       children: (
         <GroupTable
           data={groupRows}
-          loading={isLoading || isFetching || isBootstrapping}
+          loading={tableLoading}
           page={uiPage}
           pageSize={uiPageSize}
-          total={getProgressiveTotal(groupRows.length)}
+          total={getTableTotal(groupRows.length)}
+          searchValue={searchText}
+          isSearchMode={isSearchMode}
+          onSearchChange={setSearchText}
           onPaginationChange={(nextPage, nextPageSize) => {
             void handlePaginationChange(nextPage, nextPageSize);
           }}
@@ -362,10 +445,13 @@ const GroupTabs = () => {
       children: (
         <GroupTable
           data={createdGroupRows}
-          loading={isLoading || isFetching || isBootstrapping}
+          loading={tableLoading}
           page={uiPage}
           pageSize={uiPageSize}
-          total={getProgressiveTotal(createdGroupRows.length)}
+          total={getTableTotal(createdGroupRows.length)}
+          searchValue={searchText}
+          isSearchMode={isSearchMode}
+          onSearchChange={setSearchText}
           onPaginationChange={(nextPage, nextPageSize) => {
             void handlePaginationChange(nextPage, nextPageSize);
           }}
@@ -390,10 +476,13 @@ const GroupTabs = () => {
       children: (
         <GroupTable
           data={managedGroupRows}
-          loading={isLoading || isFetching || isBootstrapping}
+          loading={tableLoading}
           page={uiPage}
           pageSize={uiPageSize}
-          total={getProgressiveTotal(managedGroupRows.length)}
+          total={getTableTotal(managedGroupRows.length)}
+          searchValue={searchText}
+          isSearchMode={isSearchMode}
+          onSearchChange={setSearchText}
           onPaginationChange={(nextPage, nextPageSize) => {
             void handlePaginationChange(nextPage, nextPageSize);
           }}
@@ -458,7 +547,7 @@ const GroupTabs = () => {
               </div>
               <div>
                 <Text type="secondary" className="text-xs">
-                  Groups  //cached groups
+                  Groups
                 </Text>
                 <div className="text-2xl font-bold leading-tight text-slate-800">
                   {summary.total}

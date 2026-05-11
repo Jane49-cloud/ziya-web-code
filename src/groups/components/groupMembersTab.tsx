@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Table,
   Typography,
@@ -16,6 +22,7 @@ import {
 } from "antd";
 import {
   useLazyGetGroupMembersQuery,
+  useLazySearchGroupMembersQuery,
   useRemoveGroupMemberMutation,
   useAddGroupMemberMutation,
 } from "../features";
@@ -26,6 +33,7 @@ import { formatName, getInitials } from "../../utils";
 const { Title } = Typography;
 
 const BATCH_SIZE = 20;
+const MEMBER_SEARCH_DEBOUNCE_MS = 500;
 
 interface Props {
   groupId: number;
@@ -68,13 +76,19 @@ const dedupeMemberRows = (items: any[]) => {
 const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [searchMembers, setSearchMembers] = useState("");
+  const [searchRows, setSearchRows] = useState<any[]>([]);
   const [searchCustomers, setSearchCustomers] = useState("");
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
 
   const [fetchGroupMembers, { isFetching }] = useLazyGetGroupMembersQuery();
 
+  const [searchGroupMembers, { isFetching: isSearchingMembers }] =
+    useLazySearchGroupMembersQuery();
+
   const rowsRef = useRef<any[]>([]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   const [members, setMembers] = useState<any[]>([]);
   const [backendPage, setBackendPage] = useState(0);
@@ -85,11 +99,10 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
+  const isSearchingMembersMode = searchMembers.trim().length > 0;
+
   const { data: allCustomersData, isLoading: customersLoading } =
-    useGetAllCustomersQuery(
-      {},
-      { refetchOnFocus: false, skip: !modalOpen }
-    );
+    useGetAllCustomersQuery({}, { refetchOnFocus: false, skip: !modalOpen });
 
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
@@ -168,6 +181,11 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     try {
       setIsBootstrapping(true);
       setIsPaginationLoading(true);
+
+      searchRequestIdRef.current += 1;
+      setSearchMembers("");
+      setSearchRows([]);
+
       setUiPage(1);
       setUiPageSize(10);
       setBackendPage(0);
@@ -188,6 +206,54 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   useEffect(() => {
     void refreshMembers();
   }, [refreshMembers]);
+
+  useEffect(() => {
+    const q = searchMembers.trim();
+
+    setUiPage(1);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    if (!q) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      return;
+    }
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchGroupMembers({
+          groupId,
+          q,
+        }).unwrap();
+
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows(dedupeMemberRows(Array.isArray(result) ? result : []));
+      } catch (error: any) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows([]);
+
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to search group members"
+        );
+      }
+    }, MEMBER_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [groupId, searchMembers, searchGroupMembers]);
 
   const handleAddMember = async (cust: any) => {
     try {
@@ -227,23 +293,6 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
   };
 
-  const filteredMembers = useMemo(() => {
-    const needle = searchMembers.trim().toLowerCase();
-
-    if (!needle) return members;
-
-    return members.filter((m: any) => {
-      const normalizedName = formatName(
-        `${m.firstname ?? ""} ${m.lastname ?? ""}`
-      );
-
-      const fullName = normalizedName.toLowerCase();
-      const phone = (m.phone_number || "").toLowerCase();
-
-      return fullName.includes(needle) || phone.includes(needle);
-    });
-  }, [members, searchMembers]);
-
   const filteredCustomers = useMemo(() => {
     if (!modalOpen) {
       return [];
@@ -256,7 +305,14 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
       ).toLowerCase();
 
-      return fullName.includes(searchText);
+      const phone = String(cust.phone_number ?? "").toLowerCase();
+      const email = String(cust.email ?? "").toLowerCase();
+
+      return (
+        fullName.includes(searchText) ||
+        phone.includes(searchText) ||
+        email.includes(searchText)
+      );
     });
   }, [customers, modalOpen, searchCustomers]);
 
@@ -264,10 +320,10 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     return filteredCustomers.slice(0, customerPage * pageSize);
   }, [filteredCustomers, customerPage]);
 
-  const isFilteringMembers = Boolean(searchMembers.trim());
+  const tableRows = isSearchingMembersMode ? searchRows : members;
 
-  const tableTotal = isFilteringMembers
-    ? filteredMembers.length
+  const tableTotal = isSearchingMembersMode
+    ? searchRows.length
     : members.length + (hasMore ? BATCH_SIZE : 0);
 
   const handlePaginationChange = async (
@@ -280,7 +336,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     try {
       setIsPaginationLoading(true);
 
-      if (!isFilteringMembers) {
+      if (!isSearchingMembersMode) {
         await ensureRowsForPage(targetPage, nextPageSize);
       }
 
@@ -300,8 +356,8 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       dataIndex: "fullname",
       key: "fullname",
       sorter: (a: any, b: any) =>
-        `${a.firstname} ${a.lastname}`.localeCompare(
-          `${b.firstname} ${b.lastname}`
+        `${a.firstname ?? ""} ${a.lastname ?? ""}`.localeCompare(
+          `${b.firstname ?? ""} ${b.lastname ?? ""}`
         ),
       render: (_: any, record: any) =>
         formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`),
@@ -311,7 +367,18 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       dataIndex: "phone_number",
       key: "phone_number",
       sorter: (a: any, b: any) =>
-        (a.phone_number || "").localeCompare(b.phone_number || ""),
+        String(a.phone_number || "").localeCompare(
+          String(b.phone_number || "")
+        ),
+      render: (value: string | null) => value || "—",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      sorter: (a: any, b: any) =>
+        String(a.email || "").localeCompare(String(b.email || "")),
+      render: (value: string | null) => value || "—",
     },
     {
       title: "Action",
@@ -359,7 +426,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
               setSearchMembers(e.target.value);
               setUiPage(1);
             }}
-            style={{ width: 220 }}
+            style={{ width: 240 }}
             allowClear
           />
 
@@ -375,9 +442,14 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
 
       <Table
         columns={columns}
-        dataSource={filteredMembers}
-        rowKey={(record) => record.id}
-        loading={isBootstrapping || isFetching || isPaginationLoading}
+        dataSource={tableRows}
+        rowKey={(record) => String(record.id)}
+        loading={
+          isBootstrapping ||
+          isFetching ||
+          isSearchingMembers ||
+          isPaginationLoading
+        }
         pagination={{
           current: uiPage,
           pageSize: uiPageSize,
@@ -405,7 +477,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         destroyOnClose
       >
         <Input
-          placeholder="Search customer by name"
+          placeholder="Search customer by name, phone, or email"
           value={searchCustomers}
           onChange={(e) => {
             setCustomerPage(1);
@@ -421,7 +493,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
             dataSource={pagedCustomers}
             renderItem={(cust: any) => {
               const isAlreadyMember = members.some(
-                (m: any) => m.id === cust.id
+                (m: any) => Number(m.id) === Number(cust.id)
               );
 
               return (
@@ -455,7 +527,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
                     title={formatName(
                       `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
                     )}
-                    description={cust.email}
+                    description={cust.email || cust.phone_number || "—"}
                   />
                 </List.Item>
               );

@@ -16,6 +16,9 @@ export const {
   useGetCustomerSubscriptionsQuery,
   useLazyGetCustomerSubscriptionsQuery,
 
+  //search
+  useLazySearchSubscriptionsQuery,
+
   useTriggerSubscriptionCollectionMutation,
   useTriggerSubscriptionCollectionNotifyMutation,
   useTriggerSubscriptionArrearsMutation,

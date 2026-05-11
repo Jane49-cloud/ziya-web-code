@@ -86,18 +86,32 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
     }),
 
 
-    // getCustomerSubscriptions: builder.query<
-    //   SubscriptionApiResponse,
-    //   string | number
-    // >({
-    //   query: (customerId) => ({
-    //     url: `/subscriptions/customer/${customerId}`,
-    //     method: "GET",
-    //   }),
-    //   providesTags: (_result, _error, customerId) => [
-    //     { type: "Subscriptions", id: `CUSTOMER-${customerId}` },
-    //   ],
-    // }),
+    // search
+    searchSubscriptions: builder.query<any[], { q: string }>({
+      query: ({ q }) => ({
+        url: "/subscriptions/search",
+        method: "GET",
+        params: {
+          q: q.trim() || "all",
+        },
+      }),
+      transformResponse: (response: any) => {
+        // if returns a direct array.
+        if (Array.isArray(response)) return response;
+
+        const rows =
+          response?.subscriptions ??
+          response?.customers ??
+          response?.data ??
+          response?.results ??
+          [];
+
+        return Array.isArray(rows) ? rows : [];
+      },
+      providesTags: [{ type: "Subscriptions", id: "SEARCH" }],
+    }),
+
+
 
 
     triggerSubscriptionCollection: builder.mutation<SubscriptionApiResponse, void>({

@@ -603,7 +603,7 @@ const CustomerManagement: FC = () => {
           <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-slate-500 text-sm mb-1">
+                <p className="text-slate-500 text-sm mb-1">c
                   Active Subscriptions
                 </p>
                 <Statistic

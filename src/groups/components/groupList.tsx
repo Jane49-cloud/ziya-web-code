@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import type { FC } from "react";
 import {
   Table,
@@ -46,6 +45,9 @@ type GroupTableProps = {
   page: number;
   pageSize: number;
   total: number;
+  searchValue: string;
+  isSearchMode?: boolean;
+  onSearchChange: (value: string) => void;
   onPaginationChange: (page: number, pageSize: number) => void;
   onEdit: (record: GroupRecord) => void;
   onChangeManager: (record: GroupRecord) => void;
@@ -57,32 +59,14 @@ const GroupTable: FC<GroupTableProps> = ({
   page,
   pageSize,
   total,
+  searchValue,
+  isSearchMode = false,
+  onSearchChange,
   onPaginationChange,
   onEdit,
   onChangeManager,
 }) => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-
-  const filteredData = useMemo(() => {
-    const searchText = search.trim().toLowerCase();
-    if (!searchText) return data;
-
-    return data.filter((group) => {
-      const managerName = formatName(group.relationship_manager_name ?? "")
-        .toLowerCase()
-        .trim();
-
-      return (
-        String(group.name ?? "").toLowerCase().includes(searchText) ||
-        managerName.includes(searchText) ||
-        String(group.tags ?? "").toLowerCase().includes(searchText) ||
-        String(group.admin_name ?? "").toLowerCase().includes(searchText)
-      );
-    });
-  }, [data, search]);
-
-  const effectiveTotal = search.trim() ? filteredData.length : total;
 
   const renderManager = (managerName?: string | null) => {
     const fullName = formatName(managerName ?? "").trim();
@@ -259,22 +243,21 @@ const GroupTable: FC<GroupTableProps> = ({
             </Text>
           </div>
 
-          <Tag color="blue" className="px-3 py-1 text-sm font-medium">
-            {filteredData.length} {filteredData.length === 1 ? "Group" : "Groups"}
+          <Tag
+            color={isSearchMode ? "green" : "blue"}
+            className="px-3 py-1 text-sm font-medium"
+          >
+            {data.length} {data.length === 1 ? "Group" : "Groups"}
           </Tag>
         </div>
 
         <Input
           allowClear
           prefix={<FiSearch className="text-gray-400" />}
-          placeholder="Search by group name, manager, or tag..."
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            if (page !== 1) {
-              onPaginationChange(1, pageSize);
-            }
-          }}
+          // placeholder="Search by group name, manager, tag, or admin..."
+          placeholder="Search by group name"
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
           size="large"
           className="w-full sm:w-96"
           style={{ borderRadius: "8px" }}
@@ -282,7 +265,7 @@ const GroupTable: FC<GroupTableProps> = ({
       </div>
 
       <Table<GroupRecord>
-        dataSource={filteredData}
+        dataSource={data}
         loading={loading}
         columns={columns}
         rowKey={(record) => String(record.id)}
@@ -292,7 +275,7 @@ const GroupTable: FC<GroupTableProps> = ({
         pagination={{
           current: page,
           pageSize,
-          total: effectiveTotal,
+          total,
           showSizeChanger: true,
           pageSizeOptions: [5, 10, 20, 50],
           onChange: (nextPage, nextPageSize) => {
