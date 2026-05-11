@@ -9,6 +9,13 @@ import { useRegisterMutation } from "../features/authApi";
 import { styles } from "../../styles";
 import { useGetAllRolesQuery } from "../../roles/features/rolesSlice";
 
+import {
+  sanitizePhoneNumber,
+  isValidPhoneNumber,
+  PHONE_NUMBER_ERROR,
+  phoneNumberInputProps,
+} from "../../utils/index";
+
 const initialValues = {
   firstname: "",
   middlename: "",
@@ -24,50 +31,51 @@ const addUserSchema = Yup.object().shape({
     .min(2, "Minimum 2 characters")
     .max(50, "Maximum 50 characters")
     .required("First name is required"),
+
   middlename: Yup.string().max(50, "Maximum 50 characters"),
+
   lastname: Yup.string()
     .min(2, "Minimum 2 characters")
     .max(50, "Maximum 50 characters")
     .required("Last name is required"),
+
   email: Yup.string()
     .email("Invalid email format")
     .min(3, "Minimum 3 characters")
     .max(50, "Maximum 50 characters")
     .required("Email is required"),
+
   country_code: Yup.string().required("Country code is required"),
 
   phone_number: Yup.string()
-    .matches(/^\d+$/, "Phone number must contain only numbers")
-    .min(9, "Phone number is too short")
-    .max(15, "Phone number is too long")
-    .required("Phone number is required"),
+    .required("Phone number is required")
+    .test("valid-phone-number", PHONE_NUMBER_ERROR, (value) => {
+      return isValidPhoneNumber(value);
+    }),
 
   role_id: Yup.string().required("User role is required"),
 });
 
 type AddUserProps = {
-  // This callback is passed from the parent (Staff) to switch tabs
   onUserCreated?: () => void;
 };
 
-// Reusable input field component
 function FormField({
   id,
   label,
   formik,
   type = "text",
   placeholder,
-  numbersOnly = false,
 }: {
   id: keyof typeof initialValues;
   label: string;
   type?: string;
   placeholder?: string;
-  numbersOnly?: boolean;
   formik: ReturnType<typeof useFormik<typeof initialValues>>;
 }) {
   const { touched, errors, getFieldProps, setFieldValue } = formik;
   const hasError = touched[id] && errors[id];
+  const isPhoneField = id === "phone_number";
 
   return (
     <div>
@@ -77,15 +85,18 @@ function FormField({
       >
         {label}
       </label>
+
       <input
         id={id}
         type={type}
         placeholder={placeholder}
         {...getFieldProps(id)}
+        {...(isPhoneField ? phoneNumberInputProps : {})}
         onInput={
-          numbersOnly
+          isPhoneField
             ? (e) => {
-              const value = e.currentTarget.value.replace(/\D/g, "");
+              const value = sanitizePhoneNumber(e.currentTarget.value);
+              e.currentTarget.value = value;
               setFieldValue(id, value);
             }
             : undefined
@@ -97,6 +108,7 @@ function FormField({
             : "border-gray-300 focus:ring-indigo-200"
         )}
       />
+
       {hasError && (
         <div className="mt-1 text-xs text-red-500">{errors[id]}</div>
       )}
@@ -110,7 +122,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
     isLoading: rolesLoading,
     isError: rolesError,
   } = useGetAllRolesQuery({});
-  // const [showPassword, setShowPassword] = useState(false);
+
   const [registerUser, { isLoading, error }] = useRegisterMutation();
 
   const formik = useFormik({
@@ -120,8 +132,10 @@ export function AddUser({ onUserCreated }: AddUserProps) {
       try {
         const payload = {
           ...values,
+          phone_number: sanitizePhoneNumber(values.phone_number),
           role_id: Number(values.role_id),
         };
+
         const response = await registerUser(payload).unwrap();
 
         setStatus(response.message || "User added successfully!");
@@ -137,8 +151,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
       }
     },
   });
-
-  // const togglePassword = () => setShowPassword((prev) => !prev);
 
   const rtkErrorMessage =
     (error as any)?.data?.error ?? (error as any)?.error ?? null;
@@ -159,7 +171,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
             </Alert>
           )}
 
-          {/* If there's an RTK Query error, show that */}
           {rtkErrorMessage && (
             <Alert variant="danger" className="mb-4">
               {rtkErrorMessage}
@@ -167,10 +178,8 @@ export function AddUser({ onUserCreated }: AddUserProps) {
           )}
 
           <form onSubmit={formik.handleSubmit} className="space-y-5">
-            {/* First Name */}
             <FormField id="firstname" label="First Name" formik={formik} />
 
-            {/* Middle Name */}
             <FormField
               id="middlename"
               label="Middle Name"
@@ -178,10 +187,8 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               placeholder="Optional"
             />
 
-            {/* Last Name */}
             <FormField id="lastname" label="Last Name" formik={formik} />
 
-            {/* Email */}
             <FormField
               id="email"
               label="Email"
@@ -190,7 +197,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               placeholder="e.g. john.doe@ziya.co.ke"
             />
 
-            {/* Country Code */}
             <FormField
               id="country_code"
               label="Country Code"
@@ -198,17 +204,13 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               placeholder="e.g. +254"
             />
 
-            {/* Phone Number */}
             <FormField
               id="phone_number"
               label="Phone Number"
               formik={formik}
-              placeholder="e.g. 07123456789"
-              numbersOnly
+              placeholder="e.g. 0712345678"
             />
 
-
-            {/* User Role */}
             <div>
               <label
                 htmlFor="role_id"
@@ -216,7 +218,7 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               >
                 User Role
               </label>
-              {/* Render the roles dynamically */}
+
               <select
                 id="role_id"
                 {...formik.getFieldProps("role_id")}
@@ -237,10 +239,13 @@ export function AddUser({ onUserCreated }: AddUserProps) {
                     </option>
                   ))}
               </select>
+
               {rolesLoading && <p>Loading roles...</p>}
+
               {rolesError && (
                 <p className="text-red-500">Error loading roles.</p>
               )}
+
               {formik.touched.role_id && formik.errors.role_id && (
                 <div className="mt-1 text-xs text-red-500">
                   {formik.errors.role_id}
@@ -248,7 +253,6 @@ export function AddUser({ onUserCreated }: AddUserProps) {
               )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className={styles.btn}
