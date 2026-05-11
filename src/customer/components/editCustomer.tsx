@@ -1,9 +1,52 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, type FormEvent } from "react";
 import { Form, Input, Button, Select } from "antd";
 import { Alert } from "../../components/Alert";
 
 const { Option } = Select;
+
+const sanPhoneNumber = (value: string) => {
+  return value.replace(/\D/g, "").slice(0, 10);
+};
+
+const isValidPhoneNumber = (value: string) => {
+  return /^\d{10}$/.test(value);
+};
+
+const getPhoneInputProps = (name: string) => {
+  if (name !== "phone_number") return {};
+
+  return {
+    maxLength: 10,
+    inputMode: "numeric" as const,
+    pattern: "\\d{10}",
+    title: "Phone number must be exactly 10 digits.",
+    onInput: (e: FormEvent<HTMLInputElement>) => {
+      e.currentTarget.value = sanPhoneNumber(e.currentTarget.value);
+    },
+  };
+};
+
+const getPhoneRules = (name: string, rules: any[]) => {
+  if (name !== "phone_number") return rules;
+
+  return [
+    { required: true, message: "Phone number is required." },
+    {
+      validator: (_: any, value: string) => {
+        const phoneNumber = sanPhoneNumber(String(value ?? ""));
+
+        if (!isValidPhoneNumber(phoneNumber)) {
+          return Promise.reject(
+            new Error("Phone number must be exactly 10 digits.")
+          );
+        }
+
+        return Promise.resolve();
+      },
+    },
+  ];
+};
 
 export const EditCustomerForm: FC<{
   customer: any;
@@ -22,8 +65,13 @@ export const EditCustomerForm: FC<{
     try {
       const values = await form.validateFields();
 
-      // Clean phone number
-      values.phone_number = values.phone_number.replace(/\D/g, "");
+      values.phone_number = sanPhoneNumber(String(values.phone_number ?? ""));
+
+      if (!isValidPhoneNumber(values.phone_number)) {
+        setAlertType("danger");
+        setStatusMessage("Phone number must be exactly 10 digits.");
+        return;
+      }
 
       const success = await onSubmit(values);
 
@@ -47,8 +95,17 @@ export const EditCustomerForm: FC<{
     rules: any[] = [{ required: true }],
     inputType: "text" | "password" = "text"
   ) => (
-    <Form.Item name={name} label={label} rules={rules}>
-      <Input type={inputType} />
+    <Form.Item
+      name={name}
+      label={label}
+      rules={getPhoneRules(name, rules)}
+      normalize={
+        name === "phone_number"
+          ? (value) => sanPhoneNumber(String(value ?? ""))
+          : undefined
+      }
+    >
+      <Input type={inputType} {...getPhoneInputProps(name)} />
     </Form.Item>
   );
 
@@ -82,9 +139,8 @@ export const EditCustomerForm: FC<{
           </Select>
         </Form.Item>
 
-        {/* Optional fields you can uncomment if needed later */}
-        {/* {renderInput("middlename", "Middle Name", [{ required: false }])} */}
         {renderInput("identification_number", "ID Number")}
+
         <Form.Item
           name="identification_type"
           label="ID Type"

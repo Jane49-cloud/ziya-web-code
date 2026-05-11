@@ -35,6 +35,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGetAllGroupLoansQuery } from "../Loans/features/loanSlice";
 import { useGetAllCustomersQuery } from "../customer/features/customerSlice";
 import { useGetAllGroupWalletsQuery, useGetAllGroupsQuery } from "../groups/features";
+import { useGetDashboardStatsQuery } from "./features/dashSlice";
 
 const { Title, Text } = Typography;
 
@@ -57,13 +58,22 @@ const capitalizeName = (name: string) =>
     .join(" ");
 
 const DashboardOverview = () => {
+  const { data: dashboardStats } = useGetDashboardStatsQuery();
+
   const { data: groupLoansData, isLoading: groupLoansLoading } =
     useGetAllGroupLoansQuery({});
   const { data: customersData, isLoading: customersLoading } =
     useGetAllCustomersQuery({});
   const { data: walletsData, isLoading: walletsLoading } =
     useGetAllGroupWalletsQuery({});
-  const { data: groupsData, isLoading: groupsLoading } = useGetAllGroupsQuery({});
+  const { data: _, isLoading: groupsLoading } = useGetAllGroupsQuery({});
+
+  const backendTotalGroups = toNumber(dashboardStats?.total_groups);
+  const backendTotalCustomers = toNumber(dashboardStats?.total_customers);
+  const backendTotalLoansDisbursed = toNumber(
+    dashboardStats?.total_loans_disbursed,
+  );
+  const backendTotalUnpaidLoans = toNumber(dashboardStats?.total_unpaid_loans);
 
   const groupLoansRaw = groupLoansData?.loans as GroupLoan[] | undefined;
   const customersRaw = customersData?.customers as Customer[] | undefined;
@@ -72,7 +82,7 @@ const DashboardOverview = () => {
   const groupLoans = useMemo(() => groupLoansRaw ?? [], [groupLoansRaw]);
   const customers = useMemo(() => customersRaw ?? [], [customersRaw]);
   const wallets = useMemo(() => walletsRaw ?? [], [walletsRaw]);
-  const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
+  //const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
 
   const loanAggregates = useMemo(() => {
     return groupLoans.reduce(
@@ -96,16 +106,16 @@ const DashboardOverview = () => {
   const repaymentRate =
     totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
-  const activeGroupCount = useMemo(() => {
-    if (groups.length) return groups.length;
-    const unique = new Set<string>();
-    groupLoans.forEach((loan, index) => {
-      const identifier =
-        loan.group_id ?? loan.group_name ?? loan.id ?? `group-${index}`;
-      unique.add(String(identifier));
-    });
-    return unique.size;
-  }, [groupLoans, groups.length]);
+  // const activeGroupCount = useMemo(() => {
+  //   if (groups.length) return groups.length;
+  //   const unique = new Set<string>();
+  //   groupLoans.forEach((loan, index) => {
+  //     const identifier =
+  //       loan.group_id ?? loan.group_name ?? loan.id ?? `group-${index}`;
+  //     unique.add(String(identifier));
+  //   });
+  //   return unique.size;
+  // }, [groupLoans, groups.length]);
 
   const groupPerformance = useMemo(() => {
     const collection = new Map<
@@ -174,7 +184,6 @@ const DashboardOverview = () => {
           value: recovered,
           disbursed: stats.disbursed,
           recoveryRate,
-          // blend repayment quality and size to avoid tiny-loan outliers
           score: recovered * recoveryRate,
         };
       })
@@ -300,7 +309,7 @@ const DashboardOverview = () => {
     {
       key: "groups",
       title: "Active Groups",
-      value: activeGroupCount.toLocaleString(),
+      value: backendTotalGroups.toLocaleString(),
       helper: "Borrowing collectives",
       icon: <TeamOutlined />,
       gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -311,7 +320,7 @@ const DashboardOverview = () => {
     {
       key: "customers",
       title: "Total Customers",
-      value: customers.length.toLocaleString(),
+      value: backendTotalCustomers.toLocaleString(),
       helper: "Registered members",
       icon: <UserOutlined />,
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
@@ -322,7 +331,7 @@ const DashboardOverview = () => {
     {
       key: "disbursed",
       title: "Total Disbursed",
-      value: formatCurrency(totals.disbursed),
+      value: formatCurrency(backendTotalLoansDisbursed),
       helper: `${totals.loansCount.toLocaleString()} loans`,
       icon: <DollarCircleOutlined />,
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
@@ -333,7 +342,7 @@ const DashboardOverview = () => {
     {
       key: "outstanding",
       title: "Outstanding Balance",
-      value: formatCurrency(totals.outstanding),
+      value: formatCurrency(backendTotalUnpaidLoans),
       helper: `Recovery ${repaymentRate.toFixed(1)}%`,
       icon: <WalletOutlined />,
       gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
@@ -429,12 +438,10 @@ const DashboardOverview = () => {
                 </div>
               ) : (
                 <>
-                  {/* Subtle bg tint */}
                   <div
                     className="absolute inset-0 opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.08]"
                     style={{ background: card.gradient }}
                   />
-                  {/* Left accent bar */}
                   <div
                     className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
                     style={{ background: card.gradient }}
@@ -459,11 +466,10 @@ const DashboardOverview = () => {
                         </Text>
                         {card.trend !== undefined && (
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              card.trendUp
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-amber-50 text-amber-700"
-                            }`}
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${card.trendUp
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                              }`}
                           >
                             {card.trend}
                           </span>

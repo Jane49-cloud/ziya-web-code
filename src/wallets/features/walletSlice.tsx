@@ -1,57 +1,80 @@
 import { apiSlice } from "../../redux/api";
 
+type PaginationQuery = {
+    page?: number;
+    page_size?: number;
+};
+
 export const WalletSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getGroupWallets: builder.query({
-            query: () => ({
+        getGroupWallets: builder.query<any, PaginationQuery | void>({
+            query: (params) => ({
                 url: "/group-wallets/all",
                 method: "GET",
+                params: {
+                    page: params?.page ?? 1,
+                    page_size: params?.page_size ?? 20,
+                },
             }),
-            providesTags: [{ type: "Wallets" }],
+            providesTags: [{ type: "Wallets", id: "GROUP-WALLETS" }],
         }),
 
-        getPersonalWallets: builder.query({
-            query: () => ({
+        getPersonalWallets: builder.query<any, PaginationQuery | void>({
+            query: (params) => ({
                 url: "/personal-wallets/all",
                 method: "GET",
+                params: {
+                    page: params?.page ?? 1,
+                    page_size: params?.page_size ?? 20,
+                },
             }),
-            providesTags: [{ type: "Wallets" }],
+            providesTags: [{ type: "Wallets", id: "PERSONAL-WALLETS" }],
         }),
 
-        getSinglePersonalWallet: builder.query({
-            query: (customerId: number) => ({
+        getSinglePersonalWallet: builder.query<any, number>({
+            query: (customerId) => ({
                 url: `/personal-wallets/customer/${customerId}`,
                 method: "GET",
             }),
-            providesTags: (_result, _error, customerId) => [{ type: "Wallets", id: `personal-customer-${customerId}` }],
+            providesTags: (_result, _error, customerId) => [
+                { type: "Wallets", id: `personal-customer-${customerId}` },
+            ],
         }),
 
-        getSingleGroupWallet: builder.query({
-            query: (id: number) => ({
+        getSingleGroupWallet: builder.query<any, number>({
+            query: (id) => ({
                 url: `/group-wallets/group/${id}`,
                 method: "GET",
             }),
-            providesTags: (_result, _error, id) => [{ type: "Wallets", id }],
+            providesTags: (_result, _error, id) => [
+                { type: "Wallets", id: `group-${id}` },
+            ],
         }),
 
-        createGroupWalletDeposit: builder.mutation({
+        createGroupWalletDeposit: builder.mutation<any, any>({
             query: (payload) => ({
                 url: "/group-wallets/deposit",
                 method: "POST",
                 body: payload,
             }),
-            invalidatesTags: [{ type: "Wallets" }, { type: "WalletTransactions" }],
+            invalidatesTags: [
+                { type: "Wallets" },
+                { type: "Wallets", id: "GROUP-WALLETS" },
+                { type: "WalletTransactions" },
+            ],
         }),
 
-        // Update Group Wallet
-        updateGroupWallet: builder.mutation({
+        updateGroupWallet: builder.mutation<any, any>({
             query: (payload) => ({
                 url: `/group-wallets/update/${payload.id}`,
                 method: "PATCH",
                 body: payload,
             }),
-            invalidatesTags: ({ id }) => [{ type: "Wallets", id }],
+            invalidatesTags: (_result, _error, payload) => [
+                { type: "Wallets" },
+                { type: "Wallets", id: "GROUP-WALLETS" },
+                { type: "Wallets", id: `group-${payload.id}` },
+            ],
         }),
     }),
 });
-

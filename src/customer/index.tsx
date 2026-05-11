@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Tabs,
   Table,
@@ -20,11 +20,11 @@ import { CustomerForm } from "./components/addCustomer";
 import { CustomerTableActions } from "./components/customerActions";
 import { EditCustomerForm } from "./components/editCustomer";
 import {
-  useGetAllCustomersQuery,
+  useLazyGetAllCustomersQuery,
+  useLazySearchCustomersQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useToggleCustomerStatusMutation,
-
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
 import { customAvatar, formatName } from "../utils";
@@ -35,6 +35,54 @@ import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
 import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
+const BATCH_SIZE = 20;
+const MIN_SEARCH_LENGTH = 4;
+const SEARCH_DEBOUNCE_MS = 600;
+
+type MembershipFilter = "all" | "inGroup" | "noGroup";
+
+const getMembershipParam = (
+  filter: MembershipFilter
+): 0 | 1 | undefined => {
+  if (filter === "inGroup") return 1;
+  if (filter === "noGroup") return 0;
+  return undefined;
+};
+
+const normalizeCustomerCollection = (response: any) => {
+  const value =
+    response?.customers?.data ??
+    response?.customers ??
+    response?.data?.customers ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
+const getCustomerCacheKey = (customer: any) =>
+  String(
+    customer?.id ??
+    customer?.customer_id ??
+    customer?.phone_number ??
+    customer?.identification_number ??
+    JSON.stringify(customer)
+  );
+
+const dedupeCustomerRows = (items: any[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getCustomerCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
 const isSubscriptionActive = (status: unknown) => {
   if (typeof status === "string") {
     return status.toLowerCase() === "active";
@@ -43,38 +91,242 @@ const isSubscriptionActive = (status: unknown) => {
 };
 
 const CustomerManagement: FC = () => {
-  const { data, isLoading, isFetching, refetch } = useGetAllCustomersQuery({});
-  const customers = data?.customers;
+  const [fetchAllCustomers, { isFetching }] = useLazyGetAllCustomersQuery();
+  const [searchCustomers] = useLazySearchCustomersQuery();
+
+  const rowsRef = useRef<any[]>([]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
+
+  const [rows, setRows] = useState<any[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
   const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation();
   const [toggleStatus] = useToggleCustomerStatusMutation();
+
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("1");
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "danger" | undefined>(
     undefined
   );
+
   // const [selectedForSubscription, setSelectedForSubscription] =
   //   useState<any>(null);
   // const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   // const [createSubscription, { isLoading: creatingSubscription }] =
   //   useCreateSubscriptionMutation();
+
   const navigate = useNavigate();
   // const { Text, Title } = Typography;
 
-  type SubscriptionFilter = "all" | "active" | "inactive";
-
-  // Filter state for enhanced table controls
   const [searchText, setSearchText] = useState("");
-  const [subscriptionFilter, setSubscriptionFilter] =
-    useState<SubscriptionFilter>("all");
-  const [tablePagination, setTablePagination] = useState({
-    current: 1,
-    pageSize: 10,
-  });
+  const [searchRows, setSearchRows] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [membershipFilter, setMembershipFilter] =
+    useState<MembershipFilter>("all");
+
+  const isSearchMode =
+    membershipFilter !== "all" ||
+    searchText.trim().length >= MIN_SEARCH_LENGTH;
+
+  const syncRows = useCallback((nextRows: any[]) => {
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchAllCustomers({
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeCustomerCollection(response);
+
+      const nextRows = reset
+        ? dedupeCustomerRows(batchRows)
+        : dedupeCustomerRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchAllCustomers, syncRows]
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchAllCustomers({
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeCustomerCollection(response);
+
+        cachedRows = dedupeCustomerRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchAllCustomers, hasMore, syncRows]
+  );
+
+  const refreshCustomers = useCallback(async () => {
+    try {
+      setIsBootstrapping(true);
+      setIsPaginationLoading(true);
+      setUiPage(1);
+      setUiPageSize(10);
+      setBackendPage(0);
+      setHasMore(true);
+      syncRows([]);
+
+      await loadBatch(1, true);
+    } catch (error: any) {
+      setAlertMessage(
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        "Failed to load customers."
+      );
+      setAlertType("danger");
+    } finally {
+      setIsBootstrapping(false);
+      setIsPaginationLoading(false);
+    }
+  }, [loadBatch, syncRows]);
+
+  useEffect(() => {
+    refreshCustomers();
+  }, [refreshCustomers]);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
+  };
+
+  const runCustomerSearch = async (
+    nextSearchText = searchText,
+    nextMembershipFilter = membershipFilter
+  ) => {
+    const rawQ = nextSearchText.trim();
+
+    const shouldSearch =
+      nextMembershipFilter !== "all" || rawQ.length >= MIN_SEARCH_LENGTH;
+
+    if (!shouldSearch) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const q = rawQ.length >= MIN_SEARCH_LENGTH ? rawQ : "all";
+    const membership = getMembershipParam(nextMembershipFilter);
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    try {
+      setIsSearching(true);
+
+      const response = await searchCustomers({
+        q,
+        membership,
+      }).unwrap();
+
+      const customerRows = normalizeCustomerCollection(response);
+
+      if (requestId === searchRequestIdRef.current) {
+        setSearchRows(customerRows);
+      }
+    } catch {
+      if (requestId === searchRequestIdRef.current) {
+        setSearchRows([]);
+      }
+    } finally {
+      if (requestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
+    }
+  };
+
+  const handleCustomerSearchChange = (value: string) => {
+    setSearchText(value);
+    setUiPage(1);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    const q = value.trim();
+
+    if (!q && membershipFilter === "all") {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      setIsSearching(false);
+      return;
+    }
+
+    if (
+      q.length > 0 &&
+      q.length < MIN_SEARCH_LENGTH &&
+      membershipFilter === "all"
+    ) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      setIsSearching(false);
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(() => {
+      void runCustomerSearch(value, membershipFilter);
+    }, SEARCH_DEBOUNCE_MS);
+  };
+
+  const handleMembershipFilterChange = (value: MembershipFilter) => {
+    setMembershipFilter(value);
+    setUiPage(1);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    void runCustomerSearch(searchText, value);
   };
 
   const handleSaveCustomer = async (values: any) => {
@@ -82,7 +334,7 @@ const CustomerManagement: FC = () => {
       await createCustomer(values).unwrap();
       setAlertMessage("Customer created successfully!");
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
       setActiveTab("1");
       return true;
     } catch (err: any) {
@@ -99,7 +351,7 @@ const CustomerManagement: FC = () => {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
       setSelectedCustomer(null);
       setActiveTab("1");
       return true;
@@ -117,7 +369,7 @@ const CustomerManagement: FC = () => {
         `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
       );
       setAlertType("success");
-      refetch();
+      await refreshCustomers();
     } catch (err: any) {
       setAlertMessage("Failed to change customer status.");
       setAlertType("danger");
@@ -128,95 +380,55 @@ const CustomerManagement: FC = () => {
     navigate(`/customer/${id}`);
   };
 
-  // const handleCreateSubscription = async (dates: {
-  //   start_date: string;
-  //   end_date: string;
-  // }) => {
-  //   const customerId = selectedForSubscription?.id;
-  //   if (!customerId) {
-  //     setAlertMessage("No customer selected for subscription.");
-  //     setAlertType("danger");
-  //     return;
-  //   }
-  //   try {
-  //     await createSubscription({
-  //       customer_id: customerId,
-  //       ...dates,
-  //     }).unwrap();
-  //     await refetch();
-  //     setAlertMessage("Subscription created successfully!");
-  //     setAlertType("success");
-  //     setSubscriptionModalOpen(false);
-  //     setSelectedForSubscription(null);
-  //   } catch (err: any) {
-  //     setAlertMessage(err?.data?.error || "Failed to create subscription.");
-  //     setAlertType("danger");
-  //   }
-  // };
-
-  const normalizedCustomers = useMemo(
-    () => (customers ? [...customers] : []),
-    [customers]
-  );
+  const normalizedCustomers = useMemo(() => rows, [rows]);
 
   const customerMetrics = useMemo(() => {
     const total = normalizedCustomers.length;
-    const active = normalizedCustomers.filter(
-      (customer: any) => isSubscriptionActive(customer.subscription_status)
+    const active = normalizedCustomers.filter((customer: any) =>
+      isSubscriptionActive(customer.subscription_status)
     ).length;
     const inactive = total - active;
     return { total, active, inactive };
   }, [normalizedCustomers]);
 
-  const filteredCustomers = useMemo(() => {
-    const search = searchText.trim().toLowerCase();
-    return normalizedCustomers.filter((customer: any) => {
-      const firstName = customer.firstname ?? "";
-      const lastName = customer.lastname ?? "";
-      const fullName = `${firstName} ${lastName}`.trim().toLowerCase();
-      const phone = (customer.phone_number ?? "").toLowerCase();
+  const tableCustomers = isSearchMode ? searchRows : normalizedCustomers;
 
-      const matchesSearch =
-        !search ||
-        fullName.includes(search) ||
-        phone.includes(search) ||
-        (customer.identification_number ?? "").toLowerCase().includes(search);
+  const tableTotal = isSearchMode
+    ? searchRows.length
+    : rows.length + (hasMore ? BATCH_SIZE : 0);
 
-      const matchesStatus =
-        subscriptionFilter === "all" ||
-        (subscriptionFilter === "active" &&
-          isSubscriptionActive(customer.subscription_status)) ||
-        (subscriptionFilter === "inactive" &&
-          !isSubscriptionActive(customer.subscription_status));
+  const tableLoading = isSearchMode
+    ? isSearching
+    : isBootstrapping || isFetching || isPaginationLoading;
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [normalizedCustomers, searchText, subscriptionFilter]);
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
 
-  useEffect(() => {
-    setTablePagination((current) => ({
-      ...current,
-      current: 1,
-    }));
-  }, [searchText, subscriptionFilter]);
+    try {
+      setIsPaginationLoading(true);
 
-  useEffect(() => {
-    setTablePagination((current) => {
-      const pageSize = current.pageSize ?? 10;
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredCustomers.length / pageSize)
-      );
-      const nextCurrent = Math.min(current.current ?? 1, totalPages);
-      if (nextCurrent === current.current) {
-        return current;
+      if (!isSearchMode) {
+        await ensureRowsForPage(targetPage, nextPageSize);
       }
-      return {
-        ...current,
-        current: nextCurrent,
-      };
-    });
-  }, [filteredCustomers.length]);
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error: any) {
+      setAlertMessage(
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        "Failed to load more customers."
+      );
+      setAlertType("danger");
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const columns: ColumnsType<any> = [
     {
@@ -280,11 +492,17 @@ const CustomerManagement: FC = () => {
       title: "Group",
       dataIndex: "group_name",
       key: "group_name",
-      render: (value: string) => (
-        <Tag color="cyan" className="capitalize">
-          {value || "Unassigned"}
-        </Tag>
-      ),
+      render: (value: string) => {
+        const groupName = String(value ?? "").trim();
+
+        return groupName ? (
+          <Tag color="cyan" className="capitalize">
+            {formatName(groupName)}
+          </Tag>
+        ) : (
+          <span className="text-slate-400 text-sm">Unassigned</span>
+        );
+      },
     },
     {
       title: "Subscription",
@@ -329,10 +547,6 @@ const CustomerManagement: FC = () => {
           onEdit={() => setSelectedCustomer(customer)}
           onStatusChange={handleToggleStatus}
           handleView={handleView}
-        // onCreateSubscription={() => {
-        //   setSelectedForSubscription(customer);
-        //   setSubscriptionModalOpen(true);
-        // }}
         />
       ),
     },
@@ -371,7 +585,7 @@ const CustomerManagement: FC = () => {
                 <p className="text-slate-500 text-sm mb-1">Total Customers</p>
                 <Statistic
                   value={customerMetrics.total}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -389,12 +603,12 @@ const CustomerManagement: FC = () => {
           <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-slate-500 text-sm mb-1">
+                <p className="text-slate-500 text-sm mb-1">c
                   Active Subscriptions
                 </p>
                 <Statistic
                   value={customerMetrics.active}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -417,7 +631,7 @@ const CustomerManagement: FC = () => {
                 </p>
                 <Statistic
                   value={customerMetrics.inactive}
-                  loading={isLoading || isFetching}
+                  loading={isBootstrapping || isFetching}
                   valueStyle={{
                     fontSize: "1.875rem",
                     fontWeight: 600,
@@ -432,7 +646,6 @@ const CustomerManagement: FC = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
         <Card className="border border-slate-200 shadow-sm">
           <Tabs
             activeKey={activeTab}
@@ -456,11 +669,16 @@ const CustomerManagement: FC = () => {
                     <Input
                       allowClear
                       value={searchText}
-                      onChange={(event) => setSearchText(event.target.value)}
+                      onChange={(event) =>
+                        handleCustomerSearchChange(event.target.value)
+                      }
                       prefix={<SearchOutlined className="text-slate-400" />}
                       placeholder="Search customers..."
                       className="w-full md:w-60"
                     />
+
+                    {/* subscription filter e */}
+                    {/*
                     <Segmented
                       value={subscriptionFilter}
                       options={[
@@ -472,6 +690,22 @@ const CustomerManagement: FC = () => {
                         setSubscriptionFilter(value as SubscriptionFilter)
                       }
                     />
+                    */}
+
+                    <Segmented
+                      value={membershipFilter}
+                      options={[
+                        { label: "All Customers", value: "all" },
+                        { label: "In Groups", value: "inGroup" },
+                        { label: "No Group", value: "noGroup" },
+                      ]}
+                      onChange={(value) =>
+                        handleMembershipFilterChange(
+                          value as MembershipFilter
+                        )
+                      }
+                    />
+
                     <Button
                       type="primary"
                       icon={<UserAddOutlined />}
@@ -484,33 +718,29 @@ const CustomerManagement: FC = () => {
 
                 {/* Table */}
                 <Table
-                  dataSource={filteredCustomers}
+                  dataSource={tableCustomers}
                   columns={columns}
                   rowKey="id"
-                  loading={isLoading || isFetching}
+                  loading={tableLoading}
                   size="middle"
                   pagination={{
-                    ...tablePagination,
+                    current: uiPage,
+                    pageSize: uiPageSize,
+                    total: tableTotal,
                     showSizeChanger: true,
-                    pageSizeOptions: [10, 20, 50],
-                    total: filteredCustomers.length,
-                    showTotal: (total, range) =>
-                      `${range[0]}-${range[1]} of ${total} customers`,
+                    pageSizeOptions: ["5", "10", "20", "50"],
+                    onChange: (page, pageSize) => {
+                      void handlePaginationChange(page, pageSize);
+                    },
                   }}
-                  onChange={(paginationConfig) =>
-                    setTablePagination({
-                      current: paginationConfig.current ?? 1,
-                      pageSize: paginationConfig.pageSize ?? 10,
-                    })
-                  }
                   scroll={{ x: 900 }}
                   bordered
                   locale={{
                     emptyText: (
                       <Empty
                         description={
-                          searchText || subscriptionFilter !== "all"
-                            ? "No customers match your filters"
+                          isSearchMode
+                            ? "No customers match your search or filter"
                             : "No customers found yet"
                         }
                       />
@@ -520,17 +750,12 @@ const CustomerManagement: FC = () => {
               </div>
             </Tabs.TabPane>
 
-            {/* Tab 2: Add Customer */}
             <Tabs.TabPane tab="Add Customer" key="2">
-              <CustomerForm
-                onSubmit={handleSaveCustomer}
-                isLoading={creating}
-              />
+              <CustomerForm onSubmit={handleSaveCustomer} isLoading={creating} />
             </Tabs.TabPane>
           </Tabs>
         </Card>
 
-        {/* Modal for editing customer */}
         <Modal
           title="Edit Customer"
           open={selectedCustomer !== null}
@@ -547,13 +772,6 @@ const CustomerManagement: FC = () => {
             />
           )}
         </Modal>
-
-        {/* <SubscriptionModal
-          open={subscriptionModalOpen}
-          onCancel={() => setSubscriptionModalOpen(false)}
-          onSubmit={handleCreateSubscription}
-          loading={creatingSubscription}
-        /> */}
       </div>
     </div>
   );

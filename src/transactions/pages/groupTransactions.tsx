@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card, Empty, Input, Table, Tag, Typography, Tooltip, } from "antd";
-import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { useMemo, useState, useEffect } from "react";
+import { Card, Empty, Input, Table, Tag, Typography, Tooltip, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiUsers, FiEye } from "react-icons/fi";
-import { useGetAllGroupTransactionsQuery } from "../features";
+import { useLazyGetAllGroupTransactionsQuery } from "../features";
 import { useNavigate, useLocation } from "react-router-dom";
-import { formatCurrency, formatFullName } from "../../utils";
+import { formatCurrency, formatFullName, formatName } from "../../utils";
 
 const { Title, Paragraph } = Typography;
-import { formatName } from "../../utils";
+
+const BATCH_SIZE = 20;
 
 type GroupWalletTransaction = {
     id: string | number;
@@ -24,24 +25,219 @@ type GroupWalletTransaction = {
     admin_phone_number?: string;
 };
 
+const extractGroupTransactionRows = (response: any): GroupWalletTransaction[] => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.transactions)) return response.transactions;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.data?.transactions)) {
+        return response.data.transactions;
+    }
 
+    return [];
+};
 
+const getGroupTransactionCacheKey = (record: GroupWalletTransaction) =>
+    String(
+        record.id ??
+        record.reference_code ??
+        `${record.group_id ?? "group"}-${record.type ?? "type"}-${record.source ?? "source"
+        }-${record.amount ?? "amount"}-${record.date_created ?? "date"}`,
+    );
+
+const dedupeGroupTransactionRows = (items: GroupWalletTransaction[]) => {
+    const seen = new Set<string>();
+
+    return items.filter((item) => {
+        const key = getGroupTransactionCacheKey(item);
+
+        if (seen.has(key)) return false;
+
+        seen.add(key);
+        return true;
+    });
+};
 
 const WalletTransactionsTab = () => {
     const [searchTerm, setSearchTerm] = useState("");
-    const [pagination, setPagination] = useState<TablePaginationConfig>({
-        current: 1,
-        pageSize: 10,
-    });
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { data, isLoading, isFetching, refetch } = useGetAllGroupTransactionsQuery({});
-    const rows = useMemo(() => data?.transactions ?? [], [data?.transactions]);
+    const [fetchGroupTransactions, { isFetching }] =
+        useLazyGetAllGroupTransactionsQuery();
+
+    const rowsRef = useRef<GroupWalletTransaction[]>([]);
+
+    const [rows, setRows] = useState<GroupWalletTransaction[]>([]);
+    const [backendPage, setBackendPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isBootstrapping, setIsBootstrapping] = useState(true);
+    const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+    const [uiPage, setUiPage] = useState(1);
+    const [uiPageSize, setUiPageSize] = useState(10);
+
+    const syncRows = useCallback((nextRows: GroupWalletTransaction[]) => {
+        rowsRef.current = nextRows;
+        setRows(nextRows);
+    }, []);
+
+    const loadBatch = useCallback(
+        async (pageToLoad: number, reset = false) => {
+            const response = await fetchGroupTransactions({
+                page: pageToLoad,
+                page_size: BATCH_SIZE,
+            }).unwrap();
+
+            const batchRows = extractGroupTransactionRows(response);
+
+            const nextRows = reset
+                ? dedupeGroupTransactionRows(batchRows)
+                : dedupeGroupTransactionRows([...rowsRef.current, ...batchRows]);
+
+            syncRows(nextRows);
+            setBackendPage(pageToLoad);
+            setHasMore(batchRows.length === BATCH_SIZE);
+
+            return nextRows;
+        },
+        [fetchGroupTransactions, syncRows],
+    );
+
+    const ensureRowsForPage = useCallback(
+        async (nextPage: number, nextPageSize: number) => {
+            const requiredRows = nextPage * nextPageSize;
+
+            let cachedRows = rowsRef.current;
+            let nextBackendPage = backendPage;
+            let canFetchMore = hasMore;
+
+            while (cachedRows.length < requiredRows && canFetchMore) {
+                const pageToLoad = nextBackendPage + 1;
+
+                const response = await fetchGroupTransactions({
+                    page: pageToLoad,
+                    page_size: BATCH_SIZE,
+                }).unwrap();
+
+                const batchRows = extractGroupTransactionRows(response);
+
+                cachedRows = dedupeGroupTransactionRows([
+                    ...cachedRows,
+                    ...batchRows,
+                ]);
+
+                syncRows(cachedRows);
+
+                nextBackendPage = pageToLoad;
+                canFetchMore = batchRows.length === BATCH_SIZE;
+
+                setBackendPage(pageToLoad);
+                setHasMore(canFetchMore);
+
+                if (batchRows.length < BATCH_SIZE) break;
+            }
+        },
+        [backendPage, fetchGroupTransactions, hasMore, syncRows],
+    );
+
+    useEffect(() => {
+        const bootstrap = async () => {
+            try {
+                setIsBootstrapping(true);
+                setIsPaginationLoading(true);
+                setUiPage(1);
+                setUiPageSize(10);
+
+                await loadBatch(1, true);
+            } catch (error: any) {
+                message.error(
+                    error?.data?.message ||
+                    error?.message ||
+                    "Failed to load group transactions",
+                );
+            } finally {
+                setIsBootstrapping(false);
+                setIsPaginationLoading(false);
+            }
+        };
+
+        bootstrap();
+    }, [loadBatch]);
+
+    const refreshGroupTransactions = Boolean(
+        (location.state as any)?.refreshGroupTransactions,
+    );
+
+    useEffect(() => {
+        if (!refreshGroupTransactions) return;
+
+        const refreshRows = async () => {
+            try {
+                setIsPaginationLoading(true);
+                setUiPage(1);
+
+                await loadBatch(1, true);
+
+                navigate(location.pathname + location.search, {
+                    replace: true,
+                    state: null,
+                });
+            } catch (error: any) {
+                message.error(
+                    error?.data?.message ||
+                    error?.message ||
+                    "Failed to refresh group transactions",
+                );
+            } finally {
+                setIsPaginationLoading(false);
+            }
+        };
+
+        refreshRows();
+    }, [
+        refreshGroupTransactions,
+        loadBatch,
+        location.pathname,
+        location.search,
+        navigate,
+    ]);
+
+    useEffect(() => {
+        setUiPage(1);
+    }, [searchTerm]);
+
+    const handlePaginationChange = async (
+        nextPage: number,
+        nextPageSize: number,
+    ) => {
+        const sizeChanged = nextPageSize !== uiPageSize;
+        const targetPage = sizeChanged ? 1 : nextPage;
+        const hasSearch = Boolean(searchTerm.trim());
+
+        try {
+            setIsPaginationLoading(true);
+
+            if (!hasSearch) {
+                await ensureRowsForPage(targetPage, nextPageSize);
+            }
+
+            setUiPage(targetPage);
+            setUiPageSize(nextPageSize);
+        } catch (error: any) {
+            message.error(
+                error?.data?.message ||
+                error?.message ||
+                "Failed to load more group transactions",
+            );
+        } finally {
+            setIsPaginationLoading(false);
+        }
+    };
 
     const filteredRows = useMemo(() => {
         if (!searchTerm.trim()) return rows;
+
         const needle = searchTerm.toLowerCase();
 
         return rows.filter((item: GroupWalletTransaction) =>
@@ -58,10 +254,9 @@ const WalletTransactionsTab = () => {
                 item.date_created,
             ]
                 .map((value) => (value ?? "").toString().toLowerCase())
-                .some((value) => value.includes(needle))
+                .some((value) => value.includes(needle)),
         );
     }, [rows, searchTerm]);
-
 
     const handleViewGroup = (record: GroupWalletTransaction) => {
         navigate(`/transactions/group/${record.group_id}`, {
@@ -69,44 +264,28 @@ const WalletTransactionsTab = () => {
                 from: "/transactions?tab=group",
                 groupId: record.group_id,
                 groupName: formatName(record.group_name) || "-",
-                adminName: `${record.admin_firstname ?? ""} ${record.admin_lastname ?? ""}`.trim(),
+                adminName: `${record.admin_firstname ?? ""} ${record.admin_lastname ?? ""
+                    }`.trim(),
                 adminPhone: record.admin_phone_number,
-
             },
         });
     };
 
-    // const handleEditGroup = (record: GroupWalletTransaction) => {
-    //     console.log("Edit group:", record.group_id);
-
-    //     /// itafanywa  hii pia
-    // };
-
-
     const columns: ColumnsType<GroupWalletTransaction> = [
-        // {
-        //     title: "Group ID",
-        //     dataIndex: "group_id",
-        //     key: "group_id",
-        //     width: 120,
-        //     render: (value) => (
-        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-        //             {value ?? "—"}
-        //         </span>
-        //     ),
-        // },
         {
             title: "Group Name",
             dataIndex: "group_name",
             key: "group_name",
             width: 240,
             render: (value) => (
-                <div className="inline-flex max-w-full items-center gap-2  px-3 py-2">
+                <div className="inline-flex max-w-full items-center gap-2 px-3 py-2">
                     <span className="text-blue-600">
                         <FiUsers size={16} />
                     </span>
+
                     <span className="truncate font-medium text-slate-600">
-                        {formatName(value) || "—"}</span>
+                        {formatName(value) || "—"}
+                    </span>
                 </div>
             ),
         },
@@ -114,7 +293,8 @@ const WalletTransactionsTab = () => {
             title: "Admin Name",
             key: "admin_name",
             width: 220,
-            render: (_value, record) => formatFullName(record.admin_firstname, record.admin_lastname),
+            render: (_value, record) =>
+                formatFullName(record.admin_firstname, record.admin_lastname),
         },
         {
             title: "Admin Phone",
@@ -135,14 +315,13 @@ const WalletTransactionsTab = () => {
             title: "Transaction Type",
             dataIndex: "type",
             key: "type",
-            width: 120,
+            width: 140,
             render: (value) => (
                 <Tag color={value === "credit" ? "blue" : "orange"}>
                     {value || "—"}
                 </Tag>
             ),
         },
-
         {
             title: "Action",
             key: "actions",
@@ -154,24 +333,22 @@ const WalletTransactionsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewGroup(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            disabled={!record.group_id}
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3] disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <FiEye size={16} />
                         </button>
                     </Tooltip>
                 </div>
-
             ),
-
-        }
+        },
     ];
 
-    useEffect(() => {
-        if (location.state?.refreshGroupTransactions) {
-            refetch();
-            navigate(location.pathname + location.search, { replace: true, state: null });
-        }
-    }, [location, navigate, refetch]);
+    const isSearching = Boolean(searchTerm.trim());
+
+    const progressiveTotal = isSearching
+        ? filteredRows.length
+        : rows.length + (hasMore ? BATCH_SIZE : 0);
 
     return (
         <Card bordered={false} className="rounded-xl shadow-sm">
@@ -180,6 +357,7 @@ const WalletTransactionsTab = () => {
                     <Title level={4} className="!mb-1">
                         Group Wallet Transactions
                     </Title>
+
                     <Paragraph className="!mb-0 text-gray-500">
                         Transaction activity across group wallets.
                     </Paragraph>
@@ -192,7 +370,7 @@ const WalletTransactionsTab = () => {
 
             <Input.Search
                 allowClear
-                placeholder="Search by group name, admin name, phone, type or amount..."
+                placeholder="Search by group name, admin name, phone, source, reference code, type or amount..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onSearch={setSearchTerm}
@@ -200,27 +378,25 @@ const WalletTransactionsTab = () => {
             />
 
             <Table<GroupWalletTransaction>
-                rowKey={(record) => record.id}
+                rowKey={(record) => getGroupTransactionCacheKey(record)}
                 columns={columns}
                 dataSource={filteredRows}
-                loading={isLoading || isFetching}
+                loading={isBootstrapping || isFetching || isPaginationLoading}
                 bordered
                 size="middle"
-                // scroll={{ x: 700 }}
                 scroll={{ x: "max-content" }}
                 pagination={{
-                    ...pagination,
+                    current: uiPage,
+                    pageSize: uiPageSize,
+                    total: progressiveTotal,
                     showSizeChanger: true,
-                    total: filteredRows.length,
-                    pageSizeOptions: [5, 10, 20, 50],
-                    onChange: (current, pageSize) => setPagination({ current, pageSize }),
-                    onShowSizeChange: (_, size) => setPagination({ current: 1, pageSize: size }),
+                    pageSizeOptions: ["10", "20", "50"],
+                    onChange: handlePaginationChange,
                 }}
-                locale={{ emptyText: <Empty description="No wallet transactions found" /> }}
-
+                locale={{
+                    emptyText: <Empty description="No wallet transactions found" />,
+                }}
             />
-
-
         </Card>
     );
 };

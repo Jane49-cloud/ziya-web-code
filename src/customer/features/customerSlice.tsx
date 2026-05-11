@@ -1,5 +1,14 @@
 import { apiSlice } from "../../redux/api";
 
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
+type CustomerSubscriptionHistoryQuery = PaginationQuery & {
+  customerId: number;
+};
+
 export const customerSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createCustomer: builder.mutation({
@@ -10,12 +19,18 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    getAllCustomers: builder.query({
-      query: () => ({
+    getAllCustomers: builder.query<any, PaginationQuery | void>({
+      query: (params) => ({
         url: "/customers/get/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
     }),
+
+
     getCustomerById: builder.query({
       query: (id) => ({
         url: `/customers/get/single/${id}`,
@@ -83,18 +98,57 @@ export const customerSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    getCustomerSubscriptionHistory: builder.query({
-      query: (customerId: number) => ({
-        url: `/subscriptions/history/${customerId}`,
-        method: "GET",
-      }),
+    // getCustomerSubscriptionHistory: builder.query ({
+    //   query: (customerId: number) => ({
+    //     url: `/subscriptions/history/${customerId}`,
+    //     method: "GET",
+    //   }),
+    // }),
+
+    getCustomerSubscriptionHistory: builder.query<any, number | CustomerSubscriptionHistoryQuery>({
+      query: (arg) => {
+        const customerId = typeof arg === "number" ? arg : arg.customerId;
+
+        return {
+          url: `/subscriptions/history/${customerId}`,
+          method: "GET",
+          params: {
+            page: typeof arg === "number" ? 1 : arg.page ?? 1,
+            page_size: typeof arg === "number" ? 20 : arg.page_size ?? 20,
+          },
+        };
+      },
     }),
+
+    //search
+    searchCustomers: builder.query<
+      any[],
+      { q: string; membership?: 0 | 1 }
+    >({
+      query: ({ q, membership }) => ({
+        url: "/customers/search",
+        method: "GET",
+        params: {
+          q: q.trim() || "all",
+          ...(membership !== undefined ? { m: membership } : {}),
+        },
+      }),
+      transformResponse: (response: any) => {
+        return Array.isArray(response?.customers) ? response.customers : [];
+      },
+    }),
+
+
   }),
 });
 
 export const {
   useCreateCustomerMutation,
+
   useGetAllCustomersQuery,
+  useLazyGetAllCustomersQuery,
+
+
   useGetCustomerByIdQuery,
   useUpdateCustomerMutation,
   useUpdateCustomerPasswordMutation,
@@ -104,5 +158,12 @@ export const {
   useUpdateBusinessMutation,
   useDeleteBusinessMutation,
   useCreateSubscriptionMutation,
+
   useGetCustomerSubscriptionHistoryQuery,
+  useLazyGetCustomerSubscriptionHistoryQuery,
+
+
+  //search
+  useLazySearchCustomersQuery,
+
 } = customerSlice;
