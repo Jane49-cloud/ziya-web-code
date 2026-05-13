@@ -537,7 +537,7 @@ const GroupTabs = () => {
           <Button onClick={() => void handleRefresh()}>Refresh</Button>
         </Space>
       </div>
-
+      {/* 
       <Card bordered={false} className="rounded-xl shadow-sm mb-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4">
@@ -588,7 +588,7 @@ const GroupTabs = () => {
             </Space>
           </div>
         </div>
-      </Card>
+      </Card> */}
 
       <Tabs
         activeKey={activeTab}

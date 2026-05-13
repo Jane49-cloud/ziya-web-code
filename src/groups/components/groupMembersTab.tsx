@@ -603,14 +603,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         ),
       render: (value: string | null) => value || "—",
     },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-      sorter: (a: any, b: any) =>
-        String(a.email || "").localeCompare(String(b.email || "")),
-      render: (value: string | null) => value || "—",
-    },
+
     {
       title: "Action",
       key: "action",

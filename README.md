@@ -50,5 +50,19 @@ export default tseslint.config({
 ```
 
 
-//wakios request
-member details page, total members number
+
+<!-- //13th march meet before live -->
+
+add member, search members not in any group 
+remove email group member  //done
+relation ship manager pagination 
+Add loans issued to pagination & search
+Visualizations
+
+remove summaries from pages
+
+My created by 
+My managed
+
+Business  page check it 
+go live locally 

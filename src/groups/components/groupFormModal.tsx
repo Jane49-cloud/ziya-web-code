@@ -18,7 +18,9 @@ import type { DefaultOptionType } from "antd/es/select";
 import type { Dayjs } from "dayjs";
 import {
   useCreateGroupLoanMutation,
+
   useGetGroupMembersQuery,
+
   useUpdateGroupLoanMutation,
 } from "../features";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
@@ -105,8 +107,8 @@ const GroupLoanFormModal = ({
         ...values,
         date_issued: values.date_issued
           ? values.date_issued
-              .startOf("day")
-              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
+            .startOf("day")
+            .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
         group_id: groupId,
         issued_by: issuedBy,

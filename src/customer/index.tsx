@@ -569,7 +569,6 @@ const CustomerManagement: FC = () => {
           </p>
         </div>
 
-        {/* Show status alert */}
         {alertMessage && alertType && (
           <Alert variant={alertType} className="mb-5">
             {alertMessage}
@@ -577,74 +576,72 @@ const CustomerManagement: FC = () => {
         )}
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-          {/* Total Customers */}
-          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-slate-500 text-sm mb-1">Total Customers</p>
-                <Statistic
-                  value={customerMetrics.total}
-                  loading={isBootstrapping || isFetching}
-                  valueStyle={{
-                    fontSize: "1.875rem",
-                    fontWeight: 600,
-                    color: "#1e293b",
-                  }}
-                />
-              </div>
-              <div className="w-11 h-11 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <FiUsers className="text-indigo-600 text-xl" />
-              </div>
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+         
+        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-slate-500 text-sm mb-1">Total Customers</p>
+              <Statistic
+                value={customerMetrics.total}
+                loading={isBootstrapping || isFetching}
+                valueStyle={{
+                  fontSize: "1.875rem",
+                  fontWeight: 600,
+                  color: "#1e293b",
+                }}
+              />
             </div>
-          </Card>
+            <div className="w-11 h-11 rounded-lg bg-indigo-50 flex items-center justify-center">
+              <FiUsers className="text-indigo-600 text-xl" />
+            </div>
+          </div>
+        </Card>
 
-          {/* Active Subscriptions */}
-          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-slate-500 text-sm mb-1">c
-                  Active Subscriptions
-                </p>
-                <Statistic
-                  value={customerMetrics.active}
-                  loading={isBootstrapping || isFetching}
-                  valueStyle={{
-                    fontSize: "1.875rem",
-                    fontWeight: 600,
-                    color: "#1e293b",
-                  }}
-                />
-              </div>
-              <div className="w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <FiCheckCircle className="text-emerald-600 text-xl" />
-              </div>
+        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-slate-500 text-sm mb-1">c
+                Active Subscriptions
+              </p>
+              <Statistic
+                value={customerMetrics.active}
+                loading={isBootstrapping || isFetching}
+                valueStyle={{
+                  fontSize: "1.875rem",
+                  fontWeight: 600,
+                  color: "#1e293b",
+                }}
+              />
             </div>
-          </Card>
+            <div className="w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <FiCheckCircle className="text-emerald-600 text-xl" />
+            </div>
+          </div>
+        </Card>
 
-          {/* Inactive Subscriptions */}
-          <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-slate-500 text-sm mb-1">
-                  Inactive Subscriptions
-                </p>
-                <Statistic
-                  value={customerMetrics.inactive}
-                  loading={isBootstrapping || isFetching}
-                  valueStyle={{
-                    fontSize: "1.875rem",
-                    fontWeight: 600,
-                    color: "#1e293b",
-                  }}
-                />
-              </div>
-              <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center">
-                <FiSlash className="text-slate-600 text-xl" />
-              </div>
+        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-slate-500 text-sm mb-1">
+                Inactive Subscriptions
+              </p>
+              <Statistic
+                value={customerMetrics.inactive}
+                loading={isBootstrapping || isFetching}
+                valueStyle={{
+                  fontSize: "1.875rem",
+                  fontWeight: 600,
+                  color: "#1e293b",
+                }}
+              />
             </div>
-          </Card>
-        </div>
+            <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center">
+              <FiSlash className="text-slate-600 text-xl" />
+            </div>
+          </div>
+        </Card>
+      </div> */}
 
         <Card className="border border-slate-200 shadow-sm">
           <Tabs
@@ -773,7 +770,7 @@ const CustomerManagement: FC = () => {
           )}
         </Modal>
       </div>
-    </div>
+    </div >
   );
 };
 
