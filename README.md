@@ -62,8 +62,9 @@ Visualizations
 remove summaries from pages //done
 
 
-My created by 
-My managed
+My created by //done
+My managed. //done
 
+Groups page analytics (itarudishia api ikiwa ready wadau)
 Business  page check it 
 go live locally 

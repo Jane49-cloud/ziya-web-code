@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Badge,
+  //Badge,
   Button,
   Form,
   Space,
@@ -12,7 +12,7 @@ import {
 import { useSearchParams } from "react-router-dom";
 import {
   FiPlusCircle,
-  FiTrendingUp,
+ // FiTrendingUp,
   FiUserCheck,
 } from "react-icons/fi";
 
@@ -21,7 +21,7 @@ import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
 import ChangeManagerModal from "./components/changeManagerModal";
 import CreateGroupForm from "./components/groupForm";
-import GroupAnalyticsPage from "./pages/groupAnalytics";
+// import GroupAnalyticsPage from "./pages/groupAnalytics";
 import GroupAdminAccessAnalytics from "./pages/groupAdminAccessAnalytics";
 import {
   useLazyGetAllGroupsQuery,
@@ -452,13 +452,13 @@ const GroupTabs = () => {
       : listStates.managed.rows;
   }, [isSearchMode, searchRows, listStates.managed.rows, currentStaffId]);
 
-  const summary = useMemo(() => {
-    return {
-      total: groupRows.length,
-      created: createdGroupRows.length,
-      managed: managedGroupRows.length,
-    };
-  }, [groupRows.length, createdGroupRows.length, managedGroupRows.length]);
+  // const summary = useMemo(() => {
+  //   return {
+  //     total: groupRows.length,
+  //     created: createdGroupRows.length,
+  //     managed: managedGroupRows.length,
+  //   };
+  // }, [groupRows.length, createdGroupRows.length, managedGroupRows.length]);
 
   const getTableTotal = (key: ListKey, length: number) => {
     if (isSearchMode) return length;
@@ -656,16 +656,16 @@ const GroupTabs = () => {
         />
       ),
     },
-    {
-      key: "analytics",
-      label: (
-        <Space size={6}>
-          Analytics
-          <FiTrendingUp />
-        </Space>
-      ),
-      children: <GroupAnalyticsPage />,
-    },
+    // {
+    //   key: "analytics",
+    //   label: (
+    //     <Space size={6}>
+    //       Analytics
+    //       <FiTrendingUp />
+    //     </Space>
+    //   ),
+    //   children: <GroupAnalyticsPage />,
+    // },
     {
       key: "admin-access",
       label: (
