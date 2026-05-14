@@ -21,10 +21,14 @@ import { StaffStats } from "../types/statistics";
 import { normalizeStatData, formatNumber, formatCurrency } from "../utils";
 import { StatCard } from "./statCard";
 
+
+
 interface StaffStatsTabProps {
   data: StaffStats;
   loading: boolean;
 }
+
+
 
 const GRADIENT_COLORS = [
   "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -34,11 +38,48 @@ const GRADIENT_COLORS = [
   "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
 ];
 
+
+
+
+// export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
+//   data,
+//   loading,
+// }) => {
+
+type StaffStatisticItem = {
+  id: number;
+  statistic_title: string;
+  current_value: number;
+  previous_value: number;
+  last_update: string;
+  staff_id: number;
+};
+
+type StaffStatsApiResponse = {
+  data?: StaffStatisticItem[];
+};
+
+const getStaffStatsRows = (value: unknown): StaffStatisticItem[] => {
+  if (Array.isArray(value)) return value as StaffStatisticItem[];
+
+  const response = value as StaffStatsApiResponse;
+
+  if (Array.isArray(response?.data)) return response.data;
+
+  return [];
+};
+
 export const StaffStatsTab: React.FC<StaffStatsTabProps> = ({
   data,
   loading,
 }) => {
-  const stats = useMemo(() => normalizeStatData(data ?? []), [data]);
+  const stats = useMemo(() => {
+    const rows = getStaffStatsRows(data);
+    return normalizeStatData(rows);
+  }, [data]);
+
+  // const stats = useMemo(() => normalizeStatData(data ?? []), [data]);
+
 
   const performanceData = useMemo(
     () => [

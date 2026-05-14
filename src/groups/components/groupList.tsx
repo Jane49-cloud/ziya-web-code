@@ -30,13 +30,32 @@ const GROUP_TAG_COLORS: Record<string, string> = {
   testing: "gold",
 };
 
+// export type GroupRecord = {
+//   id: string | number;
+//   name: string;
+//   tags?: string | null;
+//   relationship_manager?: number;
+//   relationship_manager_name?: string | null;
+//   admin_name?: string | null;
+// };
+
 export type GroupRecord = {
   id: string | number;
   name: string;
-  tags?: string | null;
-  relationship_manager?: number;
+
+  created_by?: string | number | null;
+  created_by_id?: string | number | null;
+  creator_id?: string | number | null;
+
+  relationship_manager?: string | number | null;
+  relationship_manager_id?: string | number | null;
+  manager_id?: string | number | null;
+
   relationship_manager_name?: string | null;
   admin_name?: string | null;
+  tags?: string | null;
+
+  [key: string]: any;
 };
 
 type GroupTableProps = {

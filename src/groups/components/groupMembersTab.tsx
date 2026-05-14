@@ -23,17 +23,24 @@ import {
 import {
   useLazyGetGroupMembersQuery,
   useLazySearchGroupMembersQuery,
+
   useRemoveGroupMemberMutation,
   useAddGroupMemberMutation,
 } from "../features";
 import { UserAddOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useGetAllCustomersQuery } from "../../customer/features/customerSlice";
+import {
+  useLazyGetAllCustomersQuery,
+  useLazySearchCustomersQuery,
+} from "../../customer/features/customerSlice";
 import { formatName, getInitials } from "../../utils";
 
 const { Title } = Typography;
 
 const BATCH_SIZE = 20;
+const CUSTOMER_BATCH_SIZE = 20;
+const CUSTOMER_FIRST_PAGE = 0;
 const MEMBER_SEARCH_DEBOUNCE_MS = 500;
+const CUSTOMER_SEARCH_DEBOUNCE_MS = 400;
 
 interface Props {
   groupId: number;
@@ -52,6 +59,18 @@ const normalizeGroupMembersCollection = (response: any) => {
   return Array.isArray(value) ? value : [];
 };
 
+const normalizeCustomersCollection = (response: any) => {
+  const value =
+    response?.customers?.data ??
+    response?.customers ??
+    response?.data?.customers ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
 const getMemberCacheKey = (member: any) =>
   String(
     member?.id ??
@@ -60,11 +79,33 @@ const getMemberCacheKey = (member: any) =>
     `${member?.firstname ?? ""}-${member?.lastname ?? ""}`
   );
 
+const getCustomerCacheKey = (customer: any) =>
+  String(
+    customer?.id ??
+    customer?.customer_id ??
+    customer?.phone_number ??
+    customer?.identification_number ??
+    `${customer?.firstname ?? ""}-${customer?.lastname ?? ""}`
+  );
+
 const dedupeMemberRows = (items: any[]) => {
   const seen = new Set<string>();
 
   return items.filter((item) => {
     const key = getMemberCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
+const dedupeCustomerRows = (items: any[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getCustomerCacheKey(item);
 
     if (seen.has(key)) return false;
 
@@ -86,9 +127,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [searchGroupMembers, { isFetching: isSearchingMembers }] =
     useLazySearchGroupMembersQuery();
 
+  const [fetchCustomers, { isFetching: isFetchingCustomers }] =
+    useLazyGetAllCustomersQuery();
+
+  const [searchCustomerList, { isFetching: isSearchingCustomers }] =
+    useLazySearchCustomersQuery();
+
   const rowsRef = useRef<any[]>([]);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRequestIdRef = useRef(0);
+
+  const customerRowsRef = useRef<any[]>([]);
+  const customerSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const customerSearchRequestIdRef = useRef(0);
 
   const [members, setMembers] = useState<any[]>([]);
   const [backendPage, setBackendPage] = useState(0);
@@ -96,27 +149,35 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
 
+  const [customerRows, setCustomerRows] = useState<any[]>([]);
+  const [customerSearchRows, setCustomerSearchRows] = useState<any[]>([]);
+  const [customerBackendPage, setCustomerBackendPage] = useState(
+    CUSTOMER_FIRST_PAGE - 1
+  );
+  const [customerHasMore, setCustomerHasMore] = useState(true);
+  const [isCustomerBootstrapping, setIsCustomerBootstrapping] = useState(false);
+  const [isCustomerPaginationLoading, setIsCustomerPaginationLoading] =
+    useState(false);
+
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
   const isSearchingMembersMode = searchMembers.trim().length > 0;
-
-  const { data: allCustomersData, isLoading: customersLoading } =
-    useGetAllCustomersQuery({}, { refetchOnFocus: false, skip: !modalOpen });
+  const isSearchingCustomersMode = searchCustomers.trim().length > 0;
 
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
-
-  const customers = useMemo(
-    () => allCustomersData?.customers || [],
-    [allCustomersData]
-  );
 
   const pageSize = 20;
 
   const syncRows = useCallback((nextRows: any[]) => {
     rowsRef.current = nextRows;
     setMembers(nextRows);
+  }, []);
+
+  const syncCustomerRows = useCallback((nextRows: any[]) => {
+    customerRowsRef.current = nextRows;
+    setCustomerRows(nextRows);
   }, []);
 
   const loadBatch = useCallback(
@@ -140,6 +201,28 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       return nextRows;
     },
     [fetchGroupMembers, groupId, syncRows]
+  );
+
+  const loadCustomerBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchCustomers({
+        page: pageToLoad,
+        page_size: CUSTOMER_BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeCustomersCollection(response);
+
+      const nextRows = reset
+        ? dedupeCustomerRows(batchRows)
+        : dedupeCustomerRows([...customerRowsRef.current, ...batchRows]);
+
+      syncCustomerRows(nextRows);
+      setCustomerBackendPage(pageToLoad);
+      setCustomerHasMore(batchRows.length === CUSTOMER_BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchCustomers, syncCustomerRows]
   );
 
   const ensureRowsForPage = useCallback(
@@ -203,9 +286,47 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
   }, [loadBatch, syncRows]);
 
+  const refreshCustomers = useCallback(async () => {
+    try {
+      setIsCustomerBootstrapping(true);
+      setIsCustomerPaginationLoading(true);
+
+      customerSearchRequestIdRef.current += 1;
+      setSearchCustomers("");
+      setCustomerSearchRows([]);
+      setCustomerPage(1);
+
+      setCustomerBackendPage(CUSTOMER_FIRST_PAGE - 1);
+      setCustomerHasMore(true);
+      syncCustomerRows([]);
+
+      await loadCustomerBatch(CUSTOMER_FIRST_PAGE, true);
+    } catch (error) {
+      console.error("Failed to load customers:", error);
+      syncCustomerRows([]);
+      setCustomerHasMore(false);
+      message.error("Failed to load customers");
+    } finally {
+      setIsCustomerBootstrapping(false);
+      setIsCustomerPaginationLoading(false);
+    }
+  }, [loadCustomerBatch, syncCustomerRows]);
+
   useEffect(() => {
     void refreshMembers();
   }, [refreshMembers]);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      if (customerSearchTimerRef.current) {
+        clearTimeout(customerSearchTimerRef.current);
+      }
+
+      return;
+    }
+
+    void refreshCustomers();
+  }, [modalOpen, refreshCustomers]);
 
   useEffect(() => {
     const q = searchMembers.trim();
@@ -255,6 +376,53 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     };
   }, [groupId, searchMembers, searchGroupMembers]);
 
+  useEffect(() => {
+    if (!modalOpen) return;
+
+    const q = searchCustomers.trim();
+
+    if (customerSearchTimerRef.current) {
+      clearTimeout(customerSearchTimerRef.current);
+    }
+
+    if (!q) {
+      customerSearchRequestIdRef.current += 1;
+      setCustomerSearchRows([]);
+      return;
+    }
+
+    const requestId = customerSearchRequestIdRef.current + 1;
+    customerSearchRequestIdRef.current = requestId;
+
+    customerSearchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchCustomerList({
+          q,
+        }).unwrap();
+
+        if (requestId !== customerSearchRequestIdRef.current) return;
+
+        const rows = normalizeCustomersCollection(result);
+
+        setCustomerSearchRows(dedupeCustomerRows(rows));
+      } catch (error: any) {
+        if (requestId !== customerSearchRequestIdRef.current) return;
+
+        setCustomerSearchRows([]);
+
+        message.error(
+          error?.data?.message || error?.message || "Failed to search customers"
+        );
+      }
+    }, CUSTOMER_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (customerSearchTimerRef.current) {
+        clearTimeout(customerSearchTimerRef.current);
+      }
+    };
+  }, [modalOpen, searchCustomers, searchCustomerList]);
+
   const handleAddMember = async (cust: any) => {
     try {
       setLoadingId(cust.id);
@@ -293,6 +461,55 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
   };
 
+  const loadMoreCustomers = async () => {
+    if (
+      isSearchingCustomersMode ||
+      isCustomerPaginationLoading ||
+      isFetchingCustomers ||
+      !customerHasMore
+    ) {
+      return;
+    }
+
+    try {
+      setIsCustomerPaginationLoading(true);
+
+      await loadCustomerBatch(customerBackendPage + 1);
+
+      setCustomerPage((page) => page + 1);
+    } catch (error: any) {
+      message.error(
+        error?.data?.message || error?.message || "Failed to load more customers"
+      );
+    } finally {
+      setIsCustomerPaginationLoading(false);
+    }
+  };
+
+  const handleCustomersScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (
+      isSearchingCustomersMode ||
+      isCustomerPaginationLoading ||
+      isFetchingCustomers ||
+      !customerHasMore
+    ) {
+      return;
+    }
+
+    const target = event.currentTarget;
+
+    const isNearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 48;
+
+    if (isNearBottom) {
+      void loadMoreCustomers();
+    }
+  };
+
+  const customers = useMemo(() => {
+    return isSearchingCustomersMode ? customerSearchRows : customerRows;
+  }, [customerRows, customerSearchRows, isSearchingCustomersMode]);
+
   const filteredCustomers = useMemo(() => {
     if (!modalOpen) {
       return [];
@@ -317,14 +534,28 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   }, [customers, modalOpen, searchCustomers]);
 
   const pagedCustomers = useMemo(() => {
+    if (isSearchingCustomersMode) {
+      return filteredCustomers;
+    }
+
     return filteredCustomers.slice(0, customerPage * pageSize);
-  }, [filteredCustomers, customerPage]);
+  }, [filteredCustomers, customerPage, isSearchingCustomersMode]);
 
   const tableRows = isSearchingMembersMode ? searchRows : members;
 
   const tableTotal = isSearchingMembersMode
     ? searchRows.length
     : members.length + (hasMore ? BATCH_SIZE : 0);
+
+  const customersLoading =
+    isCustomerBootstrapping ||
+    (isFetchingCustomers && customerRows.length === 0) ||
+    (isSearchingCustomers &&
+      isSearchingCustomersMode &&
+      customerSearchRows.length === 0);
+
+  const showCustomerLoadMore =
+    !isSearchingCustomersMode && customerHasMore && pagedCustomers.length > 0;
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -372,14 +603,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         ),
       render: (value: string | null) => value || "—",
     },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-      sorter: (a: any, b: any) =>
-        String(a.email || "").localeCompare(String(b.email || "")),
-      render: (value: string | null) => value || "—",
-    },
+
     {
       title: "Action",
       key: "action",
@@ -489,60 +713,85 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         {customersLoading ? (
           <Spin />
         ) : (
-          <List
-            dataSource={pagedCustomers}
-            renderItem={(cust: any) => {
-              const isAlreadyMember = members.some(
-                (m: any) => Number(m.id) === Number(cust.id)
-              );
-
-              return (
-                <List.Item
-                  actions={[
-                    isAlreadyMember ? (
-                      <Button type="default" disabled>
-                        Already Added
-                      </Button>
-                    ) : (
-                      <Button
-                        type="link"
-                        loading={loadingId === cust.id}
-                        onClick={() => handleAddMember(cust)}
-                      >
-                        Add
-                      </Button>
-                    ),
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar>
-                        {getInitials(
-                          formatName(
-                            `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
-                          ) || "?"
-                        )}
-                      </Avatar>
-                    }
-                    title={formatName(
-                      `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
-                    )}
-                    description={cust.email || cust.phone_number || "—"}
-                  />
-                </List.Item>
-              );
+          <div
+            onScroll={handleCustomersScroll}
+            style={{
+              maxHeight: 420,
+              overflowY: "auto",
+              paddingRight: 4,
             }}
-          />
+          >
+            <List
+              dataSource={pagedCustomers}
+              locale={{
+                emptyText: isSearchingCustomers
+                  ? "Searching customers..."
+                  : "No customers found",
+              }}
+              renderItem={(cust: any) => {
+                const isAlreadyMember = members.some(
+                  (m: any) => Number(m.id) === Number(cust.id)
+                );
+
+                return (
+                  <List.Item
+                    actions={[
+                      isAlreadyMember ? (
+                        <Button type="default" disabled>
+                          Already Added
+                        </Button>
+                      ) : (
+                        <Button
+                          type="link"
+                          loading={loadingId === cust.id}
+                          onClick={() => handleAddMember(cust)}
+                        >
+                          Add
+                        </Button>
+                      ),
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar>
+                          {getInitials(
+                            formatName(
+                              `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+                            ) || "?"
+                          )}
+                        </Avatar>
+                      }
+                      title={formatName(
+                        `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
+                      )}
+                      description={cust.email || cust.phone_number || "—"}
+                    />
+                  </List.Item>
+                );
+              }}
+            />
+
+            {isCustomerPaginationLoading && (
+              <div className="mt-3 flex justify-center">
+                <Spin size="small" />
+              </div>
+            )}
+          </div>
         )}
 
-        {pagedCustomers.length < filteredCustomers.length && (
-          <div className="mt-4 flex justify-center">
-            <Button onClick={() => setCustomerPage((page) => page + 1)}>
+        {showCustomerLoadMore && (
+          <div className="mt-4 flex justify-center text-blue-500">
+            <Button
+              loading={isCustomerPaginationLoading}
+              onClick={() => void loadMoreCustomers()}
+
+            >
               Load More
             </Button>
           </div>
         )}
       </Modal>
+
     </Card>
   );
 };

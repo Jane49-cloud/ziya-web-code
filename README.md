@@ -47,8 +47,24 @@ export default tseslint.config({
     ...react.configs['jsx-runtime'].rules,
   },
 })
+
 ```
 
+<!-- //13th march meet before live -->
 
-//wakios request
-member details page, total members number
+add member, search members not in any group //done
+remove email group member  //done
+relation ship manager pagination //done
+Add loans issued to pagination & search. //done
+Visualizations
+
+
+remove summaries from pages //done
+
+
+My created by //done
+My managed. //done
+
+Groups page analytics (itarudishia api ikiwa ready wadau)
+Business  page check it 
+go live locally 
