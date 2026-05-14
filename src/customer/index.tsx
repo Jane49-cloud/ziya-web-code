@@ -11,7 +11,7 @@ import {
   Input,
   Tag,
   Tooltip,
-  Statistic,
+  // Statistic,
   Segmented,
   Button,
   Empty,
@@ -33,7 +33,7 @@ import { useNavigate } from "react-router-dom";
 // import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
-import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
+//import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
 const BATCH_SIZE = 20;
 const MIN_SEARCH_LENGTH = 4;
@@ -382,14 +382,14 @@ const CustomerManagement: FC = () => {
 
   const normalizedCustomers = useMemo(() => rows, [rows]);
 
-  const customerMetrics = useMemo(() => {
-    const total = normalizedCustomers.length;
-    const active = normalizedCustomers.filter((customer: any) =>
-      isSubscriptionActive(customer.subscription_status)
-    ).length;
-    const inactive = total - active;
-    return { total, active, inactive };
-  }, [normalizedCustomers]);
+  // const customerMetrics = useMemo(() => {
+  //   const total = normalizedCustomers.length;
+  //   const active = normalizedCustomers.filter((customer: any) =>
+  //     isSubscriptionActive(customer.subscription_status)
+  //   ).length;
+  //   const inactive = total - active;
+  //   return { total, active, inactive };
+  // }, [normalizedCustomers]);
 
   const tableCustomers = isSearchMode ? searchRows : normalizedCustomers;
 

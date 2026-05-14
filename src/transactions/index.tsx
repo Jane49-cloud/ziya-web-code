@@ -11,6 +11,8 @@ import {
 
 const { Title, Text } = Typography;
 
+const SHOW_TRANSACTION_SUMMARY = false;
+
 const BATCH_SIZE = 20;
 
 const extractTransactionRows = (response: any): any[] => {
@@ -27,24 +29,34 @@ const extractTransactionRows = (response: any): any[] => {
 const TransactionsIndex = () => {
     const location = useLocation();
 
-    const { data: groupResponse } = useGetAllGroupTransactionsQuery({
-        page: 1,
-        page_size: BATCH_SIZE,
-    });
+    const { data: groupResponse } = useGetAllGroupTransactionsQuery(
+        {
+            page: 1,
+            page_size: BATCH_SIZE,
+        },
+        {
+            skip: !SHOW_TRANSACTION_SUMMARY,
+        }
+    );
 
-    const { data: personalResponse } = useGetAllCustomerTransactionsQuery({
-        page: 1,
-        page_size: BATCH_SIZE,
-    });
+    const { data: personalResponse } = useGetAllCustomerTransactionsQuery(
+        {
+            page: 1,
+            page_size: BATCH_SIZE,
+        },
+        {
+            skip: !SHOW_TRANSACTION_SUMMARY,
+        }
+    );
 
     const groupRows = useMemo(
         () => extractTransactionRows(groupResponse),
-        [groupResponse],
+        [groupResponse]
     );
 
     const personalRows = useMemo(
         () => extractTransactionRows(personalResponse),
-        [personalResponse],
+        [personalResponse]
     );
 
     const summary = useMemo(() => {
@@ -53,7 +65,7 @@ const TransactionsIndex = () => {
 
         const totalTransactionValue = [...groupRows, ...personalRows].reduce(
             (sum: number, item: any) => sum + Math.abs(Number(item?.amount ?? 0)),
-            0,
+            0
         );
 
         return {
@@ -77,7 +89,9 @@ const TransactionsIndex = () => {
                 </Text>
             </div>
 
-            <TransactionSummaryCards summary={summary} />
+            {SHOW_TRANSACTION_SUMMARY && (
+                <TransactionSummaryCards summary={summary} />
+            )}
 
             <div className="rounded-xl bg-white shadow-sm">
                 <Outlet context={{ isGroup }} />
