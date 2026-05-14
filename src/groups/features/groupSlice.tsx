@@ -5,11 +5,28 @@ type GroupPaginationArgs = {
   page_size?: number;
 };
 
+// type GroupsResponse = {
+//   data?: any[];
+//   groups?: any[];
+//   page?: number;
+//   page_size?: number;
+//   message?: string;
+// };
+
 type GroupsResponse = {
-  data?: any[];
+  data?: any[] | {
+    groups?: any[];
+    data?: any[];
+    results?: any[];
+    rows?: any[];
+  };
   groups?: any[];
+  results?: any[];
+  rows?: any[];
   page?: number;
   page_size?: number;
+  total?: number;
+  count?: number;
   message?: string;
 };
 
@@ -129,13 +146,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "Groups" }],
     }),
 
-    getMyManagedGroups: builder.query({
-      query: () => ({
-        url: "/groups/get/my-managed",
-        method: "GET",
-      }),
-      providesTags: [{ type: "Groups" }],
-    }),
+    
 
 
     getGroupMembers: builder.query<any, GroupLoansQuery>({
@@ -191,14 +202,55 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
 
+    getMyCreatedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
+  query: (args) => {
+    const { page = 1, page_size = 20 } = args ?? {};
 
-    getMyCreatedGroups: builder.query({
-      query: () => ({
-        url: "/groups/get/my-created",
-        method: "GET",
-      }),
-      providesTags: [{ type: "Groups" }],
-    }),
+    return {
+      url: "/groups/get/my-created",
+      method: "GET",
+      params: {
+        page,
+        page_size,
+      },
+    };
+  },
+  providesTags: [{ type: "Groups" }],
+}),
+
+getMyManagedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
+  query: (args) => {
+    const { page = 1, page_size = 20 } = args ?? {};
+
+    return {
+      url: "/groups/get/my-managed",
+      method: "GET",
+      params: {
+        page,
+        page_size,
+      },
+    };
+  },
+  providesTags: [{ type: "Groups" }],
+}),
+
+
+
+    // getMyCreatedGroups: builder.query({
+    //   query: () => ({
+    //     url: "/groups/get/my-created",
+    //     method: "GET",
+    //   }),
+    //   providesTags: [{ type: "Groups" }],
+    // }),
+
+    // getMyManagedGroups: builder.query({
+    //   query: () => ({
+    //     url: "/groups/get/my-managed",
+    //     method: "GET",
+    //   }),
+    //   providesTags: [{ type: "Groups" }],
+    // }),
 
     getGroupWallet: builder.query({
       query: (id: number) => ({

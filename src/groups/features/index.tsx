@@ -15,8 +15,13 @@ export const {
   useDeleteGroupMutation,
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
+
+
   useGetMyManagedGroupsQuery,
+  useLazyGetMyManagedGroupsQuery,
+
   useGetMyCreatedGroupsQuery,
+  useLazyGetMyCreatedGroupsQuery,
 
   useGetGroupMembersQuery,
   useLazyGetGroupMembersQuery,
