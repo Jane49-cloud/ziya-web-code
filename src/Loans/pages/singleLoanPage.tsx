@@ -60,15 +60,15 @@ const SingleLoanPage = () => {
   const fullName =
     loan?.recipient_firstname || loan?.recipient_lastname
       ? formatName(
-          `${loan?.recipient_firstname ?? ""} ${loan?.recipient_lastname ?? ""}`,
-        )
+        `${loan?.recipient_firstname ?? ""} ${loan?.recipient_lastname ?? ""}`,
+      )
       : "N/A";
 
   const formattedGroupName = formatName(loan?.group_name ?? "") || "N/A";
   const approvingUserName = approvingUser
     ? formatName(
-        `${approvingUser.firstname ?? ""} ${approvingUser.lastname ?? ""}`,
-      ) || "Group Admin"
+      `${approvingUser.firstname ?? ""} ${approvingUser.lastname ?? ""}`,
+    ) || "Group Admin"
     : "Group Admin";
 
   const summaryCards = summaryCardsFactory(
@@ -139,7 +139,7 @@ const SingleLoanPage = () => {
             <div className="relative flex items-center justify-between">
               <div>
                 <Typography.Title level={3} className="!text-white !mb-1">
-                  Loan #{loan.id}
+                  Loan {loan.id}
                 </Typography.Title>
                 <Typography.Text className="text-slate-100/80">
                   Portfolio overview and repayment summary
@@ -150,8 +150,8 @@ const SingleLoanPage = () => {
                   isFullyPaid
                     ? "green"
                     : repaymentPercentage > 50
-                    ? "orange"
-                    : "red"
+                      ? "orange"
+                      : "red"
                 }
                 className="rounded-full px-4 py-1 text-sm shadow-sm"
               >
@@ -312,22 +312,22 @@ const summaryCardsFactory = (
   formattedRepaid: string,
   formattedBalance: string
 ) => [
-  {
-    title: "Loan Amount",
-    value: `KES ${formattedAmount}`,
-    icon: <HiOutlineCurrencyDollar className="text-xl" />,
-    palette: summaryPalettes.amount,
-  },
-  {
-    title: "Amount Repaid",
-    value: `KES ${formattedRepaid}`,
-    icon: <FaMoneyBillWave className="text-xl" />,
-    palette: summaryPalettes.repaid,
-  },
-  {
-    title: "Outstanding",
-    value: `KES ${formattedBalance}`,
-    icon: <FaCoins className="text-xl" />,
-    palette: summaryPalettes.outstanding,
-  },
-];
+    {
+      title: "Loan Amount",
+      value: `KES ${formattedAmount}`,
+      icon: <HiOutlineCurrencyDollar className="text-xl" />,
+      palette: summaryPalettes.amount,
+    },
+    {
+      title: "Amount Repaid",
+      value: `KES ${formattedRepaid}`,
+      icon: <FaMoneyBillWave className="text-xl" />,
+      palette: summaryPalettes.repaid,
+    },
+    {
+      title: "Outstanding",
+      value: `KES ${formattedBalance}`,
+      icon: <FaCoins className="text-xl" />,
+      palette: summaryPalettes.outstanding,
+    },
+  ];

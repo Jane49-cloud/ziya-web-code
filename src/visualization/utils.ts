@@ -340,3 +340,6 @@ export const aggregateGlobalBorrowerPenetrationTrend = (
             return aDate.valueOf() - bDate.valueOf();
         });
 };
+
+//Ranking
+

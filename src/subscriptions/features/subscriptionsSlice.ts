@@ -1,20 +1,32 @@
 import { apiSlice } from "../../redux/api";
 import type { SubscriptionApiResponse } from "../types";
 
+
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
+type CustomerSubscriptionsQuery = PaginationQuery & {
+  customerId: string | number;
+};
+
+
 export const subscriptionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAllSubscriptions: builder.query<SubscriptionApiResponse, void>({
-      query: () => ({
+    getAllSubscriptions: builder.query<SubscriptionApiResponse, PaginationQuery | void>({
+      query: (params) => ({
         url: "/subscriptions/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
       providesTags: [{ type: "Subscriptions", id: "LIST" }],
     }),
 
-    getSubscriptionsByGroup: builder.query<
-      SubscriptionApiResponse,
-      string | number
-    >({
+    getSubscriptionsByGroup: builder.query<SubscriptionApiResponse, string | number>({
       query: (groupId) => ({
         url: `/subscriptions/group/${groupId}`,
         method: "GET",
@@ -24,10 +36,15 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
       ],
     }),
 
-    getAllSubscriptionRevenue: builder.query<SubscriptionApiResponse, void>({
-      query: () => ({
+
+    getAllSubscriptionRevenue: builder.query<SubscriptionApiResponse, PaginationQuery | void>({
+      query: (params) => ({
         url: "/subscriptions/revenue/all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
       providesTags: [{ type: "Subscriptions", id: "REVENUE" }],
     }),
@@ -45,19 +62,56 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
       ],
     }),
 
-
     getCustomerSubscriptions: builder.query<
       SubscriptionApiResponse,
-      string | number
+      string | number | CustomerSubscriptionsQuery
     >({
-      query: (customerId) => ({
-        url: `/subscriptions/customer/${customerId}`,
-        method: "GET",
-      }),
-      providesTags: (_result, _error, customerId) => [
-        { type: "Subscriptions", id: `CUSTOMER-${customerId}` },
-      ],
+      query: (arg) => {
+        const customerId = typeof arg === "object" ? arg.customerId : arg;
+
+        return {
+          url: `/subscriptions/customer/${customerId}`,
+          method: "GET",
+          params: {
+            page: typeof arg === "object" ? arg.page ?? 1 : 1,
+            page_size: typeof arg === "object" ? arg.page_size ?? 20 : 20,
+          },
+        };
+      },
+      providesTags: (_result, _error, arg) => {
+        const customerId = typeof arg === "object" ? arg.customerId : arg;
+
+        return [{ type: "Subscriptions", id: `CUSTOMER-${customerId}` }];
+      },
     }),
+
+
+    // search
+    searchSubscriptions: builder.query<any[], { q: string }>({
+      query: ({ q }) => ({
+        url: "/subscriptions/search",
+        method: "GET",
+        params: {
+          q: q.trim() || "all",
+        },
+      }),
+      transformResponse: (response: any) => {
+        // if returns a direct array.
+        if (Array.isArray(response)) return response;
+
+        const rows =
+          response?.subscriptions ??
+          response?.customers ??
+          response?.data ??
+          response?.results ??
+          [];
+
+        return Array.isArray(rows) ? rows : [];
+      },
+      providesTags: [{ type: "Subscriptions", id: "SEARCH" }],
+    }),
+
+
 
 
     triggerSubscriptionCollection: builder.mutation<SubscriptionApiResponse, void>({

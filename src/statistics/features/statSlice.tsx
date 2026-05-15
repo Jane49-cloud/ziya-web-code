@@ -40,7 +40,7 @@ export const statSlice = apiSlice.injectEndpoints({
     // }),
 
     getAllUsersActivities: builder.query({
-      query: ({ page = 1, page_size = 100 } = {}) => ({
+      query: ({ page = 1, page_size = 20 } = {}) => ({
         url: "/staff/activities",
         method: "GET",
         params: {

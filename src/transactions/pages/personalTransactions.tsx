@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card, Empty, Input, Table, Tag, Typography, Tooltip } from "antd";
-import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { useMemo, useState } from "react";
+import { Card, Empty, Input, Table, Tag, Typography, Tooltip, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiEye, FiUser } from "react-icons/fi";
 import { getTypeColor, formatCurrency, formatFullName } from "../../utils";
 
 import {
-    useGetAllCustomerTransactionsQuery,
+    useLazyGetAllCustomerTransactionsQuery,
     useGetSingleCustomerTransactionsQuery,
 } from "../features";
 import PersonalCustomerTransactionsDrawer, {
@@ -15,6 +15,8 @@ import PersonalCustomerTransactionsDrawer, {
 } from "../components/singlePersonalTransactionsDrawer";
 
 const { Title, Paragraph } = Typography;
+
+const BATCH_SIZE = 20;
 
 type AllCustomerTransactionRow = {
     id: number;
@@ -29,37 +31,191 @@ type AllCustomerTransactionRow = {
     phone_number: string;
 };
 
+const extractCustomerTransactionRows = (
+    response: any,
+): AllCustomerTransactionRow[] => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.transactions)) return response.transactions;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.data?.transactions)) {
+        return response.data.transactions;
+    }
 
-// const getTypeColor = (type?: string) => {
-//     const normalized = (type ?? "").toLowerCase();
-//     if (normalized === "credit") return "green";
-//     if (normalized === "debit") return "red";
-//     return "default";
-// };
+    return [];
+};
+
+const getCustomerTransactionCacheKey = (record: AllCustomerTransactionRow) =>
+    String(
+        record.id ??
+        record.reference_code ??
+        `${record.customer_id ?? "customer"}-${record.type ?? "type"}-${record.source ?? "source"
+        }-${record.amount ?? "amount"}-${record.date_created ?? "date"}`,
+    );
+
+const dedupeCustomerTransactionRows = (items: AllCustomerTransactionRow[]) => {
+    const seen = new Set<string>();
+
+    return items.filter((item) => {
+        const key = getCustomerTransactionCacheKey(item);
+
+        if (seen.has(key)) return false;
+
+        seen.add(key);
+        return true;
+    });
+};
 
 const PersonalTransactionsTab = () => {
     const [searchTerm, setSearchTerm] = useState("");
-    const [pagination, setPagination] = useState<TablePaginationConfig>({
-        current: 1,
-        pageSize: 10,
-    });
 
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState<SelectedPersonalCustomer | null>(null);
+    const [selectedCustomer, setSelectedCustomer] =
+        useState<SelectedPersonalCustomer | null>(null);
 
-    const { data, isLoading, isFetching } = useGetAllCustomerTransactionsQuery({});
+    const [fetchCustomerTransactions, { isFetching }] =
+        useLazyGetAllCustomerTransactionsQuery();
+
     const {
         data: singleCustomerTransactionsResponse,
         isLoading: isLoadingCustomerTransactions,
         isFetching: isFetchingCustomerTransactions,
-    } = useGetSingleCustomerTransactionsQuery(selectedCustomer?.customer_id as number, {
-        skip: !selectedCustomer?.customer_id || !drawerOpen,
-    });
-
-    const rows: AllCustomerTransactionRow[] = useMemo(
-        () => data?.transactions ?? [],
-        [data?.transactions]
+    } = useGetSingleCustomerTransactionsQuery(
+        selectedCustomer?.customer_id as number,
+        {
+            skip: !selectedCustomer?.customer_id || !drawerOpen,
+        },
     );
+
+    const rowsRef = useRef<AllCustomerTransactionRow[]>([]);
+
+    const [rows, setRows] = useState<AllCustomerTransactionRow[]>([]);
+    const [backendPage, setBackendPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isBootstrapping, setIsBootstrapping] = useState(true);
+    const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+    const [uiPage, setUiPage] = useState(1);
+    const [uiPageSize, setUiPageSize] = useState(10);
+
+    const syncRows = useCallback((nextRows: AllCustomerTransactionRow[]) => {
+        rowsRef.current = nextRows;
+        setRows(nextRows);
+    }, []);
+
+    const loadBatch = useCallback(
+        async (pageToLoad: number, reset = false) => {
+            const response = await fetchCustomerTransactions({
+                page: pageToLoad,
+                page_size: BATCH_SIZE,
+            }).unwrap();
+
+            const batchRows = extractCustomerTransactionRows(response);
+
+            const nextRows = reset
+                ? dedupeCustomerTransactionRows(batchRows)
+                : dedupeCustomerTransactionRows([...rowsRef.current, ...batchRows]);
+
+            syncRows(nextRows);
+            setBackendPage(pageToLoad);
+            setHasMore(batchRows.length === BATCH_SIZE);
+
+            return nextRows;
+        },
+        [fetchCustomerTransactions, syncRows],
+    );
+
+    const ensureRowsForPage = useCallback(
+        async (nextPage: number, nextPageSize: number) => {
+            const requiredRows = nextPage * nextPageSize;
+
+            let cachedRows = rowsRef.current;
+            let nextBackendPage = backendPage;
+            let canFetchMore = hasMore;
+
+            while (cachedRows.length < requiredRows && canFetchMore) {
+                const pageToLoad = nextBackendPage + 1;
+
+                const response = await fetchCustomerTransactions({
+                    page: pageToLoad,
+                    page_size: BATCH_SIZE,
+                }).unwrap();
+
+                const batchRows = extractCustomerTransactionRows(response);
+
+                cachedRows = dedupeCustomerTransactionRows([
+                    ...cachedRows,
+                    ...batchRows,
+                ]);
+
+                syncRows(cachedRows);
+
+                nextBackendPage = pageToLoad;
+                canFetchMore = batchRows.length === BATCH_SIZE;
+
+                setBackendPage(pageToLoad);
+                setHasMore(canFetchMore);
+
+                if (batchRows.length < BATCH_SIZE) break;
+            }
+        },
+        [backendPage, fetchCustomerTransactions, hasMore, syncRows],
+    );
+
+    useEffect(() => {
+        const bootstrap = async () => {
+            try {
+                setIsBootstrapping(true);
+                setIsPaginationLoading(true);
+                setUiPage(1);
+                setUiPageSize(10);
+
+                await loadBatch(1, true);
+            } catch (error: any) {
+                message.error(
+                    error?.data?.message ||
+                    error?.message ||
+                    "Failed to load personal transactions",
+                );
+            } finally {
+                setIsBootstrapping(false);
+                setIsPaginationLoading(false);
+            }
+        };
+
+        bootstrap();
+    }, [loadBatch]);
+
+    useEffect(() => {
+        setUiPage(1);
+    }, [searchTerm]);
+
+    const handlePaginationChange = async (
+        nextPage: number,
+        nextPageSize: number,
+    ) => {
+        const sizeChanged = nextPageSize !== uiPageSize;
+        const targetPage = sizeChanged ? 1 : nextPage;
+        const hasSearch = Boolean(searchTerm.trim());
+
+        try {
+            setIsPaginationLoading(true);
+
+            if (!hasSearch) {
+                await ensureRowsForPage(targetPage, nextPageSize);
+            }
+
+            setUiPage(targetPage);
+            setUiPageSize(nextPageSize);
+        } catch (error: any) {
+            message.error(
+                error?.data?.message ||
+                error?.message ||
+                "Failed to load more personal transactions",
+            );
+        } finally {
+            setIsPaginationLoading(false);
+        }
+    };
 
     const filteredRows = useMemo(() => {
         if (!searchTerm.trim()) return rows;
@@ -78,9 +234,10 @@ const PersonalTransactionsTab = () => {
                 item.firstname,
                 item.lastname,
                 item.phone_number,
+                formatFullName(item.firstname, item.lastname),
             ]
                 .map((value) => (value ?? "").toString().toLowerCase())
-                .some((value) => value.includes(needle))
+                .some((value) => value.includes(needle)),
         );
     }, [rows, searchTerm]);
 
@@ -94,15 +251,20 @@ const PersonalTransactionsTab = () => {
             const rawAmount = item?.amount ?? item?.Amount;
 
             return {
-                id: rawId === null || rawId === undefined || rawId === ""
-                    ? undefined
-                    : Number(rawId),
-                customer_id: rawCustomerId === null || rawCustomerId === undefined || rawCustomerId === ""
-                    ? undefined
-                    : Number(rawCustomerId),
-                amount: rawAmount === null || rawAmount === undefined || rawAmount === ""
-                    ? undefined
-                    : Number(rawAmount),
+                id:
+                    rawId === null || rawId === undefined || rawId === ""
+                        ? undefined
+                        : Number(rawId),
+                customer_id:
+                    rawCustomerId === null ||
+                        rawCustomerId === undefined ||
+                        rawCustomerId === ""
+                        ? undefined
+                        : Number(rawCustomerId),
+                amount:
+                    rawAmount === null || rawAmount === undefined || rawAmount === ""
+                        ? undefined
+                        : Number(rawAmount),
                 type: (item?.type ?? item?.Type ?? "").toString().toLowerCase(),
                 source: item?.source ?? item?.Source ?? "",
                 reference_code: item?.reference_code ?? item?.ReferenceCode ?? "",
@@ -118,6 +280,7 @@ const PersonalTransactionsTab = () => {
             lastname: record.lastname,
             phone_number: record.phone_number,
         });
+
         setDrawerOpen(true);
     };
 
@@ -127,26 +290,16 @@ const PersonalTransactionsTab = () => {
     };
 
     const columns: ColumnsType<AllCustomerTransactionRow> = [
-        // {
-        //     title: "Transaction ID",
-        //     dataIndex: "id",
-        //     key: "id",
-        //     width: 120,
-        //     render: (value) => (
-        //         <span className="inline-flex min-w-[56px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
-        //             {value ?? "—"}
-        //         </span>
-        //     ),
-        // },
         {
             title: "Customer Name",
             key: "customer_name",
             width: 240,
             render: (_value, record) => (
-                <div className="inline-flex max-w-full items-center gap-2  px-3 py-2">
+                <div className="inline-flex max-w-full items-center gap-2 px-3 py-2">
                     <span className="text-blue-600">
                         <FiUser size={16} />
                     </span>
+
                     <span className="truncate font-medium text-slate-600">
                         {formatFullName(record.firstname, record.lastname)}
                     </span>
@@ -172,14 +325,9 @@ const PersonalTransactionsTab = () => {
             title: "Transaction Type",
             dataIndex: "type",
             key: "type",
-            width: 120,
-            render: (value) => (
-                <Tag color={getTypeColor(value)}>
-                    {value || "—"}
-                </Tag>
-            ),
+            width: 140,
+            render: (value) => <Tag color={getTypeColor(value)}>{value || "—"}</Tag>,
         },
-
         {
             title: "Action",
             key: "actions",
@@ -191,19 +339,25 @@ const PersonalTransactionsTab = () => {
                         <button
                             type="button"
                             onClick={() => handleViewCustomer(record)}
-                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3]"
+                            disabled={!record.customer_id}
+                            className="flex h-8 w-8 items-center justify-center bg-white text-[#344054] transition hover:cursor-pointer hover:bg-[#F0F9FF] hover:text-[#175CD3] disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <FiEye size={16} />
                         </button>
                     </Tooltip>
                 </div>
             ),
-
-
         },
     ];
 
-    const detailsLoading = isLoadingCustomerTransactions || isFetchingCustomerTransactions;
+    const detailsLoading =
+        isLoadingCustomerTransactions || isFetchingCustomerTransactions;
+
+    const isSearching = Boolean(searchTerm.trim());
+
+    const progressiveTotal = isSearching
+        ? filteredRows.length
+        : rows.length + (hasMore ? BATCH_SIZE : 0);
 
     return (
         <>
@@ -213,6 +367,7 @@ const PersonalTransactionsTab = () => {
                         <Title level={4} className="!mb-1">
                             Personal Transactions
                         </Title>
+
                         <Paragraph className="!mb-0 text-gray-400">
                             Customer wallet transaction activity and payment history.
                         </Paragraph>
@@ -225,7 +380,7 @@ const PersonalTransactionsTab = () => {
 
                 <Input.Search
                     allowClear
-                    placeholder="Search by customer name, phone, amount or type..."
+                    placeholder="Search by customer name, phone, source, reference code, amount or type..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onSearch={setSearchTerm}
@@ -233,25 +388,24 @@ const PersonalTransactionsTab = () => {
                 />
 
                 <Table<AllCustomerTransactionRow>
-                    rowKey={(record) => record.id}
+                    rowKey={(record) => getCustomerTransactionCacheKey(record)}
                     columns={columns}
                     dataSource={filteredRows}
-                    loading={isLoading || isFetching}
+                    loading={isBootstrapping || isFetching || isPaginationLoading}
                     bordered
                     size="middle"
-                    // scroll={{ x: 700 }}
                     scroll={{ x: "max-content" }}
                     pagination={{
-                        ...pagination,
+                        current: uiPage,
+                        pageSize: uiPageSize,
+                        total: progressiveTotal,
                         showSizeChanger: true,
-                        total: filteredRows.length,
-                        pageSizeOptions: [5, 10, 20, 50],
-                        onChange: (current, pageSize) =>
-                            setPagination({ current, pageSize }),
-                        onShowSizeChange: (_current, size) =>
-                            setPagination({ current: 1, pageSize: size }),
+                        pageSizeOptions: ["10", "20", "50"],
+                        onChange: handlePaginationChange,
                     }}
-                    locale={{ emptyText: <Empty description="No personal transactions found" /> }}
+                    locale={{
+                        emptyText: <Empty description="No personal transactions found" />,
+                    }}
                 />
             </Card>
 

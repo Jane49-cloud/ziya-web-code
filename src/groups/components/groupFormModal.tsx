@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Modal,
   Form,
@@ -13,12 +19,15 @@ import {
   Typography,
   Space,
   Card,
+  Button,
+  Divider,
 } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 import type { Dayjs } from "dayjs";
 import {
   useCreateGroupLoanMutation,
-  useGetGroupMembersQuery,
+  useLazyGetGroupMembersQuery,
+  useLazySearchGroupMembersQuery,
   useUpdateGroupLoanMutation,
 } from "../features";
 import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
@@ -29,6 +38,9 @@ import { formatName } from "../../utils";
 
 const { Text } = Typography;
 
+const BATCH_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 500;
+
 interface GroupLoanFormModalProps {
   visible: boolean;
   onClose: () => void;
@@ -38,6 +50,110 @@ interface GroupLoanFormModalProps {
   onWalletRefresh?: () => void;
   issuedBy: number | null;
 }
+
+type GroupMemberRecord = {
+  id: string | number;
+  firstname?: string | null;
+  lastname?: string | null;
+  full_name?: string | null;
+  phone_number?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
+  email?: string | null;
+  [key: string]: any;
+};
+
+type MemberOption = {
+  label: string;
+  value: string | number;
+  phone?: string | null;
+  email?: string | null;
+  selectedLabel?: React.ReactNode;
+};
+
+const dedupeById = <T extends GroupMemberRecord>(items: T[]) => {
+  const map = new Map<string | number, T>();
+
+  items.forEach((item) => {
+    if (item?.id !== undefined && item?.id !== null) {
+      map.set(item.id, item);
+    }
+  });
+
+  return Array.from(map.values());
+};
+
+const extractMembers = (result: any): GroupMemberRecord[] => {
+  const rows =
+    result?.members ??
+    result?.data?.members ??
+    result?.data ??
+    result?.rows ??
+    result?.result ??
+    result?.results ??
+    [];
+
+  return Array.isArray(rows) ? rows : [];
+};
+
+const getMemberName = (member: GroupMemberRecord) => {
+  const name =
+    member.full_name ||
+    `${member.firstname ?? ""} ${member.lastname ?? ""}`.trim();
+
+  return name ? formatName(name) : `ID ${member.id}`;
+};
+
+const getMemberPhone = (member: GroupMemberRecord) => {
+  return member.phone_number || member.phone || member.mobile || "";
+};
+
+const renderMemberSelectedLabel = (item: MemberOption) => {
+  const phoneOrEmail = item.phone || item.email || "";
+
+  return (
+    <div className="grid w-full grid-cols-[1fr_145px] items-center gap-8">
+      <span className="truncate font-medium text-slate-700">
+        {item.label}
+      </span>
+
+      <span className="text-right text-xs tabular-nums text-slate-500 pr-2 ">
+        {phoneOrEmail}
+      </span>
+    </div>
+  );
+};
+
+const renderMemberOption = (option: any) => {
+  const item = option?.data ?? {};
+  const phoneOrEmail = item.phone || item.email || "";
+
+  return (
+    <div className="grid grid-cols-[1fr_145px] items-center gap-8">
+      <span className="truncate font-medium text-slate-700">
+        {item.label}
+      </span>
+
+      <span className="text-right text-xs tabular-nums text-slate-500 pr-2 ">
+        {phoneOrEmail}
+      </span>
+    </div>
+  );
+};
+
+const buildMemberOption = (member: GroupMemberRecord): MemberOption => {
+  const option: MemberOption = {
+    label: getMemberName(member),
+    value: member.id,
+    phone: getMemberPhone(member),
+    email: member.email,
+  };
+
+  return {
+    ...option,
+    selectedLabel: renderMemberSelectedLabel(option),
+  };
+};
 
 const GroupLoanFormModal = ({
   visible,
@@ -54,34 +170,146 @@ const GroupLoanFormModal = ({
   const [createLoan, { isLoading: creating }] = useCreateGroupLoanMutation();
   const [updateLoan, { isLoading: updating }] = useUpdateGroupLoanMutation();
 
-  const { data: membersData, isLoading: membersLoading } =
-    useGetGroupMembersQuery(groupId);
+  const [fetchMembers, { isFetching: isFetchingMembers }] =
+    useLazyGetGroupMembersQuery();
+
+  const [searchGroupMembers, { isFetching: isSearchingMembers }] =
+    useLazySearchGroupMembersQuery();
+
   const { data: loanDefsData, isLoading: defsLoading } =
     useGetLoanDefinitionsByPlatformQuery("web");
-  const { data: cyclesData, isLoading: cyclesLoading } = useGetAllCyclesQuery(undefined);
 
-  const members = membersData?.members || [];
+  const { data: cyclesData, isLoading: cyclesLoading } =
+    useGetAllCyclesQuery(undefined);
+
+  const [memberRows, setMemberRows] = useState<GroupMemberRecord[]>([]);
+  const [memberPage, setMemberPage] = useState(0);
+  const [memberHasMore, setMemberHasMore] = useState(true);
+
+  const [memberSearchText, setMemberSearchText] = useState("");
+  const [memberSearchRows, setMemberSearchRows] = useState<GroupMemberRecord[]>(
+    []
+  );
+
+  const memberSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  const memberSearchRequestIdRef = useRef(0);
+
+  const isMemberSearchMode = memberSearchText.trim().length > 0;
+
   const loanDefs =
     loanDefsData?.loan_definitions?.filter(
       (loanDef: any) => loanDef.status === 1
     ) || [];
+
   const cycles = extractCycles(cyclesData);
+
   const cycleOptions = cycles
     .map((cycle) => {
       const rawValue =
         cycle.cycle_number ??
         (typeof cycle.id === "number" ? cycle.id : Number(cycle.id));
+
       if (Number.isNaN(Number(rawValue))) {
         return null;
       }
+
       const cycleValue = Number(rawValue);
       const cycleName = String(cycle.title ?? "").trim();
+
       return {
         value: cycleValue,
         label: cycleName || `Cycle ${cycleValue}`,
       };
     })
-    .filter((option): option is { value: number; label: string } => Boolean(option));
+    .filter(
+      (option): option is { value: number; label: string } => Boolean(option)
+    );
+
+  const loadMembers = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      if (!groupId) return [];
+
+      const result = await fetchMembers({
+        groupId,
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batch = extractMembers(result);
+
+      setMemberRows((prev) =>
+        reset ? batch : dedupeById([...prev, ...batch])
+      );
+
+      setMemberPage(pageToLoad);
+      setMemberHasMore(batch.length === BATCH_SIZE);
+
+      return batch;
+    },
+    [fetchMembers, groupId]
+  );
+
+  useEffect(() => {
+    if (!visible || !groupId) return;
+
+    setMemberRows([]);
+    setMemberPage(0);
+    setMemberHasMore(true);
+    setMemberSearchText("");
+    setMemberSearchRows([]);
+
+    memberSearchRequestIdRef.current += 1;
+
+    void loadMembers(1, true);
+  }, [visible, groupId, loadMembers]);
+
+  useEffect(() => {
+    const q = memberSearchText.trim();
+
+    if (memberSearchTimerRef.current) {
+      clearTimeout(memberSearchTimerRef.current);
+    }
+
+    if (!visible || !groupId) return;
+
+    if (!q) {
+      memberSearchRequestIdRef.current += 1;
+      setMemberSearchRows([]);
+      return;
+    }
+
+    const requestId = memberSearchRequestIdRef.current + 1;
+    memberSearchRequestIdRef.current = requestId;
+
+    memberSearchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchGroupMembers({ groupId, q }).unwrap();
+
+        if (requestId !== memberSearchRequestIdRef.current) return;
+
+        setMemberSearchRows(dedupeById(Array.isArray(result) ? result : []));
+      } catch (err: any) {
+        if (requestId !== memberSearchRequestIdRef.current) return;
+
+        setMemberSearchRows([]);
+
+        message.error(
+          err?.data?.message ||
+            err?.message ||
+            "Failed to search group members"
+        );
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (memberSearchTimerRef.current) {
+        clearTimeout(memberSearchTimerRef.current);
+      }
+    };
+  }, [memberSearchText, searchGroupMembers, visible, groupId]);
 
   useEffect(() => {
     if (loan) {
@@ -98,9 +326,33 @@ const GroupLoanFormModal = ({
     }
   }, [loan, form]);
 
+  const memberOptions = useMemo(() => {
+    const sourceRows = isMemberSearchMode ? memberSearchRows : memberRows;
+
+    return sourceRows.map(buildMemberOption);
+  }, [memberRows, memberSearchRows, isMemberSearchMode]);
+
+  const loadMoreMembers = async () => {
+    if (isMemberSearchMode || isFetchingMembers || !memberHasMore) return;
+
+    await loadMembers(memberPage + 1);
+  };
+
+  const handleMemberPopupScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+
+    const isBottom =
+      target.scrollTop + target.offsetHeight >= target.scrollHeight - 20;
+
+    if (isBottom) {
+      void loadMoreMembers();
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+
       const payload = {
         ...values,
         date_issued: values.date_issued
@@ -130,7 +382,7 @@ const GroupLoanFormModal = ({
 
   const filterOptionsByLabel = (
     input: string,
-    option?: DefaultOptionType,
+    option?: DefaultOptionType
   ): boolean => {
     return String(option?.children ?? "")
       .toLowerCase()
@@ -139,6 +391,9 @@ const GroupLoanFormModal = ({
 
   const disableFutureDates = (current: Dayjs) =>
     current && current.isAfter(dayjs(), "day");
+
+  const membersLoading =
+    visible && memberRows.length === 0 && isFetchingMembers;
 
   return (
     <Modal
@@ -174,6 +429,7 @@ const GroupLoanFormModal = ({
               />
             </Form.Item>
           </Col>
+
           <Col span={12}>
             <Form.Item
               label="Loan Cycle"
@@ -221,6 +477,7 @@ const GroupLoanFormModal = ({
               )}
             </Form.Item>
           </Col>
+
           <Col span={12}>
             <Form.Item
               label="Date Issued"
@@ -249,16 +506,52 @@ const GroupLoanFormModal = ({
           ) : (
             <Select
               showSearch
+              allowClear
               placeholder="Select member"
-              optionFilterProp="children"
-              filterOption={filterOptionsByLabel}
-            >
-              {members.map((m: any) => (
-                <Select.Option key={m.id} value={m.id}>
-                  {formatName(`${m.firstname ?? ""} ${m.lastname ?? ""}`)}
-                </Select.Option>
-              ))}
-            </Select>
+              filterOption={false}
+              searchValue={memberSearchText}
+              onSearch={setMemberSearchText}
+              onSelect={() => setMemberSearchText("")}
+              options={memberOptions}
+              optionRender={renderMemberOption}
+              optionLabelProp="selectedLabel"
+              notFoundContent={
+                isSearchingMembers ? (
+                  <Spin size="small" />
+                ) : (
+                  "No members found"
+                )
+              }
+              onPopupScroll={handleMemberPopupScroll}
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+
+                  <Divider className="my-2" />
+
+                  <div className="flex justify-center px-2 pb-1">
+                    <Button
+                      size="small"
+                      loading={isFetchingMembers}
+                      disabled={
+                        isMemberSearchMode ||
+                        isFetchingMembers ||
+                        !memberHasMore
+                      }
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => void loadMoreMembers()}
+                      className="!h-7 !px-3 !text-xs"
+                    >
+                      {isMemberSearchMode
+                        ? "Clear search"
+                        : memberHasMore
+                        ? "Load more"
+                        : "All members loaded"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            />
           )}
         </Form.Item>
 

@@ -1,14 +1,23 @@
 import { apiSlice } from "../redux/api";
 
 const cycleBaseUrl = "/cycles";
+
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
+
 const buildQuery = (
   url: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   body?: unknown,
+  params?: Record<string, unknown>
 ) => ({
   url,
   method,
   ...(body ? { body } : {}),
+  ...(params ? { params } : {}),
 });
 
 export const cycleSlice = apiSlice.injectEndpoints({
@@ -19,8 +28,11 @@ export const cycleSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "Cycles", id: "LIST" }],
     }),
 
-    getAllCycles: builder.query({
-      query: () => buildQuery(`${cycleBaseUrl}/all`, "GET"),
+    getAllCycles: builder.query<any, PaginationQuery | void>({
+      query: (params) => buildQuery(`${cycleBaseUrl}/all`, "GET", undefined, {
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 20,
+      }),
       providesTags: [{ type: "Cycles", id: "LIST" }],
     }),
 
@@ -47,7 +59,11 @@ export const cycleSlice = apiSlice.injectEndpoints({
 
 export const {
   useCreateCycleMutation,
+
   useGetAllCyclesQuery,
+  useLazyGetAllCyclesQuery,
+
+
   useGetSingleCycleQuery,
   useUpdateCycleMutation,
   useDeleteCycleMutation,

@@ -19,14 +19,14 @@ const formatCurrencyShort = (value: number) => {
 };
 
 const LoansIssuedVsBorrowedVolumeSection: React.FC = () => {
-    const { data = [], isLoading } = useGetGroupCreditHealthQuery(undefined);
+    const { data: rows = [], isLoading } = useGetGroupCreditHealthQuery(undefined);
 
     const [range, setRange] = useState<ChartRange>("12M");
     const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
     const aggregatedData = useMemo(
-        () => aggregateLoansIssuedVsBorrowedVolume(data),
-        [data]
+        () => aggregateLoansIssuedVsBorrowedVolume(rows),
+        [rows]
     );
 
     const monthOptions = useMemo(
@@ -201,32 +201,6 @@ const LoansIssuedVsBorrowedVolumeSection: React.FC = () => {
                     onMonthChange={setSelectedMonth}
                     monthOptions={monthOptions}
                 />
-
-                {/* <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                    <Select
-                        value={range}
-                        onChange={(value) => {
-                            setRange(value);
-                            setSelectedMonth(null);
-                        }}
-                        style={{ width: 170 }}
-                        options={[
-                            { label: "Last 6 months", value: "6M" },
-                            { label: "Last 12 months", value: "12M" },
-                            { label: "Year to date", value: "YTD" },
-                            { label: "All time", value: "ALL" },
-                        ]}
-                    />
-
-                    <Select
-                        allowClear
-                        placeholder="Select month"
-                        value={selectedMonth}
-                        onChange={(value) => setSelectedMonth(value ?? null)}
-                        style={{ width: 180 }}
-                        options={monthOptions}
-                    />
-                </div> */}
             </div>
 
             {isLoading ? (

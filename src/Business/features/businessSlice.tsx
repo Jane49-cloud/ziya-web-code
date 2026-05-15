@@ -1,11 +1,21 @@
 import { apiSlice } from "../../redux/api";
 
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
+
 export const businessSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAllBusinesses: builder.query({
-      query: () => ({
+    getAllBusinesses: builder.query<any, PaginationQuery | void>({
+      query: (params) => ({
         url: "/customer-business/get-all",
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
     }),
 
@@ -50,6 +60,8 @@ export const businessSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetAllBusinessesQuery,
+  useLazyGetAllBusinessesQuery,
+
   useGetBusinessesByCustomerQuery,
   useGetBusinessByIdQuery,
   useCreateBusinessMutation,

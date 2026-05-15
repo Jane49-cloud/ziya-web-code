@@ -1,7 +1,8 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Table, Tag, Spin, Empty, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import { useGetCustomerSubscriptionsQuery } from "../../../subscriptions/features";
+import { useLazyGetCustomerSubscriptionsQuery } from "../../../subscriptions/features";
 import type { SubscriptionApiResponse } from "../../../subscriptions/types";
 import { formatCurrency, formatDate, formatName } from "../../../utils";
 
@@ -14,24 +15,173 @@ type SubscriptionHistoryRecord = Extract<
   unknown[]
 >[number];
 
+const BATCH_SIZE = 20;
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
   const parsed = dayjs(value);
   return parsed.isValid() ? parsed.format("DD MMM YYYY, HH:mm") : "—";
 };
 
+const normalizeSubscriptionCollection = (
+  response: SubscriptionApiResponse | any
+): SubscriptionHistoryRecord[] => {
+  const value =
+    response?.data?.data ??
+    response?.data ??
+    response?.subscriptions?.data ??
+    response?.subscriptions ??
+    response?.history?.data ??
+    response?.history ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
+const getSubscriptionKey = (record: SubscriptionHistoryRecord) =>
+  String(
+    record.id ??
+    `${record.customer_id ?? "customer"}-${record.start_date ?? "start"}-${record.end_date ?? "end"
+    }`
+  );
+
+const dedupeSubscriptionRows = (items: SubscriptionHistoryRecord[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getSubscriptionKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
 const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
   customerId,
 }) => {
-  const { data, isLoading, isFetching } =
-    useGetCustomerSubscriptionsQuery(customerId, {
-      skip: !customerId,
-      refetchOnReconnect: true,
-    });
+  const [fetchCustomerSubscriptions, { isFetching }] =
+    useLazyGetCustomerSubscriptionsQuery();
 
-  const history: SubscriptionHistoryRecord[] = Array.isArray(data?.data)
-    ? data.data
-    : [];
+  const rowsRef = useRef<SubscriptionHistoryRecord[]>([]);
+
+  const [rows, setRows] = useState<SubscriptionHistoryRecord[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
+  const syncRows = useCallback((nextRows: SubscriptionHistoryRecord[]) => {
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchCustomerSubscriptions({
+        customerId,
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeSubscriptionCollection(response);
+
+      const nextRows = reset
+        ? dedupeSubscriptionRows(batchRows)
+        : dedupeSubscriptionRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [customerId, fetchCustomerSubscriptions, syncRows]
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchCustomerSubscriptions({
+          customerId,
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeSubscriptionCollection(response);
+
+        cachedRows = dedupeSubscriptionRows([...cachedRows, ...batchRows]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, customerId, fetchCustomerSubscriptions, hasMore, syncRows]
+  );
+
+  const refreshSubscriptionHistory = useCallback(async () => {
+    if (!customerId) return;
+
+    try {
+      setIsBootstrapping(true);
+      setIsPaginationLoading(true);
+      setUiPage(1);
+      setUiPageSize(10);
+      setBackendPage(0);
+      setHasMore(true);
+      syncRows([]);
+
+      await loadBatch(1, true);
+    } catch {
+      syncRows([]);
+      setHasMore(false);
+    } finally {
+      setIsBootstrapping(false);
+      setIsPaginationLoading(false);
+    }
+  }, [customerId, loadBatch, syncRows]);
+
+  useEffect(() => {
+    void refreshSubscriptionHistory();
+  }, [refreshSubscriptionHistory]);
+
+  const progressiveTotal = rows.length + (hasMore ? BATCH_SIZE : 0);
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+
+    try {
+      setIsPaginationLoading(true);
+      await ensureRowsForPage(targetPage, nextPageSize);
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const columns: ColumnsType<SubscriptionHistoryRecord> = [
     {
@@ -109,7 +259,7 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
     },
   ];
 
-  if (isLoading && !history.length) {
+  if (isBootstrapping && !rows.length) {
     return (
       <Card bordered={false} className="shadow-sm">
         <div className="flex min-h-[200px] items-center justify-center">
@@ -119,7 +269,7 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
     );
   }
 
-  if (!history.length) {
+  if (!rows.length) {
     return (
       <Card bordered={false} className="shadow-sm">
         <Empty description="No subscription history yet" />
@@ -143,10 +293,19 @@ const CustomerSubscriptionHistoryTab: React.FC<SubscriptionHistoryProps> = ({
           String(record.id ?? `${record.customer_id}-${record.start_date}`)
         }
         columns={columns}
-        dataSource={history}
-        loading={isFetching && Boolean(history.length)}
+        dataSource={rows}
+        loading={isFetching || isPaginationLoading}
         bordered={false}
-        pagination={{ pageSize: 6, showSizeChanger: true }}
+        pagination={{
+          current: uiPage,
+          pageSize: uiPageSize,
+          total: progressiveTotal,
+          showSizeChanger: true,
+          pageSizeOptions: ["5", "10", "20", "50"],
+          onChange: (page, pageSize) => {
+            void handlePaginationChange(page, pageSize);
+          },
+        }}
         scroll={{ x: 1200 }}
       />
     </Card>

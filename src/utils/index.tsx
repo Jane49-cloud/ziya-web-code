@@ -151,3 +151,45 @@ export const getSubscriptionStanding = (
     ? { label: "In Arrears", color: "red" }
     : { label: "Up to Date", color: "green" };
 };
+
+//phone number sanitizing
+import type React from "react";
+
+export const PHONE_NUMBER_LENGTH = 10;
+
+export const PHONE_NUMBER_ERROR = "Phone number must be exactly 10 digits.";
+
+export const sanitizePhoneNumber = (value: unknown) => {
+  return String(value ?? "")
+    .replace(/\D/g, "")
+    .slice(0, PHONE_NUMBER_LENGTH);
+};
+
+export const isValidPhoneNumber = (value: unknown) => {
+  return /^\d{10}$/.test(String(value ?? ""));
+};
+
+export const phoneNumberInputProps = {
+  maxLength: PHONE_NUMBER_LENGTH,
+  inputMode: "numeric" as const,
+  pattern: "\\d{10}",
+  title: PHONE_NUMBER_ERROR,
+  onInput: (e: React.FormEvent<HTMLInputElement>) => {
+    e.currentTarget.value = sanitizePhoneNumber(e.currentTarget.value);
+  },
+};
+
+export const phoneNumberAntdRules = [
+  { required: true, message: "Phone number is required!" },
+  {
+    validator: (_: unknown, value: unknown) => {
+      const phoneNumber = String(value ?? "");
+
+      if (!isValidPhoneNumber(phoneNumber)) {
+        return Promise.reject(new Error(PHONE_NUMBER_ERROR));
+      }
+
+      return Promise.resolve();
+    },
+  },
+];

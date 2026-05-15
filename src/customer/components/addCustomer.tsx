@@ -1,9 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC } from "react";
+import React, { FC } from "react";
 
 type CustomerFormProps = {
   onSubmit: (values: Record<string, FormDataEntryValue>) => void;
   isLoading: boolean;
+};
+
+const sanPhoneNumber = (value: string) => {
+  return value.replace(/\D/g, "").slice(0, 10);
+};
+
+const isValidPhoneNumber = (value: string) => {
+  return /^\d{10}$/.test(value);
+};
+
+const getPhoneInputProps = (name: string) => {
+  if (name !== "phone_number") return {};
+
+  return {
+    maxLength: 10,
+    inputMode: "numeric" as const,
+    pattern: "\\d{10}",
+    title: "Phone number must be exactly 10 digits.",
+    onInput: (e: React.FormEvent<HTMLInputElement>) => {
+      e.currentTarget.value = sanPhoneNumber(e.currentTarget.value);
+    },
+  };
 };
 
 export const CustomerForm: FC<CustomerFormProps> = ({
@@ -12,8 +34,26 @@ export const CustomerForm: FC<CustomerFormProps> = ({
 }) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // const formData = new FormData(event.currentTarget);
+    // formData.set("date_created", new Date().toISOString());
+
     const formData = new FormData(event.currentTarget);
+
+    const phoneNumber = sanPhoneNumber(
+      String(formData.get("phone_number") ?? "")
+
+    );
+
+    if (!isValidPhoneNumber(phoneNumber)) {
+      alert("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    formData.set("phone_number", phoneNumber);
     formData.set("date_created", new Date().toISOString());
+
+
 
     const entries = Array.from(formData.entries()).filter(
       (entry): entry is [string, FormDataEntryValue] => entry[1] !== null
@@ -37,13 +77,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         name={name}
         type={type}
         required={required}
-        onInput={
-          name === "phone_number"
-            ? (e) => {
-              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
-            }
-            : undefined
-        }
+        // onInput={
+        //   name === "phone_number"
+        //     ? (e) => {
+        //       e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
+        //     }
+        //     : undefined
+        // }
+        {...getPhoneInputProps(name)}
         className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
       />
     </div>

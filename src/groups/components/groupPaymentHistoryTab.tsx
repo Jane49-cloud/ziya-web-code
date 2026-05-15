@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useGetGroupPaymentsQuery } from "../features";
+import { useLazyGetGroupPaymentsQuery } from "../features";
 import {
   Card,
   Table,
@@ -10,13 +10,53 @@ import {
   Row,
   Col,
 } from "antd";
-import { useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { formatName, getUser } from "../../utils";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 
 const { Title, Text } = Typography;
+
+const BATCH_SIZE = 20;
+
+const normalizeGroupPaymentsCollection = (response: any) => {
+  const value =
+    response?.payments?.data ??
+    response?.payments ??
+    response?.data?.payments ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  return Array.isArray(value) ? value : [];
+};
+
+const getGroupPaymentCacheKey = (payment: any) =>
+  String(
+    payment?.id ??
+    `${payment?.loan_id ?? ""}-${payment?.customer_id ?? ""}-${payment?.amount ?? ""
+    }-${payment?.date_paid ?? ""}`
+  );
+
+const dedupeGroupPaymentRows = (items: any[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getGroupPaymentCacheKey(item);
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
 
 const GroupPaymentHistoryTab = ({
   groupId,
@@ -27,51 +67,177 @@ const GroupPaymentHistoryTab = ({
 }) => {
   const staffUserId = useMemo(() => {
     const user = getUser();
+
     if (!user?.id) return null;
+
     const parsedId = Number(user.id);
     return Number.isNaN(parsedId) ? null : parsedId;
   }, []);
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useGetGroupPaymentsQuery(groupId, {
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-    pollingInterval: 180000,
-  });
+  const [fetchGroupPayments, { isFetching }] =
+    useLazyGetGroupPaymentsQuery();
 
-  const payments = useMemo(() => {
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.payments)) return data.payments;
-    if (Array.isArray((data as any)?.data)) return (data as any).data;
-    return [];
-  }, [data]);
-  const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
+  const rowsRef = useRef<any[]>([]);
+
+  const [payments, setPayments] = useState<any[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+
+  const [uiPage, setUiPage] = useState(1);
+  const [uiPageSize, setUiPageSize] = useState(10);
+
+  const [sortOrder, setSortOrder] = useState<"ascend" | "descend">(
+    "descend"
+  );
+
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
+
   const navigate = useNavigate();
+
+  const syncRows = useCallback((nextRows: any[]) => {
+    rowsRef.current = nextRows;
+    setPayments(nextRows);
+  }, []);
+
+  const loadBatch = useCallback(
+    async (pageToLoad: number, reset = false) => {
+      const response = await fetchGroupPayments({
+        groupId,
+        page: pageToLoad,
+        page_size: BATCH_SIZE,
+      }).unwrap();
+
+      const batchRows = normalizeGroupPaymentsCollection(response);
+
+      const nextRows = reset
+        ? dedupeGroupPaymentRows(batchRows)
+        : dedupeGroupPaymentRows([...rowsRef.current, ...batchRows]);
+
+      syncRows(nextRows);
+      setBackendPage(pageToLoad);
+      setHasMore(batchRows.length === BATCH_SIZE);
+
+      return nextRows;
+    },
+    [fetchGroupPayments, groupId, syncRows]
+  );
+
+  const ensureRowsForPage = useCallback(
+    async (nextPage: number, nextPageSize: number) => {
+      const requiredRows = nextPage * nextPageSize;
+
+      let cachedRows = rowsRef.current;
+      let nextBackendPage = backendPage;
+      let canFetchMore = hasMore;
+
+      while (cachedRows.length < requiredRows && canFetchMore) {
+        const pageToLoad = nextBackendPage + 1;
+
+        const response = await fetchGroupPayments({
+          groupId,
+          page: pageToLoad,
+          page_size: BATCH_SIZE,
+        }).unwrap();
+
+        const batchRows = normalizeGroupPaymentsCollection(response);
+
+        cachedRows = dedupeGroupPaymentRows([
+          ...cachedRows,
+          ...batchRows,
+        ]);
+
+        syncRows(cachedRows);
+
+        nextBackendPage = pageToLoad;
+        canFetchMore = batchRows.length === BATCH_SIZE;
+
+        setBackendPage(pageToLoad);
+        setHasMore(canFetchMore);
+
+        if (batchRows.length < BATCH_SIZE) break;
+      }
+    },
+    [backendPage, fetchGroupPayments, groupId, hasMore, syncRows]
+  );
+
+  const refreshGroupPayments = useCallback(async () => {
+    try {
+      setIsBootstrapping(true);
+      setIsPaginationLoading(true);
+      setUiPage(1);
+      setUiPageSize(10);
+      setBackendPage(0);
+      setHasMore(true);
+      syncRows([]);
+
+      await loadBatch(1, true);
+    } catch (error) {
+      console.error("Failed to load group payments:", error);
+      syncRows([]);
+      setHasMore(false);
+    } finally {
+      setIsBootstrapping(false);
+      setIsPaginationLoading(false);
+    }
+  }, [loadBatch, syncRows]);
+
+  useEffect(() => {
+    void refreshGroupPayments();
+  }, [refreshGroupPayments]);
 
   const sortedPayments = useMemo(
     () =>
       [...payments].sort((a, b) =>
         sortOrder === "ascend"
-          ? new Date(a.date_paid).getTime() - new Date(b.date_paid).getTime()
-          : new Date(b.date_paid).getTime() - new Date(a.date_paid).getTime(),
+          ? new Date(a.date_paid).getTime() -
+          new Date(b.date_paid).getTime()
+          : new Date(b.date_paid).getTime() -
+          new Date(a.date_paid).getTime()
       ),
-    [payments, sortOrder],
+    [payments, sortOrder]
   );
 
-  const totalPaid = sortedPayments.reduce((sum, payment) => {
-    const amount =
-      typeof payment.amount === "string"
-        ? parseFloat(payment.amount)
-        : payment.amount;
-    return sum + (isNaN(amount) ? 0 : amount);
-  }, 0);
+  const totalPaid = useMemo(() => {
+    return sortedPayments.reduce((sum, payment) => {
+      const amount =
+        typeof payment.amount === "string"
+          ? parseFloat(payment.amount)
+          : payment.amount;
+
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+  }, [sortedPayments]);
+
+  const totalTransactions = sortedPayments.length;
+
+  const averagePayment = totalTransactions
+    ? Math.round(totalPaid / totalTransactions)
+    : 0;
 
   const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+
+  const handlePaginationChange = async (
+    nextPage: number,
+    nextPageSize: number
+  ) => {
+    const sizeChanged = nextPageSize !== uiPageSize;
+    const targetPage = sizeChanged ? 1 : nextPage;
+
+    try {
+      setIsPaginationLoading(true);
+
+      await ensureRowsForPage(targetPage, nextPageSize);
+
+      setUiPage(targetPage);
+      setUiPageSize(nextPageSize);
+    } catch (error) {
+      console.error("Failed to load more group payments:", error);
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const columns = [
     {
@@ -79,9 +245,8 @@ const GroupPaymentHistoryTab = ({
       key: "customer",
       render: (_: any, record: any) =>
         formatName(
-          `${record.customer_firstname ?? ""} ${
-            record.customer_lastname ?? ""
-          }`.trim()
+          `${record.customer_firstname ?? ""} ${record.customer_lastname ?? ""
+            }`.trim()
         ) || "Unnamed Customer",
     },
     {
@@ -125,6 +290,7 @@ const GroupPaymentHistoryTab = ({
           >
             Edit
           </Button>
+
           <Button
             type="link"
             size="small"
@@ -137,10 +303,7 @@ const GroupPaymentHistoryTab = ({
     },
   ];
 
-  const totalTransactions = sortedPayments.length;
-  const averagePayment = totalTransactions
-    ? Math.round(totalPaid / totalTransactions)
-    : 0;
+  const progressiveTotal = payments.length + (hasMore ? BATCH_SIZE : 0);
 
   return (
     <Card bordered={false} className="rounded-xl shadow-sm">
@@ -154,6 +317,7 @@ const GroupPaymentHistoryTab = ({
               Track incoming repayments and keep customer journeys on schedule.
             </Text>
           </div>
+
           <Button
             onClick={() =>
               setSortOrder(sortOrder === "ascend" ? "descend" : "ascend")
@@ -166,26 +330,48 @@ const GroupPaymentHistoryTab = ({
 
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-emerald-50" styles={{ body: { padding: '14px 18px' } }}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-emerald-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Total Received"
                 value={totalPaid}
                 formatter={(value) => formatCurrency(value as number)}
-                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#059669' }}
+                valueStyle={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: "#059669",
+                }}
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-blue-50" styles={{ body: { padding: '14px 18px' } }}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-blue-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Transactions"
                 value={totalTransactions}
-                valueStyle={{ fontSize: 20, fontWeight: 600, color: '#1d4ed8' }}
+                valueStyle={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: "#1d4ed8",
+                }}
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} md={8}>
-            <Card bordered={false} className="rounded-xl bg-slate-50" styles={{ body: { padding: '14px 18px' } }}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-slate-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
               <Statistic
                 title="Average Ticket"
                 value={averagePayment}
@@ -199,9 +385,18 @@ const GroupPaymentHistoryTab = ({
         <Table
           columns={columns}
           dataSource={sortedPayments}
-          loading={isLoading || isFetching}
+          loading={isBootstrapping || isFetching || isPaginationLoading}
           rowKey="id"
-          pagination={{ pageSize: 6, showSizeChanger: true }}
+          pagination={{
+            current: uiPage,
+            pageSize: uiPageSize,
+            total: progressiveTotal,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            onChange: (page, pageSize) => {
+              void handlePaginationChange(page, pageSize);
+            },
+          }}
           scroll={{ x: 900 }}
           size="middle"
           className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-emerald-50/30"
@@ -220,7 +415,7 @@ const GroupPaymentHistoryTab = ({
             cycle: selectedPayment.cycle,
           }}
           payment={selectedPayment}
-          refetch={refetch}
+          refetch={refreshGroupPayments}
           approved_by={staffUserId ?? groupAdminId ?? null}
         />
       )}

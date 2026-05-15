@@ -9,6 +9,12 @@ import {
   useGetStaffRoleQuery,
 } from "../../roles/features/rolesSlice";
 
+import {
+  sanitizePhoneNumber,
+  phoneNumberInputProps,
+  phoneNumberAntdRules,
+} from "../../utils/index";
+
 interface AccountTabProps {
   user: any;
   setUser?: React.Dispatch<React.SetStateAction<any>>;
@@ -23,24 +29,25 @@ const AccountTab: React.FC<AccountTabProps> = ({
 }) => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [form] = Form.useForm();
+
   const { data: rolesData, isLoading: rolesLoading } = useGetAllRolesQuery(
     {},
-    { skip: !canEditRole },
+    { skip: !canEditRole }
   );
+
   const { data: currentRole } = useGetStaffRoleQuery(user?.id, {
     skip: !user?.id || !canEditRole,
   });
 
-  // State for showing alert messages
   const [serverStatus, setServerStatus] = useState("");
   const [color, setColor] = useState<
     "success" | "info" | "danger" | "primary" | "warning" | ""
   >("danger");
 
-  // Set form values when the user prop changes
   useEffect(() => {
     form.setFieldsValue({
       ...user,
+      phone_number: sanitizePhoneNumber(user?.phone_number),
       role_id:
         canEditRole && currentRole?.id ? String(currentRole.id) : undefined,
     });
@@ -56,7 +63,7 @@ const AccountTab: React.FC<AccountTabProps> = ({
           lastname: values.lastname,
           email: values.email,
           country_code: values.country_code,
-          phone_number: values.phone_number,
+          phone_number: sanitizePhoneNumber(values.phone_number),
           ...(canEditRole && values.role_id
             ? { role_id: Number(values.role_id) }
             : {}),
@@ -65,15 +72,13 @@ const AccountTab: React.FC<AccountTabProps> = ({
 
       await updateUser(payload).unwrap();
 
-      // Show success alert message
       setColor("success");
       setServerStatus("User updated successfully!");
       onUpdateSuccess?.();
     } catch (err: any) {
-      // Show actual error message returned from the API
       if (err?.data?.error) {
         setColor("danger");
-        setServerStatus(err.data.error); // Show the actual error message
+        setServerStatus(err.data.error);
       } else {
         setColor("danger");
         setServerStatus("Failed to save changes. Please try again.");
@@ -89,7 +94,6 @@ const AccountTab: React.FC<AccountTabProps> = ({
         Edit Account Information
       </h2>
 
-      {/* Show success/error Alert */}
       {serverStatus && (
         <Alert variant={color} className="mb-4">
           {serverStatus}
@@ -99,11 +103,10 @@ const AccountTab: React.FC<AccountTabProps> = ({
       <Form
         form={form}
         layout="vertical"
-        onFinish={handleSaveChanges} // Handle form submission
-        initialValues={user} // Set initial values from user prop
+        onFinish={handleSaveChanges}
+        initialValues={user}
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* First Name */}
           <Form.Item
             label="First Name"
             name="firstname"
@@ -112,12 +115,10 @@ const AccountTab: React.FC<AccountTabProps> = ({
             <Input />
           </Form.Item>
 
-          {/* Middle Name */}
           <Form.Item label="Middle Name" name="middlename">
             <Input />
           </Form.Item>
 
-          {/* Last Name */}
           <Form.Item
             label="Last Name"
             name="lastname"
@@ -126,7 +127,6 @@ const AccountTab: React.FC<AccountTabProps> = ({
             <Input />
           </Form.Item>
 
-          {/* Email */}
           <Form.Item
             label="Email"
             name="email"
@@ -138,18 +138,17 @@ const AccountTab: React.FC<AccountTabProps> = ({
             <Input />
           </Form.Item>
 
-          {/* Country Code */}
           <Form.Item label="Country Code" name="country_code">
             <Input />
           </Form.Item>
 
-          {/* Phone Number */}
           <Form.Item
             label="Phone Number"
             name="phone_number"
-            rules={[{ required: true, message: "Phone number is required!" }]}
+            rules={phoneNumberAntdRules}
+            normalize={(value) => sanitizePhoneNumber(value)}
           >
-            <Input />
+            <Input {...phoneNumberInputProps} />
           </Form.Item>
 
           {canEditRole && (

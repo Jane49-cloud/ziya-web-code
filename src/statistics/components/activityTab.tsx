@@ -15,7 +15,7 @@ import type { ActivityLog } from "../types/statistics";
 import { formatDate, statusColor } from "../utils/index";
 import SingleUserActivityDrawer from "./singleUserActivityDrawer";
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 20;
 
 const dedupeById = (items: ActivityLog[]) => {
     const map = new Map<number, ActivityLog>();
@@ -129,8 +129,6 @@ export const ActivityTab: React.FC = () => {
         return () => {
             mounted = false;
         };
-        // intentionally only on mount / initial empty state
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const filteredRows = useMemo(() => {

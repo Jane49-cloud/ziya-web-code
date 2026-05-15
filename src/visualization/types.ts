@@ -59,3 +59,6 @@ export type GlobalBorrowerPenetrationTrendPoint = {
     total_members: number;
     borrower_penetration_pct: number;
 };
+
+//new
+

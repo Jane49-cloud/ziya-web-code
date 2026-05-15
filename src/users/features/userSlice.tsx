@@ -1,12 +1,21 @@
 /* eslint-disable react-refresh/only-export-components */
 import { apiSlice } from "../../redux/api";
 
+type PaginationQuery = {
+  page?: number;
+  page_size?: number;
+};
+
 export const UserSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAllUsers: builder.query({
-      query: () => ({
+    getAllUsers: builder.query<any, PaginationQuery | void>({
+      query: (params) => ({
         url: `/staff/get/all`,
         method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
       }),
       providesTags: [{ type: "Users" }],
     }),
@@ -34,12 +43,34 @@ export const UserSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: "Users", id }],
     }),
+
+    //search
+    searchStaff: builder.query<UserData[], string>({
+      query: (q) => ({
+        url: "/staff/search",
+        method: "GET",
+        params: {
+          q: q.trim(),
+        },
+      }),
+      transformResponse: (response: any) => {
+        return Array.isArray(response?.staffs) ? response.staffs : [];
+      },
+    }),
+
   }),
 });
 
 export const {
   useGetAllUsersQuery,
+  useLazyGetAllUsersQuery,
+
+
   useUpdateUserMutation,
   useGetUserByIdQuery,
   useResetPasswordMutation,
+
+  //search
+  useLazySearchStaffQuery,
+
 } = UserSlice;
