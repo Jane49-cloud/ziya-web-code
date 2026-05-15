@@ -84,24 +84,24 @@ const DashboardOverview = () => {
   const wallets = useMemo(() => walletsRaw ?? [], [walletsRaw]);
   //const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
 
-  const loanAggregates = useMemo(() => {
-    return groupLoans.reduce(
-      (acc, loan) => {
-        acc.count += 1;
-        acc.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
-        acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
-        return acc;
-      },
-      { count: 0, disbursed: 0, outstanding: 0 },
-    );
-  }, [groupLoans]);
+  // const loanAggregates = useMemo(() => {
+  //   return groupLoans.reduce(
+  //     (acc, loan) => {
+  //       acc.count += 1;
+  //       acc.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
+  //       acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
+  //       return acc;
+  //     },
+  //     { count: 0, disbursed: 0, outstanding: 0 },
+  //   );
+  // }, [groupLoans]);
 
-  const totals = useMemo(() => {
-    const disbursed = loanAggregates.disbursed;
-    const outstanding = loanAggregates.outstanding;
-    const repaid = Math.max(disbursed - outstanding, 0);
-    return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
-  }, [loanAggregates]);
+  // const totals = useMemo(() => {
+  //   const disbursed = loanAggregates.disbursed;
+  //   const outstanding = loanAggregates.outstanding;
+  //   const repaid = Math.max(disbursed - outstanding, 0);
+  //   return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
+  // }, [loanAggregates]);
 
   // const repaymentRate =
   //   totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
