@@ -193,3 +193,13 @@ export const phoneNumberAntdRules = [
     },
   },
 ];
+
+//search utils
+
+export const lowerInput = (value?: string | number | null): string => {
+  return String(value ?? "").toLowerCase();
+};
+
+export const cleanLowerInput = (value?: string | number | null): string => {
+  return String(value ?? "").trim().toLowerCase();
+};

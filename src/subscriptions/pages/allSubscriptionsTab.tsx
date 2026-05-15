@@ -9,6 +9,7 @@ import {
   Tag,
   Typography,
   message,
+  Spin,
 } from "antd";
 import type { MenuProps } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,7 +25,7 @@ import {
   useLazySearchSubscriptionsQuery,
   useMarkSubscriptionPaidMutation,
 } from "../features";
-import { formatName, getRole, normalizeRole } from "../../utils";
+import { formatName, getRole, normalizeRole, cleanLowerInput, lowerInput } from "../../utils";
 import {
   normalizeSubscriptionCollection,
   toCurrency,
@@ -47,10 +48,12 @@ import {
   type UserRole,
 } from "../../utils/roles";
 
+
+
 const { Text, Title } = Typography;
 
 const BATCH_SIZE = 20;
-const SEARCH_DEBOUNCE_MS = 500;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const getCustomerName = (record: SubscriptionRecord) =>
   toDisplayText(
@@ -152,7 +155,10 @@ export default function AllSubscriptionsTab({
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
-  const isSearchMode = search.trim().length > 0;
+  const cleanSearch = cleanLowerInput(search);
+  const isSearchMode = cleanSearch.length > 0;
+
+  const isSearchLoading = isSearchMode && isSearchingSubscriptions;
 
   const syncRows = useCallback((nextRows: SubscriptionRecord[]) => {
     rowsRef.current = nextRows;
@@ -244,7 +250,7 @@ export default function AllSubscriptionsTab({
   useEffect(() => {
     if (!enabled) return;
 
-    const q = search.trim();
+    const q = cleanSearch;
 
     setUiPage(1);
 
@@ -290,7 +296,7 @@ export default function AllSubscriptionsTab({
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [enabled, search, searchSubscriptions]);
+  }, [enabled, cleanSearch, searchSubscriptions]);
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -639,15 +645,31 @@ export default function AllSubscriptionsTab({
             <Input
               allowClear
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => setSearch(lowerInput(event.target.value))}
               prefix={<FiSearch className="text-slate-400" />}
+
+              suffix={isSearchLoading ? <Spin size="small" /> : null}
+
               placeholder="Search customer, phone, group..."
               className="w-full lg:w-72"
             />
           </Space>
         </div>
 
-        {!tableRows.length ? (
+        {/* {!tableRows.length ? (
+          <Empty
+            description={
+              isSearchMode
+                ? "No subscriptions match your search"
+                : "No subscription records available"
+            }
+          /> */}
+
+        {isSearchLoading && !tableRows.length ? (
+          <div className="flex min-h-[260px] items-center justify-center">
+            <Spin size="large" />
+          </div>
+        ) : !tableRows.length ? (
           <Empty
             description={
               isSearchMode
@@ -655,6 +677,8 @@ export default function AllSubscriptionsTab({
                 : "No subscription records available"
             }
           />
+
+
         ) : (
           <Table
             rowKey={(record) =>
@@ -663,8 +687,10 @@ export default function AllSubscriptionsTab({
             columns={columns}
             dataSource={tableRows}
             loading={
-              isFetching || isSearchingSubscriptions || isPaginationLoading
+              // isFetching || isSearchingSubscriptions || isPaginationLoading
+              isFetching || isSearchLoading || isPaginationLoading
             }
+
             pagination={{
               current: uiPage,
               pageSize: uiPageSize,

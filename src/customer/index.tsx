@@ -11,7 +11,6 @@ import {
   Input,
   Tag,
   Tooltip,
-  // Statistic,
   Segmented,
   Button,
   Empty,
@@ -27,13 +26,16 @@ import {
   useToggleCustomerStatusMutation,
 } from "./features/customerSlice";
 import { ColumnsType } from "antd/es/table";
-import { customAvatar, formatName } from "../utils";
+import {
+  cleanLowerInput,
+  customAvatar,
+  formatName,
+  lowerInput,
+} from "../utils";
 import { Alert } from "../components/Alert";
 import { useNavigate } from "react-router-dom";
-// import { SubscriptionModal } from "./components/subscriptionModal";
 import moment from "moment";
 import { SearchOutlined, UserAddOutlined } from "@ant-design/icons";
-//import { FiUsers, FiCheckCircle, FiSlash } from "react-icons/fi";
 
 const BATCH_SIZE = 20;
 const MIN_SEARCH_LENGTH = 4;
@@ -41,9 +43,7 @@ const SEARCH_DEBOUNCE_MS = 600;
 
 type MembershipFilter = "all" | "inGroup" | "noGroup";
 
-const getMembershipParam = (
-  filter: MembershipFilter
-): 0 | 1 | undefined => {
+const getMembershipParam = (filter: MembershipFilter): 0 | 1 | undefined => {
   if (filter === "inGroup") return 1;
   if (filter === "noGroup") return 0;
   return undefined;
@@ -87,6 +87,7 @@ const isSubscriptionActive = (status: unknown) => {
   if (typeof status === "string") {
     return status.toLowerCase() === "active";
   }
+
   return Number(status) === 1;
 };
 
@@ -118,14 +119,7 @@ const CustomerManagement: FC = () => {
     undefined
   );
 
-  // const [selectedForSubscription, setSelectedForSubscription] =
-  //   useState<any>(null);
-  // const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-  // const [createSubscription, { isLoading: creatingSubscription }] =
-  //   useCreateSubscriptionMutation();
-
   const navigate = useNavigate();
-  // const { Text, Title } = Typography;
 
   const [searchText, setSearchText] = useState("");
   const [searchRows, setSearchRows] = useState<any[]>([]);
@@ -133,9 +127,11 @@ const CustomerManagement: FC = () => {
   const [membershipFilter, setMembershipFilter] =
     useState<MembershipFilter>("all");
 
+  const cleanSearchText = cleanLowerInput(searchText);
+
   const isSearchMode =
     membershipFilter !== "all" ||
-    searchText.trim().length >= MIN_SEARCH_LENGTH;
+    cleanSearchText.length >= MIN_SEARCH_LENGTH;
 
   const syncRows = useCallback((nextRows: any[]) => {
     rowsRef.current = nextRows;
@@ -243,7 +239,7 @@ const CustomerManagement: FC = () => {
     nextSearchText = searchText,
     nextMembershipFilter = membershipFilter
   ) => {
-    const rawQ = nextSearchText.trim();
+    const rawQ = cleanLowerInput(nextSearchText);
 
     const shouldSearch =
       nextMembershipFilter !== "all" || rawQ.length >= MIN_SEARCH_LENGTH;
@@ -286,14 +282,16 @@ const CustomerManagement: FC = () => {
   };
 
   const handleCustomerSearchChange = (value: string) => {
-    setSearchText(value);
+    const nextValue = lowerInput(value);
+
+    setSearchText(nextValue);
     setUiPage(1);
 
     if (searchTimerRef.current) {
       clearTimeout(searchTimerRef.current);
     }
 
-    const q = value.trim();
+    const q = cleanLowerInput(nextValue);
 
     if (!q && membershipFilter === "all") {
       searchRequestIdRef.current += 1;
@@ -314,7 +312,7 @@ const CustomerManagement: FC = () => {
     }
 
     searchTimerRef.current = setTimeout(() => {
-      void runCustomerSearch(value, membershipFilter);
+      void runCustomerSearch(nextValue, membershipFilter);
     }, SEARCH_DEBOUNCE_MS);
   };
 
@@ -346,7 +344,9 @@ const CustomerManagement: FC = () => {
 
   const handleUpdateCustomer = async (values: any) => {
     const id = selectedCustomer?.id;
+
     if (!id) return false;
+
     try {
       await updateCustomer({ id, ...values }).unwrap();
       setAlertMessage("Customer updated successfully!");
@@ -365,9 +365,11 @@ const CustomerManagement: FC = () => {
   const handleToggleStatus = async (id: string, status: number) => {
     try {
       await toggleStatus({ id, status }).unwrap();
+
       setAlertMessage(
         `Customer ${status === 1 ? "activated" : "deactivated"} successfully!`
       );
+
       setAlertType("success");
       await refreshCustomers();
     } catch (err: any) {
@@ -381,15 +383,6 @@ const CustomerManagement: FC = () => {
   };
 
   const normalizedCustomers = useMemo(() => rows, [rows]);
-
-  // const customerMetrics = useMemo(() => {
-  //   const total = normalizedCustomers.length;
-  //   const active = normalizedCustomers.filter((customer: any) =>
-  //     isSubscriptionActive(customer.subscription_status)
-  //   ).length;
-  //   const inactive = total - active;
-  //   return { total, active, inactive };
-  // }, [normalizedCustomers]);
 
   const tableCustomers = isSearchMode ? searchRows : normalizedCustomers;
 
@@ -449,12 +442,16 @@ const CustomerManagement: FC = () => {
         const fullName = `${record.firstname ?? ""} ${record.lastname ?? ""}`
           .trim()
           .replace(/\s+/g, " ");
+
         const fallbackName = record.name ?? "";
         const displayNameRaw = fullName || fallbackName;
+
         const displayName = displayNameRaw
           ? formatName(displayNameRaw)
           : "Unnamed Customer";
+
         const initial = displayName.charAt(0).toUpperCase() || "?";
+
         return (
           <Space align="center" size={10}>
             <Avatar
@@ -464,8 +461,10 @@ const CustomerManagement: FC = () => {
             >
               {initial}
             </Avatar>
+
             <div className="flex flex-col">
               <span className="text-slate-900 font-medium">{displayName}</span>
+
               <span className="text-slate-500 text-xs">
                 {record.phone_number || "No phone on file"}
               </span>
@@ -479,9 +478,6 @@ const CustomerManagement: FC = () => {
       key: "identification",
       render: (_: any, record: any) => (
         <Space direction="vertical" size={2}>
-          {/* <Tag color="geekblue" className="text-xs">
-            {record.identification_type || "Not provided"}
-          </Tag> */}
           <span className="text-slate-600 text-xs">
             {record.identification_number || "—"}
           </span>
@@ -522,6 +518,7 @@ const CustomerManagement: FC = () => {
       sorter: (a: any, b: any) => {
         const aTime = a?.last_login ? moment(a.last_login).valueOf() : 0;
         const bTime = b?.last_login ? moment(b.last_login).valueOf() : 0;
+
         return aTime - bTime;
       },
       defaultSortOrder: "descend",
@@ -559,11 +556,11 @@ const CustomerManagement: FC = () => {
   return (
     <div className="customer-management p-6 bg-slate-50/30 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-800 mb-1">
             Customer Management
           </h1>
+
           <p className="text-slate-500">
             Manage your customer base and track subscriptions
           </p>
@@ -575,93 +572,25 @@ const CustomerManagement: FC = () => {
           </Alert>
         )}
 
-        {/* Metrics Cards */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-         
-        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-slate-500 text-sm mb-1">Total Customers</p>
-              <Statistic
-                value={customerMetrics.total}
-                loading={isBootstrapping || isFetching}
-                valueStyle={{
-                  fontSize: "1.875rem",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                }}
-              />
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-indigo-50 flex items-center justify-center">
-              <FiUsers className="text-indigo-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-slate-500 text-sm mb-1">c
-                Active Subscriptions
-              </p>
-              <Statistic
-                value={customerMetrics.active}
-                loading={isBootstrapping || isFetching}
-                valueStyle={{
-                  fontSize: "1.875rem",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                }}
-              />
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <FiCheckCircle className="text-emerald-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="border border-slate-200 shadow-sm hover:shadow transition-shadow">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-slate-500 text-sm mb-1">
-                Inactive Subscriptions
-              </p>
-              <Statistic
-                value={customerMetrics.inactive}
-                loading={isBootstrapping || isFetching}
-                valueStyle={{
-                  fontSize: "1.875rem",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                }}
-              />
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center">
-              <FiSlash className="text-slate-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-      </div> */}
-
         <Card className="border border-slate-200 shadow-sm">
           <Tabs
             activeKey={activeTab}
             onChange={handleTabChange}
             className="customer-tabs"
           >
-            {/* Tab 1: Customer List */}
             <Tabs.TabPane tab="Customer List" key="1">
               <div className="space-y-4">
-                {/* Controls */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-4 border-b border-slate-100">
                   <div>
                     <h3 className="text-base font-medium text-slate-800">
                       All Customers
                     </h3>
+
                     <p className="text-sm text-slate-500">
                       View and manage customer information
                     </p>
                   </div>
+
                   <Space wrap>
                     <Input
                       allowClear
@@ -673,21 +602,6 @@ const CustomerManagement: FC = () => {
                       placeholder="Search customers..."
                       className="w-full md:w-60"
                     />
-
-                    {/* subscription filter e */}
-                    {/*
-                    <Segmented
-                      value={subscriptionFilter}
-                      options={[
-                        { label: "All", value: "all" },
-                        { label: "Active", value: "active" },
-                        { label: "Inactive", value: "inactive" },
-                      ]}
-                      onChange={(value) =>
-                        setSubscriptionFilter(value as SubscriptionFilter)
-                      }
-                    />
-                    */}
 
                     <Segmented
                       value={membershipFilter}
@@ -713,7 +627,6 @@ const CustomerManagement: FC = () => {
                   </Space>
                 </div>
 
-                {/* Table */}
                 <Table
                   dataSource={tableCustomers}
                   columns={columns}
@@ -770,7 +683,7 @@ const CustomerManagement: FC = () => {
           )}
         </Modal>
       </div>
-    </div >
+    </div>
   );
 };
 

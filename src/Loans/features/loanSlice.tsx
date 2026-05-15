@@ -41,6 +41,17 @@ export const loansSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    //search group loans
+    searchGroupLoans: builder.query<any, { q: string }>({
+      query: ({ q }) => ({
+        url: "/group-loans/search",
+        method: "GET",
+        params: {
+          q: q || "all",
+        },
+      }),
+    }),
+
 
 
     getLoansByCustomerId: builder.query({
@@ -71,14 +82,25 @@ export const loansSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+
+
+
   }),
+
+
 });
+
+
+
 
 export const {
   useCreateLoanMutation,
 
   useGetAllLoansQuery,
   useLazyGetAllGroupLoansQuery,
+
+  useLazySearchGroupLoansQuery,
 
   useGetLoansByCustomerIdQuery,
   useUpdateLoanMutation,

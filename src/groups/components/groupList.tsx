@@ -19,7 +19,7 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { formatName, getInitials } from "../../utils";
+import { formatName, getInitials, lowerInput } from "../../utils";
 
 const { Text, Title } = Typography;
 
@@ -276,7 +276,7 @@ const GroupTable: FC<GroupTableProps> = ({
           // placeholder="Search by group name, manager, tag, or admin..."
           placeholder="Search by group name"
           value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => onSearchChange(lowerInput(event.target.value))}
           size="large"
           className="w-full sm:w-96"
           style={{ borderRadius: "8px" }}

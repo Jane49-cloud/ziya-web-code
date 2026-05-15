@@ -2,6 +2,8 @@ import { apiSlice } from "../../redux/api";
 import type { SubscriptionApiResponse } from "../types";
 
 
+
+
 type PaginationQuery = {
   page?: number;
   page_size?: number;
@@ -96,7 +98,7 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
         },
       }),
       transformResponse: (response: any) => {
-        // if returns a direct array.
+
         if (Array.isArray(response)) return response;
 
         const rows =
