@@ -49,6 +49,13 @@ export default tseslint.config({
 })
 
 ```
+summaries removed (kutegea izo api's):
+Group Loan Portfolio
+Payment History
+group analytics
+
+Filters in Loans Management
+
 
 <!-- //13th march meet before live -->
 
@@ -62,9 +69,16 @@ Visualizations
 remove summaries from pages //done
 
 
+
+
 My created by //done
 My managed. //done
 
+remove edit loans and edit payment 
+
 Groups page analytics (itarudishia api ikiwa ready wadau)
 Business  page check it 
+
+add member only list those not in groups
+sanitize search
 go live locally 

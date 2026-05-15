@@ -12,7 +12,7 @@ import {
 import { useSearchParams } from "react-router-dom";
 import {
   FiPlusCircle,
- // FiTrendingUp,
+  // FiTrendingUp,
   FiUserCheck,
 } from "react-icons/fi";
 
@@ -32,7 +32,7 @@ import {
   useChangeRelationshipManagerMutation,
   useUpdateGroupMemberCountMutation,
 } from "./features";
-import { getUser } from "../utils";
+import { getUser, cleanLowerInput } from "../utils";
 
 const { Title, Text } = Typography;
 
@@ -169,7 +169,8 @@ const GroupTabs = () => {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRequestIdRef = useRef(0);
 
-  const isSearchMode = searchText.trim().length > 0;
+  const cleanSearch = cleanLowerInput(searchText);
+  const isSearchMode = cleanSearch.length > 0;
 
   const [fetchAllGroups, allFetchState] = useLazyGetAllGroupsQuery();
   const [fetchMyCreatedGroups, createdFetchState] =
@@ -270,7 +271,7 @@ const GroupTabs = () => {
   }, [activeTab, activeListKey]);
 
   useEffect(() => {
-    const q = searchText.trim();
+    const q = cleanSearch;
 
     setUiStates((prev) => ({
       all: { ...prev.all, page: 1 },
@@ -316,7 +317,7 @@ const GroupTabs = () => {
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [searchText, searchGroups]);
+  }, [cleanSearch, searchGroups]);
 
   const getSearchRowsForTab = (key: ListKey, rows: GroupRecord[]) => {
     if (key === "created") {
@@ -328,9 +329,9 @@ const GroupTabs = () => {
     if (key === "managed") {
       return currentStaffId
         ? rows.filter(
-            (group) =>
-              Number(getRelationshipManager(group) ?? 0) === currentStaffId
-          )
+          (group) =>
+            Number(getRelationshipManager(group) ?? 0) === currentStaffId
+        )
         : [];
     }
 
