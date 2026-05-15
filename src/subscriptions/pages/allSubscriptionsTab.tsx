@@ -9,6 +9,7 @@ import {
   Tag,
   Typography,
   message,
+  Spin,
 } from "antd";
 import type { MenuProps } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -52,7 +53,7 @@ import {
 const { Text, Title } = Typography;
 
 const BATCH_SIZE = 20;
-const SEARCH_DEBOUNCE_MS = 500;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const getCustomerName = (record: SubscriptionRecord) =>
   toDisplayText(
@@ -156,6 +157,8 @@ export default function AllSubscriptionsTab({
 
   const cleanSearch = cleanLowerInput(search);
   const isSearchMode = cleanSearch.length > 0;
+
+  const isSearchLoading = isSearchMode && isSearchingSubscriptions;
 
   const syncRows = useCallback((nextRows: SubscriptionRecord[]) => {
     rowsRef.current = nextRows;
@@ -644,13 +647,29 @@ export default function AllSubscriptionsTab({
               value={search}
               onChange={(event) => setSearch(lowerInput(event.target.value))}
               prefix={<FiSearch className="text-slate-400" />}
+
+              suffix={isSearchLoading ? <Spin size="small" /> : null}
+
               placeholder="Search customer, phone, group..."
               className="w-full lg:w-72"
             />
           </Space>
         </div>
 
-        {!tableRows.length ? (
+        {/* {!tableRows.length ? (
+          <Empty
+            description={
+              isSearchMode
+                ? "No subscriptions match your search"
+                : "No subscription records available"
+            }
+          /> */}
+
+        {isSearchLoading && !tableRows.length ? (
+          <div className="flex min-h-[260px] items-center justify-center">
+            <Spin size="large" />
+          </div>
+        ) : !tableRows.length ? (
           <Empty
             description={
               isSearchMode
@@ -658,6 +677,8 @@ export default function AllSubscriptionsTab({
                 : "No subscription records available"
             }
           />
+
+
         ) : (
           <Table
             rowKey={(record) =>
@@ -666,8 +687,10 @@ export default function AllSubscriptionsTab({
             columns={columns}
             dataSource={tableRows}
             loading={
-              isFetching || isSearchingSubscriptions || isPaginationLoading
+              // isFetching || isSearchingSubscriptions || isPaginationLoading
+              isFetching || isSearchLoading || isPaginationLoading
             }
+
             pagination={{
               current: uiPage,
               pageSize: uiPageSize,

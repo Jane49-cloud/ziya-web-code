@@ -23,7 +23,6 @@ import {
 import {
   useLazyGetGroupMembersQuery,
   useLazySearchGroupMembersQuery,
-
   useRemoveGroupMemberMutation,
   useAddGroupMemberMutation,
 } from "../features";
@@ -32,7 +31,12 @@ import {
   useLazyGetAllCustomersQuery,
   useLazySearchCustomersQuery,
 } from "../../customer/features/customerSlice";
-import { formatName, getInitials } from "../../utils";
+import {
+  cleanLowerInput,
+  formatName,
+  getInitials,
+  lowerInput,
+} from "../../utils";
 
 const { Title } = Typography;
 
@@ -162,8 +166,11 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
-  const isSearchingMembersMode = searchMembers.trim().length > 0;
-  const isSearchingCustomersMode = searchCustomers.trim().length > 0;
+  const cleanMemberSearch = cleanLowerInput(searchMembers);
+  const cleanCustomerSearch = cleanLowerInput(searchCustomers);
+
+  const isSearchingMembersMode = cleanMemberSearch.length > 0;
+  const isSearchingCustomersMode = cleanCustomerSearch.length > 0;
 
   const [removeMember] = useRemoveGroupMemberMutation();
   const [addMember] = useAddGroupMemberMutation();
@@ -329,7 +336,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
   }, [modalOpen, refreshCustomers]);
 
   useEffect(() => {
-    const q = searchMembers.trim();
+    const q = cleanMemberSearch;
 
     setUiPage(1);
 
@@ -374,12 +381,12 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [groupId, searchMembers, searchGroupMembers]);
+  }, [groupId, cleanMemberSearch, searchGroupMembers]);
 
   useEffect(() => {
     if (!modalOpen) return;
 
-    const q = searchCustomers.trim();
+    const q = cleanCustomerSearch;
 
     if (customerSearchTimerRef.current) {
       clearTimeout(customerSearchTimerRef.current);
@@ -421,7 +428,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         clearTimeout(customerSearchTimerRef.current);
       }
     };
-  }, [modalOpen, searchCustomers, searchCustomerList]);
+  }, [modalOpen, cleanCustomerSearch, searchCustomerList]);
 
   const handleAddMember = async (cust: any) => {
     try {
@@ -515,23 +522,21 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       return [];
     }
 
-    const searchText = searchCustomers.trim().toLowerCase();
-
     return customers.filter((cust: any) => {
-      const fullName = formatName(
-        `${cust.firstname ?? ""} ${cust.lastname ?? ""}`
-      ).toLowerCase();
+      const fullName = lowerInput(
+        formatName(`${cust.firstname ?? ""} ${cust.lastname ?? ""}`)
+      );
 
-      const phone = String(cust.phone_number ?? "").toLowerCase();
-      const email = String(cust.email ?? "").toLowerCase();
+      const phone = lowerInput(cust.phone_number);
+      const email = lowerInput(cust.email);
 
       return (
-        fullName.includes(searchText) ||
-        phone.includes(searchText) ||
-        email.includes(searchText)
+        fullName.includes(cleanCustomerSearch) ||
+        phone.includes(cleanCustomerSearch) ||
+        email.includes(cleanCustomerSearch)
       );
     });
-  }, [customers, modalOpen, searchCustomers]);
+  }, [customers, modalOpen, cleanCustomerSearch]);
 
   const pagedCustomers = useMemo(() => {
     if (isSearchingCustomersMode) {
@@ -603,7 +608,6 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         ),
       render: (value: string | null) => value || "—",
     },
-
     {
       title: "Action",
       key: "action",
@@ -647,7 +651,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
             placeholder="Search members..."
             value={searchMembers}
             onChange={(e) => {
-              setSearchMembers(e.target.value);
+              setSearchMembers(lowerInput(e.target.value));
               setUiPage(1);
             }}
             style={{ width: 240 }}
@@ -705,9 +709,10 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
           value={searchCustomers}
           onChange={(e) => {
             setCustomerPage(1);
-            setSearchCustomers(e.target.value);
+            setSearchCustomers(lowerInput(e.target.value));
           }}
           className="mb-4"
+          allowClear
         />
 
         {customersLoading ? (
@@ -784,14 +789,12 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
             <Button
               loading={isCustomerPaginationLoading}
               onClick={() => void loadMoreCustomers()}
-
             >
               Load More
             </Button>
           </div>
         )}
       </Modal>
-
     </Card>
   );
 };

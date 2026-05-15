@@ -6,9 +6,9 @@ import {
   Typography,
   Space,
   Button,
-  Statistic,
-  Row,
-  Col,
+  // Statistic,
+  // Row,
+  // Col,
 } from "antd";
 import {
   useCallback,
@@ -199,24 +199,24 @@ const GroupPaymentHistoryTab = ({
     [payments, sortOrder]
   );
 
-  const totalPaid = useMemo(() => {
-    return sortedPayments.reduce((sum, payment) => {
-      const amount =
-        typeof payment.amount === "string"
-          ? parseFloat(payment.amount)
-          : payment.amount;
+  // const totalPaid = useMemo(() => {
+  //   return sortedPayments.reduce((sum, payment) => {
+  //     const amount =
+  //       typeof payment.amount === "string"
+  //         ? parseFloat(payment.amount)
+  //         : payment.amount;
 
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
-  }, [sortedPayments]);
+  //     return sum + (isNaN(amount) ? 0 : amount);
+  //   }, 0);
+  // }, [sortedPayments]);
 
-  const totalTransactions = sortedPayments.length;
+  // const totalTransactions = sortedPayments.length;
 
-  const averagePayment = totalTransactions
-    ? Math.round(totalPaid / totalTransactions)
-    : 0;
+  // const averagePayment = totalTransactions
+  //   ? Math.round(totalPaid / totalTransactions)
+  //   : 0;
 
-  const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+  // const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -283,13 +283,13 @@ const GroupPaymentHistoryTab = ({
       key: "actions",
       render: (_: any, record: any) => (
         <Space size="small">
-          <Button
+          {/* <Button
             type="link"
             size="small"
             onClick={() => setSelectedPayment(record)}
           >
             Edit
-          </Button>
+          </Button> */}
 
           <Button
             type="link"
@@ -328,7 +328,7 @@ const GroupPaymentHistoryTab = ({
           </Button>
         </div>
 
-        <Row gutter={[16, 16]}>
+        {/* <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
             <Card
               bordered={false}
@@ -380,7 +380,7 @@ const GroupPaymentHistoryTab = ({
               />
             </Card>
           </Col>
-        </Row>
+        </Row> */}
 
         <Table
           columns={columns}

@@ -20,12 +20,13 @@ import {
   DatePicker,
   Progress,
   Badge,
+  Spin,
 } from "antd";
 import {
   EyeOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  FilterOutlined,
+  //FilterOutlined,
   ClearOutlined,
   UserOutlined,
   CalendarOutlined,
@@ -33,8 +34,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
 import type { ColumnsType } from "antd/es/table";
-import { formatDate, customAvatar, formatName } from "../../utils";
-import { useLazyGetAllGroupLoansQuery } from "../features/loanSlice";
+import { formatDate, customAvatar, formatName, lowerInput, cleanLowerInput } from "../../utils";
+import {
+  useLazyGetAllGroupLoansQuery,
+  useLazySearchGroupLoansQuery,
+} from "../features/loanSlice";
 import dayjs from "dayjs";
 
 const { Search } = Input;
@@ -42,6 +46,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const BATCH_SIZE = 20;
+const DEBOUNCE_MS = 300;
 
 export interface GroupLoan {
   id: number;
@@ -99,9 +104,17 @@ const LoanTable: FC = () => {
 
   const [fetchGroupLoans, { isFetching }] = useLazyGetAllGroupLoansQuery();
 
+  const [searchGroupLoans, { isFetching: isSearchingGroupLoans }] = useLazySearchGroupLoansQuery();
+
   const rowsRef = useRef<GroupLoan[]>([]);
 
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestIdRef = useRef(0);
+
   const [data, setData] = useState<GroupLoan[]>([]);
+
+  const [searchRows, setSearchRows] = useState<GroupLoan[]>([]);
+
   const [backendPage, setBackendPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -115,9 +128,22 @@ const LoanTable: FC = () => {
   const [dateRange, setDateRange] = useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
   >(null);
-  const [showFilters, setShowFilters] = useState(false);
 
-  const isLoading = isBootstrapping || isFetching || isPaginationLoading;
+  const [showFilters, _] = useState(false);
+  // const [showFilters, setShowFilters] = useState(false);
+
+  // const isLoading = isBootstrapping || isFetching || isPaginationLoading;
+  // const cleanSearch = cleanLowerInput(searchText);
+
+  const cleanSearch = cleanLowerInput(searchText);
+  const isSearchMode = cleanSearch.length > 0;
+  const isSearchLoading = isSearchMode && isSearchingGroupLoans;
+
+  const isLoading =
+    isBootstrapping ||
+    isFetching ||
+    isPaginationLoading ||
+    isSearchLoading;
 
   const syncRows = useCallback((nextRows: GroupLoan[]) => {
     rowsRef.current = nextRows;
@@ -204,26 +230,101 @@ const LoanTable: FC = () => {
     bootstrap();
   }, [loadBatch]);
 
+
+  useEffect(() => {
+    const q = cleanSearch;
+
+    setUiPage(1);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    if (!q) {
+      searchRequestIdRef.current += 1;
+      setSearchRows([]);
+      return;
+    }
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await searchGroupLoans({ q }).unwrap();
+
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows(
+          dedupeGroupLoanRows(extractGroupLoanRows(result)),
+        );
+      } catch (error: any) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchRows([]);
+
+        message.error(
+          error?.data?.message ||
+          error?.message ||
+          "Failed to search group loans",
+        );
+      }
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [cleanSearch, searchGroupLoans]);
+
+
+
+  // const filteredData = useMemo(() => {
+  //   return data.filter((item) => {
+
+  //     // const search = searchText.toLowerCase();
+  //     const search = cleanSearch;
+
+  //     const rawName = `${item?.recipient_firstname ?? ""} ${item?.recipient_lastname ?? ""
+  //       }`
+  //       .trim()
+  //       .replace(/\s+/g, " ");
+
+  //     const fullName = formatName(rawName);
+  //     const isPaid = Number(item.balance) === 0;
+
+  //     const matchesSearch =
+  //       !search ||
+  //       String(item.id ?? "").includes(search) ||
+  //       item.group_name?.toLowerCase().includes(search) ||
+  //       fullName.toLowerCase().includes(search) ||
+  //       item.amount?.toString().includes(search) ||
+  //       item.balance?.toString().includes(search) ||
+  //       formatDate(item.date_issued)?.toLowerCase().includes(search);
+
+  //     const matchesStatus =
+  //       statusFilter === "all" ||
+  //       (statusFilter === "paid" && isPaid) ||
+  //       (statusFilter === "active" && !isPaid) ||
+  //       (statusFilter === "overdue" && !isPaid);
+
+  //     const hasDateFilter = Boolean(dateRange?.[0] && dateRange?.[1]);
+
+  //     const matchesDateRange =
+  //       !hasDateFilter ||
+  //       (dayjs(item.date_issued).isAfter(dayjs(dateRange?.[0])) &&
+  //         dayjs(item.date_issued).isBefore(dayjs(dateRange?.[1])));
+
+  //     return matchesSearch && matchesStatus && matchesDateRange;
+  //   });
+  // }, [data, cleanSearch, statusFilter, dateRange]);
+
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      const search = searchText.toLowerCase();
+    const sourceRows = isSearchMode ? searchRows : data;
 
-      const rawName = `${item?.recipient_firstname ?? ""} ${item?.recipient_lastname ?? ""
-        }`
-        .trim()
-        .replace(/\s+/g, " ");
-
-      const fullName = formatName(rawName);
+    return sourceRows.filter((item) => {
       const isPaid = Number(item.balance) === 0;
-
-      const matchesSearch =
-        !searchText ||
-        String(item.id ?? "").includes(search) ||
-        item.group_name?.toLowerCase().includes(search) ||
-        fullName.toLowerCase().includes(search) ||
-        item.amount?.toString().includes(search) ||
-        item.balance?.toString().includes(search) ||
-        formatDate(item.date_issued)?.toLowerCase().includes(search);
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -238,18 +339,20 @@ const LoanTable: FC = () => {
         (dayjs(item.date_issued).isAfter(dayjs(dateRange?.[0])) &&
           dayjs(item.date_issued).isBefore(dayjs(dateRange?.[1])));
 
-      return matchesSearch && matchesStatus && matchesDateRange;
+      return matchesStatus && matchesDateRange;
     });
-  }, [data, searchText, statusFilter, dateRange]);
+  }, [data, searchRows, isSearchMode, statusFilter, dateRange]);
+
 
   const hasActiveFilters =
-    Boolean(searchText.trim()) ||
+    //Boolean(cleanSearch) ||
+    isSearchMode ||
     statusFilter !== "all" ||
     Boolean(dateRange?.[0] && dateRange?.[1]);
 
   useEffect(() => {
     setUiPage(1);
-  }, [searchText, statusFilter, dateRange]);
+  }, [isSearchMode, cleanSearch, statusFilter, dateRange]);
 
   const progressiveTotal = hasActiveFilters
     ? filteredData.length
@@ -575,10 +678,10 @@ const LoanTable: FC = () => {
                 Loans Management
               </span>
 
-              <Badge
+              {/* <Badge
                 count={filteredData.length}
                 style={{ backgroundColor: "#52c41a" }}
-              />
+              /> */}
             </div>
 
             <div className="my-2 flex w-full flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
@@ -586,19 +689,20 @@ const LoanTable: FC = () => {
                 placeholder="Search loans, recipients, groups..."
                 allowClear
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(e) => setSearchText(lowerInput(e.target.value))}
                 className="w-full sm:w-64"
                 prefix={<UserOutlined className="text-gray-400" />}
+                suffix={isSearchLoading ? <Spin size="small" /> : null}
               />
 
-              <Button
+              {/* <Button
                 icon={<FilterOutlined />}
                 onClick={() => setShowFilters(!showFilters)}
                 type={showFilters ? "primary" : "default"}
                 ghost={showFilters}
               >
                 Filters
-              </Button>
+              </Button> */}
 
               <Button
                 icon={<DownloadOutlined />}

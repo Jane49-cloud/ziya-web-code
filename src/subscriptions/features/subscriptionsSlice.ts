@@ -98,7 +98,7 @@ export const subscriptionsApi = apiSlice.injectEndpoints({
         },
       }),
       transformResponse: (response: any) => {
-        // if returns a direct array.
+
         if (Array.isArray(response)) return response;
 
         const rows =
