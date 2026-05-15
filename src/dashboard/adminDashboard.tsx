@@ -84,27 +84,27 @@ const DashboardOverview = () => {
   const wallets = useMemo(() => walletsRaw ?? [], [walletsRaw]);
   //const groups = useMemo(() => groupsData?.groups ?? [], [groupsData?.groups]);
 
-  const loanAggregates = useMemo(() => {
-    return groupLoans.reduce(
-      (acc, loan) => {
-        acc.count += 1;
-        acc.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
-        acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
-        return acc;
-      },
-      { count: 0, disbursed: 0, outstanding: 0 },
-    );
-  }, [groupLoans]);
+  // const loanAggregates = useMemo(() => {
+  //   return groupLoans.reduce(
+  //     (acc, loan) => {
+  //       acc.count += 1;
+  //       acc.disbursed += toNumber(loan.amount ?? loan.disbursed_amount);
+  //       acc.outstanding += toNumber(loan.balance ?? loan.outstanding_balance);
+  //       return acc;
+  //     },
+  //     { count: 0, disbursed: 0, outstanding: 0 },
+  //   );
+  // }, [groupLoans]);
 
-  const totals = useMemo(() => {
-    const disbursed = loanAggregates.disbursed;
-    const outstanding = loanAggregates.outstanding;
-    const repaid = Math.max(disbursed - outstanding, 0);
-    return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
-  }, [loanAggregates]);
+  // const totals = useMemo(() => {
+  //   const disbursed = loanAggregates.disbursed;
+  //   const outstanding = loanAggregates.outstanding;
+  //   const repaid = Math.max(disbursed - outstanding, 0);
+  //   return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
+  // }, [loanAggregates]);
 
-  const repaymentRate =
-    totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
+  // const repaymentRate =
+  //   totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
   // const activeGroupCount = useMemo(() => {
   //   if (groups.length) return groups.length;
@@ -310,7 +310,7 @@ const DashboardOverview = () => {
       key: "groups",
       title: "Active Groups",
       value: backendTotalGroups.toLocaleString(),
-      helper: "Borrowing collectives",
+      // helper: "Borrowing collectives",
       icon: <TeamOutlined />,
       gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       trend: undefined as string | undefined,
@@ -321,7 +321,7 @@ const DashboardOverview = () => {
       key: "customers",
       title: "Total Customers",
       value: backendTotalCustomers.toLocaleString(),
-      helper: "Registered members",
+      // helper: "Registered members",
       icon: <UserOutlined />,
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       trend: undefined as string | undefined,
@@ -332,10 +332,10 @@ const DashboardOverview = () => {
       key: "disbursed",
       title: "Total Disbursed",
       value: formatCurrency(backendTotalLoansDisbursed),
-      helper: `${totals.loansCount.toLocaleString()} loans`,
+      // helper: `${totals.loansCount.toLocaleString()} loans`,
       icon: <DollarCircleOutlined />,
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      trend: `${repaymentRate.toFixed(1)}% repaid` as string | undefined,
+      // trend: `${repaymentRate.toFixed(1)}% repaid` as string | undefined,
       trendUp: true as boolean | undefined,
       loading: loansLoadingState,
     },
@@ -343,10 +343,10 @@ const DashboardOverview = () => {
       key: "outstanding",
       title: "Outstanding Balance",
       value: formatCurrency(backendTotalUnpaidLoans),
-      helper: `Recovery ${repaymentRate.toFixed(1)}%`,
+      // helper: `Recovery ${repaymentRate.toFixed(1)}%`,
       icon: <WalletOutlined />,
       gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-      trend: `${portfolioUtilization.toFixed(1)}% deployed` as string | undefined,
+      // trend: `${portfolioUtilization.toFixed(1)}% deployed` as string | undefined,
       trendUp: (portfolioUtilization < 80) as boolean | undefined,
       loading: loansLoadingState,
     },
@@ -461,9 +461,9 @@ const DashboardOverview = () => {
                         {card.value}
                       </div>
                       <div className="flex items-center justify-between pt-1">
-                        <Text className="text-[11px] text-slate-400">
+                        {/* <Text className="text-[11px] text-slate-400">
                           {card.helper}
-                        </Text>
+                        </Text> */}
                         {card.trend !== undefined && (
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${card.trendUp
