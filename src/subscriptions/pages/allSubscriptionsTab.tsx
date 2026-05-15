@@ -24,7 +24,7 @@ import {
   useLazySearchSubscriptionsQuery,
   useMarkSubscriptionPaidMutation,
 } from "../features";
-import { formatName, getRole, normalizeRole } from "../../utils";
+import { formatName, getRole, normalizeRole, cleanLowerInput, lowerInput } from "../../utils";
 import {
   normalizeSubscriptionCollection,
   toCurrency,
@@ -46,6 +46,8 @@ import {
   canAccess,
   type UserRole,
 } from "../../utils/roles";
+
+
 
 const { Text, Title } = Typography;
 
@@ -152,7 +154,8 @@ export default function AllSubscriptionsTab({
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
-  const isSearchMode = search.trim().length > 0;
+  const cleanSearch = cleanLowerInput(search);
+  const isSearchMode = cleanSearch.length > 0;
 
   const syncRows = useCallback((nextRows: SubscriptionRecord[]) => {
     rowsRef.current = nextRows;
@@ -244,7 +247,7 @@ export default function AllSubscriptionsTab({
   useEffect(() => {
     if (!enabled) return;
 
-    const q = search.trim();
+    const q = cleanSearch;
 
     setUiPage(1);
 
@@ -290,7 +293,7 @@ export default function AllSubscriptionsTab({
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [enabled, search, searchSubscriptions]);
+  }, [enabled, cleanSearch, searchSubscriptions]);
 
   const handlePaginationChange = async (
     nextPage: number,
@@ -639,7 +642,7 @@ export default function AllSubscriptionsTab({
             <Input
               allowClear
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => setSearch(lowerInput(event.target.value))}
               prefix={<FiSearch className="text-slate-400" />}
               placeholder="Search customer, phone, group..."
               className="w-full lg:w-72"
