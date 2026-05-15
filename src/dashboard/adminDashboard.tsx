@@ -103,8 +103,8 @@ const DashboardOverview = () => {
     return { disbursed, outstanding, repaid, loansCount: loanAggregates.count };
   }, [loanAggregates]);
 
-  const repaymentRate =
-    totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
+  // const repaymentRate =
+  //   totals.disbursed > 0 ? (totals.repaid / totals.disbursed) * 100 : 0;
 
   // const activeGroupCount = useMemo(() => {
   //   if (groups.length) return groups.length;
