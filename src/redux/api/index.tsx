@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
 
   // baseUrl: "http://
   // baseUrl: "https://stagingapi.ziya.co.ke/api/v2",
-  baseUrl: "https://v3.1.0.ziya.co.ke/api/v2",
+   baseUrl: "https://v3.1.0.ziya.co.ke/api/v2",
 
   prepareHeaders: (headers) => {
     const accessToken = localStorage.getItem("ziya-access");

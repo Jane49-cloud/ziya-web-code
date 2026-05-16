@@ -1,62 +1,38 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Card,
   Table,
   Typography,
-  Spin,
-  Card,
+  Space,
   Button,
-  Modal,
+  Tag,
   Input,
-  List,
-  Avatar,
-  Popconfirm,
-  message,
+  // Statistic,
+  // Row,
+  // Col,
 } from "antd";
-import {
-  useLazyGetGroupMembersQuery,
-  useLazySearchGroupMembersQuery,
-  useRemoveGroupMemberMutation,
-  useAddGroupMemberMutation,
-} from "../features";
-import { UserAddOutlined, DeleteOutlined } from "@ant-design/icons";
-import {
-  useLazyGetAllCustomersQuery,
-  useLazySearchCustomersQuery,
-} from "../../customer/features/customerSlice";
-import {
-  cleanLowerInput,
-  formatName,
-  getInitials,
-  lowerInput,
-} from "../../utils";
+import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
+import { useLazyGetGroupLoansQuery } from "../features";
+import GroupLoanFormModal from "./groupFormModal";
+import GroupPaymentFormModal from "./groupPaymentFormModal";
+import { cleanLowerInput, formatName, getUser } from "../../utils";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const BATCH_SIZE = 20;
-const CUSTOMER_BATCH_SIZE = 20;
-const CUSTOMER_FIRST_PAGE = 0;
-const MEMBER_SEARCH_DEBOUNCE_MS = 500;
-const CUSTOMER_SEARCH_DEBOUNCE_MS = 400;
 
-interface Props {
+interface GroupLoanHistoryTabProps {
   groupId: number;
-  // isAdmin?: boolean;
-  groupAdminId?: number | string | null;
+  groupAdminId: number;
 }
 
-const normalizeGroupMembersCollection = (response: any) => {
+const normalizeGroupLoansCollection = (response: any) => {
   const value =
-    response?.members?.data ??
-    response?.members ??
-    response?.data?.members ??
+    response?.loans?.data ??
+    response?.loans ??
+    response?.data?.loans ??
     response?.data?.data ??
     response?.data ??
     response;
@@ -64,40 +40,18 @@ const normalizeGroupMembersCollection = (response: any) => {
   return Array.isArray(value) ? value : [];
 };
 
-const normalizeCustomersCollection = (response: any) => {
-  const value =
-    response?.customers?.data ??
-    response?.customers ??
-    response?.data?.customers ??
-    response?.data?.data ??
-    response?.data ??
-    response;
-
-  return Array.isArray(value) ? value : [];
-};
-
-const getMemberCacheKey = (member: any) =>
+const getGroupLoanCacheKey = (loan: any) =>
   String(
-    member?.id ??
-    member?.customer_id ??
-    member?.phone_number ??
-    `${member?.firstname ?? ""}-${member?.lastname ?? ""}`,
+    loan?.id ??
+    `${loan?.group_id ?? ""}-${loan?.issued_to ?? ""}-${loan?.cycle ?? ""}-${loan?.amount ?? ""
+    }`
   );
 
-const getCustomerCacheKey = (customer: any) =>
-  String(
-    customer?.id ??
-    customer?.customer_id ??
-    customer?.phone_number ??
-    customer?.identification_number ??
-    `${customer?.firstname ?? ""}-${customer?.lastname ?? ""}`,
-  );
-
-const dedupeMemberRows = (items: any[]) => {
+const dedupeGroupLoanRows = (items: any[]) => {
   const seen = new Set<string>();
 
   return items.filter((item) => {
-    const key = getMemberCacheKey(item);
+    const key = getGroupLoanCacheKey(item);
 
     if (seen.has(key)) return false;
 
@@ -106,101 +60,64 @@ const dedupeMemberRows = (items: any[]) => {
   });
 };
 
-const dedupeCustomerRows = (items: any[]) => {
-  const seen = new Set<string>();
+const sanitizeSearchInput = (value?: string | number | null) =>
+  cleanLowerInput(value)
+    .replace(/[^a-z0-9\s@._-]/g, "")
+    .replace(/\s+/g, " ");
 
-  return items.filter((item) => {
-    const key = getCustomerCacheKey(item);
+const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
+  groupId,
+  groupAdminId,
+}) => {
+  const staffUserId = useMemo(() => {
+    const user = getUser();
+    if (!user?.id) return null;
 
-    if (seen.has(key)) return false;
+    const parsedId = Number(user.id);
+    return Number.isNaN(parsedId) ? null : parsedId;
+  }, []);
 
-    seen.add(key);
-    return true;
-  });
-};
-
-const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [searchMembers, setSearchMembers] = useState("");
-  const [searchRows, setSearchRows] = useState<any[]>([]);
-  const [searchCustomers, setSearchCustomers] = useState("");
-  const [loadingId, setLoadingId] = useState<number | null>(null);
-  const [customerPage, setCustomerPage] = useState(1);
-
-  const [fetchGroupMembers, { isFetching }] = useLazyGetGroupMembersQuery();
-
-  const [searchGroupMembers, { isFetching: isSearchingMembers }] =
-    useLazySearchGroupMembersQuery();
-
-  const [fetchCustomers, { isFetching: isFetchingCustomers }] =
-    useLazyGetAllCustomersQuery();
-
-  const [searchCustomerList, { isFetching: isSearchingCustomers }] =
-    useLazySearchCustomersQuery();
+  const [fetchGroupLoans, { isFetching }] = useLazyGetGroupLoansQuery();
 
   const rowsRef = useRef<any[]>([]);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchRequestIdRef = useRef(0);
 
-  const customerRowsRef = useRef<any[]>([]);
-  const customerSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const customerSearchRequestIdRef = useRef(0);
-
-  const [members, setMembers] = useState<any[]>([]);
+  const [loans, setLoans] = useState<any[]>([]);
   const [backendPage, setBackendPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
 
-  const [customerRows, setCustomerRows] = useState<any[]>([]);
-  const [customerSearchRows, setCustomerSearchRows] = useState<any[]>([]);
-  const [customerBackendPage, setCustomerBackendPage] = useState(
-    CUSTOMER_FIRST_PAGE - 1,
-  );
-  const [customerHasMore, setCustomerHasMore] = useState(true);
-  const [isCustomerBootstrapping, setIsCustomerBootstrapping] = useState(false);
-  const [isCustomerPaginationLoading, setIsCustomerPaginationLoading] =
-    useState(false);
-
   const [uiPage, setUiPage] = useState(1);
   const [uiPageSize, setUiPageSize] = useState(10);
 
-  const cleanMemberSearch = cleanLowerInput(searchMembers);
-  const cleanCustomerSearch = cleanLowerInput(searchCustomers);
+  const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [editLoan, setEditLoan] = useState<any>(null);
 
-  const isSearchingMembersMode = cleanMemberSearch.length > 0;
-  const isSearchingCustomersMode = cleanCustomerSearch.length > 0;
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<any>(null);
 
-  const [removeMember] = useRemoveGroupMemberMutation();
-  const [addMember] = useAddGroupMemberMutation();
-
-  const pageSize = 20;
+  const navigate = useNavigate();
 
   const syncRows = useCallback((nextRows: any[]) => {
     rowsRef.current = nextRows;
-    setMembers(nextRows);
-  }, []);
-
-  const syncCustomerRows = useCallback((nextRows: any[]) => {
-    customerRowsRef.current = nextRows;
-    setCustomerRows(nextRows);
+    setLoans(nextRows);
   }, []);
 
   const loadBatch = useCallback(
     async (pageToLoad: number, reset = false) => {
-      const response = await fetchGroupMembers({
+      const response = await fetchGroupLoans({
         groupId,
         page: pageToLoad,
         page_size: BATCH_SIZE,
       }).unwrap();
 
-      const batchRows = normalizeGroupMembersCollection(response);
+      const batchRows = normalizeGroupLoansCollection(response);
 
       const nextRows = reset
-        ? dedupeMemberRows(batchRows)
-        : dedupeMemberRows([...rowsRef.current, ...batchRows]);
+        ? dedupeGroupLoanRows(batchRows)
+        : dedupeGroupLoanRows([...rowsRef.current, ...batchRows]);
 
       syncRows(nextRows);
       setBackendPage(pageToLoad);
@@ -208,29 +125,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
 
       return nextRows;
     },
-    [fetchGroupMembers, groupId, syncRows],
-  );
-
-  const loadCustomerBatch = useCallback(
-    async (pageToLoad: number, reset = false) => {
-      const response = await fetchCustomers({
-        page: pageToLoad,
-        page_size: CUSTOMER_BATCH_SIZE,
-      }).unwrap();
-
-      const batchRows = normalizeCustomersCollection(response);
-
-      const nextRows = reset
-        ? dedupeCustomerRows(batchRows)
-        : dedupeCustomerRows([...customerRowsRef.current, ...batchRows]);
-
-      syncCustomerRows(nextRows);
-      setCustomerBackendPage(pageToLoad);
-      setCustomerHasMore(batchRows.length === CUSTOMER_BATCH_SIZE);
-
-      return nextRows;
-    },
-    [fetchCustomers, syncCustomerRows],
+    [fetchGroupLoans, groupId, syncRows]
   );
 
   const ensureRowsForPage = useCallback(
@@ -244,15 +139,15 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
       while (cachedRows.length < requiredRows && canFetchMore) {
         const pageToLoad = nextBackendPage + 1;
 
-        const response = await fetchGroupMembers({
+        const response = await fetchGroupLoans({
           groupId,
           page: pageToLoad,
           page_size: BATCH_SIZE,
         }).unwrap();
 
-        const batchRows = normalizeGroupMembersCollection(response);
+        const batchRows = normalizeGroupLoansCollection(response);
 
-        cachedRows = dedupeMemberRows([...cachedRows, ...batchRows]);
+        cachedRows = dedupeGroupLoanRows([...cachedRows, ...batchRows]);
 
         syncRows(cachedRows);
 
@@ -265,18 +160,13 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
         if (batchRows.length < BATCH_SIZE) break;
       }
     },
-    [backendPage, fetchGroupMembers, groupId, hasMore, syncRows],
+    [backendPage, fetchGroupLoans, groupId, hasMore, syncRows]
   );
 
-  const refreshMembers = useCallback(async () => {
+  const refreshGroupLoans = useCallback(async () => {
     try {
       setIsBootstrapping(true);
       setIsPaginationLoading(true);
-
-      searchRequestIdRef.current += 1;
-      setSearchMembers("");
-      setSearchRows([]);
-
       setUiPage(1);
       setUiPageSize(10);
       setBackendPage(0);
@@ -285,7 +175,7 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
 
       await loadBatch(1, true);
     } catch (error) {
-      console.error("Failed to load group members:", error);
+      console.error("Failed to load group loans:", error);
       syncRows([]);
       setHasMore(false);
     } finally {
@@ -294,278 +184,81 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     }
   }, [loadBatch, syncRows]);
 
-  const refreshCustomers = useCallback(async () => {
-    try {
-      setIsCustomerBootstrapping(true);
-      setIsCustomerPaginationLoading(true);
-
-      customerSearchRequestIdRef.current += 1;
-      setSearchCustomers("");
-      setCustomerSearchRows([]);
-      setCustomerPage(1);
-
-      setCustomerBackendPage(CUSTOMER_FIRST_PAGE - 1);
-      setCustomerHasMore(true);
-      syncCustomerRows([]);
-
-      await loadCustomerBatch(CUSTOMER_FIRST_PAGE, true);
-    } catch (error) {
-      console.error("Failed to load customers:", error);
-      syncCustomerRows([]);
-      setCustomerHasMore(false);
-      message.error("Failed to load customers");
-    } finally {
-      setIsCustomerBootstrapping(false);
-      setIsCustomerPaginationLoading(false);
-    }
-  }, [loadCustomerBatch, syncCustomerRows]);
-
   useEffect(() => {
-    void refreshMembers();
-  }, [refreshMembers]);
+    void refreshGroupLoans();
+  }, [refreshGroupLoans]);
 
-  useEffect(() => {
-    if (!modalOpen) {
-      if (customerSearchTimerRef.current) {
-        clearTimeout(customerSearchTimerRef.current);
-      }
+  // const totalLoaned = useMemo(
+  //   () =>
+  //     loans.reduce((sum: number, loan: any) => {
+  //       const amount =
+  //         typeof loan.amount === "string"
+  //           ? parseFloat(loan.amount)
+  //           : loan.amount;
 
-      return;
-    }
+  //       return sum + (isNaN(amount) ? 0 : amount);
+  //     }, 0),
+  //   [loans]
+  // );
 
-    void refreshCustomers();
-  }, [modalOpen, refreshCustomers]);
+  // const totalLoanCount = useMemo(() => loans.length, [loans]);
 
-  useEffect(() => {
-    const q = cleanMemberSearch;
+  // const activeLoanCount = useMemo(
+  //   () => loans.filter((loan: any) => Number(loan.balance ?? 0) > 0).length,
+  //   [loans]
+  // );
 
-    setUiPage(1);
+  // const averageAmount = useMemo(
+  //   () => (totalLoanCount ? Math.round(totalLoaned / totalLoanCount) : 0),
+  //   [totalLoaned, totalLoanCount]
+  // );
 
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
+  const filteredLoans = useMemo(() => {
+    const needle = sanitizeSearchInput(searchTerm);
 
-    if (!q) {
-      searchRequestIdRef.current += 1;
-      setSearchRows([]);
-      return;
-    }
+    if (!needle) return loans;
 
-    const requestId = searchRequestIdRef.current + 1;
-    searchRequestIdRef.current = requestId;
-
-    searchTimerRef.current = setTimeout(async () => {
-      try {
-        const result = await searchGroupMembers({
-          groupId,
-          q,
-        }).unwrap();
-
-        if (requestId !== searchRequestIdRef.current) return;
-
-        setSearchRows(dedupeMemberRows(Array.isArray(result) ? result : []));
-      } catch (error: any) {
-        if (requestId !== searchRequestIdRef.current) return;
-
-        setSearchRows([]);
-
-        message.error(
-          error?.data?.message ||
-          error?.message ||
-          "Failed to search group members",
-        );
-      }
-    }, MEMBER_SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, [groupId, cleanMemberSearch, searchGroupMembers]);
-
-  useEffect(() => {
-    if (!modalOpen) return;
-
-    const q = cleanCustomerSearch;
-
-    if (customerSearchTimerRef.current) {
-      clearTimeout(customerSearchTimerRef.current);
-    }
-
-    if (!q) {
-      customerSearchRequestIdRef.current += 1;
-      setCustomerSearchRows([]);
-      return;
-    }
-
-    const requestId = customerSearchRequestIdRef.current + 1;
-    customerSearchRequestIdRef.current = requestId;
-
-    customerSearchTimerRef.current = setTimeout(async () => {
-      try {
-        const result = await searchCustomerList({
-          q,
-        }).unwrap();
-
-        if (requestId !== customerSearchRequestIdRef.current) return;
-
-        const rows = normalizeCustomersCollection(result);
-
-        setCustomerSearchRows(dedupeCustomerRows(rows));
-      } catch (error: any) {
-        if (requestId !== customerSearchRequestIdRef.current) return;
-
-        setCustomerSearchRows([]);
-
-        message.error(
-          error?.data?.message || error?.message || "Failed to search customers",
-        );
-      }
-    }, CUSTOMER_SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      if (customerSearchTimerRef.current) {
-        clearTimeout(customerSearchTimerRef.current);
-      }
-    };
-  }, [modalOpen, cleanCustomerSearch, searchCustomerList]);
-
-  const handleAddMember = async (cust: any) => {
-    try {
-      setLoadingId(cust.id);
-
-      await addMember({
-        groupId,
-        memberData: { memberId: cust.id },
-      }).unwrap();
-
-      message.success("Member added successfully");
-
-      await refreshMembers();
-
-      setSearchCustomers("");
-      setModalOpen(false);
-    } catch (err: any) {
-      message.error(err?.data?.error || "Failed to add member");
-    } finally {
-      setLoadingId(null);
-    }
-  };
-
-  const handleRemoveMember = async (id: number) => {
-    try {
-      setLoadingId(id);
-
-      await removeMember({ groupId, memberId: id }).unwrap();
-
-      message.success("Member removed");
-
-      await refreshMembers();
-    } catch (err: any) {
-      message.error(err?.data?.error || "Failed to remove member");
-    } finally {
-      setLoadingId(null);
-    }
-  };
-
-  const loadMoreCustomers = async () => {
-    if (
-      isSearchingCustomersMode ||
-      isCustomerPaginationLoading ||
-      isFetchingCustomers ||
-      !customerHasMore
-    ) {
-      return;
-    }
-
-    try {
-      setIsCustomerPaginationLoading(true);
-
-      await loadCustomerBatch(customerBackendPage + 1);
-
-      setCustomerPage((page) => page + 1);
-    } catch (error: any) {
-      message.error(
-        error?.data?.message || error?.message || "Failed to load more customers",
-      );
-    } finally {
-      setIsCustomerPaginationLoading(false);
-    }
-  };
-
-  const handleCustomersScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    if (
-      isSearchingCustomersMode ||
-      isCustomerPaginationLoading ||
-      isFetchingCustomers ||
-      !customerHasMore
-    ) {
-      return;
-    }
-
-    const target = event.currentTarget;
-
-    const isNearBottom =
-      target.scrollTop + target.clientHeight >= target.scrollHeight - 48;
-
-    if (isNearBottom) {
-      void loadMoreCustomers();
-    }
-  };
-
-  const customers = useMemo(() => {
-    return isSearchingCustomersMode ? customerSearchRows : customerRows;
-  }, [customerRows, customerSearchRows, isSearchingCustomersMode]);
-
-  const filteredCustomers = useMemo(() => {
-    if (!modalOpen) {
-      return [];
-    }
-
-    return customers.filter((cust: any) => {
-      const fullName = lowerInput(
-        formatName(`${cust.firstname ?? ""} ${cust.lastname ?? ""}`),
+    return loans.filter((loan: any) => {
+      const recipient = sanitizeSearchInput(
+        formatName(
+          `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
+        )
       );
 
-      const phone = lowerInput(cust.phone_number);
-      const email = lowerInput(cust.email);
+      const loanTypeName = sanitizeSearchInput(loan.loan_type_name);
+      const loanType = sanitizeSearchInput(loan.loan_type);
+      const cycle = sanitizeSearchInput(loan.cycle);
 
       return (
-        fullName.includes(cleanCustomerSearch) ||
-        phone.includes(cleanCustomerSearch) ||
-        email.includes(cleanCustomerSearch)
+        recipient.includes(needle) ||
+        loanTypeName.includes(needle) ||
+        loanType.includes(needle) ||
+        cycle.includes(needle)
       );
     });
-  }, [customers, modalOpen, cleanCustomerSearch]);
+  }, [loans, searchTerm]);
 
-  const pagedCustomers = useMemo(() => {
-    if (isSearchingCustomersMode) {
-      return filteredCustomers;
-    }
+  const sortedLoans = useMemo(
+    () =>
+      [...filteredLoans].sort((a, b) =>
+        sortOrder === "ascend"
+          ? new Date(a.created_at ?? a.date_issued).getTime() -
+          new Date(b.created_at ?? b.date_issued).getTime()
+          : new Date(b.created_at ?? b.date_issued).getTime() -
+          new Date(a.created_at ?? a.date_issued).getTime()
+      ),
+    [filteredLoans, sortOrder]
+  );
 
-    return filteredCustomers.slice(0, customerPage * pageSize);
-  }, [filteredCustomers, customerPage, isSearchingCustomersMode]);
+  const isFiltering = Boolean(sanitizeSearchInput(searchTerm));
 
-  const tableRows = isSearchingMembersMode ? searchRows : members;
-
-  const tableTotal = isSearchingMembersMode
-    ? searchRows.length
-    : members.length + (hasMore ? BATCH_SIZE : 0);
-
-  const customersLoading =
-    isCustomerBootstrapping ||
-    (isFetchingCustomers && customerRows.length === 0) ||
-    (isSearchingCustomers &&
-      isSearchingCustomersMode &&
-      customerSearchRows.length === 0);
-
-  const showCustomerLoadMore =
-    !isSearchingCustomersMode && customerHasMore && pagedCustomers.length > 0;
+  const progressiveTotal = isFiltering
+    ? sortedLoans.length
+    : loans.length + (hasMore ? BATCH_SIZE : 0);
 
   const handlePaginationChange = async (
     nextPage: number,
-    nextPageSize: number,
+    nextPageSize: number
   ) => {
     const sizeChanged = nextPageSize !== uiPageSize;
     const targetPage = sizeChanged ? 1 : nextPage;
@@ -573,231 +266,265 @@ const GroupMembersTab: React.FC<Props> = ({ groupId }) => {
     try {
       setIsPaginationLoading(true);
 
-      if (!isSearchingMembersMode) {
+      if (!isFiltering) {
         await ensureRowsForPage(targetPage, nextPageSize);
       }
 
       setUiPage(targetPage);
       setUiPageSize(nextPageSize);
     } catch (error) {
-      console.error("Failed to load more group members:", error);
-      message.error("Failed to load more group members");
+      console.error("Failed to load more group loans:", error);
     } finally {
       setIsPaginationLoading(false);
     }
   };
 
-  const columns = [
-    {
-      title: "Full Name",
-      dataIndex: "fullname",
-      key: "fullname",
-      sorter: (a: any, b: any) =>
-        `${a.firstname ?? ""} ${a.lastname ?? ""}`.localeCompare(
-          `${b.firstname ?? ""} ${b.lastname ?? ""}`,
-        ),
-      render: (_: any, record: any) =>
-        formatName(`${record.firstname ?? ""} ${record.lastname ?? ""}`),
-    },
-    {
-      title: "Phone Number",
-      dataIndex: "phone_number",
-      key: "phone_number",
-      sorter: (a: any, b: any) =>
-        String(a.phone_number || "").localeCompare(
-          String(b.phone_number || ""),
-        ),
-      render: (value: string | null) => value || "—",
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_: any, record: any) => (
-        <Popconfirm
-          title="Remove this member?"
-          onConfirm={() => handleRemoveMember(record.id)}
-          okButtonProps={{ loading: loadingId === record.id }}
-        >
+  // const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Recipient",
+        key: "recipient",
+        render: (_: any, record: any) => (
           <Button
-            icon={<DeleteOutlined />}
-            danger
-            size="small"
-            loading={loadingId === record.id}
+            type="link"
+            className="p-0"
+            onClick={() => navigate(`/customer/${record.issued_to}`)}
           >
-            Remove
+            {formatName(
+              `${record.recipient_firstname ?? ""} ${record.recipient_lastname ?? ""
+              }`
+            )}
           </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
+        ),
+      },
+      {
+        title: "Amount (KES)",
+        dataIndex: "amount",
+        key: "amount",
+        render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
+      },
+      {
+        title: "Balance (KES)",
+        dataIndex: "balance",
+        key: "balance",
+        render: (amount: number) => `KES ${Number(amount).toLocaleString()}`,
+      },
+      {
+        title: "Loan Type",
+        dataIndex: "loan_type_name",
+        key: "loan_type",
+        render: (type: string) => type || "N/A",
+      },
+      {
+        title: "Cycle",
+        dataIndex: "cycle",
+        key: "cycle",
+      },
+      {
+        title: "Issued On",
+        dataIndex: "date_issued",
+        key: "date_issued",
+        render: (_: string, record: any) => {
+          const date = record.date_issued ?? record.created_at;
+          return date ? dayjs(date).format("DD MMM YYYY") : "—";
+        },
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        render: (_: any, record: any) => {
+          const isPaid = Number(record?.balance ?? 0) <= 0;
+
+          return (
+            <Space>
+              {/* <Tag
+                color="blue"
+                className="cursor-pointer"
+                onClick={() => {
+                  setEditLoan(record);
+                  setShowLoanModal(true);
+                }}
+              >
+                Edit
+              </Tag> */}
+
+              {isPaid ? (
+                <Tag className="cursor-not-allowed opacity-70" color="green">
+                  Paid
+                </Tag>
+              ) : (
+                <Tag
+                  color="gold"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelectedLoan(record);
+                    setShowPaymentModal(true);
+                  }}
+                >
+                  + Payment
+                </Tag>
+              )}
+            </Space>
+          );
+        },
+      },
+    ],
+    [navigate]
+  );
 
   return (
-    <Card
-      bordered={false}
-      className="rounded-xl shadow-sm"
-      styles={{ body: { padding: "20px 24px" } }}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div>
-          <Title level={4} className="!mb-0.5">
-            Group Members
-          </Title>
-          <Typography.Text type="secondary" className="text-sm">
-            Manage who belongs to this group.
-          </Typography.Text>
-        </div>
-
-        <div className="flex gap-2">
-          <Input
-            placeholder="Search members..."
-            value={searchMembers}
-            onChange={(e) => {
-              setSearchMembers(lowerInput(e.target.value));
-              setUiPage(1);
-            }}
-            style={{ width: 240 }}
-            allowClear
-          />
+    <Card bordered={false} className="rounded-xl shadow-sm">
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Title level={4} className="!mb-1">
+              Group Loan Portfolio
+            </Title>
+            <Text type="secondary">
+              Monitor issued loans, track balances, and capture repayments in
+              real time.
+            </Text>
+          </div>
 
           <Button
             type="primary"
-            icon={<UserAddOutlined />}
-            onClick={() => setModalOpen(true)}
-          >
-            Add Member
-          </Button>
-        </div>
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={tableRows}
-        rowKey={(record) => String(record.id)}
-        loading={
-          isBootstrapping ||
-          isFetching ||
-          isSearchingMembers ||
-          isPaginationLoading
-        }
-        pagination={{
-          current: uiPage,
-          pageSize: uiPageSize,
-          total: tableTotal,
-          showSizeChanger: true,
-          pageSizeOptions: ["5", "10", "20", "50"],
-          onChange: (page, pageSize) => {
-            void handlePaginationChange(page, pageSize);
-          },
-        }}
-        scroll={{ x: 900 }}
-        size="middle"
-        className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
-      />
-
-      <Modal
-        title="Add Member"
-        open={modalOpen}
-        onCancel={() => {
-          setModalOpen(false);
-          setSearchCustomers("");
-          setCustomerPage(1);
-        }}
-        footer={null}
-        destroyOnClose
-      >
-        <Input
-          placeholder="Search customer by name, phone, or email"
-          value={searchCustomers}
-          onChange={(e) => {
-            setCustomerPage(1);
-            setSearchCustomers(lowerInput(e.target.value));
-          }}
-          className="mb-4"
-          allowClear
-        />
-
-        {customersLoading ? (
-          <Spin />
-        ) : (
-          <div
-            onScroll={handleCustomersScroll}
-            style={{
-              maxHeight: 420,
-              overflowY: "auto",
-              paddingRight: 4,
+            onClick={() => {
+              setEditLoan(null);
+              setShowLoanModal(true);
             }}
           >
-            <List
-              dataSource={pagedCustomers}
-              locale={{
-                emptyText: isSearchingCustomers
-                  ? "Searching customers..."
-                  : "No customers found",
-              }}
-              renderItem={(cust: any) => {
-                const isAlreadyMember = members.some(
-                  (m: any) => Number(m.id) === Number(cust.id),
-                );
+            Add Loan
+          </Button>
+        </div>
 
-                return (
-                  <List.Item
-                    actions={[
-                      isAlreadyMember ? (
-                        <Button type="default" disabled>
-                          Already Added
-                        </Button>
-                      ) : (
-                        <Button
-                          type="link"
-                          loading={loadingId === cust.id}
-                          onClick={() => handleAddMember(cust)}
-                        >
-                          Add
-                        </Button>
-                      ),
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={
-                        <Avatar>
-                          {getInitials(
-                            formatName(
-                              `${cust.firstname ?? ""} ${cust.lastname ?? ""}`,
-                            ) || "?",
-                          )}
-                        </Avatar>
-                      }
-                      title={formatName(
-                        `${cust.firstname ?? ""} ${cust.lastname ?? ""}`,
-                      )}
-                      description={cust.email || cust.phone_number || "—"}
-                    />
-                  </List.Item>
-                );
-              }}
-            />
-
-            {isCustomerPaginationLoading && (
-              <div className="mt-3 flex justify-center">
-                <Spin size="small" />
-              </div>
-            )}
-          </div>
-        )}
-
-        {showCustomerLoadMore && (
-          <div className="mt-4 flex justify-center text-blue-500">
-            <Button
-              loading={isCustomerPaginationLoading}
-              onClick={() => void loadMoreCustomers()}
+        {/* <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-blue-50"
+              styles={{ body: { padding: "14px 18px" } }}
             >
-              Load More
-            </Button>
-          </div>
-        )}
-      </Modal>
+              <Statistic
+                title="Total Amount Issued"
+                value={totalLoaned}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#1d4ed8" }}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-slate-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
+              <Statistic
+                title="Total Loans Given"
+                value={totalLoanCount}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#475569" }}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-emerald-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
+              <Statistic
+                title="Active Loans"
+                value={activeLoanCount}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#059669" }}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              bordered={false}
+              className="rounded-xl bg-amber-50"
+              styles={{ body: { padding: "14px 18px" } }}
+            >
+              <Statistic
+                title="Average Ticket Size"
+                value={averageAmount}
+                formatter={(value) => formatCurrency(value as number)}
+                valueStyle={{ fontSize: 20, fontWeight: 600, color: "#d97706" }}
+              />
+            </Card>
+          </Col>
+        </Row> */}
+
+        <Space wrap>
+          <Button
+            onClick={() =>
+              setSortOrder(sortOrder === "ascend" ? "descend" : "ascend")
+            }
+          >
+            Sort by Date (
+            {sortOrder === "ascend" ? "Oldest First" : "Newest First"})
+          </Button>
+
+          <Input.Search
+            allowClear
+            placeholder="Search recipient, type, or cycle"
+            value={searchTerm}
+            onChange={(event) => {
+              setSearchTerm(sanitizeSearchInput(event.target.value));
+              setUiPage(1);
+            }}
+            className="w-64"
+          />
+        </Space>
+
+        <Table
+          columns={columns}
+          dataSource={sortedLoans}
+          loading={isBootstrapping || isFetching || isPaginationLoading}
+          rowKey="id"
+          pagination={{
+            current: uiPage,
+            pageSize: uiPageSize,
+            total: progressiveTotal,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            onChange: (page, pageSize) => {
+              void handlePaginationChange(page, pageSize);
+            },
+          }}
+          scroll={{ x: 900 }}
+          size="middle"
+          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50/30"
+        />
+      </Space>
+
+      {showLoanModal && (
+        <GroupLoanFormModal
+          visible={showLoanModal}
+          onClose={() => setShowLoanModal(false)}
+          groupId={groupId}
+          loan={editLoan}
+          refetch={refreshGroupLoans}
+          issuedBy={staffUserId ?? groupAdminId ?? null}
+        />
+      )}
+
+      {showPaymentModal && selectedLoan && (
+        <GroupPaymentFormModal
+          visible={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          groupId={groupId}
+          loan={selectedLoan}
+          refetch={refreshGroupLoans}
+          approved_by={staffUserId ?? groupAdminId ?? null}
+        />
+      )}
     </Card>
   );
 };
 
-export default GroupMembersTab;
+export default GroupLoanHistoryTab;
