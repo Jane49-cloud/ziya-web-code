@@ -23,7 +23,7 @@ build_image:
     - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
   only:
-    - v2
+    - beta
     - staging
     - live
 
@@ -51,7 +51,7 @@ build_image:
       docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
       EOF
   only:
-    - v2
+    - beta
     - staging
     - live
 
@@ -64,7 +64,7 @@ deploy_dev:
     CONTAINER_NAME: ziyaweb-dev
     PORT: 5000
   only:
-    - v2
+    - beta
 
 deploy_staging:
   <<: *deploy_template
