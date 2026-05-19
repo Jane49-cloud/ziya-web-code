@@ -82,3 +82,8 @@ Business  page check it
 add member only list those not in groups
 sanitize search
 go live locally 
+
+18th
+wallet search
+comment out business 
+payment page pagination and search
