@@ -1,12 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card, Empty, Input, Table, Tag, Typography, Tooltip, message } from "antd";
+import {
+    Card,
+    Empty,
+    Input,
+    Table,
+    Tag,
+    Typography,
+    Tooltip,
+    message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiEye, FiUser } from "react-icons/fi";
 
-import { useLazyGetPersonalWalletsQuery, useGetSinglePersonalWalletQuery } from "../features";
-import PersonalWalletDetailsDrawer, { type PersonalWalletDetails } from "../components/personalWalletDetailsDrawer";
-import { formatCurrency, formatFullName } from "../../utils";
+import {
+    useLazyGetPersonalWalletsQuery,
+    useGetSinglePersonalWalletQuery,
+    useLazySearchPersonalWalletsQuery,
+} from "../features";
+
+import PersonalWalletDetailsDrawer, {
+    type PersonalWalletDetails,
+} from "../components/personalWalletDetailsDrawer";
+
+import {
+    formatCurrency,
+    formatFullName,
+    cleanLowerInput,
+} from "../../utils";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -48,6 +69,7 @@ const extractPersonalWalletRows = (response: any): PersonalWallet[] => {
 
 const PersonalWalletsTab = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [searchRows, setSearchRows] = useState<PersonalWallet[]>([]);
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
@@ -56,6 +78,9 @@ const PersonalWalletsTab = () => {
 
     const [fetchPersonalWallets, { isFetching }] =
         useLazyGetPersonalWalletsQuery();
+
+    const [searchPersonalWallets, { isFetching: isSearchFetching }] =
+        useLazySearchPersonalWalletsQuery();
 
     const {
         data: selectedWallet,
@@ -121,7 +146,10 @@ const PersonalWalletsTab = () => {
 
                 const batchRows = extractPersonalWalletRows(response);
 
-                cachedRows = dedupePersonalWalletRows([...cachedRows, ...batchRows]);
+                cachedRows = dedupePersonalWalletRows([
+                    ...cachedRows,
+                    ...batchRows,
+                ]);
 
                 syncRows(cachedRows);
 
@@ -161,9 +189,57 @@ const PersonalWalletsTab = () => {
         bootstrap();
     }, [loadBatch]);
 
+    const cleanedSearchTerm = cleanLowerInput(searchTerm);
+
     useEffect(() => {
         setUiPage(1);
-    }, [searchTerm]);
+
+        if (!cleanedSearchTerm) {
+            setSearchRows([]);
+            return;
+        }
+
+        let cancelled = false;
+
+        const timeout = window.setTimeout(async () => {
+            try {
+                const response = await searchPersonalWallets(
+                    cleanedSearchTerm,
+                ).unwrap();
+
+                if (!cancelled) {
+                    setSearchRows(
+                        dedupePersonalWalletRows(response as PersonalWallet[]),
+                    );
+                }
+            } catch (error: any) {
+                if (!cancelled) {
+                    setSearchRows([]);
+
+                    message.error(
+                        error?.data?.message ||
+                        error?.message ||
+                        "Failed to search personal wallets",
+                    );
+                }
+            }
+        }, 350);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeout);
+        };
+    }, [cleanedSearchTerm, searchPersonalWallets]);
+
+    const isSearching = Boolean(cleanedSearchTerm);
+
+    const displayRows = useMemo(() => {
+        return isSearching ? searchRows : rows;
+    }, [isSearching, searchRows, rows]);
+
+    const progressiveTotal = isSearching
+        ? displayRows.length
+        : rows.length + (hasMore ? BATCH_SIZE : 0);
 
     const handlePaginationChange = async (
         nextPage: number,
@@ -171,12 +247,11 @@ const PersonalWalletsTab = () => {
     ) => {
         const sizeChanged = nextPageSize !== uiPageSize;
         const targetPage = sizeChanged ? 1 : nextPage;
-        const hasSearch = Boolean(searchTerm.trim());
 
         try {
             setIsPaginationLoading(true);
 
-            if (!hasSearch) {
+            if (!isSearching) {
                 await ensureRowsForPage(targetPage, nextPageSize);
             }
 
@@ -192,26 +267,6 @@ const PersonalWalletsTab = () => {
             setIsPaginationLoading(false);
         }
     };
-
-    const filteredRows = useMemo(() => {
-        if (!searchTerm.trim()) return rows;
-
-        const needle = searchTerm.toLowerCase();
-
-        return rows.filter((item) =>
-            [
-                item.id,
-                item.customer_id,
-                item.firstname,
-                item.lastname,
-                formatFullName(item.firstname, item.lastname),
-                item.balance,
-                item.phone_number,
-            ]
-                .map((value) => (value ?? "").toString().toLowerCase())
-                .some((value) => value.includes(needle)),
-        );
-    }, [rows, searchTerm]);
 
     const handleViewCustomer = (record: PersonalWallet) => {
         setSelectedCustomerId(record.customer_id);
@@ -267,6 +322,7 @@ const PersonalWalletsTab = () => {
                             type="button"
                             onClick={() => handleViewCustomer(record)}
                             className="flex h-8 w-8 items-center justify-center bg-white text-sky-500 transition hover:cursor-pointer hover:bg-sky-50 hover:text-sky-600"
+                            aria-label="View wallet details"
                         >
                             <FiEye size={16} />
                         </button>
@@ -278,12 +334,6 @@ const PersonalWalletsTab = () => {
 
     const walletDetails = selectedWallet as PersonalWalletDetails | undefined;
     const detailsLoading = isLoadingDetails || isFetchingDetails;
-
-    const isSearching = Boolean(searchTerm.trim());
-
-    const progressiveTotal = isSearching
-        ? filteredRows.length
-        : rows.length + (hasMore ? BATCH_SIZE : 0);
 
     return (
         <>
@@ -300,24 +350,29 @@ const PersonalWalletsTab = () => {
                     </div>
 
                     <Tag color="blue" className="rounded-md px-3 py-1 text-sm font-medium">
-                        {filteredRows.length} Wallets
+                        {displayRows.length} Wallets
                     </Tag>
                 </div>
 
                 <Input.Search
                     allowClear
-                    placeholder="Search by customer name, phone number, balance..."
+                    placeholder="Search by customer name or phone number..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onSearch={setSearchTerm}
+                    onSearch={(value) => setSearchTerm(value)}
                     className="mb-5 w-full"
                 />
 
                 <Table<PersonalWallet>
                     rowKey={(record) => record.id ?? record.customer_id}
                     columns={columns}
-                    dataSource={filteredRows}
-                    loading={isBootstrapping || isFetching || isPaginationLoading}
+                    dataSource={displayRows}
+                    loading={
+                        isBootstrapping ||
+                        isFetching ||
+                        isSearchFetching ||
+                        isPaginationLoading
+                    }
                     bordered
                     size="middle"
                     scroll={{ x: "max-content" }}
@@ -328,9 +383,12 @@ const PersonalWalletsTab = () => {
                         showSizeChanger: true,
                         pageSizeOptions: ["10", "20", "50"],
                         onChange: handlePaginationChange,
-
                     }}
-                    locale={{ emptyText: <Empty description="No personal wallets found" /> }}
+                    locale={{
+                        emptyText: (
+                            <Empty description="No personal wallets found" />
+                        ),
+                    }}
                 />
             </Card>
 

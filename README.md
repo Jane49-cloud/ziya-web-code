@@ -68,9 +68,6 @@ Visualizations
 
 remove summaries from pages //done
 
-
-
-
 My created by //done
 My managed. //done
 
@@ -82,3 +79,8 @@ Business  page check it
 add member only list those not in groups
 sanitize search
 go live locally 
+
+18th
+wallet search // doen  but in personal  Joan Ouma does not work
+comment out business //done
+payment page pagination and search //done but Abraham Mbarak does not work

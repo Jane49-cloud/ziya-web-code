@@ -3,8 +3,13 @@ import { Card, Empty, Input, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiUsers, FiPlusCircle, FiEye, FiEdit } from "react-icons/fi";
-import { useLazyGetGroupWalletsQuery } from "../features/index";
-import { formatName, getRole, formatCurrency } from "../../utils";
+
+import {
+    useLazyGetGroupWalletsQuery,
+    useLazySearchGroupWalletsQuery,
+} from "../features/index";
+
+import { formatName, getRole, formatCurrency, cleanLowerInput } from "../../utils";
 import SingleGroupWalletDrawer, {
     type GroupWallet,
 } from "../components/singleGroupWalletDrawer";
@@ -45,6 +50,7 @@ const GroupWalletsTab = () => {
     const userRole = getRole() as UserRole | null;
 
     const [searchTerm, setSearchTerm] = useState("");
+    const [searchRows, setSearchRows] = useState<GroupWallet[]>([]);
 
     const [selectedGroup, setSelectedGroup] = useState<GroupWallet | null>(null);
     const [isSingleDrawerOpen, setIsSingleDrawerOpen] = useState(false);
@@ -52,6 +58,9 @@ const GroupWalletsTab = () => {
     const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
 
     const [fetchGroupWallets, { isFetching }] = useLazyGetGroupWalletsQuery();
+
+    const [searchGroupWallets, { isFetching: isSearchFetching }] =
+        useLazySearchGroupWalletsQuery();
 
     const rowsRef = useRef<GroupWallet[]>([]);
 
@@ -149,9 +158,53 @@ const GroupWalletsTab = () => {
         bootstrap();
     }, [loadBatch]);
 
+    const trimmedSearchTerm = cleanLowerInput(searchTerm);
+
     useEffect(() => {
         setUiPage(1);
-    }, [searchTerm]);
+
+        if (!trimmedSearchTerm) {
+            setSearchRows([]);
+            return;
+        }
+
+        let cancelled = false;
+
+        const timeout = window.setTimeout(async () => {
+            try {
+                const response = await searchGroupWallets(trimmedSearchTerm).unwrap();
+
+                if (!cancelled) {
+                    setSearchRows(dedupeGroupWalletRows(response as GroupWallet[]));
+                }
+            } catch (error: any) {
+                if (!cancelled) {
+                    setSearchRows([]);
+
+                    message.error(
+                        error?.data?.message ||
+                        error?.message ||
+                        "Failed to search group wallets",
+                    );
+                }
+            }
+        }, 350);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeout);
+        };
+    }, [trimmedSearchTerm, searchGroupWallets]);
+
+    const isSearching = Boolean(trimmedSearchTerm);
+
+    const displayRows = useMemo(() => {
+        return isSearching ? searchRows : rows;
+    }, [isSearching, searchRows, rows]);
+
+    const progressiveTotal = isSearching
+        ? displayRows.length
+        : rows.length + (hasMore ? BATCH_SIZE : 0);
 
     const handlePaginationChange = async (
         nextPage: number,
@@ -159,12 +212,11 @@ const GroupWalletsTab = () => {
     ) => {
         const sizeChanged = nextPageSize !== uiPageSize;
         const targetPage = sizeChanged ? 1 : nextPage;
-        const hasSearch = Boolean(searchTerm.trim());
 
         try {
             setIsPaginationLoading(true);
 
-            if (!hasSearch) {
+            if (!isSearching) {
                 await ensureRowsForPage(targetPage, nextPageSize);
             }
 
@@ -180,18 +232,6 @@ const GroupWalletsTab = () => {
             setIsPaginationLoading(false);
         }
     };
-
-    const filteredRows = useMemo(() => {
-        if (!searchTerm.trim()) return rows;
-
-        const needle = searchTerm.toLowerCase();
-
-        return rows.filter((item: GroupWallet) =>
-            [item.id, item.group_id, formatName(item.group_name), item.balance, item.capital]
-                .map((value) => (value ?? "").toString().toLowerCase())
-                .some((value) => value.includes(needle)),
-        );
-    }, [rows, searchTerm]);
 
     const handleViewGroup = (record: GroupWallet) => {
         setSelectedGroup(record);
@@ -299,12 +339,6 @@ const GroupWalletsTab = () => {
         },
     ];
 
-    const isSearching = Boolean(searchTerm.trim());
-
-    const progressiveTotal = isSearching
-        ? filteredRows.length
-        : rows.length + (hasMore ? BATCH_SIZE : 0);
-
     return (
         <Card bordered={false} className="rounded-xl shadow-sm">
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -319,24 +353,29 @@ const GroupWalletsTab = () => {
                 </div>
 
                 <Tag color="blue" className="w-fit">
-                    {filteredRows.length} Wallets
+                    {displayRows.length} Wallets
                 </Tag>
             </div>
 
             <Input.Search
                 allowClear
-                placeholder="Search by group name, balance, capital..."
+                placeholder="Search by group name or group ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onSearch={setSearchTerm}
+                onSearch={(value) => setSearchTerm(value)}
                 className="mb-5 w-full"
             />
 
             <Table<GroupWallet>
                 rowKey={(record) => record.id ?? record.group_id}
                 columns={columns}
-                dataSource={filteredRows}
-                loading={isBootstrapping || isFetching || isPaginationLoading}
+                dataSource={displayRows}
+                loading={
+                    isBootstrapping ||
+                    isFetching ||
+                    isSearchFetching ||
+                    isPaginationLoading
+                }
                 bordered
                 size="middle"
                 scroll={{ x: "max-content" }}
@@ -348,7 +387,9 @@ const GroupWalletsTab = () => {
                     pageSizeOptions: ["10", "20", "50"],
                     onChange: handlePaginationChange,
                 }}
-                locale={{ emptyText: <Empty description="No group wallets found" /> }}
+                locale={{
+                    emptyText: <Empty description="No group wallets found" />,
+                }}
             />
 
             <SingleGroupWalletDrawer

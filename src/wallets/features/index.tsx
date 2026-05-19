@@ -10,6 +10,10 @@ export const {
     useGetSinglePersonalWalletQuery,
     useGetSingleGroupWalletQuery,
 
+    //search
+    useLazySearchGroupWalletsQuery,
+    useLazySearchPersonalWalletsQuery,
+
     useCreateGroupWalletDepositMutation,
     useUpdateGroupWalletMutation,
 } = WalletSlice;
