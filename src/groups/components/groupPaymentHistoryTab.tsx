@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useLazyGetGroupPaymentsQuery } from "../features";
+import {
+  useLazyGetGroupPaymentsQuery,
+  useLazySearchGroupLoanPaymentsQuery,
+} from "../features";
 import {
   Card,
   Table,
   Typography,
   Space,
   Button,
+  Input,
   // Statistic,
   // Row,
   // Col,
@@ -19,7 +23,7 @@ import {
 } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
-import { formatName, getUser } from "../../utils";
+import { cleanLowerInput, formatName, getUser } from "../../utils";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 
 const { Title, Text } = Typography;
@@ -77,9 +81,15 @@ const GroupPaymentHistoryTab = ({
   const [fetchGroupPayments, { isFetching }] =
     useLazyGetGroupPaymentsQuery();
 
+  const [searchGroupLoanPayments, { isFetching: isSearchFetching }] =
+    useLazySearchGroupLoanPaymentsQuery();
+
   const rowsRef = useRef<any[]>([]);
 
   const [payments, setPayments] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchRows, setSearchRows] = useState<any[]>([]);
+
   const [backendPage, setBackendPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -170,6 +180,8 @@ const GroupPaymentHistoryTab = ({
       setUiPageSize(10);
       setBackendPage(0);
       setHasMore(true);
+      setSearchTerm("");
+      setSearchRows([]);
       syncRows([]);
 
       await loadBatch(1, true);
@@ -187,16 +199,57 @@ const GroupPaymentHistoryTab = ({
     void refreshGroupPayments();
   }, [refreshGroupPayments]);
 
+  const cleanedSearchTerm = cleanLowerInput(searchTerm);
+  const isSearching = Boolean(cleanedSearchTerm);
+
+  useEffect(() => {
+    setUiPage(1);
+
+    if (!cleanedSearchTerm) {
+      setSearchRows([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        const response = await searchGroupLoanPayments({
+          groupId,
+          q: cleanedSearchTerm,
+        }).unwrap();
+
+        if (!cancelled) {
+          setSearchRows(dedupeGroupPaymentRows(response));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to search group payments:", error);
+          setSearchRows([]);
+        }
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [cleanedSearchTerm, groupId, searchGroupLoanPayments]);
+
+  const displayPayments = useMemo(() => {
+    return isSearching ? searchRows : payments;
+  }, [isSearching, payments, searchRows]);
+
   const sortedPayments = useMemo(
     () =>
-      [...payments].sort((a, b) =>
+      [...displayPayments].sort((a, b) =>
         sortOrder === "ascend"
           ? new Date(a.date_paid).getTime() -
           new Date(b.date_paid).getTime()
           : new Date(b.date_paid).getTime() -
           new Date(a.date_paid).getTime()
       ),
-    [payments, sortOrder]
+    [displayPayments, sortOrder]
   );
 
   // const totalPaid = useMemo(() => {
@@ -228,7 +281,9 @@ const GroupPaymentHistoryTab = ({
     try {
       setIsPaginationLoading(true);
 
-      await ensureRowsForPage(targetPage, nextPageSize);
+      if (!isSearching) {
+        await ensureRowsForPage(targetPage, nextPageSize);
+      }
 
       setUiPage(targetPage);
       setUiPageSize(nextPageSize);
@@ -303,7 +358,9 @@ const GroupPaymentHistoryTab = ({
     },
   ];
 
-  const progressiveTotal = payments.length + (hasMore ? BATCH_SIZE : 0);
+  const progressiveTotal = isSearching
+    ? sortedPayments.length
+    : payments.length + (hasMore ? BATCH_SIZE : 0);
 
   return (
     <Card bordered={false} className="rounded-xl shadow-sm">
@@ -317,6 +374,15 @@ const GroupPaymentHistoryTab = ({
               Track incoming repayments and keep customer journeys on schedule.
             </Text>
           </div>
+
+          <Input.Search
+            allowClear
+            placeholder="Search payment by customer name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onSearch={(value) => setSearchTerm(value)}
+            className="min-w-[260px] flex-1 sm:max-w-md"
+          />
 
           <Button
             onClick={() =>
@@ -385,7 +451,12 @@ const GroupPaymentHistoryTab = ({
         <Table
           columns={columns}
           dataSource={sortedPayments}
-          loading={isBootstrapping || isFetching || isPaginationLoading}
+          loading={
+            isBootstrapping ||
+            isFetching ||
+            isSearchFetching ||
+            isPaginationLoading
+          }
           rowKey="id"
           pagination={{
             current: uiPage,
