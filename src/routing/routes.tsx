@@ -86,12 +86,12 @@ export const sidebarItems: SidebarItem[] = [
       },
     ],
   },
-  {
-    title: "Businesses",
-    icon: "shop",
-    path: "/businesses",
-    allowedRoles: ALL_ROLES,
-  },
+  // {
+  //   title: "Businesses",
+  //   icon: "shop",
+  //   path: "/businesses",
+  //   allowedRoles: ALL_ROLES,
+  // },
   {
     title: "Loans",
     icon: "bank",

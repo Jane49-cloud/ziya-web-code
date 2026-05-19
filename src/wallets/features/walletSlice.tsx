@@ -76,5 +76,32 @@ export const WalletSlice = apiSlice.injectEndpoints({
                 { type: "Wallets", id: `group-${payload.id}` },
             ],
         }),
+
+        //search
+        searchGroupWallets: builder.query<any[], string>({
+            query: (q) => ({
+                url: "/group-wallets/search",
+                method: "GET",
+                params: {
+                    q: q.trim() || "all",
+                },
+            }),
+            transformResponse: (response: any) => response?.wallets ?? [],
+            providesTags: [{ type: "Wallets", id: "GROUP-WALLETS-SEARCH" }],
+        }),
+
+        searchPersonalWallets: builder.query<any[], string>({
+            query: (q) => ({
+                url: "/personal-wallets/search",
+                method: "GET",
+                params: {
+                    q: q.trim() || "all",
+                },
+            }),
+            transformResponse: (response: any) => response?.wallets ?? [],
+            providesTags: [{ type: "Wallets", id: "PERSONAL-WALLETS-SEARCH" }],
+        }),
+
+
     }),
 });
