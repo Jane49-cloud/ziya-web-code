@@ -51,6 +51,9 @@ export const {
   useGetGroupPaymentsQuery,
   useLazyGetGroupPaymentsQuery,
 
+  // search group payments
+  useLazySearchGroupLoanPaymentsQuery,
+
 
   useUpdateGroupLoanPaymentMutation,
   useDeleteGroupLoanPaymentMutation,

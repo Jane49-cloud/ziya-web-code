@@ -68,9 +68,6 @@ Visualizations
 
 remove summaries from pages //done
 
-
-
-
 My created by //done
 My managed. //done
 
@@ -84,6 +81,6 @@ sanitize search
 go live locally 
 
 18th
-wallet search
-comment out business 
-payment page pagination and search
+wallet search // doen  but in personal  Joan Ouma does not work
+comment out business //done
+payment page pagination and search //done but Abraham Mbarak does not work

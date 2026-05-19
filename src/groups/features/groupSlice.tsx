@@ -146,7 +146,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "Groups" }],
     }),
 
-    
+
 
 
     getGroupMembers: builder.query<any, GroupLoansQuery>({
@@ -203,36 +203,36 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
 
     getMyCreatedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
-  query: (args) => {
-    const { page = 1, page_size = 20 } = args ?? {};
+      query: (args) => {
+        const { page = 1, page_size = 20 } = args ?? {};
 
-    return {
-      url: "/groups/get/my-created",
-      method: "GET",
-      params: {
-        page,
-        page_size,
+        return {
+          url: "/groups/get/my-created",
+          method: "GET",
+          params: {
+            page,
+            page_size,
+          },
+        };
       },
-    };
-  },
-  providesTags: [{ type: "Groups" }],
-}),
+      providesTags: [{ type: "Groups" }],
+    }),
 
-getMyManagedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
-  query: (args) => {
-    const { page = 1, page_size = 20 } = args ?? {};
+    getMyManagedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
+      query: (args) => {
+        const { page = 1, page_size = 20 } = args ?? {};
 
-    return {
-      url: "/groups/get/my-managed",
-      method: "GET",
-      params: {
-        page,
-        page_size,
+        return {
+          url: "/groups/get/my-managed",
+          method: "GET",
+          params: {
+            page,
+            page_size,
+          },
+        };
       },
-    };
-  },
-  providesTags: [{ type: "Groups" }],
-}),
+      providesTags: [{ type: "Groups" }],
+    }),
 
 
 
@@ -449,5 +449,28 @@ getMyManagedGroups: builder.query<GroupsResponse, GroupPaginationArgs | void>({
         { type: "GroupMembers", id: groupId },
       ],
     }),
+
+    //search
+    // search group loan payments
+    searchGroupLoanPayments: builder.query<
+      any[],
+      { groupId: string | number; q: string }
+    >({
+      query: ({ groupId, q }) => ({
+        url: "/group-loan-payments/search",
+        method: "GET",
+        params: {
+          q: q || "all",
+          g: groupId,
+        },
+      }),
+      transformResponse: (response: any) => response?.payments ?? [],
+
+      providesTags: (_result, _error, arg) => [
+        { type: "GroupLoanPayments", id: `SEARCH-${arg.groupId}` },
+      ],
+    }),
+
+
   }),
 });
