@@ -1,7 +1,7 @@
-image: node:20
+image: docker:24.0.5
 
 services:
-  - docker:20.10.16-dind
+  - docker:24.0.5-dind
 
 stages:
   - build
@@ -9,79 +9,185 @@ stages:
 
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
 
 before_script:
-  # 1) Log in to the GitLab Container Registry on the CI runner
+  - apk add --no-cache openssh-client
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-# 🧱 BUILD STAGE
-build_image:
+
+# build dev 
+
+
+build_beta:
   stage: build
   tags:
     - ziya-web
   script:
-    - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
-    - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+    - docker build --no-cache -t "$DOCKER_IMAGE:beta" -t "$DOCKER_IMAGE:beta-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:beta"
+    - docker push "$DOCKER_IMAGE:beta-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
   only:
-    - beta
+    - dev
+
+# staging 
+
+build_staging:
+  stage: build
+  tags:
+    - ziya-web
+  script:
+    - docker build --no-cache -t "$DOCKER_IMAGE:staging" -t "$DOCKER_IMAGE:staging-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:staging"
+    - docker push "$DOCKER_IMAGE:staging-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
+  only:
     - staging
+
+# build live
+
+build_live:
+  stage: build
+  tags:
+    - ziya-web
+  script:
+    - docker build --no-cache -t "$DOCKER_IMAGE:live" -t "$DOCKER_IMAGE:live-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:live"
+    - docker push "$DOCKER_IMAGE:live-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
+  only:
     - live
 
-# 🚀 DEPLOY TEMPLATE
+# DEPLOY TEMPLATE
+
 .deploy_template: &deploy_template
   stage: deploy
   tags:
     - ziya-web
   before_script:
-    # 2) Install your SSH key on the runner
+    - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - cp "$SSH_PRIVATE_KEY" ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+    - cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
   script:
     - |
-      ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << EOF
-      # 3) Log in to the GitLab registry on the remote host
+      ssh "$DEPLOY_USER@$DEPLOY_HOST" << EOF
+      set -e
+
       echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-      # 4) Stop, remove, pull, and run your container
-      docker stop  $CONTAINER_NAME  || true
-      docker rm    $CONTAINER_NAME  || true
-      docker pull  $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      EOF
-  only:
-    - beta
-    - staging
-    - live
+      BACKUP_NAME="${CONTAINER_NAME}-backup-\$(date +%Y%m%d%H%M%S)"
+      FAILED_NAME="${CONTAINER_NAME}-failed-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}-\$(date +%Y%m%d%H%M%S)"
+      NEW_IMAGE="${DOCKER_IMAGE}:${IMAGE_TAG}-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
 
-# 🧩 DEPLOY JOBS
-deploy_dev:
+      echo "Deploying \$NEW_IMAGE to ${CONTAINER_NAME} on port ${PORT}"
+
+      docker pull "\$NEW_IMAGE"
+
+      # stop conte
+      if docker ps -a --format '{{.Names}}' | grep -Fxq "${CONTAINER_NAME}"; then
+        echo "Backing up existing container: ${CONTAINER_NAME} -> \$BACKUP_NAME"
+        docker rename "${CONTAINER_NAME}" "\$BACKUP_NAME"
+        docker stop "\$BACKUP_NAME" || true
+      fi
+
+      # Start new container
+      docker run \
+        --name "${CONTAINER_NAME}" \
+        -d \
+        --restart unless-stopped \
+        -p ${PORT}:3000 \
+        "\$NEW_IMAGE"
+
+      sleep 8
+
+      RUNNING=\$(docker inspect -f '{{.State.Running}}' "${CONTAINER_NAME}" 2>/dev/null || echo false)
+
+      if [ "\$RUNNING" != "true" ]; then
+        echo "New container is not running. Rolling back..."
+
+        docker stop "${CONTAINER_NAME}" || true
+        docker rename "${CONTAINER_NAME}" "\$FAILED_NAME" || true
+
+        LAST_BACKUP=\$(docker ps -a --format '{{.Names}}' | grep "^${CONTAINER_NAME}-backup-" | sort | tail -n 1 || true)
+
+        if [ -n "\$LAST_BACKUP" ]; then
+          docker rename "\$LAST_BACKUP" "${CONTAINER_NAME}"
+          docker start "${CONTAINER_NAME}"
+          echo "Rollback completed using \$LAST_BACKUP"
+        else
+          echo "No backup container found for rollback."
+          exit 1
+        fi
+
+        exit 1
+      fi
+
+      echo "Deployment successful."
+
+      # Keep latest 2 backup containers
+      OLD_BACKUPS=\$(docker ps -a --format '{{.Names}}' | grep "^${CONTAINER_NAME}-backup-" | sort | head -n -2 || true)
+
+      if [ -n "\$OLD_BACKUPS" ]; then
+        echo "Removing backup containers older than latest 2:"
+        echo "\$OLD_BACKUPS"
+        echo "\$OLD_BACKUPS" | xargs -r docker rm
+      fi
+
+      # latest 3 commit-tagged images 
+      OLD_IMAGE_TAGS=\$(docker image ls "${DOCKER_IMAGE}" --format '{{.Tag}}' | grep "^${IMAGE_TAG}-[0-9].*-" | sort -V | head -n -3 || true)
+
+      if [ -n "\$OLD_IMAGE_TAGS" ]; then
+        echo "Removing local images older than latest 3:"
+        echo "\$OLD_IMAGE_TAGS"
+
+        echo "\$OLD_IMAGE_TAGS" | while read -r OLD_TAG; do
+          if [ -n "\$OLD_TAG" ]; then
+            docker rmi "${DOCKER_IMAGE}:\$OLD_TAG" || true
+          fi
+        done
+      fi
+
+      echo "Current running container:"
+      docker ps --filter "name=${CONTAINER_NAME}"
+
+      echo "Backup containers retained:"
+      docker ps -a --filter "name=${CONTAINER_NAME}-backup-"
+
+      echo "Local images retained:"
+      docker image ls "${DOCKER_IMAGE}" | grep "${IMAGE_TAG}" || true
+      EOF
+
+#  DEV
+
+deploy_beta:
   <<: *deploy_template
   variables:
-    SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.213.142.112
-    CONTAINER_NAME: ziyaweb-dev
+    CONTAINER_NAME: ziyaweb-beta
     PORT: 5000
+    IMAGE_TAG: beta
   only:
-    - beta
+    - dev
+
+#  STAGING
 
 deploy_staging:
   <<: *deploy_template
   variables:
-    SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.213.142.112
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
+    IMAGE_TAG: staging
   only:
     - staging
+
+#  LIVE
 
 deploy_live:
   <<: *deploy_template
   variables:
-    SSH_KEY: $LIVE_KEY
-    TARGET_HOST: 34.213.142.112
     CONTAINER_NAME: ziyaweb-live
     PORT: 3001
+    IMAGE_TAG: live
   only:
     - live
