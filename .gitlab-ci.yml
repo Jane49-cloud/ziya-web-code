@@ -46,7 +46,7 @@ build_live:
   only:
     - live
 
-# DEPLOY TEMPLATE
+# DEPLOY TEMPLAT
 
 
 .deploy_template: &deploy_template
