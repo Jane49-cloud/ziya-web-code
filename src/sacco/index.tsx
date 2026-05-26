@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, Col, Row, Space, Tabs, Typography, message } from "antd";
 import {
     FiPlus,
-    FiRefreshCw,
+    //FiRefreshCw,
     FiTrendingUp,
     FiUserCheck,
 } from "react-icons/fi";
@@ -199,10 +199,10 @@ const SaccoPage = () => {
         [ensureRowsForPage, uiPageSize]
     );
 
-    const handleRefresh = async () => {
-        setUiPage(1);
-        await loadBatch(1, true);
-    };
+    // const handleRefresh = async () => {
+    //     setUiPage(1);
+    //     await loadBatch(1, true);
+    // };
 
     const progressiveTotal = rows.length + (hasMore ? BATCH_SIZE : 0);
 
@@ -234,13 +234,13 @@ const SaccoPage = () => {
 
                     <Col>
                         <Space wrap>
-                            <Button
+                            {/* <Button
                                 icon={<FiRefreshCw />}
                                 loading={isFetching || isBootstrapping}
                                 onClick={handleRefresh}
                             >
                                 Refresh
-                            </Button>
+                            </Button> */}
 
                             <Button
                                 type="primary"
