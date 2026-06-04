@@ -339,7 +339,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
           return (
             <Space>
-              {/* <Tag
+              <Tag
                 color="blue"
                 className="cursor-pointer"
                 onClick={() => {
@@ -348,7 +348,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
                 }}
               >
                 Edit
-              </Tag> */}
+              </Tag>
 
               {isPaid ? (
                 <Tag className="cursor-not-allowed opacity-70" color="green">

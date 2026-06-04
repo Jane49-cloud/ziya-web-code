@@ -361,7 +361,7 @@ const GroupLoanFormModal = ({
               .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
         group_id: groupId,
-        issued_by: issuedBy,
+        // issued_by: issuedBy,
       };
 
       if (isEditing) {
