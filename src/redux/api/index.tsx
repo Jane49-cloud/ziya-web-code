@@ -6,12 +6,14 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "https://betaapi.ziya.co.ke/api/v1",
+  baseUrl: "https://betaapi.ziya.co.ke/api/v2",
 
   // baseUrl: "https://api.ziya.co.ke/api/v2",
 
-  // baseUrl: "http://
-  baseUrl: "https://stagingapi.ziya.co.ke/api/v2",
+  // staging
+  //baseUrl: "https://stagingapi.ziya.co.ke/api/v2",
+
+  //edge (live)
   // baseUrl: "https://v3.1.0.ziya.co.ke/api/v2",
 
   prepareHeaders: (headers) => {
@@ -72,6 +74,7 @@ export const apiSlice = createApi({
     "WalletTransactions",
     "Subscriptions",
     "Visualization",
+    "Saccos",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

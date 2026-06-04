@@ -94,7 +94,7 @@ export const sidebarItems: SidebarItem[] = [
   // },
   {
     title: "Loans",
-    icon: "bank",
+    icon: "dollar",
     dropdown: [
       {
         title: "Categories",
@@ -121,7 +121,7 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
     title: "Subscriptions",
-    icon: "dollar",
+    icon: "bill",
     path: "/subscriptions",
     allowedRoles: STAFF_ROLES,
   },
@@ -159,6 +159,13 @@ export const sidebarItems: SidebarItem[] = [
       },
     ],
   },
+  {
+    title: "Sacco",
+    // icon: "chart-line",
+    icon: "bank",
+    path: "/sacco",
+    allowedRoles: ["admin", "dev"],
+  },
 
   {
     title: "Tasks",
@@ -174,7 +181,7 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
     title: "Documents",
-    icon: "note-2",
+    icon: "document",
     path: "/documents",
     allowedRoles: ALL_ROLES,
   },
@@ -186,10 +193,10 @@ export const sidebarItems: SidebarItem[] = [
   },
 
   // visualization
-  {
-    title: "Visualizations",
-    icon: "chart-line",
-    path: "/visualizations",
-    allowedRoles: ADMIN_DEV,
-  },
+  // {
+  //   title: "Visualizations",
+  //   icon: "chart-line",
+  //   path: "/visualizations",
+  //   allowedRoles: ADMIN_DEV,
+  // },
 ];

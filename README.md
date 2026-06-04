@@ -59,28 +59,24 @@ Filters in Loans Management
 
 <!-- //13th march meet before live -->
 
-add member, search members not in any group //done
-remove email group member  //done
-relation ship manager pagination //done
-Add loans issued to pagination & search. //done
-Visualizations
 
 
 remove summaries from pages //done
-
-My created by //done
-My managed. //done
 
 remove edit loans and edit payment 
 
 Groups page analytics (itarudishia api ikiwa ready wadau)
 Business  page check it 
 
-add member only list those not in groups
-sanitize search
-go live locally 
+
 
 18th
 wallet search // doen  but in personal  Joan Ouma does not work
 comment out business //done
 payment page pagination and search //done but Abraham Mbarak does not work
+
+
+//TO-DO
+sacco onboarding
+admin tracker
+
