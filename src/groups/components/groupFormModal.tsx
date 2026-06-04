@@ -162,7 +162,7 @@ const GroupLoanFormModal = ({
   loan,
   refetch,
   onWalletRefresh,
-  issuedBy,
+  //issuedBy,
 }: GroupLoanFormModalProps) => {
   const [form] = Form.useForm();
   const isEditing = !!loan;
