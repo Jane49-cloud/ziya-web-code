@@ -19,7 +19,8 @@ import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 import { cleanLowerInput, formatName, getUser } from "../../utils";
 
-import { STAFF_MANAGEMENT_ROLES, type UserRole, canAccess } from "../../utils/roles";
+import { type UserRole, canAccess } from "../../utils/roles";
+import { getRole } from "../../utils";
 
 const { Title, Text } = Typography;
 
@@ -83,9 +84,10 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
   
   //added
-    const userRole = (getUser()?.role ?? null) as UserRole | null;
+  const userRole = getRole() as UserRole | null;
+  const canManageLoanActions = canAccess(["admin", "dev", "support"], userRole);
+  const canManageLoanPay = canAccess(["admin", "dev"], userRole);
 
-    const canManageLoans = canAccess(STAFF_MANAGEMENT_ROLES, userRole);
 
   const [fetchGroupLoans, { isFetching }] = useLazyGetGroupLoansQuery();
 
@@ -343,57 +345,50 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
           return date ? dayjs(date).format("DD MMM YYYY") : "—";
         },
       },
-      ...(canManageLoans
-    ? [
       {
-        title: "Actions",
-        key: "actions",
-        render: (_: any, record: any) => {
-          const isPaid = Number(record?.balance ?? 0) <= 0;
+  title: "Actions",
+  key: "actions",
+  render: (_: any, record: any) => {
+    const isPaid = Number(record?.balance ?? 0) <= 0;
 
-          return (
-            <Space>
-              {canAccess(STAFF_MANAGEMENT_ROLES, userRole) && (
-                <>
-              <Tag
-                color="blue"
-                className="cursor-pointer"
-                onClick={() => {
-                  setEditLoan(record);
-                  setShowLoanModal(true);
-                }}
-              >
-                Edit
-              </Tag>
-              
+    return (
+      <Space>
+        {canManageLoanActions && (
+          <Tag
+            color="blue"
+            className="cursor-pointer"
+            onClick={() => {
+              setEditLoan(record);
+              setShowLoanModal(true);
+            }}
+          >
+            Edit
+          </Tag>
+        )}
 
-              {isPaid ? (
-                <Tag className="cursor-not-allowed opacity-70" color="green">
-                  Paid
-                </Tag>
-              ) : (
-                <Tag
-                  color="gold"
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setSelectedLoan(record);
-                    setShowPaymentModal(true);
-                  }}
-                >
-                  + Payment
-                </Tag>
-              )}
-              </>
-            )}
-            </Space>
-          );
-        },
-      },
-      ]
-     : []),
-  ],
-  [navigate, canManageLoans]
-);
+        {isPaid ? (
+          <Tag className="cursor-not-allowed opacity-70" color="green">
+            Paid
+          </Tag>
+        ) : (
+          canManageLoanPay && (
+            <Tag
+              color="gold"
+              className="cursor-pointer"
+              onClick={() => {
+                setSelectedLoan(record);
+                setShowPaymentModal(true);
+              }}
+            >
+              + Payment
+            </Tag>
+          )
+        )}
+      </Space>
+    );
+  },
+}
+    ], [navigate, canManageLoanActions, canManageLoanPay]);
    
 
   return (
