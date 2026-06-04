@@ -11,29 +11,54 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE
 
 before_script:
-  # 1) Log in to the GitLab Container Registry on the CI runner
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-# 🧱 BUILD STAGE
-build_image:
+# BUILD: DEV 
+
+build_beta:
   stage: build
   tags:
-    - ziya-web
+    - ziya-admin
   script:
-    - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
-    - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
+    - docker build --no-cache -t "$DOCKER_IMAGE:beta" -t "$DOCKER_IMAGE:beta-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:beta"
+    - docker push "$DOCKER_IMAGE:beta-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
   only:
-    - beta
+    - dev
+
+# BUILD: STAGING
+
+build_staging:
+  stage: build
+  tags:
+    - ziya-admin
+  script:
+    - docker build --no-cache -t "$DOCKER_IMAGE:staging" -t "$DOCKER_IMAGE:staging-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:staging"
+    - docker push "$DOCKER_IMAGE:staging-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
+  only:
     - staging
+
+# BUILD: LIVE
+
+build_live:
+  stage: build
+  tags:
+    - ziya-admin
+  script:
+    - docker build --no-cache -t "$DOCKER_IMAGE:live" -t "$DOCKER_IMAGE:live-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
+    - docker push "$DOCKER_IMAGE:live"
+    - docker push "$DOCKER_IMAGE:live-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
+  only:
     - live
 
-# 🚀 DEPLOY TEMPLATE
+# DEPLOY TEMPLATE
+
 .deploy_template: &deploy_template
   stage: deploy
   tags:
-    - ziya-web
+    - ziya-admin
   before_script:
-    # 2) Install your SSH key on the runner
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
@@ -41,47 +66,96 @@ build_image:
   script:
     - |
       ssh -o StrictHostKeyChecking=no ubuntu@"$TARGET_HOST" << EOF
-      # 3) Log in to the GitLab registry on the remote host
+      set -e
+
       echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-      # 4) Stop, remove, pull, and run your container
-      docker stop  $CONTAINER_NAME  || true
-      docker rm    $CONTAINER_NAME  || true
-      docker pull  $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      docker run --name $CONTAINER_NAME -d -p $PORT:3000 $DOCKER_IMAGE:$CI_COMMIT_REF_NAME
-      EOF
-  only:
-    - beta
-    - staging
-    - live
+      NEW_IMAGE="$DOCKER_IMAGE:$IMAGE_TAG-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}"
 
-# 🧩 DEPLOY JOBS
-deploy_dev:
+      echo "Pulling image: \$NEW_IMAGE"
+      docker pull "\$NEW_IMAGE"
+
+      echo "Stopping and removing current container: $CONTAINER_NAME"
+      docker stop "$CONTAINER_NAME" || true
+      docker rm "$CONTAINER_NAME" || true
+
+      echo "Starting new container: $CONTAINER_NAME on port $PORT"
+      docker run \
+        --name "$CONTAINER_NAME" \
+        -d \
+        --restart unless-stopped \
+        -p "$PORT":3000 \
+        "\$NEW_IMAGE"
+
+      sleep 8
+
+      RUNNING=\$(docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || echo false)
+
+      if [ "\$RUNNING" != "true" ]; then
+        echo "New container failed to stay running."
+        docker logs "$CONTAINER_NAME" || true
+        exit 1
+      fi
+
+      echo "Container deployed successfully."
+
+      echo "Keeping only latest 2 local images for $IMAGE_TAG..."
+
+      OLD_IMAGE_TAGS=\$(docker image ls "$DOCKER_IMAGE" --format '{{.Tag}}' | grep "^$IMAGE_TAG-[0-9].*-" | sort -V | head -n -2 || true)
+
+      if [ -n "\$OLD_IMAGE_TAGS" ]; then
+        echo "Removing older local images:"
+        echo "\$OLD_IMAGE_TAGS"
+
+        echo "\$OLD_IMAGE_TAGS" | while read -r OLD_TAG; do
+          if [ -n "\$OLD_TAG" ]; then
+            docker rmi "$DOCKER_IMAGE:\$OLD_TAG" || true
+          fi
+        done
+      fi
+
+      echo "Current running container:"
+      docker ps --filter "name=$CONTAINER_NAME"
+
+      echo "Images retained for $IMAGE_TAG:"
+      docker image ls "$DOCKER_IMAGE" | grep "$IMAGE_TAG" || true
+      EOF
+
+# DEPLOY: DEV -> BETA
+
+deploy_beta:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.213.142.112
-    CONTAINER_NAME: ziyaweb-dev
+    TARGET_HOST: 54.218.41.109
+    CONTAINER_NAME: ziyaweb-beta
     PORT: 5000
+    IMAGE_TAG: beta
   only:
-    - beta
+    - dev
+
+# DEPLOY: STAGING
 
 deploy_staging:
   <<: *deploy_template
   variables:
     SSH_KEY: $STAGING_KEY
-    TARGET_HOST: 34.213.142.112
+    TARGET_HOST: 54.218.41.109
     CONTAINER_NAME: ziyaweb-staging
     PORT: 3000
+    IMAGE_TAG: staging
   only:
     - staging
+
+# DEPLOY: LIVE
 
 deploy_live:
   <<: *deploy_template
   variables:
     SSH_KEY: $LIVE_KEY
-    TARGET_HOST: 34.213.142.112
+    TARGET_HOST: 54.218.41.109
     CONTAINER_NAME: ziyaweb-live
     PORT: 3001
+    IMAGE_TAG: live
   only:
     - live

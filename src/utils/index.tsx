@@ -91,6 +91,22 @@ export const formatDate = (dateString: string) => {
   }).format(new Date(dateString));
 };
 
+export const formatDateTime = (
+  value?: string | null,
+  fallback = "—"
+): string => {
+  if (!value || value.startsWith("0001-01-01")) return fallback;
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(parsed);
+};
 
 export const formatCurrency = (
   value: number | string | null | undefined,

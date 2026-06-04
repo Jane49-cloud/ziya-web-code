@@ -19,6 +19,8 @@ import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 import { cleanLowerInput, formatName, getUser } from "../../utils";
 
+import { STAFF_MANAGEMENT_ROLES, type UserRole, canAccess } from "../../utils/roles";
+
 const { Title, Text } = Typography;
 
 const BATCH_SIZE = 20;
@@ -73,9 +75,17 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
     const user = getUser();
     if (!user?.id) return null;
 
+    
+
     const parsedId = Number(user.id);
     return Number.isNaN(parsedId) ? null : parsedId;
   }, []);
+
+  
+  //added
+    const userRole = (getUser()?.role ?? null) as UserRole | null;
+
+    const canManageLoans = canAccess(STAFF_MANAGEMENT_ROLES, userRole);
 
   const [fetchGroupLoans, { isFetching }] = useLazyGetGroupLoansQuery();
 
@@ -281,6 +291,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
   // const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
 
+  
+
   const columns = useMemo(
     () => [
       {
@@ -331,6 +343,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
           return date ? dayjs(date).format("DD MMM YYYY") : "—";
         },
       },
+      ...(canManageLoans
+    ? [
       {
         title: "Actions",
         key: "actions",
@@ -339,7 +353,9 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
           return (
             <Space>
-              {/* <Tag
+              {canAccess(STAFF_MANAGEMENT_ROLES, userRole) && (
+                <>
+              <Tag
                 color="blue"
                 className="cursor-pointer"
                 onClick={() => {
@@ -348,7 +364,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
                 }}
               >
                 Edit
-              </Tag> */}
+              </Tag>
+              
 
               {isPaid ? (
                 <Tag className="cursor-not-allowed opacity-70" color="green">
@@ -366,13 +383,18 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
                   + Payment
                 </Tag>
               )}
+              </>
+            )}
             </Space>
           );
         },
       },
-    ],
-    [navigate]
-  );
+      ]
+     : []),
+  ],
+  [navigate, canManageLoans]
+);
+   
 
   return (
     <Card bordered={false} className="rounded-xl shadow-sm">
