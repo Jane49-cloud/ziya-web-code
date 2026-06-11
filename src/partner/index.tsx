@@ -7,9 +7,11 @@ import {
     FiUserCheck,
 } from "react-icons/fi";
 
-import { useLazyGetAllSaccosQuery } from "./features";
+import { useLazyGetAllSaccosQuery, useGetAllPartnerWalletsQuery } from "./features";
 import AllSaccosTab, { type SaccoRow } from "./pages/allSaccosTab";
 import CreateSaccoTab from "./pages/createSaccoTab";
+
+import AllPartnerWalletsTab from "./pages/allPartnerWalletsTab";
 
 const { Title, Text } = Typography;
 
@@ -19,6 +21,7 @@ const getSaccoRows = (data: any): SaccoRow[] => {
     if (Array.isArray(data)) return data;
 
     const rows =
+        data?.partners ??
         data?.saccos ??
         data?.data ??
         data?.results ??
@@ -75,6 +78,7 @@ const mergeSaccoRows = (items: SaccoRow[]) => {
     return Array.from(map.values());
 };
 
+
 const SaccoPage = () => {
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -87,6 +91,21 @@ const SaccoPage = () => {
 
     const [uiPage, setUiPage] = useState(1);
     const [uiPageSize, setUiPageSize] = useState(10);
+
+    //wallets
+    const [walletPage, setWalletPage] = useState(1);
+    const [walletPageSize, setWalletPageSize] = useState(10);
+
+    const {
+        data: walletsData,
+        isLoading: isLoadingWallets,
+        isFetching: isFetchingWallets,
+    } = useGetAllPartnerWalletsQuery({
+        page: walletPage - 1,
+        page_size: walletPageSize,
+    });
+
+    const wallets = walletsData?.wallets ?? [];
 
     const [knownTotalSaccos, setKnownTotalSaccos] = useState<number>();
     const [knownTotalSaccoMembers, setKnownTotalSaccoMembers] = useState<number>();
@@ -141,7 +160,7 @@ const SaccoPage = () => {
                     hasMoreAfter,
                 };
             } catch (error) {
-                messageApi.error("Failed to load Saccos.");
+                messageApi.error("Failed to load Partners.");
 
                 return {
                     newRows: [],
@@ -201,6 +220,7 @@ const SaccoPage = () => {
 
     // const handleRefresh = async () => {
     //     setUiPage(1);
+
     //     await loadBatch(1, true);
     // };
 
@@ -224,11 +244,11 @@ const SaccoPage = () => {
                 <Row justify="space-between" align="middle" gutter={[16, 16]}>
                     <Col>
                         <Title level={3} style={{ marginBottom: 4 }}>
-                            Sacco Management
+                            Parter Management
                         </Title>
 
                         <Text type="secondary">
-                            Manage Sacco onboarding, chairpersons, locations, and membership records.
+                            Manage Partner onboarding, chairpersons, locations, and membership records.
                         </Text>
                     </Col>
 
@@ -247,7 +267,7 @@ const SaccoPage = () => {
                                 icon={<FiPlus />}
                                 onClick={() => setActiveTab("create")}
                             >
-                                Create Sacco
+                                Create Partner
                             </Button>
                         </Space>
                     </Col>
@@ -259,7 +279,7 @@ const SaccoPage = () => {
                             <Space direction="vertical" size={4}>
                                 <Space>
                                     <FiTrendingUp color="#1677ff" />
-                                    <Text type="secondary">Total SACCOs</Text>
+                                    <Text type="secondary">Total Partners</Text>
                                 </Space>
 
                                 <Title level={3} style={{ margin: 0 }}>
@@ -274,7 +294,7 @@ const SaccoPage = () => {
                             <Space direction="vertical" size={4}>
                                 <Space>
                                     <FiUserCheck color="#1677ff" />
-                                    <Text type="secondary">Total SACCO Members</Text>
+                                    <Text type="secondary">Total Partners Members</Text>
                                 </Space>
 
                                 <Title level={3} style={{ margin: 0 }}>
@@ -292,7 +312,7 @@ const SaccoPage = () => {
                         items={[
                             {
                                 key: "all",
-                                label: "All Saccos",
+                                label: "All Partners",
                                 children: (
                                     <AllSaccosTab
                                         saccos={rows}
@@ -307,7 +327,7 @@ const SaccoPage = () => {
                             },
                             {
                                 key: "create",
-                                label: "Create Sacco",
+                                label: "Create Partner",
                                 children: (
                                     <CreateSaccoTab
                                         onCancel={() => setActiveTab("all")}
@@ -315,6 +335,29 @@ const SaccoPage = () => {
                                             setUiPage(1);
                                             setActiveTab("all");
                                             void loadBatch(1, true);
+                                        }}
+                                    />
+                                ),
+                            },
+                            //wallet
+                            {
+                                key: "wallets",
+                                label: "Partner Wallets",
+                                children: (
+                                    <AllPartnerWalletsTab
+                                        wallets={wallets}
+                                        isLoading={isLoadingWallets}
+                                        isFetching={isFetchingWallets}
+                                        page={walletPage}
+                                        pageSize={walletPageSize}
+                                        totalWallets={
+                                            walletsData?.total ??
+                                            walletsData?.count ??
+                                            wallets.length
+                                        }
+                                        onPaginationChange={(nextPage, nextPageSize) => {
+                                            setWalletPage(nextPage);
+                                            setWalletPageSize(nextPageSize);
                                         }}
                                     />
                                 ),
