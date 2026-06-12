@@ -190,7 +190,6 @@ const AllPartnerWalletsTab = ({
                 value={search}
                 onChange={(event) => {
                     setSearch(event.target.value);
-                    void onPaginationChange(1, pageSize);
                 }}
                 style={{ marginBottom: 20 }}
             />
