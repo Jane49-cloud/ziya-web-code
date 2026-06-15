@@ -215,9 +215,7 @@ const AllSaccosTab = ({
                     </Text>
                 </Col>
 
-                <Col>
-                    <Tag color="blue">{filteredSaccos.length} shown</Tag>
-                </Col>
+                
             </Row>
 
             <Input

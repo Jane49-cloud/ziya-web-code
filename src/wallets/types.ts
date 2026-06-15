@@ -10,3 +10,4 @@ export interface GroupWallet {
     subscription_arrears?: number;
     amount_paid?: number;
 }
+

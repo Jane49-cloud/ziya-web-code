@@ -140,6 +140,11 @@ export const sidebarItems: SidebarItem[] = [
         path: "/wallets/personal",
         allowedRoles: STAFF_ROLES,
       },
+      {
+        title: "Partner Wallets",
+        path: "/wallets/partners",
+        allowedRoles: ADMIN_DEV,
+      },
     ],
   },
 
@@ -148,12 +153,12 @@ export const sidebarItems: SidebarItem[] = [
     icon: "arrows-circle",
     dropdown: [
       {
-        title: "Group",
+        title: "Group Transactions",
         path: "/transactions/group",
         allowedRoles: STAFF_ROLES,
       },
       {
-        title: "Personal",
+        title: "Personal Transactions",
         path: "/transactions/personal",
         allowedRoles: STAFF_ROLES,
       },
