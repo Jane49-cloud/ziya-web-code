@@ -173,7 +173,7 @@ const AppRouting = (): ReactElement => {
             {/* partner */}
             <Route path="/sacco" element={<SaccoPage />} />
             <Route path="/partners/:id" element={<SinglePartnerPage />} />
-            <Route path="/partners/wallets/:id" element={<SinglePartnerWalletPage />} />
+            <Route path="/partners/wallet/:id" element={<SinglePartnerWalletPage />} />
 
           </Route>
 

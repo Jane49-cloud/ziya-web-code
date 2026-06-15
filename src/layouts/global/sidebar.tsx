@@ -23,6 +23,10 @@ const Sidebar = ({ closeSidebar }: SidebarProps) => {
   // Auto-open dropdown if a child route is currently active
   useEffect(() => {
     setOpenDropdowns((prev) => {
+      console.log("USER:", getUser());
+  console.log("ROLE:", getRole());
+  console.log("ROLE TYPE:", typeof getRole());
+  
       const next = { ...prev };
       sidebarItems.forEach((item) => {
         if (item.dropdown) {

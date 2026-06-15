@@ -26,6 +26,7 @@ export type SaccoRow = {
     chairPerson?: number;
     chairperson?: number;
     chairPersonName?: string;
+    chairperson_name?: string;
 
     totalMembers?: number;
     total_members?: number;
@@ -59,7 +60,7 @@ const getPartnerName = (record: SaccoRow) =>
     record.saccoName ?? record.name;
 
 const getChairperson = (record: SaccoRow) =>
-    record.chairPerson ?? record.chairperson;
+    record.chairperson_name ?? record.chairperson_name;
 
 const getMembersCount = (record: SaccoRow) => {
     return Number(
@@ -140,8 +141,8 @@ const AllSaccosTab = ({
             ),
         },
         {
-            title: "Chairperson",
-            key: "chairperson",
+            title: "Chairperson Name",
+            key: "chairperson_name",
             render: (_, record) => {
                 const chairpersonName =
                     formatFullName(record.chairPersonName) ||
@@ -153,7 +154,7 @@ const AllSaccosTab = ({
 
                 return (
                     <Tag>
-                        {getChairperson(record) ?? "—"}
+                        {formatName(getChairperson(record)) ?? "—"}
                     </Tag>
                 );
             },

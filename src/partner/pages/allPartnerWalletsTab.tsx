@@ -4,7 +4,7 @@ import {
     Col,
     Input,
     Row,
-    Space,
+    //Space,
     Table,
     Tag,
     Tooltip,
@@ -80,11 +80,12 @@ const AllPartnerWalletsTab = ({
     }, [search, wallets]);
 
     const handleViewWallet = (record: PartnerWalletRow) => {
-        const walletId = getWalletId(record);
+        // const id = getWalletId(record);
+        const id = record.partner_id ?? record.wallet_id ?? record.id;
 
-        if (!walletId) return;
+        if (!id) return;
 
-        navigate(`/partners/wallets/${walletId}`);
+        navigate(`/partners/wallet/${id}`);
     };
 
     const columns: ColumnsType<PartnerWalletRow> = [

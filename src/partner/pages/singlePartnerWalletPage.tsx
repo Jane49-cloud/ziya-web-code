@@ -143,17 +143,17 @@ const SinglePartnerWalletPage = () => {
             </Row>
 
             <Descriptions bordered column={1} title="Wallet Information">
-                <Descriptions.Item label="Wallet ID">
+                {/* <Descriptions.Item label="Wallet ID">
                     {wallet.id ?? wallet.wallet_id ?? "—"}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Partner ID">
                     {wallet.partner_id ?? "—"}
-                </Descriptions.Item>
+                </Descriptions.Item> */}
 
-                <Descriptions.Item label="Partner Name">
+                {/* <Descriptions.Item label="Partner Name">
                     {formatName(wallet.partner_name) || "—"}
-                </Descriptions.Item>
+                </Descriptions.Item> */}
 
                 <Descriptions.Item label="Cash Balance">
                     {formatCurrency(wallet.cash_balance ?? 0)}
