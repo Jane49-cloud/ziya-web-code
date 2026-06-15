@@ -17,16 +17,100 @@ export const getUser = (): UserProfile | null => {
   }
 };
 
-export const normalizeRole = (role: string | null | undefined): string => {
-  if (!role) return "";
-  return role.trim().toLowerCase();
+// export const normalizeRole = (role: string | null | undefined): string => {
+//   if (!role) return "";
+//   return role.trim().toLowerCase();
+// };
+
+//new normalizeRole
+const ROLE_ID_TO_NAME: Record<number, string> = {
+  1: "admin",
+  2: "manager",
+  3: "staff",
+  4: "dev",
+  5: "finance",
+  6: "support",
+  7: "partner-staff",
+  8: "customer",
+  9: "group-admin",
+  10: "partner-chairman",
 };
 
-export const getRole = (): string | null => {
-  const role = localStorage.getItem("ziya-role");
-  if (!role) return null;
-  return normalizeRole(role) || null;
+export const normalizeRole = (role: unknown): string => {
+  if (role === null || role === undefined || role === "") return "";
+
+  // id: 1, name: "admin"
+  if (typeof role === "object") {
+    const roleObj = role as {
+      id?: number;
+      name?: string;
+      role?: string | number;
+      role_id?: number;
+    };
+
+    if (roleObj.name) return roleObj.name.trim().toLowerCase();
+    if (roleObj.role) return normalizeRole(roleObj.role);
+    if (roleObj.role_id) return normalizeRole(roleObj.role_id);
+    if (roleObj.id) return ROLE_ID_TO_NAME[roleObj.id] ?? "";
+  }
+
+  //number: 1
+  if (typeof role === "number") {
+    return ROLE_ID_TO_NAME[role] ?? "";
+  }
+
+  // string: "1" or "admin"
+  if (typeof role === "string") {
+    const cleaned = role.trim().toLowerCase();
+
+    if (/^\d+$/.test(cleaned)) {
+      return ROLE_ID_TO_NAME[Number(cleaned)] ?? "";
+    }
+
+    return cleaned;
+  }
+
+  return "";
 };
+
+// export const getRole = (): string | null => {
+//   const role = localStorage.getItem("ziya-role");
+//   if (!role) return null;
+//   return normalizeRole(role) || null;
+// };
+
+
+//new getrole with ID 
+export const getRole = (): string | null => {
+  const storedRole = localStorage.getItem("ziya-role");
+
+  if (storedRole) {
+    const normalized = normalizeRole(storedRole);
+    if (normalized) return normalized;
+  }
+
+  const user = getUser() as any;
+
+  const roleFromUser =
+    user?.userRole?.name ??
+    user?.role?.name ??
+    user?.role_id ??
+    user?.roleId ??
+    user?.role ??
+    user?.staffData?.role ??
+    null;
+
+  const normalized = normalizeRole(roleFromUser);
+
+  if (normalized) {
+    localStorage.setItem("ziya-role", normalized);
+    return normalized;
+  }
+
+  return null;
+};
+
+
 
 export const formatName = (value?: string | null): string => {
   if (!value) return "";

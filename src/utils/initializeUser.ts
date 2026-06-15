@@ -18,12 +18,24 @@ export const initializeUser = async () => {
     // Guard for browser-only
     if (typeof window !== "undefined") {
       localStorage.setItem("ziya-profile", JSON.stringify(data.staff));
+      // const detectedRole =
+      //   data.staff?.userRole?.name ??
+      //   data.staff?.role ??
+      //   data.staff?.staffData?.role ??
+      //   "";
+
+      //new detectedRole
       const detectedRole =
         data.staff?.userRole?.name ??
+        data.staff?.role?.name ??
+        data.staff?.role_id ??
+        data.staff?.roleId ??
         data.staff?.role ??
         data.staff?.staffData?.role ??
         "";
+
       const normalizedRole = normalizeRole(detectedRole);
+      
       if (normalizedRole) {
         localStorage.setItem("ziya-role", normalizedRole);
       }

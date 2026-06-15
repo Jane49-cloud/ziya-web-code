@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, Col, Row, Space, Tabs, Typography, message } from "antd";
 import {
     FiPlus,
-    //FiRefreshCw,
+    // FiRefreshCw,
     FiTrendingUp,
     FiUserCheck,
 } from "react-icons/fi";
 
-import { useLazyGetAllSaccosQuery } from "./features";
+import { useLazyGetAllSaccosQuery, useGetAllPartnerWalletsQuery } from "./features";
 import AllSaccosTab, { type SaccoRow } from "./pages/allSaccosTab";
 import CreateSaccoTab from "./pages/createSaccoTab";
+import AllPartnerWalletsTab from "./pages/allPartnerWalletsTab";
 
 const { Title, Text } = Typography;
 
@@ -19,6 +20,7 @@ const getSaccoRows = (data: any): SaccoRow[] => {
     if (Array.isArray(data)) return data;
 
     const rows =
+        data?.partners ??
         data?.saccos ??
         data?.data ??
         data?.results ??
@@ -60,8 +62,8 @@ const getMembersCount = (record: SaccoRow) => {
 const getSaccoUniqueKey = (record: SaccoRow) => {
     return String(
         record.ID ??
-        record.id ??
-        `${record.saccoName ?? "sacco"}-${record.location ?? ""}-${record.dateCreated ?? record.created_at ?? ""}`
+            record.id ??
+            `${record.saccoName ?? "sacco"}-${record.location ?? ""}-${record.dateCreated ?? record.created_at ?? ""}`
     );
 };
 
@@ -87,6 +89,27 @@ const SaccoPage = () => {
 
     const [uiPage, setUiPage] = useState(1);
     const [uiPageSize, setUiPageSize] = useState(10);
+
+    const [walletPage, setWalletPage] = useState(1);
+    const [walletPageSize, setWalletPageSize] = useState(10);
+
+    const shouldFetchWallets = activeTab === "wallets";
+
+    const {
+        data: walletsData,
+        isLoading: isLoadingWallets,
+        isFetching: isFetchingWallets,
+    } = useGetAllPartnerWalletsQuery(
+        {
+            page: walletPage,
+            page_size: walletPageSize,
+        },
+        {
+            skip: !shouldFetchWallets,
+        }
+    );
+
+    const wallets = walletsData?.wallets ?? [];
 
     const [knownTotalSaccos, setKnownTotalSaccos] = useState<number>();
     const [knownTotalSaccoMembers, setKnownTotalSaccoMembers] = useState<number>();
@@ -141,7 +164,7 @@ const SaccoPage = () => {
                     hasMoreAfter,
                 };
             } catch (error) {
-                messageApi.error("Failed to load Saccos.");
+                messageApi.error("Failed to load Partners.");
 
                 return {
                     newRows: [],
@@ -199,10 +222,15 @@ const SaccoPage = () => {
         [ensureRowsForPage, uiPageSize]
     );
 
-    // const handleRefresh = async () => {
-    //     setUiPage(1);
-    //     await loadBatch(1, true);
-    // };
+    const handleWalletPaginationChange = useCallback(
+        (nextPage: number, nextPageSize: number) => {
+            const normalizedPage = nextPageSize !== walletPageSize ? 1 : nextPage;
+
+            setWalletPage(normalizedPage);
+            setWalletPageSize(nextPageSize);
+        },
+        [walletPageSize]
+    );
 
     const progressiveTotal = rows.length + (hasMore ? BATCH_SIZE : 0);
 
@@ -224,30 +252,22 @@ const SaccoPage = () => {
                 <Row justify="space-between" align="middle" gutter={[16, 16]}>
                     <Col>
                         <Title level={3} style={{ marginBottom: 4 }}>
-                            Sacco Management
+                            Partner Management
                         </Title>
 
                         <Text type="secondary">
-                            Manage Sacco onboarding, chairpersons, locations, and membership records.
+                            Manage Partner onboarding, chairpersons, locations, and membership records.
                         </Text>
                     </Col>
 
                     <Col>
                         <Space wrap>
-                            {/* <Button
-                                icon={<FiRefreshCw />}
-                                loading={isFetching || isBootstrapping}
-                                onClick={handleRefresh}
-                            >
-                                Refresh
-                            </Button> */}
-
                             <Button
                                 type="primary"
                                 icon={<FiPlus />}
                                 onClick={() => setActiveTab("create")}
                             >
-                                Create Sacco
+                                Create Partner
                             </Button>
                         </Space>
                     </Col>
@@ -259,7 +279,7 @@ const SaccoPage = () => {
                             <Space direction="vertical" size={4}>
                                 <Space>
                                     <FiTrendingUp color="#1677ff" />
-                                    <Text type="secondary">Total SACCOs</Text>
+                                    <Text type="secondary">Total Partners</Text>
                                 </Space>
 
                                 <Title level={3} style={{ margin: 0 }}>
@@ -274,7 +294,7 @@ const SaccoPage = () => {
                             <Space direction="vertical" size={4}>
                                 <Space>
                                     <FiUserCheck color="#1677ff" />
-                                    <Text type="secondary">Total SACCO Members</Text>
+                                    <Text type="secondary">Total Partners Members</Text>
                                 </Space>
 
                                 <Title level={3} style={{ margin: 0 }}>
@@ -292,32 +312,54 @@ const SaccoPage = () => {
                         items={[
                             {
                                 key: "all",
-                                label: "All Saccos",
-                                children: (
-                                    <AllSaccosTab
-                                        saccos={rows}
-                                        isLoading={isBootstrapping}
-                                        isFetching={isFetching}
-                                        page={uiPage}
-                                        pageSize={uiPageSize}
-                                        totalSaccos={totalSaccos}
-                                        onPaginationChange={handlePaginationChange}
-                                    />
-                                ),
+                                label: "All Partners",
+                                children:
+                                    activeTab === "all" ? (
+                                        <AllSaccosTab
+                                            saccos={rows}
+                                            isLoading={isBootstrapping}
+                                            isFetching={isFetching}
+                                            page={uiPage}
+                                            pageSize={uiPageSize}
+                                            totalSaccos={totalSaccos}
+                                            onPaginationChange={handlePaginationChange}
+                                        />
+                                    ) : null,
                             },
                             {
                                 key: "create",
-                                label: "Create Sacco",
-                                children: (
-                                    <CreateSaccoTab
-                                        onCancel={() => setActiveTab("all")}
-                                        onCreated={() => {
-                                            setUiPage(1);
-                                            setActiveTab("all");
-                                            void loadBatch(1, true);
-                                        }}
-                                    />
-                                ),
+                                label: "Create Partner",
+                                children:
+                                    activeTab === "create" ? (
+                                        <CreateSaccoTab
+                                            onCancel={() => setActiveTab("all")}
+                                            onCreated={() => {
+                                                setUiPage(1);
+                                                setActiveTab("all");
+                                                void loadBatch(1, true);
+                                            }}
+                                        />
+                                    ) : null,
+                            },
+                            {
+                                key: "wallets",
+                                label: "Partner Wallets",
+                                children:
+                                    activeTab === "wallets" ? (
+                                        <AllPartnerWalletsTab
+                                            wallets={wallets}
+                                            isLoading={isLoadingWallets}
+                                            isFetching={isFetchingWallets}
+                                            page={walletPage}
+                                            pageSize={walletPageSize}
+                                            totalWallets={
+                                                walletsData?.total ??
+                                                walletsData?.count ??
+                                                wallets.length
+                                            }
+                                            onPaginationChange={handleWalletPaginationChange}
+                                        />
+                                    ) : null,
                             },
                         ]}
                     />

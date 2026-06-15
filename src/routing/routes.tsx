@@ -160,7 +160,7 @@ export const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    title: "Sacco",
+    title: "Partner",
     // icon: "chart-line",
     icon: "bank",
     path: "/sacco",

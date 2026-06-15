@@ -65,8 +65,10 @@ import SubscriptionsPage from "../subscriptions";
 import GroupSubscriptionDetailsPage from "../subscriptions/pages/groupSubscriptionDetails";
 // visualization
 import VisualizationsPage from "../visualization/visualizationIndex";
-//sacco
-import SaccoPage from "../sacco/index";
+//Partner
+import SaccoPage from "../partner/index";
+import SinglePartnerPage from "../partner/pages/singlePartnerPage";
+import SinglePartnerWalletPage from "../partner/pages/singlePartnerWalletPage";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
@@ -168,8 +170,10 @@ const AppRouting = (): ReactElement => {
             {/* visualization */}
             <Route path="/visualizations" element={<VisualizationsPage />} />
 
-            {/* sacco */}
+            {/* partner */}
             <Route path="/sacco" element={<SaccoPage />} />
+            <Route path="/partners/:id" element={<SinglePartnerPage />} />
+            <Route path="/partners/wallet/:id" element={<SinglePartnerWalletPage />} />
 
           </Route>
 

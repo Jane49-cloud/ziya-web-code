@@ -75,6 +75,7 @@ export const apiSlice = createApi({
     "Subscriptions",
     "Visualization",
     "Saccos",
+    "PartnerWallets",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

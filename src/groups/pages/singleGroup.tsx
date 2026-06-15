@@ -7,7 +7,7 @@ import GroupMembersTab from "../components/groupMembersTab";
 import GroupWalletTab from "../components/wallet";
 import GroupLoanHistoryTab from "../components/groupLoanHistoryTab";
 import GroupPaymentHistoryTab from "../components/groupPaymentHistoryTab";
-import GroupAnalysisTab from "../components/groupAnalysisTab";
+//import GroupAnalysisTab from "../components/groupAnalysisTab";
 import { formatName } from "../../utils";
 
 const { Title } = Typography;
@@ -187,15 +187,15 @@ const SingleGroupPage: React.FC = () => {
         "Open to view payment activity."
       ),
     },
-    {
-      key: "analysis",
-      label: renderTabLabel("Analysis", "Trends & insights"),
-      children: renderDeferred(
-        "analysis",
-        <GroupAnalysisTab groupId={groupId} />,
-        "Launch analytics to explore charts and ratios."
-      ),
-    },
+    // {
+    //   key: "analysis",
+    //   label: renderTabLabel("Analysis", "Trends & insights"),
+    //   children: renderDeferred(
+    //     "analysis",
+    //     <GroupAnalysisTab groupId={groupId} />,
+    //     "Launch analytics to explore charts and ratios."
+    //   ),
+    // },
   ];
 
   return (
