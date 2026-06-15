@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
     Button,
-    Col,
+    //Col,
     Input,
     Result,
     Row,
