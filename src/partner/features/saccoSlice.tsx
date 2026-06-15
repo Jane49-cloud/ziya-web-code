@@ -19,6 +19,11 @@ type CreateSaccoPayload = {
     cp_email_address: string;
 };
 
+type DepositPartnerWalletPayload = {
+    partner_id: number | string;
+    amount: number;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllSaccos: builder.query<
@@ -186,10 +191,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner groups
-        getPartnerGroups: builder.query<
-            any,
-            PartnerPaginationQuery
-        >({
+        getPartnerGroups: builder.query<any, PartnerPaginationQuery >({
             query: ({
                 partnerId,
                 page = 0,
@@ -213,6 +215,24 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 },
             ],
         }),
+
+        //deposit
+        depositToPartnerWallet: builder.mutation<
+    any,
+    DepositPartnerWalletPayload
+>({
+    query: (body) => ({
+        url: "/partner-wallets/deposit",
+        method: "POST",
+        body,
+    }),
+    invalidatesTags: [
+        {
+            type: "PartnerWallets",
+            id: "LIST",
+        },
+    ],
+}),
     }),
 });
 

@@ -14,6 +14,7 @@ export const {
 
     useGetSinglePartnerWalletQuery,
     useLazyGetSinglePartnerWalletQuery,
+    useDepositToPartnerWalletMutation,
 
     useGetPartnerStaffQuery,
     useLazyGetPartnerStaffQuery,
