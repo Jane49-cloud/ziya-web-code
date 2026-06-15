@@ -16,7 +16,27 @@ const SHOW_WALLET_SUMMARY = false;
 const WalletTabs = () => {
     const location = useLocation();
 
-    const isPersonalWalletPage = location.pathname.includes("/wallets/personal");
+    const isPersonalWalletPage =
+        location.pathname.includes("/wallets/personal");
+
+    const isPartnerWalletPage =
+        location.pathname.includes("/wallets/partners");
+
+    const pageDetails = isPartnerWalletPage
+        ? {
+              title: "Partner Wallets",
+              description:
+                  "View partner wallet balances, assets and loan summaries.",
+          }
+        : isPersonalWalletPage
+          ? {
+                title: "Personal Wallets",
+                description: "Manage personal wallets at a glance.",
+            }
+          : {
+                title: "Group Wallets",
+                description: "Manage group wallets at a glance.",
+            };
 
     const { data: walletsResponse } = useGetGroupWalletsQuery(
         {},
@@ -43,7 +63,8 @@ const WalletTabs = () => {
         const totalPersonalWallets = personalWalletRows.length;
 
         const totalBalance = [...walletRows, ...personalWalletRows].reduce(
-            (sum: number, item: any) => sum + Number(item?.balance ?? 0),
+            (sum: number, item: any) =>
+                sum + Number(item?.balance ?? item?.cash_balance ?? 0),
             0
         );
 
@@ -58,17 +79,15 @@ const WalletTabs = () => {
         <div className="space-y-6 p-6">
             <div>
                 <Title level={3} className="!mb-1">
-                    {isPersonalWalletPage ? "Personal Wallets" : "Group Wallets"}
+                    {pageDetails.title}
                 </Title>
 
-                <Text type="secondary">
-                    {isPersonalWalletPage
-                        ? "Manage personal wallets at a glance."
-                        : "Manage group wallets at a glance."}
-                </Text>
+                <Text type="secondary">{pageDetails.description}</Text>
             </div>
 
-            {SHOW_WALLET_SUMMARY && <WalletSummaryCards summary={summary} />}
+            {SHOW_WALLET_SUMMARY && (
+                <WalletSummaryCards summary={summary} />
+            )}
 
             <Outlet />
         </div>

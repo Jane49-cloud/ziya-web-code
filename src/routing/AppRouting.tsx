@@ -70,6 +70,8 @@ import SaccoPage from "../partner/index";
 import SinglePartnerPage from "../partner/pages/singlePartnerPage";
 import SinglePartnerWalletPage from "../partner/pages/singlePartnerWalletPage";
 
+import PartnerWalletsPage from "../wallets/pages/partnerWalletsTab";
+
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
 const StatisticsPage = lazy(() => import("../statistics/pages"));
@@ -204,6 +206,9 @@ const AppRouting = (): ReactElement => {
               <Route index element={<Navigate to="group" replace />} />
               <Route path="group" element={<GroupWalletsTab />} />
               <Route path="personal" element={<PersonalWalletsTab />} />
+              //new
+              <Route path="partners" element={<PartnerWalletsPage />} />
+              <Route path="partners/:id" element={<SinglePartnerWalletPage />} />
             </Route>
 
             <Route path="/subscriptions" element={<SubscriptionsPage />} />

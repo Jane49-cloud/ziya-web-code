@@ -7,10 +7,11 @@ import {
     FiUserCheck,
 } from "react-icons/fi";
 
-import { useLazyGetAllSaccosQuery, useGetAllPartnerWalletsQuery } from "./features";
+// import { useLazyGetAllSaccosQuery, useGetAllPartnerWalletsQuery } from "./features";
+import { useLazyGetAllSaccosQuery } from "./features";
 import AllSaccosTab, { type SaccoRow } from "./pages/allSaccosTab";
 import CreateSaccoTab from "./pages/createSaccoTab";
-import AllPartnerWalletsTab from "./pages/allPartnerWalletsTab";
+//import AllPartnerWalletsTab from "./pages/allPartnerWalletsTab";
 
 const { Title, Text } = Typography;
 
@@ -90,26 +91,26 @@ const SaccoPage = () => {
     const [uiPage, setUiPage] = useState(1);
     const [uiPageSize, setUiPageSize] = useState(10);
 
-    const [walletPage, setWalletPage] = useState(1);
-    const [walletPageSize, setWalletPageSize] = useState(10);
+    // const [walletPage, setWalletPage] = useState(1);
+    // const [walletPageSize, setWalletPageSize] = useState(10);
 
-    const shouldFetchWallets = activeTab === "wallets";
+    // const shouldFetchWallets = activeTab === "wallets";
 
-    const {
-        data: walletsData,
-        isLoading: isLoadingWallets,
-        isFetching: isFetchingWallets,
-    } = useGetAllPartnerWalletsQuery(
-        {
-            page: walletPage,
-            page_size: walletPageSize,
-        },
-        {
-            skip: !shouldFetchWallets,
-        }
-    );
+    // const {
+    //     data: walletsData,
+    //     isLoading: isLoadingWallets,
+    //     isFetching: isFetchingWallets,
+    // } = useGetAllPartnerWalletsQuery(
+    //     {
+    //         page: walletPage,
+    //         page_size: walletPageSize,
+    //     },
+    //     {
+    //         skip: !shouldFetchWallets,
+    //     }
+    // );
 
-    const wallets = walletsData?.wallets ?? [];
+    //const wallets = walletsData?.wallets ?? [];
 
     const [knownTotalSaccos, setKnownTotalSaccos] = useState<number>();
     const [knownTotalSaccoMembers, setKnownTotalSaccoMembers] = useState<number>();
@@ -222,15 +223,15 @@ const SaccoPage = () => {
         [ensureRowsForPage, uiPageSize]
     );
 
-    const handleWalletPaginationChange = useCallback(
-        (nextPage: number, nextPageSize: number) => {
-            const normalizedPage = nextPageSize !== walletPageSize ? 1 : nextPage;
+    // const handleWalletPaginationChange = useCallback(
+    //     (nextPage: number, nextPageSize: number) => {
+    //         const normalizedPage = nextPageSize !== walletPageSize ? 1 : nextPage;
 
-            setWalletPage(normalizedPage);
-            setWalletPageSize(nextPageSize);
-        },
-        [walletPageSize]
-    );
+    //         setWalletPage(normalizedPage);
+    //         setWalletPageSize(nextPageSize);
+    //     },
+    //     [walletPageSize]
+    // );
 
     const progressiveTotal = rows.length + (hasMore ? BATCH_SIZE : 0);
 
@@ -341,26 +342,26 @@ const SaccoPage = () => {
                                         />
                                     ) : null,
                             },
-                            {
-                                key: "wallets",
-                                label: "Partner Wallets",
-                                children:
-                                    activeTab === "wallets" ? (
-                                        <AllPartnerWalletsTab
-                                            wallets={wallets}
-                                            isLoading={isLoadingWallets}
-                                            isFetching={isFetchingWallets}
-                                            page={walletPage}
-                                            pageSize={walletPageSize}
-                                            totalWallets={
-                                                walletsData?.total ??
-                                                walletsData?.count ??
-                                                wallets.length
-                                            }
-                                            onPaginationChange={handleWalletPaginationChange}
-                                        />
-                                    ) : null,
-                            },
+                            // {
+                            //     key: "wallets",
+                            //     label: "Partner Wallets",
+                            //     children:
+                            //         activeTab === "wallets" ? (
+                            //             <AllPartnerWalletsTab
+                            //                 wallets={wallets}
+                            //                 isLoading={isLoadingWallets}
+                            //                 isFetching={isFetchingWallets}
+                            //                 page={walletPage}
+                            //                 pageSize={walletPageSize}
+                            //                 totalWallets={
+                            //                     walletsData?.total ??
+                            //                     walletsData?.count ??
+                            //                     wallets.length
+                            //                 }
+                            //                 onPaginationChange={handleWalletPaginationChange}
+                            //             />
+                            //         ) : null,
+                            // },
                         ]}
                     />
                 </Card>
