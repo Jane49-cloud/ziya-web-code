@@ -18,7 +18,7 @@ before_script:
 build_beta:
   stage: build
   tags:
-    - ziya-web
+    - ziya-mac
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:beta" -t "$DOCKER_IMAGE:beta-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
     - docker push "$DOCKER_IMAGE:beta"
@@ -31,7 +31,7 @@ build_beta:
 build_staging:
   stage: build
   tags:
-    - ziya-web
+    - ziya-mac
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:staging" -t "$DOCKER_IMAGE:staging-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
     - docker push "$DOCKER_IMAGE:staging"
@@ -44,7 +44,7 @@ build_staging:
 build_live:
   stage: build
   tags:
-    - ziya-web
+    - ziya-mac
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:live" -t "$DOCKER_IMAGE:live-${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}" .
     - docker push "$DOCKER_IMAGE:live"
@@ -57,7 +57,7 @@ build_live:
 .deploy_template: &deploy_template
   stage: deploy
   tags:
-    - ziya-web
+    - ziya-mac
   before_script:
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
