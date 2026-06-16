@@ -24,6 +24,12 @@ type DepositPartnerWalletPayload = {
     amount: number;
 };
 
+type UpdateSaccoPayload = {
+            id: string | string;
+            partner_name: string;
+            partner_location: string;
+        };
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllSaccos: builder.query<
@@ -217,22 +223,34 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         //deposit
-        depositToPartnerWallet: builder.mutation<
-    any,
-    DepositPartnerWalletPayload
->({
-    query: (body) => ({
-        url: "/partner-wallets/deposit",
-        method: "POST",
-        body,
-    }),
-    invalidatesTags: [
-        {
-            type: "PartnerWallets",
-            id: "LIST",
-        },
-    ],
-}),
+        depositToPartnerWallet: builder.mutation< any, DepositPartnerWalletPayload >({
+            query: (body) => ({
+                url: "/partner-wallets/deposit",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                {
+                    type: "PartnerWallets",
+                    id: "LIST",
+                },
+            ],
+        }),
+
+        //update partner
+        
+
+        updateSacco: builder.mutation<any, UpdateSaccoPayload>({
+            query: ({ id, ...body }) => ({
+                url: `/partners/profile/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Saccos", id },
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
     }),
 });
 
