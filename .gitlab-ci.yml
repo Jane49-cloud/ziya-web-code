@@ -18,7 +18,7 @@ before_script:
 build_image:
   stage: build
   tags:
-    - ziya-web
+    - ziya-admin
   script:
     - docker build --no-cache -t "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME" .
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_REF_NAME"
@@ -31,7 +31,7 @@ build_image:
 .deploy_template: &deploy_template
   stage: deploy
   tags:
-    - ziya-web
+    - ziya-admin
   before_script:
     # 2) Install your SSH key on the runner
     - mkdir -p ~/.ssh
