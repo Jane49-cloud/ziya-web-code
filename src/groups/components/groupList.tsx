@@ -46,6 +46,7 @@ export type GroupRecord = {
   created_by?: string | number | null;
   created_by_id?: string | number | null;
   creator_id?: string | number | null;
+  created_by_name?: string | null;
 
   relationship_manager?: string | number | null;
   relationship_manager_id?: string | number | null;
@@ -54,6 +55,8 @@ export type GroupRecord = {
   relationship_manager_name?: string | null;
   admin_name?: string | null;
   tags?: string | null;
+
+  
 
   [key: string]: any;
 };
@@ -214,6 +217,35 @@ const GroupTable: FC<GroupTableProps> = ({
           </Tag>
         ),
     },
+    //created by
+    {
+      title: "Created By",
+      dataIndex: "created_by_name",
+      width: "18%",
+      sorter: (a: GroupRecord, b: GroupRecord) =>
+        formatName(a.created_by_name ?? "").localeCompare(
+          formatName(b.created_by_name ?? "")
+        ),
+      render: (value: string | null) =>
+        value ? (
+          <Tag
+            color="purple"
+            className="px-3 py-1 text-sm font-medium"
+            style={{ borderRadius: "6px" }}
+          >
+            {formatName(value)}
+          </Tag>
+        ) : (
+          <Tag
+            color="default"
+            className="px-3 py-1 text-sm"
+            style={{ borderRadius: "6px" }}
+          >
+            Unassigned
+          </Tag>
+        ),
+    },
+
     {
       title: "",
       key: "actions",
