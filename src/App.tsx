@@ -5,13 +5,13 @@ import { useEffect } from "react";
 import { initializeUser } from "./utils/initializeUser";
 
 const App = () => {
-  
-useEffect(() => {
-  const token = localStorage.getItem('ziya-access');
-  if (token) {
-    initializeUser();
-  }
-}, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('ziya-access');
+    if (token) {
+      initializeUser();
+    }
+  }, []);
 
   return (
     <BrowserRouter>

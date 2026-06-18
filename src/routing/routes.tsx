@@ -97,8 +97,9 @@ export const sidebarItems: SidebarItem[] = [
     icon: "dollar",
     dropdown: [
       {
-        title: "Categories",
-        path: "/loan-categories",
+        //title: "Categories",
+        title: "Loan Types",
+        path: "/loan-types",
         allowedRoles: ["admin", "dev"],
       },
       {
@@ -110,6 +111,12 @@ export const sidebarItems: SidebarItem[] = [
         title: "Cycles",
         path: "/loan-cycles",
         allowedRoles: STAFF_ROLES,
+      },
+      //new loan category
+      {
+        title: "Loan Categories",
+        path: "/loan-categories",
+        allowedRoles: ["admin", "dev", "support"],
       },
     ],
   },

@@ -69,8 +69,11 @@ import VisualizationsPage from "../visualization/visualizationIndex";
 import SaccoPage from "../partner/index";
 import SinglePartnerPage from "../partner/pages/singlePartnerPage";
 import SinglePartnerWalletPage from "../partner/pages/singlePartnerWalletPage";
-
 import PartnerWalletsPage from "../wallets/pages/partnerWalletsTab";
+
+//loan categfory
+import LoanCategory from "../Loans/pages/loanCategories";
+import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
@@ -166,7 +169,7 @@ const AppRouting = (): ReactElement => {
         <Route element={<PrivateRoutes allowedRoles={ADMIN_DEV} />}>
           <Route element={<Layout children={undefined} />}>
             <Route path="/roles" element={<RolesManagement />} />
-            <Route path="/loan-categories" element={<LoanCategories />} />
+            <Route path="/loan-types" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
 
             {/* visualization */}
@@ -188,6 +191,9 @@ const AppRouting = (): ReactElement => {
           <Route element={<Layout children={undefined} />}>
             <Route path="/staff" element={<Staff />} />
             <Route path="/add-user" element={<AddUser />} />
+            {/* loan categories */}
+            <Route path="/loan-categories" element={<LoanCategory />} />
+            <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
           </Route>
         </Route>
 
