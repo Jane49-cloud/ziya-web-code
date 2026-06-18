@@ -28,4 +28,8 @@ export const {
 
     useGetPartnerGroupsQuery,
     useLazyGetPartnerGroupsQuery,
+
+    //move group and remove group
+    useMoveGroupToPartnerMutation,
+    useRemoveGroupFromPartnerMutation,
 } = saccoSlice;

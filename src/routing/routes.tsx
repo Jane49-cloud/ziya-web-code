@@ -118,6 +118,12 @@ export const sidebarItems: SidebarItem[] = [
         path: "/loan-categories",
         allowedRoles: ["admin", "dev", "support"],
       },
+      //assets module
+      {
+        title: "Assets",
+        path: "/loan-assets",
+        allowedRoles: ["admin", "dev", "support"],
+      },
     ],
   },
   {
@@ -172,7 +178,7 @@ export const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    title: "Partner",
+    title: "Partners",
     // icon: "chart-line",
     icon: "bank",
     path: "/sacco",

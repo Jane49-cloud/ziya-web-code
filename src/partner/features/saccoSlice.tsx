@@ -30,12 +30,14 @@ type UpdateSaccoPayload = {
             partner_location: string;
         };
 
+type PartnerGroupPayload = {
+    group_id: string | number;
+    partner_id: string | number;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getAllSaccos: builder.query<
-            any,
-            PaginationQuery | void
-        >({
+        getAllSaccos: builder.query< any, PaginationQuery | void >({
             query: (params) => ({
                 url: "/partners/all",
                 method: "GET",
@@ -239,7 +241,6 @@ export const saccoSlice = apiSlice.injectEndpoints({
 
         //update partner
         
-
         updateSacco: builder.mutation<any, UpdateSaccoPayload>({
             query: ({ id, ...body }) => ({
                 url: `/partners/profile/${id}`,
@@ -251,6 +252,30 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 { type: "Saccos", id: "LIST" },
             ],
         }),
+
+        //move group and remove group
+        moveGroupToPartner: builder.mutation< any, PartnerGroupPayload >({
+            query: (body) => ({
+                url: "/partners/add-group",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
+
+        removeGroupFromPartner: builder.mutation< any, PartnerGroupPayload >({
+            query: (body) => ({
+                url: "/partners/remove-group",
+                method: "DELETE",
+                body,
+            }),
+            invalidatesTags: [
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
+
     }),
 });
 

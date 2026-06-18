@@ -75,6 +75,10 @@ import PartnerWalletsPage from "../wallets/pages/partnerWalletsTab";
 import LoanCategory from "../Loans/pages/loanCategories";
 import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
 
+//assets
+import LoanAssets from "../Loans/pages/loanAssets";
+import SingleAssetType from "../Loans/pages/singleAssetType";
+
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
 const StatisticsPage = lazy(() => import("../statistics/pages"));
@@ -194,8 +198,12 @@ const AppRouting = (): ReactElement => {
             {/* loan categories */}
             <Route path="/loan-categories" element={<LoanCategory />} />
             <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
+            <Route path="/loan-assets" element={<LoanAssets />} /> 
+            <Route path="/loan-assets/:id" element={<SingleAssetType />} />
+      
           </Route>
         </Route>
+
 
         {/* Staff roles (admin, dev, relationship-manager, staff, support) */}
         <Route element={<PrivateRoutes allowedRoles={STAFF_ROLES} />}>

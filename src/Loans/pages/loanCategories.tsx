@@ -12,6 +12,7 @@ import {
     Tag,
     Typography,
     message,
+    Tooltip,
 } from "antd";
 import type { TableColumnsType } from "antd";
 
@@ -22,6 +23,7 @@ import {
 } from "../features/loanCategorySlice";
 import { FiEdit, FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import {formatDateTime} from "../../utils/index";
 
 const { Title, Text } = Typography;
 
@@ -152,27 +154,44 @@ const LoanCategories: FC = () => {
             render: () => <Tag color="green">Active</Tag>,
         },
         {
+            title: "Date Created",
+            dataIndex: "date_created",
+            width: 190,
+            sorter: (a, b) =>
+                new Date(a.date_created ?? 0).getTime() -
+                new Date(b.date_created ?? 0).getTime(),
+            render: (value?: string) => (
+                <Text>{formatDateTime(value)}</Text>
+            ),
+            },
+        {
             title: "Actions",
             key: "actions",
             width: 150,
-            align: "right",
+            align: "center",
             render: (_, record) => (
-                <Space>
+                <Space size="small">
+                <Tooltip title="View Category">
                     <Button
-                        type="text"
-                        icon={<FiEye />}
-                        onClick={() =>
-                            navigate(`/loan-categories/${record.id}`)
-                        }
-                    >
-                    </Button>
+                    type="text"
+                    aria-label="View category"
+                    icon={<FiEye />}
+                    onClick={() =>
+                        navigate(`/loan-categories/${record.id}`)
+                    }
+                    style={{ color: "#1677ff" }}
+                    />
+                </Tooltip>
 
+                <Tooltip title="Edit Category">
                     <Button
-                        type="text"
-                        icon={<FiEdit />}
-                        onClick={() => openEditModal(record)}
-                    >
-                    </Button>
+                    type="text"
+                    aria-label="Edit category"
+                    icon={<FiEdit />}
+                    onClick={() => openEditModal(record)}
+                    style={{ color: "#1677ff" }}
+                    />
+                </Tooltip>
                 </Space>
             ),
         },

@@ -16,6 +16,7 @@ import {
     Tag,
     Typography,
     message,
+    Tooltip,
 } from "antd";
 import type { TableColumnsType } from "antd";
 import {
@@ -33,6 +34,7 @@ import {
     useLazyGetSingleLoanCategoryQuery,
     useUpdateLoanSubcategoryMutation,
 } from "../features/loanCategorySlice";
+import {formatDateTime} from "../../utils/index";
 
 const { Title, Text } = Typography;
 
@@ -151,12 +153,7 @@ const SingleLoanCategory: FC = () => {
     };
 
     const columns: TableColumnsType<LoanSubcategory> = [
-        {
-            title: "ID",
-            dataIndex: "id",
-            width: 100,
-            render: (value) => <Text code>{value}</Text>,
-        },
+        
         {
             title: "Subcategory Name",
             dataIndex: "name",
@@ -171,22 +168,35 @@ const SingleLoanCategory: FC = () => {
         {
             title: "Status",
             key: "status",
-            width: 130,
+            width: 100,
             render: () => <Tag color="green">Active</Tag>,
         },
         {
+            title: "Date Created",
+            dataIndex: "date_created",
+            width: 190,
+            sorter: (a, b) =>
+                new Date(a.date_created ?? 0).getTime() -
+                new Date(b.date_created ?? 0).getTime(),
+            render: (value?: string) => (
+                <Text>{formatDateTime(value)}</Text>
+            ),
+            },
+        {
             title: "Actions",
             key: "actions",
-            width: 130,
-            align: "right",
+            width: 100,
+            align: "center",
             render: (_, record) => (
-                <Button
-                    type="text"
-                    icon={<FiEdit />}
-                    onClick={() => openEditModal(record)}
-                >
-                    Edit
-                </Button>
+                <Tooltip title="Edit Subcategory">
+                    <Button
+                        type="text"
+                        aria-label="Edit subcategory"
+                        icon={<FiEdit />}
+                        onClick={() => openEditModal(record)}
+                        style={{ color: "#1677ff" }}
+                    />
+                 </Tooltip>
             ),
         },
     ];
