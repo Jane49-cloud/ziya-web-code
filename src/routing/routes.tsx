@@ -96,12 +96,12 @@ export const sidebarItems: SidebarItem[] = [
     title: "Loans",
     icon: "dollar",
     dropdown: [
-      {
-        //title: "Categories",
-        title: "Loan Types",
-        path: "/loan-types",
-        allowedRoles: ["admin", "dev"],
-      },
+      // {
+      //   //title: "Categories",
+      //   title: "Loan Types",
+      //   path: "/loan-types",
+      //   allowedRoles: ["admin", "dev"],
+      // },
       {
         title: "Loans List",
         path: "/loans",
@@ -222,14 +222,5 @@ export const sidebarItems: SidebarItem[] = [
     allowedRoles: STAFF_ROLES,
   },
 
-  // visualization
-  // {
-  //   title: "Visualizations",
-  //   icon: "chart-line",
-  //   path: "/visualizations",
-  //   allowedRoles: ADMIN_DEV,
-  // },
-
-   //assets module
       
 ];

@@ -63,8 +63,6 @@ import { EditDocumentForm } from "../documents/pages/editDocument";
 import HomeLoading from "../components/common/homeLoading";
 import SubscriptionsPage from "../subscriptions";
 import GroupSubscriptionDetailsPage from "../subscriptions/pages/groupSubscriptionDetails";
-// visualization
-import VisualizationsPage from "../visualization/visualizationIndex";
 //Partner
 import SaccoPage from "../partner/index";
 import SinglePartnerPage from "../partner/pages/singlePartnerPage";
@@ -178,9 +176,6 @@ const AppRouting = (): ReactElement => {
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-types" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
-
-            {/* visualization */}
-            <Route path="/visualizations" element={<VisualizationsPage />} />
 
             {/* partner */}
             <Route path="/sacco" element={<SaccoPage />} />

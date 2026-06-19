@@ -39,6 +39,12 @@ type SearchPartnersPayload = {
     q: string;
 };
 
+type PartnerTransactionsPayload = {
+    partnerId: string | number;
+    page?: number;
+    page_size?: number;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllSaccos: builder.query< any, PaginationQuery | void >({
@@ -129,10 +135,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner staff
-        getPartnerStaff: builder.query<
-            any,
-            PartnerPaginationQuery
-        >({
+        getPartnerStaff: builder.query< any,  PartnerPaginationQuery >({
             query: ({
                 partnerId,
                 page = 0,
@@ -293,10 +296,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
         //search partner
-        searchPartners: builder.query<
-    any[],
-    SearchPartnersPayload
-        >({
+        searchPartners: builder.query<any[],SearchPartnersPayload>({
             query: ({ q }) => ({
                 url: "/partners/search",
                 method: "GET",
@@ -316,6 +316,34 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 return Array.isArray(records) ? records : [];
             },
         }),
+
+        //partner transactions
+        getPartnerTransactions: builder.query< any, PartnerTransactionsPayload>({
+            query: ({
+                partnerId,
+                page = 0,
+                page_size = 10,
+            }) => ({
+                url: `/partners/wallet/transactions/${partnerId}`,
+                method: "GET",
+                params: {
+                    page,
+                    page_size,
+                },
+            }),
+            providesTags: (
+                _result,
+                _error,
+                { partnerId },
+            ) => [
+                {
+                    type: "Saccos",
+                    id: `TRANSACTIONS-${partnerId}`,
+                },
+            ],
+        }),
+
+        
 
     }),
 });

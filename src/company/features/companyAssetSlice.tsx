@@ -38,19 +38,7 @@ export const companyAssetSlice =
         ],
       }),
 
-      getAssetGroups: builder.query<
-        any,
-        PaginationQuery | void
-      >({
-        query: (params) => ({
-          url: "/groups/get/all",
-          method: "GET",
-          params: {
-            page: params?.page ?? 1,
-            page_size: params?.page_size ?? 10,
-          },
-        }),
-      }),
+      
 
       moveAssetToPartner: builder.mutation<
         any,
@@ -101,9 +89,6 @@ export const companyAssetSlice =
 export const {
   useGetCompanyAssetsQuery,
   useLazyGetCompanyAssetsQuery,
-
-  useGetAssetGroupsQuery,
-  useLazyGetAssetGroupsQuery,
 
   useMoveAssetToPartnerMutation,
   useMoveAssetToGroupMutation,

@@ -41,4 +41,8 @@ export const {
     useSearchPartnersQuery,
     useLazySearchPartnersQuery,
 
+    //partner transactions
+    useGetPartnerTransactionsQuery,
+    useLazyGetPartnerTransactionsQuery,
+
 } = saccoSlice;

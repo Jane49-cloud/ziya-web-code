@@ -28,6 +28,7 @@ import GroupsTab from "../components/groupsTab";
 
 import UpdatePartnerTab from "../components/updatePartnerTab";
 import AssetsTab from "../components/assetsTab";
+import PartnerTransactionsTab from "../components/partnerTransactionsTab";
 
 const { Title, Text } = Typography;
 
@@ -148,6 +149,16 @@ const SinglePartnerPage = () => {
                 <AssetsTab
                     partnerId={partnerId}
                     active={activeTab === "assets"}
+                />
+            ),
+        },
+        {
+            key: "transactions",
+            label: "Transactions",
+            children: (
+                <PartnerTransactionsTab
+                    partnerId={partnerId}
+                    active={activeTab === "transactions"}
                 />
             ),
         },
