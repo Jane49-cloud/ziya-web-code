@@ -185,6 +185,17 @@ export const sidebarItems: SidebarItem[] = [
     path: "/loan-assets",
     allowedRoles: ["admin", "dev", "support"],
   },
+  {
+    title: "Company",
+    icon: "office-bag",
+    dropdown: [
+      {
+        title: "Company Assets",
+        path: "/company-assets",
+        allowedRoles: ["admin", "dev", "support"],
+      },
+    ],
+  },
 
   {
     title: "Tasks",

@@ -36,4 +36,9 @@ export const {
     //get single partner assets
     useGetPartnerAssetsQuery,
     useLazyGetPartnerAssetsQuery,
+
+    //search partner
+    useSearchPartnersQuery,
+    useLazySearchPartnersQuery,
+
 } = saccoSlice;

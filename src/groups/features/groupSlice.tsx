@@ -79,15 +79,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
-    // searchGroups: builder.query({
-    //   query: ({ field, value }) => ({
-    //     url: `/groups/search?field=${field}&value=${value}`,
-    //     method: "GET",
-    //   }),
-    //   providesTags: [{ type: "Groups" }],
-    // }),
-
-    // search groups
+    
     searchGroups: builder.query<any[], { q: string }>({
       query: ({ q }) => ({
         url: "/groups/search",

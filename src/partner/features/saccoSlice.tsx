@@ -35,6 +35,10 @@ type PartnerGroupPayload = {
     partner_id: string | number;
 };
 
+type SearchPartnersPayload = {
+    q: string;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllSaccos: builder.query< any, PaginationQuery | void >({
@@ -287,6 +291,30 @@ export const saccoSlice = apiSlice.injectEndpoints({
                     id: `PARTNER-${partnerId}`,
                 },
             ],
+        }),
+        //search partner
+        searchPartners: builder.query<
+    any[],
+    SearchPartnersPayload
+        >({
+            query: ({ q }) => ({
+                url: "/partners/search",
+                method: "GET",
+                params: {
+                    q: q.trim() || "all",
+                },
+            }),
+            transformResponse: (response: any) => {
+                if (Array.isArray(response)) return response;
+
+                const records =
+                    response?.partners ??
+                    response?.data ??
+                    response?.results ??
+                    [];
+
+                return Array.isArray(records) ? records : [];
+            },
         }),
 
     }),

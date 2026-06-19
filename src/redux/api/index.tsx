@@ -78,6 +78,7 @@ export const apiSlice = createApi({
     "PartnerWallets",
     "LoanCategories",
     "LoanAssets",
+    "CompanyAssets",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({

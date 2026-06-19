@@ -79,6 +79,9 @@ import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
 import LoanAssets from "../assets/pages/loanAssets";
 import SingleAssetType from "../assets/pages/singleAssetType";
 
+//company
+import CompanyAssetsPage from "../company/pages/companyAssets";
+
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
 const StatisticsPage = lazy(() => import("../statistics/pages"));
@@ -200,6 +203,7 @@ const AppRouting = (): ReactElement => {
             <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
             <Route path="/loan-assets" element={<LoanAssets />} /> 
             <Route path="/loan-assets/:id" element={<SingleAssetType />} />
+            <Route path="/company-assets" element={<CompanyAssetsPage />} />
       
           </Route>
         </Route>
