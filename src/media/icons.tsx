@@ -1,5 +1,5 @@
-import google from "../assets/icons/google.png";
-import facebook from "../assets/icons/facebook.png";
+import google from "../icons/google.png";
+import facebook from "../icons/facebook.png";
 
 export default {
   google,

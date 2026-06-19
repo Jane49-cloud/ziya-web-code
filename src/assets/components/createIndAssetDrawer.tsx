@@ -11,7 +11,7 @@ import {
     message,
 } from "antd";
 
-import { useCreateAssetMutation } from "../features/loanAssetSlice";
+import { useCreateAssetMutation } from "../../assets/features/loanAssetSlice";
 
 type CreateAssetFormValues = {
     identifier_type: string;

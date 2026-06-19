@@ -76,8 +76,8 @@ import LoanCategory from "../Loans/pages/loanCategories";
 import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
 
 //assets
-import LoanAssets from "../Loans/pages/loanAssets";
-import SingleAssetType from "../Loans/pages/singleAssetType";
+import LoanAssets from "../assets/pages/loanAssets";
+import SingleAssetType from "../assets/pages/singleAssetType";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));

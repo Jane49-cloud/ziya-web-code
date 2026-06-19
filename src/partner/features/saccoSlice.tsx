@@ -275,6 +275,19 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 { type: "Saccos", id: "LIST" },
             ],
         }),
+        //get single partner assets
+        getPartnerAssets: builder.query< any, string | number>({
+            query: (partnerId) => ({
+                url: `/company-wallets/assets/partner/${partnerId}`,
+                method: "GET",
+            }),
+            providesTags: (_result, _error, partnerId) => [
+                {
+                    type: "LoanAssets",
+                    id: `PARTNER-${partnerId}`,
+                },
+            ],
+        }),
 
     }),
 });

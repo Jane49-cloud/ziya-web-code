@@ -38,6 +38,10 @@ type GroupLoansQuery =
     page_size?: number;
   };
 
+  type GetGroupAssetsPayload = {
+    groupId: string | number;
+};
+
 export const GroupSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createGroup: builder.mutation({
@@ -469,6 +473,24 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, arg) => [
         { type: "GroupLoanPayments", id: `SEARCH-${arg.groupId}` },
       ],
+    }),
+
+    //single group partner
+    getGroupAssets: builder.query< any, GetGroupAssetsPayload >({
+        query: ({ groupId }) => ({
+            url: `/company-wallets/assets/group/${groupId}`,
+            method: "GET",
+        }),
+        providesTags: (
+            _result,
+            _error,
+            { groupId },
+        ) => [
+            {
+                type: "LoanAssets",
+                id: `GROUP-${groupId}`,
+            },
+        ],
     }),
 
 

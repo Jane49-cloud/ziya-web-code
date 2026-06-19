@@ -9,6 +9,10 @@ type CustomerSubscriptionHistoryQuery = PaginationQuery & {
   customerId: number;
 };
 
+type GetCustomerAssetsPayload = PaginationQuery & {
+    customerId: string | number;
+};
+
 export const customerSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createCustomer: builder.mutation({
@@ -121,10 +125,7 @@ export const customerSlice = apiSlice.injectEndpoints({
     }),
 
     //search
-    searchCustomers: builder.query<
-      any[],
-      { q: string; membership?: 0 | 1 }
-    >({
+    searchCustomers: builder.query<any[], { q: string; membership?: 0 | 1 } >({
       query: ({ q, membership }) => ({
         url: "/customers/search",
         method: "GET",
@@ -137,6 +138,26 @@ export const customerSlice = apiSlice.injectEndpoints({
         return Array.isArray(response?.customers) ? response.customers : [];
       },
     }),
+
+    //single customer assets
+    getCustomerAssets: builder.query<any, GetCustomerAssetsPayload>({
+        query: ({ customerId, page, page_size }) => ({
+            url: `/company-wallets/assets/customer/${customerId}`,
+            method: "GET",
+            params: {
+                page: page ?? 1,
+                page_size: page_size ?? 20,
+            },
+        }),
+        providesTags: (_result, _error, { customerId }) => [
+            {
+                type: "LoanAssets",
+                id: `CUSTOMER-${customerId}`,
+            },
+        ],
+    }),
+
+
 
 
   }),
@@ -165,5 +186,9 @@ export const {
 
   //search
   useLazySearchCustomersQuery,
+
+  ////single customer assets
+  useGetCustomerAssetsQuery,
+  useLazyGetCustomerAssetsQuery,
 
 } = customerSlice;

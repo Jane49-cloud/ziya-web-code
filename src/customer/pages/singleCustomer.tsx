@@ -18,6 +18,8 @@ import { useState, useMemo } from "react";
 import CustomerSubscriptionHistoryTab from "../components/subscriptions/customerSubscriptionHistoryTab";
 import CustomerWalletTab from "../components/wallet/customerWalletTab";
 import CustomerTransactionsTab from "../components/wallet/customerTransactionsTab";
+//customer assets
+import CustomerAssetsTab from "../components/customerAssetsTab";
 
 const CustomerPage = () => {
 
@@ -245,6 +247,10 @@ const CustomerPage = () => {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Transactions" key="7">
           <CustomerTransactionsTab customerId={customer.id} />
+        </Tabs.TabPane>
+        {/* /customer assets tab */}
+        <Tabs.TabPane tab="Assets" key="8">
+          <CustomerAssetsTab customerId={customer.id} />
         </Tabs.TabPane>
 
 

@@ -27,6 +27,7 @@ import CustomersTab from "../components/customersTab";
 import GroupsTab from "../components/groupsTab";
 
 import UpdatePartnerTab from "../components/updatePartnerTab";
+import AssetsTab from "../components/assetsTab";
 
 const { Title, Text } = Typography;
 
@@ -141,6 +142,16 @@ const SinglePartnerPage = () => {
             ),
         },
         {
+            key: "assets",
+            label: "Assets",
+            children: (
+                <AssetsTab
+                    partnerId={partnerId}
+                    active={activeTab === "assets"}
+                />
+            ),
+        },
+        {
             key: "update",
             label:  (
                 <Space size={6}>
@@ -188,7 +199,7 @@ const SinglePartnerPage = () => {
 
                         <Text type="secondary">
                             View the partner overview, staff,
-                            customers and groups.
+                            customers, groups and assets.
                         </Text>
                     </Space>
                 </Col>

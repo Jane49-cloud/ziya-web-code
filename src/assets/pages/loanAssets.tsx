@@ -25,7 +25,7 @@ import {
     useCreateAssetTypeMutation,
     useLazyGetAllAssetTypesQuery,
     useUpdateAssetTypeMutation,
-} from "../features/loanAssetSlice";
+} from "../../assets/features/loanAssetSlice";
 
 import  TabPagination from "../../utils/paginationUtil";
 

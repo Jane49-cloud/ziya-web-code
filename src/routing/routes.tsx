@@ -118,12 +118,7 @@ export const sidebarItems: SidebarItem[] = [
         path: "/loan-categories",
         allowedRoles: ["admin", "dev", "support"],
       },
-      //assets module
-      {
-        title: "Assets",
-        path: "/loan-assets",
-        allowedRoles: ["admin", "dev", "support"],
-      },
+      
     ],
   },
   {
@@ -184,6 +179,12 @@ export const sidebarItems: SidebarItem[] = [
     path: "/sacco",
     allowedRoles: ["admin", "dev"],
   },
+  {
+    title: "Assets",
+    icon:"package",
+    path: "/loan-assets",
+    allowedRoles: ["admin", "dev", "support"],
+  },
 
   {
     title: "Tasks",
@@ -217,4 +218,7 @@ export const sidebarItems: SidebarItem[] = [
   //   path: "/visualizations",
   //   allowedRoles: ADMIN_DEV,
   // },
+
+   //assets module
+      
 ];

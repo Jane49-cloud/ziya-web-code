@@ -24,7 +24,7 @@ import {
     useParams,
 } from "react-router-dom";
 
-import { useLazyGetAllAssetTypesQuery } from "../features/loanAssetSlice";
+import { useLazyGetAllAssetTypesQuery } from "../../assets/features/loanAssetSlice";
 import CreateAssetDrawer from "../components/createIndAssetDrawer";
 import type { AssetTypeRecord } from "../components/updateAssetTypeModal";
 
