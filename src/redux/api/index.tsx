@@ -73,7 +73,6 @@ export const apiSlice = createApi({
     "Wallets",
     "WalletTransactions",
     "Subscriptions",
-    "Visualization",
     "Saccos",
     "PartnerWallets",
     "LoanCategories",
