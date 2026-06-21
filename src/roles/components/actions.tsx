@@ -1,6 +1,14 @@
-import { Button, Popconfirm } from "antd";
+import { Button, Popconfirm, message } from "antd";
 import { FC } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { useDeleteRoleMutation } from "../features/rolesSlice";
+
+type Role = {
+  id: string | number;
+  name: string;
+  description?: string;
+};
 
 interface RoleActionsProps {
   role: Role;
@@ -15,23 +23,41 @@ export const RoleActions: FC<RoleActionsProps> = ({
   onDelete,
   refetch,
 }) => {
-  const [deleteRole, { isLoading }] = useDeleteRoleMutation();
+  const navigate = useNavigate();
+
+  const [deleteRole, { isLoading }] =
+    useDeleteRoleMutation();
 
   const handleDelete = async () => {
     try {
       await deleteRole(role.id).unwrap();
-      onDelete(role.id);
+
+      message.success("Role deleted successfully");
+
+      onDelete(String(role.id));
       refetch();
     } catch (error) {
       console.error("Failed to delete role:", error);
+      message.error("Failed to delete role");
     }
   };
 
   return (
-    <div className="flex space-x-4">
-      <Button type="link" onClick={() => onEdit(role.id)}>
+    <div className="flex items-center justify-center gap-3">
+      <Button
+        type="link"
+        onClick={() => navigate(`/roles/${role.id}`)}
+      >
+        View
+      </Button>
+
+      <Button
+        type="link"
+        onClick={() => onEdit(String(role.id))}
+      >
         Edit
       </Button>
+
       <Popconfirm
         title="Are you sure you want to delete this role?"
         onConfirm={handleDelete}
