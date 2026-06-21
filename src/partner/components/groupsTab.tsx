@@ -21,7 +21,10 @@ import {
     useGetPartnerGroupsQuery,
     useRemoveGroupFromPartnerMutation,
 } from "../features";
-import { formatDateTime } from "../../utils";
+import {
+    formatDateTime,
+    formatName,
+} from "../../utils";
 import TabPagination from "./pagination";
 import MoveGroupDrawer from "./movePartGrpDrawer";
 
@@ -39,6 +42,51 @@ const formatColumnTitle = (key: string) =>
             letter.toUpperCase(),
         );
 
+const isDateColumn = (key: string) => {
+    const normalizedKey = key.toLowerCase();
+
+    return (
+        normalizedKey.includes("date") ||
+        normalizedKey.includes("created_at") ||
+        normalizedKey.includes("updated_at")
+    );
+};
+
+const isNumberColumn = (key: string) => {
+    const normalizedKey = key.toLowerCase();
+
+    return (
+        normalizedKey.includes("total") ||
+        normalizedKey.includes("count") ||
+        normalizedKey.includes("members") ||
+        normalizedKey.endsWith("_id") ||
+        normalizedKey === "id"
+    );
+};
+
+const shouldFormatAsName = (key: string) => {
+    const normalizedKey = key.toLowerCase();
+
+    if (isDateColumn(normalizedKey)) return false;
+    if (isNumberColumn(normalizedKey)) return false;
+
+    if (
+        normalizedKey.includes("email") ||
+        normalizedKey.includes("phone") ||
+        normalizedKey.includes("mobile")
+    ) {
+        return false;
+    }
+
+    return (
+        normalizedKey.includes("name") ||
+        normalizedKey === "partner" ||
+        normalizedKey === "group" ||
+        normalizedKey === "location" ||
+        normalizedKey === "status"
+    );
+};
+
 const formatGroupValue = (
     value: unknown,
     key: string,
@@ -51,11 +99,7 @@ const formatGroupValue = (
         return "—";
     }
 
-    if (
-        key.includes("date") ||
-        key.includes("created_at") ||
-        key.includes("updated_at")
-    ) {
+    if (isDateColumn(key)) {
         return formatDateTime(String(value)) || "—";
     }
 
@@ -65,6 +109,10 @@ const formatGroupValue = (
 
     if (typeof value === "object") {
         return JSON.stringify(value);
+    }
+
+    if (shouldFormatAsName(key)) {
+        return formatName(String(value)) || "—";
     }
 
     return String(value);
@@ -107,9 +155,9 @@ const GroupsTab = ({
 
     const totalGroups = Number(
         data?.total ??
-            data?.total_groups ??
-            data?.pagination?.total ??
-            groups.length,
+        data?.total_groups ??
+        data?.pagination?.total ??
+        groups.length,
     );
 
     const refreshAfterChange = () => {
@@ -146,7 +194,7 @@ const GroupsTab = ({
         } catch (error: any) {
             message.error(
                 error?.data?.message ??
-                    "Failed to remove group",
+                "Failed to remove group",
             );
         }
     };
@@ -172,71 +220,73 @@ const GroupsTab = ({
         ColumnsType<PartnerGroup>
     >(() => {
         const actionColumn: ColumnsType<PartnerGroup>[number] =
-            {
-                title: "Actions",
-                key: "actions",
-                width: 90,
-                fixed: "right",
-                align: "center",
-                render: (_, record) => (
-                    <Dropdown
-                        trigger={["click"]}
-                        overlayClassName="group-actions-dropdown"
-                        menu={{
-                            items: [
-                                {
-                                    key: "move",
-                                    label: "Move Group",
-                                    icon: <FiMove />,
-                                },
-                                {
-                                    key: "remove",
-                                    label: "Remove Group",
-                                    icon: <FiTrash2 />,
-                                    danger: true,
-                                },
-                            ],
-                            onClick: ({ key }) => {
-                                if (key === "move") {
-                                    setSelectedGroup(record);
-                                }
-
-                                if (key === "remove") {
-                                    confirmRemove(record);
-                                }
+        {
+            title: "Actions",
+            key: "actions",
+            width: 90,
+            fixed: "right",
+            align: "center",
+            render: (_, record) => (
+                <Dropdown
+                    trigger={["click"]}
+                    overlayClassName="group-actions-dropdown"
+                    menu={{
+                        items: [
+                            {
+                                key: "move",
+                                label: "Move Group",
+                                icon: <FiMove />,
                             },
-                        }}
-                    >
-                        <Button
-                            type="text"
-                            aria-label="Group actions"
-                            icon={
-                                <FiMoreVertical
-                                    size={18}
-                                />
+                            {
+                                key: "remove",
+                                label: "Remove Group",
+                                icon: <FiTrash2 />,
+                                danger: true,
+                            },
+                        ],
+                        onClick: ({ key }) => {
+                            if (key === "move") {
+                                setSelectedGroup(record);
                             }
-                            className="cursor-pointer hover:!bg-blue-50 hover:!text-blue-600"
-                        />
-                    </Dropdown>
-                ),
-            };
+
+                            if (key === "remove") {
+                                confirmRemove(record);
+                            }
+                        },
+                    }}
+                >
+                    <Button
+                        type="text"
+                        aria-label="Group actions"
+                        icon={
+                            <FiMoreVertical
+                                size={18}
+                            />
+                        }
+                        className="cursor-pointer hover:!bg-blue-50 hover:!text-blue-600"
+                    />
+                </Dropdown>
+            ),
+        };
 
         if (!groups.length) {
             return [
-                // {
-                //     title: "Group ID",
-                //     dataIndex: "group_id",
-                //     key: "group_id",
-                // },
                 {
                     title: "Group Name",
                     dataIndex: "name",
                     key: "name",
+                    render: (value: unknown) =>
+                        formatGroupValue(value, "name"),
                 },
                 {
                     title: "Members",
                     dataIndex: "total_members",
                     key: "total_members",
+                    render: (value: unknown) =>
+                        formatGroupValue(
+                            value,
+                            "total_members",
+                        ),
                 },
                 {
                     title: "Date Created",
@@ -252,16 +302,18 @@ const GroupsTab = ({
             ];
         }
 
-        //hide tabs
-
         const hiddenColumns = [
             "group_id",
             "partner_id",
             "partner_group_id",
+            "admin",
         ];
 
         const dataColumns = Object.keys(groups[0])
-            .filter((key) => !hiddenColumns.includes(key))
+            .filter(
+                (key) =>
+                    !hiddenColumns.includes(key),
+            )
             .map((key) => ({
                 title: formatColumnTitle(key),
                 dataIndex: key,
@@ -269,8 +321,6 @@ const GroupsTab = ({
                 render: (value: unknown) =>
                     formatGroupValue(value, key),
             }));
-
-        
 
         return [...dataColumns, actionColumn];
     }, [groups, removing]);
@@ -299,8 +349,8 @@ const GroupsTab = ({
                 rowKey={(record) =>
                     String(
                         record.group_id ??
-                            record.id ??
-                            record.name,
+                        record.id ??
+                        record.name,
                     )
                 }
                 columns={columns}

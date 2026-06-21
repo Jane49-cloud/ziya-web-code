@@ -46,7 +46,9 @@ export const {
   useCreateGroupLoanMutation,
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,
-  useCreateGroupLoanPaymentMutation,
+  // useCreateGroupLoanPaymentMutation,
+  useInitiateGroupLoanPaymentMutation,
+  useConfirmGroupLoanPaymentMutation,
 
   useGetGroupPaymentsQuery,
   useLazyGetGroupPaymentsQuery,
@@ -61,6 +63,6 @@ export const {
   useRemoveGroupMemberMutation,
 
   //group Assets
-    useGetGroupAssetsQuery,
-    useLazyGetGroupAssetsQuery,
+  useGetGroupAssetsQuery,
+  useLazyGetGroupAssetsQuery,
 } = GroupSlice;

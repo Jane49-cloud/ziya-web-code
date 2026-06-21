@@ -9,5 +9,8 @@ on asset creation bike, preload logbook
 
 Permission on roles
 
-confirm asset movement
-group loans - creation
+confirm asset movement   -done
+group loans - creation   -done
+
+partners/all?page=1&page_size=20 = members and staff picks 0
+ 

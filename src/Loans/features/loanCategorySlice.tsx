@@ -27,11 +27,7 @@ type UpdateLoanSubcategoryPayload = {
 export const loanCategoriesSlice =
     apiSlice.injectEndpoints({
         endpoints: (builder) => ({
-            // Get loan categories with pagination
-            getLoanCategories: builder.query<
-                any,
-                PaginationQuery | void
-            >({
+            getLoanCategories: builder.query<any, PaginationQuery | void>({
                 query: (params) => ({
                     url: "/group-loans/categories/all",
                     method: "GET",
@@ -48,11 +44,7 @@ export const loanCategoriesSlice =
                 ],
             }),
 
-            // Get one category and its subcategories
-            getSingleLoanCategory: builder.query<
-                any,
-                string | number
-            >({
+            getSingleLoanCategory: builder.query<any, string | number>({
                 query: (id) => ({
                     url: `/group-loans/categories/${id}`,
                     method: "GET",
@@ -65,11 +57,7 @@ export const loanCategoriesSlice =
                 ],
             }),
 
-            // Create a category
-            createLoanCategory: builder.mutation<
-                any,
-                CreateLoanCategoryPayload
-            >({
+            createLoanCategory: builder.mutation<any, CreateLoanCategoryPayload>({
                 query: (body) => ({
                     url: "/group-loans/categories/create",
                     method: "POST",
@@ -83,11 +71,7 @@ export const loanCategoriesSlice =
                 ],
             }),
 
-            // Update a category
-            updateLoanCategory: builder.mutation<
-                any,
-                UpdateLoanCategoryPayload
-            >({
+            updateLoanCategory: builder.mutation<any, UpdateLoanCategoryPayload>({
                 query: ({ id, ...body }) => ({
                     url: `/group-loans/categories/${id}`,
                     method: "PUT",
@@ -105,11 +89,7 @@ export const loanCategoriesSlice =
                 ],
             }),
 
-            // Create a subcategory
-            createLoanSubcategory: builder.mutation<
-                any,
-                CreateLoanSubcategoryPayload
-            >({
+            createLoanSubcategory: builder.mutation<any, CreateLoanSubcategoryPayload>({
                 query: (body) => ({
                     url: "/group-loans/subcategories/create",
                     method: "POST",
@@ -131,11 +111,7 @@ export const loanCategoriesSlice =
                     ],
             }),
 
-            // Update a subcategory
-            updateLoanSubcategory: builder.mutation<
-                any,
-                UpdateLoanSubcategoryPayload
-            >({
+            updateLoanSubcategory: builder.mutation<any, UpdateLoanSubcategoryPayload>({
                 query: ({ id, ...body }) => ({
                     url: `/group-loans/subcategories/${id}`,
                     method: "PUT",
