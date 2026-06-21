@@ -5,7 +5,7 @@ import { useCreateSaccoMutation } from "../features";
 import {
     cleanLowerInput,
     sanitizePhoneNumber,
-} from "../../utils/index"; 
+} from "../../utils/index";
 
 import PartnerOnboardingFields from "../components/partnerOnboardingFld";
 

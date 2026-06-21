@@ -38,7 +38,7 @@ const StaffTab = ({
     active,
 }: StaffTabProps) => {
     const [page, setPage] = useState(0);
-    const pageSize = 10;
+    const [pageSize, setPageSize] = useState(10);
 
     const {
         data,
@@ -57,9 +57,18 @@ const StaffTab = ({
         },
     );
 
-    const staff: PartnerStaff[] = Array.isArray(data?.staff)
+    const staff: PartnerStaff[] = Array.isArray(
+        data?.staff,
+    )
         ? data.staff
         : [];
+
+    const totalStaff = Number(
+        data?.total ??
+            data?.total_staff ??
+            data?.pagination?.total ??
+            staff.length,
+    );
 
     const columns: ColumnsType<PartnerStaff> = [
         {
@@ -80,32 +89,41 @@ const StaffTab = ({
             title: "Email",
             dataIndex: "email",
             key: "email",
-            render: (value?: string) => value || "—",
+            render: (value?: string) =>
+                value || "—",
         },
         {
             title: "Phone Number",
             dataIndex: "phone_number",
             key: "phone_number",
-            render: (value?: string) => value || "—",
+            render: (value?: string) =>
+                value || "—",
         },
         {
             title: "Role",
-                dataIndex: "role_name",
-                key: "role_name",
-                render: (roleName?: string) => (
-                    <Tag color={roleName?.trim() ? "blue" : "default"}>
-                        {roleName?.trim()
-                            ? formatName(roleName)
-                            : "—"}
-                    </Tag>
-                ),
+            dataIndex: "role_name",
+            key: "role_name",
+            render: (roleName?: string) => (
+                <Tag
+                    color={
+                        roleName?.trim()
+                            ? "blue"
+                            : "default"
+                    }
+                >
+                    {roleName?.trim()
+                        ? formatName(roleName)
+                        : "—"}
+                </Tag>
+            ),
         },
         {
             title: "Last Login",
             dataIndex: "last_login",
             key: "last_login",
             render: (value?: string) =>
-                !value || value.startsWith("0001-")
+                !value ||
+                value.startsWith("0001-")
                     ? "Never"
                     : formatDateTime(value),
         },
@@ -138,7 +156,7 @@ const StaffTab = ({
 
     return (
         <>
-            <Table
+            <Table<PartnerStaff>
                 rowKey="id"
                 columns={columns}
                 dataSource={staff}
@@ -155,9 +173,16 @@ const StaffTab = ({
             <TabPagination
                 page={page}
                 pageSize={pageSize}
-                recordCount={staff.length}
+                total={totalStaff}
                 loading={isLoading || isFetching}
-                onPageChange={setPage}
+                itemName="Staff"
+                onPaginationChange={(
+                    nextPage,
+                    nextPageSize,
+                ) => {
+                    setPage(nextPage);
+                    setPageSize(nextPageSize);
+                }}
             />
         </>
     );

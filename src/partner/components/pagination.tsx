@@ -1,71 +1,54 @@
-import {
-    Button,
-    Col,
-    Row,
-    Space,
-    Typography,
-} from "antd";
-
-const { Text } = Typography;
+import { Pagination } from "antd";
 
 type TabPaginationProps = {
     page: number;
     pageSize: number;
-    recordCount: number;
-    loading: boolean;
-    onPageChange: (page: number) => void;
+    total: number;
+    loading?: boolean;
+    itemName?: string;
+    onPaginationChange: (
+        page: number,
+        pageSize: number,
+    ) => void;
 };
 
 const TabPagination = ({
     page,
     pageSize,
-    recordCount,
-    loading,
-    onPageChange,
+    total,
+    loading = false,
+    onPaginationChange,
 }: TabPaginationProps) => {
-    if (recordCount === 0 && page === 0) {
+    if (total === 0 && page === 0) {
         return null;
     }
 
     return (
-        <Row
-            justify="space-between"
-            align="middle"
-            gutter={[16, 16]}
-            style={{ marginTop: 16 }}
-        >
-            <Col>
-                <Text type="secondary">
-                    Page {page + 1}
-                </Text>
-            </Col>
+        <Pagination
+            current={page + 1}
+            pageSize={pageSize}
+            total={total}
+            disabled={loading}
+            showSizeChanger
+            pageSizeOptions={["5", "10", "20", "50"]}
+            showTotal={(recordTotal, range) =>
+                `${range[0]}-${range[1]} of ${recordTotal}`
+            }
+            onChange={(nextPage, nextPageSize) => {
+                const pageSizeChanged =
+                    nextPageSize !== pageSize;
 
-            <Col>
-                <Space>
-                    <Button
-                        disabled={loading || page === 0}
-                        onClick={() =>
-                            onPageChange(page - 1)
-                        }
-                    >
-                        Previous
-                    </Button>
-
-                    <Button
-                        type="primary"
-                        disabled={
-                            loading ||
-                            recordCount < pageSize
-                        }
-                        onClick={() =>
-                            onPageChange(page + 1)
-                        }
-                    >
-                        Next
-                    </Button>
-                </Space>
-            </Col>
-        </Row>
+                onPaginationChange(
+                    pageSizeChanged ? 0 : nextPage - 1,
+                    nextPageSize,
+                );
+            }}
+            style={{
+                marginTop: 20,
+                display: "flex",
+                justifyContent: "flex-end",
+            }}
+        />
     );
 };
 

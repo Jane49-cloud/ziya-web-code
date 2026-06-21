@@ -22,7 +22,6 @@ import {
   Button,
   Divider,
 } from "antd";
-import type { DefaultOptionType } from "antd/es/select";
 import type { Dayjs } from "dayjs";
 import {
   useCreateGroupLoanMutation,
@@ -30,11 +29,11 @@ import {
   useLazySearchGroupMembersQuery,
   useUpdateGroupLoanMutation,
 } from "../features";
-import { useGetLoanDefinitionsByPlatformQuery } from "../../Loans/features/loanDefinationsSlice";
 import { useGetAllCyclesQuery } from "../../cycles/cycleSlice";
 import { extractCycles } from "../../cycles/utils";
 import dayjs from "dayjs";
 import { formatName } from "../../utils";
+import LoanCategoryTypeFields from "./loanCategoryTypeFields";
 
 const { Text } = Typography;
 
@@ -162,22 +161,22 @@ const GroupLoanFormModal = ({
   loan,
   refetch,
   onWalletRefresh,
-  //issuedBy,
+  // issuedBy,
 }: GroupLoanFormModalProps) => {
   const [form] = Form.useForm();
   const isEditing = !!loan;
 
-  const [createLoan, { isLoading: creating }] = useCreateGroupLoanMutation();
-  const [updateLoan, { isLoading: updating }] = useUpdateGroupLoanMutation();
+  const [createLoan, { isLoading: creating }] =
+    useCreateGroupLoanMutation();
+
+  const [updateLoan, { isLoading: updating }] =
+    useUpdateGroupLoanMutation();
 
   const [fetchMembers, { isFetching: isFetchingMembers }] =
     useLazyGetGroupMembersQuery();
 
   const [searchGroupMembers, { isFetching: isSearchingMembers }] =
     useLazySearchGroupMembersQuery();
-
-  const { data: loanDefsData, isLoading: defsLoading } =
-    useGetLoanDefinitionsByPlatformQuery("web");
 
   const { data: cyclesData, isLoading: cyclesLoading } =
     useGetAllCyclesQuery(undefined);
@@ -187,22 +186,15 @@ const GroupLoanFormModal = ({
   const [memberHasMore, setMemberHasMore] = useState(true);
 
   const [memberSearchText, setMemberSearchText] = useState("");
-  const [memberSearchRows, setMemberSearchRows] = useState<GroupMemberRecord[]>(
-    []
-  );
+  const [memberSearchRows, setMemberSearchRows] =
+    useState<GroupMemberRecord[]>([]);
 
-  const memberSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const memberSearchTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const memberSearchRequestIdRef = useRef(0);
 
   const isMemberSearchMode = memberSearchText.trim().length > 0;
-
-  const loanDefs =
-    loanDefsData?.loan_definitions?.filter(
-      (loanDef: any) => loanDef.status === 1
-    ) || [];
 
   const cycles = extractCycles(cyclesData);
 
@@ -225,7 +217,8 @@ const GroupLoanFormModal = ({
       };
     })
     .filter(
-      (option): option is { value: number; label: string } => Boolean(option)
+      (option): option is { value: number; label: string } =>
+        Boolean(option),
     );
 
   const loadMembers = useCallback(
@@ -241,7 +234,7 @@ const GroupLoanFormModal = ({
       const batch = extractMembers(result);
 
       setMemberRows((prev) =>
-        reset ? batch : dedupeById([...prev, ...batch])
+        reset ? batch : dedupeById([...prev, ...batch]),
       );
 
       setMemberPage(pageToLoad);
@@ -249,7 +242,7 @@ const GroupLoanFormModal = ({
 
       return batch;
     },
-    [fetchMembers, groupId]
+    [fetchMembers, groupId],
   );
 
   useEffect(() => {
@@ -286,11 +279,16 @@ const GroupLoanFormModal = ({
 
     memberSearchTimerRef.current = setTimeout(async () => {
       try {
-        const result = await searchGroupMembers({ groupId, q }).unwrap();
+        const result = await searchGroupMembers({
+          groupId,
+          q,
+        }).unwrap();
 
         if (requestId !== memberSearchRequestIdRef.current) return;
 
-        setMemberSearchRows(dedupeById(Array.isArray(result) ? result : []));
+        setMemberSearchRows(
+          dedupeById(Array.isArray(result) ? result : []),
+        );
       } catch (err: any) {
         if (requestId !== memberSearchRequestIdRef.current) return;
 
@@ -298,8 +296,8 @@ const GroupLoanFormModal = ({
 
         message.error(
           err?.data?.message ||
-            err?.message ||
-            "Failed to search group members"
+          err?.message ||
+          "Failed to search group members",
         );
       }
     }, SEARCH_DEBOUNCE_MS);
@@ -316,13 +314,27 @@ const GroupLoanFormModal = ({
       form.setFieldsValue({
         amount: loan.amount,
         cycle: loan.cycle,
-        loan_type: loan.loan_type,
+
+        loan_category_id:
+          loan.loan_category_id ??
+          loan.category_id ??
+          loan.loan_category,
+
+        loan_type:
+          loan.loan_type ??
+          loan.loan_type_id ??
+          loan.sub_category_id,
+
         issued_to: loan.issued_to,
-        date_issued: loan.date_issued ? dayjs(loan.date_issued) : undefined,
+        date_issued: loan.date_issued
+          ? dayjs(loan.date_issued)
+          : undefined,
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ date_issued: dayjs().startOf("day") });
+      form.setFieldsValue({
+        date_issued: dayjs().startOf("day"),
+      });
     }
   }, [loan, form]);
 
@@ -338,7 +350,9 @@ const GroupLoanFormModal = ({
     await loadMembers(memberPage + 1);
   };
 
-  const handleMemberPopupScroll = (event: React.UIEvent<HTMLDivElement>) => {
+  const handleMemberPopupScroll = (
+    event: React.UIEvent<HTMLDivElement>,
+  ) => {
     const target = event.target as HTMLDivElement;
 
     const isBottom =
@@ -355,20 +369,29 @@ const GroupLoanFormModal = ({
 
       const payload = {
         ...values,
+        amount: Number(values.amount),
+        cycle: Number(values.cycle),
+        loan_category_id: Number(values.loan_category_id),
+        loan_type: Number(values.loan_type),
         date_issued: values.date_issued
           ? values.date_issued
-              .startOf("day")
-              .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
+            .startOf("day")
+            .format("YYYY-MM-DD[T]HH:mm:ss[Z]")
           : undefined,
         group_id: groupId,
         // issued_by: issuedBy,
       };
 
       if (isEditing) {
-        await updateLoan({ loanId: loan.id, updatedData: payload }).unwrap();
+        await updateLoan({
+          loanId: loan.id,
+          updatedData: payload,
+        }).unwrap();
+
         message.success("Loan updated successfully");
       } else {
         await createLoan(payload).unwrap();
+
         message.success("Loan created successfully");
       }
 
@@ -376,17 +399,12 @@ const GroupLoanFormModal = ({
       refetch();
       onWalletRefresh?.();
     } catch (err: any) {
-      message.error(err?.data?.error || "Something went wrong.");
+      message.error(
+        err?.data?.error ||
+        err?.data?.message ||
+        "Something went wrong.",
+      );
     }
-  };
-
-  const filterOptionsByLabel = (
-    input: string,
-    option?: DefaultOptionType
-  ): boolean => {
-    return String(option?.children ?? "")
-      .toLowerCase()
-      .includes(input.toLowerCase());
   };
 
   const disableFutureDates = (current: Dayjs) =>
@@ -409,6 +427,7 @@ const GroupLoanFormModal = ({
           <Typography.Title level={5} className="!mb-1">
             Loan Details
           </Typography.Title>
+
           <Text type="secondary">
             Capture accurate details so this loan stays aligned with policy.
           </Text>
@@ -419,7 +438,12 @@ const GroupLoanFormModal = ({
             <Form.Item
               label="Loan Amount"
               name="amount"
-              rules={[{ required: true, message: "Enter loan amount" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Enter loan amount",
+                },
+              ]}
             >
               <InputNumber
                 min={1}
@@ -434,7 +458,12 @@ const GroupLoanFormModal = ({
             <Form.Item
               label="Loan Cycle"
               name="cycle"
-              rules={[{ required: true, message: "Select cycle" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Select cycle",
+                },
+              ]}
             >
               {cyclesLoading ? (
                 <Spin />
@@ -452,53 +481,43 @@ const GroupLoanFormModal = ({
           </Col>
         </Row>
 
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              label="Loan Type"
-              name="loan_type"
-              rules={[{ required: true, message: "Select loan type" }]}
-            >
-              {defsLoading ? (
-                <Spin />
-              ) : (
-                <Select
-                  placeholder="Select loan type"
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={filterOptionsByLabel}
-                >
-                  {loanDefs.map((ld: any) => (
-                    <Select.Option key={ld.id} value={ld.id}>
-                      {ld.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              )}
-            </Form.Item>
-          </Col>
+        <LoanCategoryTypeFields
+          form={form}
+          initialCategoryId={
+            loan?.loan_category_id ??
+            loan?.category_id ??
+            loan?.loan_category
+          }
+        />
 
-          <Col span={12}>
-            <Form.Item
-              label="Date Issued"
-              name="date_issued"
-              rules={[{ required: true, message: "Select issued date" }]}
-            >
-              <DatePicker
-                className="w-full"
-                format="YYYY-MM-DD"
-                disabledDate={disableFutureDates}
-                popupClassName="group-modal-date-picker-dropdown"
-                placement="bottomLeft"
-              />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Form.Item
+          label="Date Issued"
+          name="date_issued"
+          rules={[
+            {
+              required: true,
+              message: "Select issued date",
+            },
+          ]}
+        >
+          <DatePicker
+            className="w-full"
+            format="YYYY-MM-DD"
+            disabledDate={disableFutureDates}
+            popupClassName="group-modal-date-picker-dropdown"
+            placement="bottomLeft"
+          />
+        </Form.Item>
 
         <Form.Item
           label="Issued To"
           name="issued_to"
-          rules={[{ required: true, message: "Select member" }]}
+          rules={[
+            {
+              required: true,
+              message: "Select member",
+            },
+          ]}
           tooltip="Pick the group member who receives this loan"
         >
           {membersLoading ? (
@@ -545,8 +564,8 @@ const GroupLoanFormModal = ({
                       {isMemberSearchMode
                         ? "Clear search"
                         : memberHasMore
-                        ? "Load more"
-                        : "All members loaded"}
+                          ? "Load more"
+                          : "All members loaded"}
                     </Button>
                   </div>
                 </>
@@ -560,9 +579,11 @@ const GroupLoanFormModal = ({
             <Text strong className="text-slate-700">
               Quick reminder
             </Text>
+
             <Text type="secondary" className="text-xs">
               Ensure the issue date reflects when funds reached the member and
-              double-check the loan amount against the approved definition.
+              double-check the loan amount against the approved category and
+              loan type.
             </Text>
           </Space>
         </Card>

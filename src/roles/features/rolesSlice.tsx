@@ -1,6 +1,11 @@
 // rolesSlice.ts
 import { apiSlice } from "../../redux/api";
 
+type UpdateRolePermissionsPayload = {
+  role_id: string | number;
+  permissions: number[];
+};
+
 export const rolesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllRoles: builder.query({
@@ -47,6 +52,35 @@ export const rolesApi = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    //single role
+    getSingleRole: builder.query<any, string>({
+      query: (id) => ({
+        url: `/staff/role/fetch/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["Roles"],
+    }),
+
+    // Role Permissions
+    getRolePermissions: builder.query<any, string | number>({
+      query: (roleId) => ({
+        url: `/staff/role/permissions/${roleId}`,
+        method: "GET",
+      }),
+      providesTags: ["Roles"],
+    }),
+
+    updateRolePermissions: builder.mutation<any, UpdateRolePermissionsPayload>({
+      query: (body) => ({
+        url: "/staff/role/permissions",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Roles"],
+    }),
+
+
   }),
 });
 
@@ -57,4 +91,12 @@ export const {
   useAssignRoleMutation,
   useGetStaffRoleQuery,
   useDeleteRoleMutation,
+
+  //single role
+  useGetSingleRoleQuery,
+
+  // role permissions
+  useLazyGetRolePermissionsQuery,
+  useUpdateRolePermissionsMutation,
+
 } = rolesApi;

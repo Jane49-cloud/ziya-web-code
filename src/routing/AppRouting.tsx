@@ -63,14 +63,25 @@ import { EditDocumentForm } from "../documents/pages/editDocument";
 import HomeLoading from "../components/common/homeLoading";
 import SubscriptionsPage from "../subscriptions";
 import GroupSubscriptionDetailsPage from "../subscriptions/pages/groupSubscriptionDetails";
-// visualization
-import VisualizationsPage from "../visualization/visualizationIndex";
 //Partner
 import SaccoPage from "../partner/index";
 import SinglePartnerPage from "../partner/pages/singlePartnerPage";
 import SinglePartnerWalletPage from "../partner/pages/singlePartnerWalletPage";
-
 import PartnerWalletsPage from "../wallets/pages/partnerWalletsTab";
+
+//loan categfory
+import LoanCategory from "../Loans/pages/loanCategories";
+import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
+
+//assets
+import LoanAssets from "../assets/pages/allAssetType";
+import SingleAssetType from "../assets/pages/singleAssetType";
+
+//company
+import CompanyAssetsPage from "../company/pages/companyAssets";
+
+//single role
+import SingleRolePage from "../roles/pages/singleRolePage";
 
 // Lazy-loaded heavy routes (recharts bundle)
 const Dashboard = lazy(() => import("../dashboard"));
@@ -166,11 +177,8 @@ const AppRouting = (): ReactElement => {
         <Route element={<PrivateRoutes allowedRoles={ADMIN_DEV} />}>
           <Route element={<Layout children={undefined} />}>
             <Route path="/roles" element={<RolesManagement />} />
-            <Route path="/loan-categories" element={<LoanCategories />} />
+            <Route path="/loan-types" element={<LoanCategories />} />
             <Route path="/tasks" element={<AdminTasksPage />} />
-
-            {/* visualization */}
-            <Route path="/visualizations" element={<VisualizationsPage />} />
 
             {/* partner */}
             <Route path="/sacco" element={<SaccoPage />} />
@@ -188,8 +196,17 @@ const AppRouting = (): ReactElement => {
           <Route element={<Layout children={undefined} />}>
             <Route path="/staff" element={<Staff />} />
             <Route path="/add-user" element={<AddUser />} />
+            {/* loan categories */}
+            <Route path="/loan-categories" element={<LoanCategory />} />
+            <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
+            <Route path="/loan-assets" element={<LoanAssets />} />
+            <Route path="/loan-assets/:id" element={<SingleAssetType />} />
+            <Route path="/company-assets" element={<CompanyAssetsPage />} />
+            <Route path="/roles/:id" element={<SingleRolePage />} />
+
           </Route>
         </Route>
+
 
         {/* Staff roles (admin, dev, relationship-manager, staff, support) */}
         <Route element={<PrivateRoutes allowedRoles={STAFF_ROLES} />}>

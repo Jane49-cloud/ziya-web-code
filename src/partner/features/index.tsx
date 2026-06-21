@@ -8,6 +8,7 @@ export const {
     useLazyGetSingleSaccoQuery,
 
     useCreateSaccoMutation,
+    useUpdateSaccoMutation,
 
     useGetAllPartnerWalletsQuery,
     useLazyGetAllPartnerWalletsQuery,
@@ -27,4 +28,21 @@ export const {
 
     useGetPartnerGroupsQuery,
     useLazyGetPartnerGroupsQuery,
+
+    //move group and remove group
+    useMoveGroupToPartnerMutation,
+    useRemoveGroupFromPartnerMutation,
+
+    //get single partner assets
+    useGetPartnerAssetsQuery,
+    useLazyGetPartnerAssetsQuery,
+
+    //search partner
+    useSearchPartnersQuery,
+    useLazySearchPartnersQuery,
+
+    //partner transactions
+    useGetPartnerTransactionsQuery,
+    useLazyGetPartnerTransactionsQuery,
+
 } = saccoSlice;

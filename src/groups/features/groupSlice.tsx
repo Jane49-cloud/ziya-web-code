@@ -38,6 +38,21 @@ type GroupLoansQuery =
     page_size?: number;
   };
 
+type GetGroupAssetsPayload = {
+  groupId: string | number;
+};
+
+type InitiateGroupLoanPaymentPayload = {
+  loan_id: number;
+  amount: number;
+};
+
+type ConfirmGroupLoanPaymentPayload = {
+  transaction_id: string;
+  token: string;
+  loan_id: number;
+};
+
 export const GroupSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createGroup: builder.mutation({
@@ -75,15 +90,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
-    // searchGroups: builder.query({
-    //   query: ({ field, value }) => ({
-    //     url: `/groups/search?field=${field}&value=${value}`,
-    //     method: "GET",
-    //   }),
-    //   providesTags: [{ type: "Groups" }],
-    // }),
 
-    // search groups
     searchGroups: builder.query<any[], { q: string }>({
       query: ({ q }) => ({
         url: "/groups/search",
@@ -148,7 +155,6 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
 
 
-
     getGroupMembers: builder.query<any, GroupLoansQuery>({
       query: (arg) => {
         const groupId = typeof arg === "number" ? arg : arg.groupId;
@@ -173,10 +179,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
     // search grp members 
-    searchGroupMembers: builder.query<
-      any[],
-      { groupId: string | number; q: string }
-    >({
+    searchGroupMembers: builder.query<any[], { groupId: string | number; q: string }>({
       query: ({ groupId, q }) => ({
         url: `/groups/members/${groupId}/search`,
         method: "GET",
@@ -235,23 +238,6 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
 
-
-    // getMyCreatedGroups: builder.query({
-    //   query: () => ({
-    //     url: "/groups/get/my-created",
-    //     method: "GET",
-    //   }),
-    //   providesTags: [{ type: "Groups" }],
-    // }),
-
-    // getMyManagedGroups: builder.query({
-    //   query: () => ({
-    //     url: "/groups/get/my-managed",
-    //     method: "GET",
-    //   }),
-    //   providesTags: [{ type: "Groups" }],
-    // }),
-
     getGroupWallet: builder.query({
       query: (id: number) => ({
         url: `/group-wallets/group/${id}`,
@@ -260,28 +246,9 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Groups", id }],
     }),
 
-    getGroupPayments: builder.query<any, GroupLoansQuery>({
-      query: (arg) => {
-        const groupId = typeof arg === "number" ? arg : arg.groupId;
 
-        return {
-          url: `/group-loan-payments/group/${groupId}`,
-          method: "GET",
-          params:
-            typeof arg === "number"
-              ? undefined
-              : {
-                page: arg.page ?? 1,
-                page_size: arg.page_size ?? 20,
-              },
-        };
-      },
-      providesTags: (_res, _err, arg) => {
-        const groupId = typeof arg === "number" ? arg : arg.groupId;
 
-        return [{ type: "GroupLoanPayments", id: groupId }];
-      },
-    }),
+
 
     getGroupLoans: builder.query<any, GroupLoansQuery>({
       query: (arg) => {
@@ -381,25 +348,83 @@ export const GroupSlice = apiSlice.injectEndpoints({
 
     // group payments
 
-    createGroupLoanPayment: builder.mutation({
-      query: (payload: {
-        group_id: number;
-        loan_id: number;
-        amount: number;
-        customer_id: number;
-        cycle: number;
-        approved_by?: number | null;
-        date_paid?: string;
-      }) => ({
+    getGroupPayments: builder.query<any, GroupLoansQuery>({
+      query: (arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return {
+          url: `/group-loan-payments/group/${groupId}`,
+          method: "GET",
+          params:
+            typeof arg === "number"
+              ? undefined
+              : {
+                page: arg.page ?? 1,
+                page_size: arg.page_size ?? 20,
+              },
+        };
+      },
+      providesTags: (_res, _err, arg) => {
+        const groupId = typeof arg === "number" ? arg : arg.groupId;
+
+        return [{ type: "GroupLoanPayments", id: groupId }];
+      },
+    }),
+
+    initiateGroupLoanPayment: builder.mutation<any, InitiateGroupLoanPaymentPayload>({
+      query: (body) => ({
         url: "/group-loan-payments/create",
         method: "POST",
-        body: payload,
+        body,
       }),
-      invalidatesTags: (_res, _err, payload) => [
-        { type: "GroupLoanPayments", id: payload.group_id },
-        { type: "GroupLoans", id: payload.group_id },
+    }),
+
+    confirmGroupLoanPayment: builder.mutation<any, ConfirmGroupLoanPaymentPayload>({
+      query: ({ transaction_id, token }) => ({
+        url: "/group-loan-payments/confirm",
+        method: "POST",
+        body: {
+          transaction_id,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: (_result, _error, { loan_id }) => [
+        {
+          type: "GroupLoanPayments",
+          id: `LOAN-${loan_id}`,
+        },
+        {
+          type: "GroupLoans",
+          id: "LIST",
+        },
+        {
+          type: "Wallets",
+          id: "LIST",
+        },
       ],
     }),
+
+    // createGroupLoanPayment: builder.mutation({
+    //   query: (payload: {
+    //     group_id: number;
+    //     loan_id: number;
+    //     amount: number;
+    //     customer_id: number;
+    //     cycle: number;
+    //     approved_by?: number | null;
+    //     date_paid?: string;
+    //   }) => ({
+    //     url: "/group-loan-payments/create",
+    //     method: "POST",
+    //     body: payload,
+    //   }),
+    //   invalidatesTags: (_res, _err, payload) => [
+    //     { type: "GroupLoanPayments", id: payload.group_id },
+    //     { type: "GroupLoans", id: payload.group_id },
+    //   ],
+    // }),
 
     updateGroupLoanPayment: builder.mutation({
       query: ({
@@ -450,12 +475,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
       ],
     }),
 
-    //search
-    // search group loan payments
-    searchGroupLoanPayments: builder.query<
-      any[],
-      { groupId: string | number; q: string }
-    >({
+    searchGroupLoanPayments: builder.query<any[], { groupId: string | number; q: string }>({
       query: ({ groupId, q }) => ({
         url: "/group-loan-payments/search",
         method: "GET",
@@ -469,6 +489,23 @@ export const GroupSlice = apiSlice.injectEndpoints({
       providesTags: (_result, _error, arg) => [
         { type: "GroupLoanPayments", id: `SEARCH-${arg.groupId}` },
       ],
+    }),
+
+    getGroupAssets: builder.query<any, GetGroupAssetsPayload>({
+      query: ({ groupId }) => ({
+        url: `/company-wallets/assets/group/${groupId}`,
+        method: "GET",
+      }),
+      providesTags: (
+        _result,
+        _error,
+        { groupId },
+      ) => [
+          {
+            type: "LoanAssets",
+            id: `GROUP-${groupId}`,
+          },
+        ],
     }),
 
 

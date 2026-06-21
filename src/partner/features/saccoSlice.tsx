@@ -24,12 +24,30 @@ type DepositPartnerWalletPayload = {
     amount: number;
 };
 
+type UpdateSaccoPayload = {
+            id: string | string;
+            partner_name: string;
+            partner_location: string;
+        };
+
+type PartnerGroupPayload = {
+    group_id: string | number;
+    partner_id: string | number;
+};
+
+type SearchPartnersPayload = {
+    q: string;
+};
+
+type PartnerTransactionsPayload = {
+    partnerId: string | number;
+    page?: number;
+    page_size?: number;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getAllSaccos: builder.query<
-            any,
-            PaginationQuery | void
-        >({
+        getAllSaccos: builder.query< any, PaginationQuery | void >({
             query: (params) => ({
                 url: "/partners/all",
                 method: "GET",
@@ -117,10 +135,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner staff
-        getPartnerStaff: builder.query<
-            any,
-            PartnerPaginationQuery
-        >({
+        getPartnerStaff: builder.query< any,  PartnerPaginationQuery >({
             query: ({
                 partnerId,
                 page = 0,
@@ -217,22 +232,119 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         //deposit
-        depositToPartnerWallet: builder.mutation<
-    any,
-    DepositPartnerWalletPayload
->({
-    query: (body) => ({
-        url: "/partner-wallets/deposit",
-        method: "POST",
-        body,
-    }),
-    invalidatesTags: [
-        {
-            type: "PartnerWallets",
-            id: "LIST",
-        },
-    ],
-}),
+        depositToPartnerWallet: builder.mutation< any, DepositPartnerWalletPayload >({
+            query: (body) => ({
+                url: "/partner-wallets/deposit",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                {
+                    type: "PartnerWallets",
+                    id: "LIST",
+                },
+            ],
+        }),
+
+        //update partner
+        
+        updateSacco: builder.mutation<any, UpdateSaccoPayload>({
+            query: ({ id, ...body }) => ({
+                url: `/partners/profile/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Saccos", id },
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
+
+        //move group and remove group
+        moveGroupToPartner: builder.mutation< any, PartnerGroupPayload >({
+            query: (body) => ({
+                url: "/partners/add-group",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
+
+        removeGroupFromPartner: builder.mutation< any, PartnerGroupPayload >({
+            query: (body) => ({
+                url: "/partners/remove-group",
+                method: "DELETE",
+                body,
+            }),
+            invalidatesTags: [
+                { type: "Saccos", id: "LIST" },
+            ],
+        }),
+        //get single partner assets
+        getPartnerAssets: builder.query< any, string | number>({
+            query: (partnerId) => ({
+                url: `/company-wallets/assets/partner/${partnerId}`,
+                method: "GET",
+            }),
+            providesTags: (_result, _error, partnerId) => [
+                {
+                    type: "LoanAssets",
+                    id: `PARTNER-${partnerId}`,
+                },
+            ],
+        }),
+        //search partner
+        searchPartners: builder.query<any[],SearchPartnersPayload>({
+            query: ({ q }) => ({
+                url: "/partners/search",
+                method: "GET",
+                params: {
+                    q: q.trim() || "all",
+                },
+            }),
+            transformResponse: (response: any) => {
+                if (Array.isArray(response)) return response;
+
+                const records =
+                    response?.partners ??
+                    response?.data ??
+                    response?.results ??
+                    [];
+
+                return Array.isArray(records) ? records : [];
+            },
+        }),
+
+        //partner transactions
+        getPartnerTransactions: builder.query< any, PartnerTransactionsPayload>({
+            query: ({
+                partnerId,
+                page = 0,
+                page_size = 10,
+            }) => ({
+                url: `/partners/wallet/transactions/${partnerId}`,
+                method: "GET",
+                params: {
+                    page,
+                    page_size,
+                },
+            }),
+            providesTags: (
+                _result,
+                _error,
+                { partnerId },
+            ) => [
+                {
+                    type: "Saccos",
+                    id: `TRANSACTIONS-${partnerId}`,
+                },
+            ],
+        }),
+
+        
+
     }),
 });
 

@@ -31,10 +31,11 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
 
     getLoanDefinitionsByPlatform: builder.query<any, LoanDefinitionPlatformQuery>({
       query: (arg) => {
-        const platform = typeof arg === "string" ? arg : arg.platform;
+        //const platform = typeof arg === "string" ? arg : arg.platform;
 
         return {
-          url: `/loan-definitions/get/all/${platform}`,
+          // url: `/loan-definitions/get/all/${platform}`,   
+          url: `/group-loans/categories/all`,
           method: "GET",
           params:
             typeof arg === "string"

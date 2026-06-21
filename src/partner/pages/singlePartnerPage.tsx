@@ -21,12 +21,14 @@ import {
 import { useGetSingleSaccoQuery } from "../features";
 import { formatName } from "../../utils";
 
-import OverviewTab, {
-    type Partner,
-} from "../components/overviewTab";
+import OverviewTab, {type Partner} from "../components/overviewTab";
 import StaffTab from "../components/staffTab";
 import CustomersTab from "../components/customersTab";
 import GroupsTab from "../components/groupsTab";
+
+import UpdatePartnerTab from "../components/updatePartnerTab";
+import AssetsTab from "../components/assetsTab";
+import PartnerTransactionsTab from "../components/partnerTransactionsTab";
 
 const { Title, Text } = Typography;
 
@@ -140,6 +142,41 @@ const SinglePartnerPage = () => {
                 />
             ),
         },
+        {
+            key: "assets",
+            label: "Assets",
+            children: (
+                <AssetsTab
+                    partnerId={partnerId}
+                    active={activeTab === "assets"}
+                />
+            ),
+        },
+        {
+            key: "transactions",
+            label: "Transactions",
+            children: (
+                <PartnerTransactionsTab
+                    partnerId={partnerId}
+                    active={activeTab === "transactions"}
+                />
+            ),
+        },
+        {
+            key: "update",
+            label:  (
+                <Space size={6}>
+                   Update Partner
+                </Space>
+            ),
+            children: (
+                <UpdatePartnerTab
+                    partner={partner}
+                    partnerId={partnerId}
+                    onUpdated={refetch}
+                />
+            ),
+        },
     ];
 
     return (
@@ -173,7 +210,7 @@ const SinglePartnerPage = () => {
 
                         <Text type="secondary">
                             View the partner overview, staff,
-                            customers and groups.
+                            customers, groups and assets.
                         </Text>
                     </Space>
                 </Col>

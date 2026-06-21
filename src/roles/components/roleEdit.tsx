@@ -2,11 +2,11 @@ import { FC, useEffect } from "react";
 import { Modal, Form, Input } from "antd";
 import { useUpdateRoleMutation } from "../features/rolesSlice";
 
-interface Role {
-  id: string;
+export type Role = {
+  id: string | number;
   name: string;
   description?: string;
-}
+};
 
 interface EditRoleModalProps {
   visible: boolean;
@@ -26,7 +26,10 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
 
   useEffect(() => {
     if (visible && role) {
-      form.setFieldsValue({ name: role.name, description: role.description });
+      form.setFieldsValue({
+        name: role.name,
+        description: role.description,
+      });
     } else {
       form.resetFields();
     }
@@ -37,7 +40,7 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
       const values = await form.validateFields();
 
       if (!role) {
-        console.error("🛑 No role selected.");
+        console.error("No role selected.");
         return;
       }
 
@@ -49,15 +52,13 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
         },
       };
 
-      console.log("🚀 Sending Payload:", payload);
       await updateRole(payload).unwrap();
-      console.log("✅ Role Updated Successfully");
 
       onUpdate();
       onClose();
       form.resetFields();
     } catch (error) {
-      console.error("🛑 Failed to update role:", error);
+      console.error("Failed to update role:", error);
     }
   };
 
@@ -74,10 +75,16 @@ export const EditRoleModal: FC<EditRoleModalProps> = ({
         <Form.Item
           label="Role Name"
           name="name"
-          rules={[{ required: true, message: "Please input the role name!" }]}
+          rules={[
+            {
+              required: true,
+              message: "Please input the role name!",
+            },
+          ]}
         >
           <Input />
         </Form.Item>
+
         <Form.Item label="Description" name="description">
           <Input.TextArea />
         </Form.Item>

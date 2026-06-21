@@ -9,6 +9,7 @@ import GroupLoanHistoryTab from "../components/groupLoanHistoryTab";
 import GroupPaymentHistoryTab from "../components/groupPaymentHistoryTab";
 //import GroupAnalysisTab from "../components/groupAnalysisTab";
 import { formatName } from "../../utils";
+import GroupAssetsTab from "../components/groupAssetsTab";
 
 const { Title } = Typography;
 
@@ -196,6 +197,20 @@ const SingleGroupPage: React.FC = () => {
     //     "Launch analytics to explore charts and ratios."
     //   ),
     // },
+
+    {
+      key: "assets",
+      label: renderTabLabel(
+        "Assets",
+        "Assigned assets"
+      ),
+      children: renderDeferred(
+        "assets",
+        <GroupAssetsTab groupId={groupId} />,
+        "Open the assets tab to load assigned assets.",
+        "Assets remain available after they are loaded."
+      ),
+    },
   ];
 
   return (

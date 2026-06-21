@@ -43,7 +43,7 @@ const CustomersTab = ({
     active,
 }: CustomersTabProps) => {
     const [page, setPage] = useState(0);
-    const pageSize = 10;
+    const [pageSize, setPageSize] = useState(10);
 
     const {
         data,
@@ -62,11 +62,17 @@ const CustomersTab = ({
         },
     );
 
-    const customers: PartnerCustomer[] = Array.isArray(
-        data?.customers,
-    )
-        ? data.customers
-        : [];
+    const customers: PartnerCustomer[] =
+        Array.isArray(data?.customers)
+            ? data.customers
+            : [];
+
+    const totalCustomers = Number(
+        data?.total ??
+            data?.total_customers ??
+            data?.pagination?.total ??
+            customers.length,
+    );
 
     const columns: ColumnsType<PartnerCustomer> = [
         {
@@ -162,7 +168,7 @@ const CustomersTab = ({
 
     return (
         <>
-            <Table
+            <Table<PartnerCustomer>
                 rowKey="partner_customer_id"
                 columns={columns}
                 dataSource={customers}
@@ -179,9 +185,16 @@ const CustomersTab = ({
             <TabPagination
                 page={page}
                 pageSize={pageSize}
-                recordCount={customers.length}
+                total={totalCustomers}
                 loading={isLoading || isFetching}
-                onPageChange={setPage}
+                itemName="Customers"
+                onPaginationChange={(
+                    nextPage,
+                    nextPageSize,
+                ) => {
+                    setPage(nextPage);
+                    setPageSize(nextPageSize);
+                }}
             />
         </>
     );

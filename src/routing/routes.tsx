@@ -96,11 +96,12 @@ export const sidebarItems: SidebarItem[] = [
     title: "Loans",
     icon: "dollar",
     dropdown: [
-      {
-        title: "Categories",
-        path: "/loan-categories",
-        allowedRoles: ["admin", "dev"],
-      },
+      // {
+      //   //title: "Categories",
+      //   title: "Loan Types",
+      //   path: "/loan-types",
+      //   allowedRoles: ["admin", "dev"],
+      // },
       {
         title: "Loans List",
         path: "/loans",
@@ -111,6 +112,13 @@ export const sidebarItems: SidebarItem[] = [
         path: "/loan-cycles",
         allowedRoles: STAFF_ROLES,
       },
+      //new loan category
+      {
+        title: "Loan Categories",
+        path: "/loan-categories",
+        allowedRoles: ["admin", "dev", "support"],
+      },
+      
     ],
   },
   {
@@ -165,11 +173,28 @@ export const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    title: "Partner",
+    title: "Partners",
     // icon: "chart-line",
     icon: "bank",
     path: "/sacco",
     allowedRoles: ["admin", "dev"],
+  },
+  {
+    title: "Assets",
+    icon:"package",
+    path: "/loan-assets",
+    allowedRoles: ["admin", "dev", "support"],
+  },
+  {
+    title: "Company",
+    icon: "office-bag",
+    dropdown: [
+      {
+        title: "Company Assets",
+        path: "/company-assets",
+        allowedRoles: ["admin", "dev", "support"],
+      },
+    ],
   },
 
   {
@@ -197,11 +222,5 @@ export const sidebarItems: SidebarItem[] = [
     allowedRoles: STAFF_ROLES,
   },
 
-  // visualization
-  // {
-  //   title: "Visualizations",
-  //   icon: "chart-line",
-  //   path: "/visualizations",
-  //   allowedRoles: ADMIN_DEV,
-  // },
+      
 ];

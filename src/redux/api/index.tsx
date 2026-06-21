@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-   baseUrl: "https://betaapi.ziya.co.ke/api/v2",
+  baseUrl: "https://betaapi.ziya.co.ke/api/v2",
 
   // baseUrl: "https://api.ziya.co.ke/api/v2",
 
@@ -18,11 +18,21 @@ const baseQuery = fetchBaseQuery({
 
   prepareHeaders: (headers) => {
     const accessToken = localStorage.getItem("ziya-access");
-    if (accessToken) {
+
+    if (accessToken && !headers.has("Authorization")) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
+
     return headers;
   },
+
+  // prepareHeaders: (headers) => {
+  //   const accessToken = localStorage.getItem("ziya-access");
+  //   if (accessToken) {
+  //     headers.set("Authorization", `Bearer ${accessToken}`);
+  //   }
+  //   return headers;
+  // },
 });
 
 const baseQueryWithAuth = async (
@@ -31,9 +41,18 @@ const baseQueryWithAuth = async (
   extraOptions: object,
 ) => {
   const result = await baseQuery(args, api, extraOptions);
-  // console.log("the result", result);
 
-  if (result.error && result.error.status === 401) {
+  //fix logging out when transaction token is invalid
+  const url =
+    typeof args === "string" ? args : args.url;
+
+  const isTransactionConfirmRequest =
+    url.includes(
+      "/company-wallets/assets/confirm/move-to-partner",
+    );
+
+
+  if (result.error && result.error.status === 401 && !isTransactionConfirmRequest) {
     console.warn("Token expired. Logging out...");
     console.log("status", result.error.status);
     localStorage.removeItem("ziya-access");
@@ -73,9 +92,11 @@ export const apiSlice = createApi({
     "Wallets",
     "WalletTransactions",
     "Subscriptions",
-    "Visualization",
     "Saccos",
     "PartnerWallets",
+    "LoanCategories",
+    "LoanAssets",
+    "CompanyAssets",
   ],
   endpoints: (builder) => ({
     loadUser: builder.query({
