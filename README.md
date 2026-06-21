@@ -1,7 +1,13 @@
 total asset type value = frontend
-need single asset, asset type child get all for a particular asset type
+need single asset, asset type child get all for a particular asset type = done
 
 on asset creation bike, preload logbook
                    phone, preload imei
 
                    assets/category/id
+  remove unit value
+
+Permission on roles
+
+confirm asset movement
+group loans - creation

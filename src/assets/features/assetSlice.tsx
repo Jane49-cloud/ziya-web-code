@@ -24,13 +24,16 @@ type UpdateAssetPayload =
         id: string | number;
     };
 
-export const loanAssetSlice =
+type GetAssetTypeProductsPayload = {
+    assetTypeId: string | number;
+    page?: number;
+    page_size?: number;
+};
+
+export const allAssetSlice =
     apiSlice.injectEndpoints({
         endpoints: (builder) => ({
-            getAllAssetTypes: builder.query<
-                any,
-                void
-            >({
+            getAllAssetTypes: builder.query<any, void>({
                 query: () => ({
                     url: "/company-wallets/asset-types/all",
                     method: "GET",
@@ -43,7 +46,7 @@ export const loanAssetSlice =
                 ],
             }),
 
-            createAssetType: builder.mutation<any, CreateAssetTypePayload >({
+            createAssetType: builder.mutation<any, CreateAssetTypePayload>({
                 query: (body) => ({
                     url: "/company-wallets/asset-types/create",
                     method: "POST",
@@ -57,7 +60,7 @@ export const loanAssetSlice =
                 ],
             }),
 
-            updateAssetType: builder.mutation<  any, UpdateAssetTypePayload >({
+            updateAssetType: builder.mutation<any, UpdateAssetTypePayload>({
                 query: ({ id, ...body }) => ({
                     url: `/company-wallets/asset-types/update/${id}`,
                     method: "PUT",
@@ -71,37 +74,43 @@ export const loanAssetSlice =
                 ],
             }),
 
-            // Create individual asset
-            createAsset: builder.mutation< any, CreateAssetPayload >({
+            createAsset: builder.mutation<any, CreateAssetPayload>({
                 query: (body) => ({
                     url: "/company-wallets/assets/create-asset",
                     method: "POST",
                     body,
                 }),
-                invalidatesTags: [
+                invalidatesTags: (_result, _error, { asset_type }) => [
                     {
                         type: "LoanAssets",
                         id: "ASSETS",
                     },
+                    {
+                        type: "LoanAssets",
+                        id: `ASSET_TYPE_PRODUCTS-${asset_type}`,
+                    },
                 ],
             }),
 
-            // Update individual asset
-            updateAsset: builder.mutation<  any, UpdateAssetPayload >({
+            updateAsset: builder.mutation<any, UpdateAssetPayload>({
                 query: ({ id, ...body }) => ({
                     url: `/company-wallets/assets/update/${id}`,
                     method: "PUT",
                     body,
                 }),
-                invalidatesTags: [
+                invalidatesTags: (_result, _error, { asset_type }) => [
                     {
                         type: "LoanAssets",
                         id: "ASSETS",
                     },
+                    {
+                        type: "LoanAssets",
+                        id: `ASSET_TYPE_PRODUCTS-${asset_type}`,
+                    },
                 ],
             }),
-            //partner assets
-            getPartnerAssets: builder.query< any,  string | number>({
+
+            getPartnerAssets: builder.query<any, string | number>({
                 query: (partnerId) => ({
                     url: `/company-wallets/assets/partner/${partnerId}`,
                     method: "GET",
@@ -114,12 +123,36 @@ export const loanAssetSlice =
                 ],
             }),
 
+            //  all assets under single asset type
+            getAssetTypeProducts: builder.query<any, GetAssetTypeProductsPayload>({
+                query: ({ assetTypeId, page, page_size }) => ({
+                    url: `/company-wallets/asset-types/products/${assetTypeId}`,
+                    method: "GET",
+                    params:
+                        page !== undefined || page_size !== undefined
+                            ? {
+                                page,
+                                page_size,
+                            }
+                            : undefined,
+                }),
+                providesTags: (_result, _error, { assetTypeId }) => [
+                    {
+                        type: "LoanAssets",
+                        id: `ASSET_TYPE_PRODUCTS-${assetTypeId}`,
+                    },
+                ],
+            }),
+
         }),
     });
 
 export const {
     useGetAllAssetTypesQuery,
     useLazyGetAllAssetTypesQuery,
+
+    useGetAssetTypeProductsQuery,
+    useLazyGetAssetTypeProductsQuery,
 
     useGetPartnerAssetsQuery,
     useLazyGetPartnerAssetsQuery,
@@ -129,4 +162,4 @@ export const {
 
     useCreateAssetMutation,
     useUpdateAssetMutation,
-} = loanAssetSlice;
+} = allAssetSlice;

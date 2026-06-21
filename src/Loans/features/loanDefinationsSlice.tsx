@@ -34,7 +34,8 @@ export const loanDefinitionsSlice = apiSlice.injectEndpoints({
         const platform = typeof arg === "string" ? arg : arg.platform;
 
         return {
-          url: `/loan-definitions/get/all/${platform}`,
+          // url: `/loan-definitions/get/all/${platform}`,   
+          url: `/group-loans/categories/all`,
           method: "GET",
           params:
             typeof arg === "string"

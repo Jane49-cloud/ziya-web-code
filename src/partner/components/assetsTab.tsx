@@ -13,7 +13,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-import { useLazyGetPartnerAssetsQuery } from "../../assets/features/loanAssetSlice";
+import { useLazyGetPartnerAssetsQuery } from "../../assets/features/assetSlice";
 import {
     formatCurrency,
     formatDateTime,

@@ -11,7 +11,7 @@ import {
     message,
 } from "antd";
 
-import { useCreateAssetMutation } from "../../assets/features/loanAssetSlice";
+import { useCreateAssetMutation } from "../features/assetSlice";
 
 type CreateAssetFormValues = {
     identifier_type: string;
@@ -78,7 +78,7 @@ const CreateAssetDrawer = ({
         } catch (error: any) {
             message.error(
                 error?.data?.message ??
-                    "Failed to create asset",
+                "Failed to create asset",
             );
         }
     };
@@ -182,7 +182,6 @@ const CreateAssetDrawer = ({
                 >
                     <InputNumber
                         min={0}
-                        precision={2}
                         style={{ width: "100%" }}
                         placeholder="Enter asset value"
                     />

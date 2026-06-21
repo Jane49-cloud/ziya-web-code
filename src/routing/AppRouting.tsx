@@ -74,7 +74,7 @@ import LoanCategory from "../Loans/pages/loanCategories";
 import SingleLoanCategory from "../Loans/pages/singleLoanCategory";
 
 //assets
-import LoanAssets from "../assets/pages/loanAssets";
+import LoanAssets from "../assets/pages/allAssetType";
 import SingleAssetType from "../assets/pages/singleAssetType";
 
 //company
@@ -196,10 +196,10 @@ const AppRouting = (): ReactElement => {
             {/* loan categories */}
             <Route path="/loan-categories" element={<LoanCategory />} />
             <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
-            <Route path="/loan-assets" element={<LoanAssets />} /> 
+            <Route path="/loan-assets" element={<LoanAssets />} />
             <Route path="/loan-assets/:id" element={<SingleAssetType />} />
             <Route path="/company-assets" element={<CompanyAssetsPage />} />
-      
+
           </Route>
         </Route>
 

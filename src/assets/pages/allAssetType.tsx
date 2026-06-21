@@ -25,9 +25,9 @@ import {
     useCreateAssetTypeMutation,
     useLazyGetAllAssetTypesQuery,
     useUpdateAssetTypeMutation,
-} from "../../assets/features/loanAssetSlice";
+} from "../features/assetSlice";
 
-import  TabPagination from "../../utils/paginationUtil";
+import TabPagination from "../../utils/paginationUtil";
 
 const { Title, Text } = Typography;
 
@@ -101,7 +101,7 @@ const LoanAssets = () => {
         } catch (error: any) {
             message.error(
                 error?.data?.message ??
-                    "Failed to create asset type",
+                "Failed to create asset type",
             );
         }
     };
@@ -126,7 +126,7 @@ const LoanAssets = () => {
         } catch (error: any) {
             message.error(
                 error?.data?.message ??
-                    "Failed to update asset type",
+                "Failed to update asset type",
             );
         }
     };

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
     useEffect,
     useMemo,
@@ -13,7 +15,7 @@ import {
     Space,
     Spin,
     Table,
-    Tag,
+    //Tag,
     Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -24,7 +26,11 @@ import {
     useParams,
 } from "react-router-dom";
 
-import { useLazyGetAllAssetTypesQuery } from "../../assets/features/loanAssetSlice";
+import {
+    useLazyGetAllAssetTypesQuery,
+    useLazyGetAssetTypeProductsQuery,
+} from "../features/assetSlice";
+
 import CreateAssetDrawer from "../components/createIndAssetDrawer";
 import type { AssetTypeRecord } from "../components/updateAssetTypeModal";
 
@@ -75,11 +81,30 @@ const SingleAssetType = () => {
         },
     ] = useLazyGetAllAssetTypesQuery();
 
+    const [
+        getAssetTypeProducts,
+        {
+            data: productsData,
+            isLoading: productsLoading,
+            isFetching: productsFetching,
+        },
+    ] = useLazyGetAssetTypeProductsQuery();
+
     useEffect(() => {
         if (!routeState?.assetType) {
             getAssetTypes();
         }
     }, [routeState?.assetType, getAssetTypes]);
+
+    useEffect(() => {
+        if (!id) return;
+
+        getAssetTypeProducts({
+            assetTypeId: id,
+            page,
+            page_size: pageSize,
+        });
+    }, [id, page, pageSize, getAssetTypeProducts]);
 
     const assetTypes: AssetTypeRecord[] =
         Array.isArray(data?.data) ? data.data : [];
@@ -87,8 +112,7 @@ const SingleAssetType = () => {
     const assetType = useMemo(() => {
         if (
             routeState?.assetType &&
-            String(routeState.assetType.id) ===
-                String(id)
+            String(routeState.assetType.id) === String(id)
         ) {
             return routeState.assetType;
         }
@@ -99,11 +123,10 @@ const SingleAssetType = () => {
         );
     }, [routeState?.assetType, assetTypes, id]);
 
-    /*
-     * Placeholder until the GET individual assets
-     * endpoint is available.
-     */
-    const individualAssets: IndividualAsset[] = [];
+    const individualAssets: IndividualAsset[] =
+        Array.isArray(productsData?.data)
+            ? productsData.data
+            : [];
 
     const displayedAssets = useMemo(() => {
         const start = page * pageSize;
@@ -201,9 +224,9 @@ const SingleAssetType = () => {
         );
     }
 
-    const totalValue =
-        Number(assetType.asset_quantity ?? 0) *
-        Number(assetType.asset_unit_value ?? 0);
+    // const totalValue =
+    //     Number(assetType.asset_quantity ?? 0) *
+    //     Number(assetType.asset_unit_value ?? 0);
 
     return (
         <Card>
@@ -214,10 +237,7 @@ const SingleAssetType = () => {
                 style={{ marginBottom: 24 }}
             >
                 <Col>
-                    <Space
-                        direction="vertical"
-                        size={4}
-                    >
+                    <Space direction="vertical" size={4}>
                         <Button
                             type="link"
                             icon={<FiArrowLeft />}
@@ -229,18 +249,12 @@ const SingleAssetType = () => {
                             Back to Asset Types
                         </Button>
 
-                        <Title
-                            level={3}
-                            style={{ margin: 0 }}
-                        >
-                            {formatName(
-                                assetType.asset_name,
-                            )}
+                        <Title level={3} style={{ margin: 0 }}>
+                            {formatName(assetType.asset_name)}
                         </Title>
 
                         <Text type="secondary">
                             View and manage individual assets
-                            under this asset type.
                         </Text>
                     </Space>
                 </Col>
@@ -258,35 +272,28 @@ const SingleAssetType = () => {
                 </Col>
             </Row>
 
-            <Space
-                size="middle"
-                wrap
-                style={{ marginBottom: 20 }}
-            >
-                <Tag color="blue">
+            <Space size="middle" wrap style={{ marginBottom: 20 }}>
+                {/* <Tag color="blue">
                     Quantity:{" "}
-                    {Number(
-                        assetType.asset_quantity ?? 0,
-                    ).toLocaleString()}
+                    {Number(assetType.asset_quantity ?? 0).toLocaleString()}
                 </Tag>
 
                 <Tag color="green">
                     Unit Value:{" "}
-                    {formatCurrency(
-                        assetType.asset_unit_value,
-                    )}
+                    {formatCurrency(assetType.asset_unit_value)}
                 </Tag>
 
                 <Tag color="purple">
                     Total Value:{" "}
                     {formatCurrency(totalValue)}
-                </Tag>
+                </Tag> */}
             </Space>
 
             <Table<IndividualAsset>
                 rowKey="id"
                 columns={columns}
                 dataSource={displayedAssets}
+                loading={productsLoading || productsFetching}
                 pagination={false}
                 scroll={{ x: 900 }}
                 locale={{
@@ -301,10 +308,7 @@ const SingleAssetType = () => {
                 pageSize={pageSize}
                 total={individualAssets.length}
                 itemName="Assets"
-                onPaginationChange={(
-                    nextPage,
-                    nextPageSize,
-                ) => {
+                onPaginationChange={(nextPage, nextPageSize) => {
                     setPage(nextPage);
                     setPageSize(nextPageSize);
                 }}
@@ -313,17 +317,16 @@ const SingleAssetType = () => {
             <CreateAssetDrawer
                 open={createDrawerOpen}
                 assetTypeId={assetType.id}
-                assetTypeName={formatName(
-                    assetType.asset_name,
-                )}
-                onClose={() =>
-                    setCreateDrawerOpen(false)
-                }
+                assetTypeName={formatName(assetType.asset_name)}
+                onClose={() => setCreateDrawerOpen(false)}
                 onCreated={() => {
-                    /*
-                     * Refetch individual assets here when
-                     * the GET endpoint becomes available.
-                     */
+                    setCreateDrawerOpen(false);
+
+                    getAssetTypeProducts({
+                        assetTypeId: id,
+                        page,
+                        page_size: pageSize,
+                    });
                 }}
             />
         </Card>

@@ -33,7 +33,7 @@ export const loanCategoriesSlice =
                 PaginationQuery | void
             >({
                 query: (params) => ({
-                    url: "/group-loans/categories",
+                    url: "/group-loans/categories/all",
                     method: "GET",
                     params: {
                         page: params?.page ?? 1,
