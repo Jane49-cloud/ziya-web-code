@@ -34,7 +34,6 @@ type PartnerAsset = {
     asset_type_name?: string;
     identifier_type?: string;
     unique_id?: string;
-    current_location?: string;
     device_value?: number;
     owner_type?: string;
     owner_id?: number;
@@ -117,6 +116,7 @@ const AssetsTab = ({
             title: "Unique ID",
             dataIndex: "unique_id",
             key: "unique_id",
+            align: "center",
             render: (value?: string) =>
                 value ? (
                     <Text code>{value}</Text>
@@ -125,17 +125,10 @@ const AssetsTab = ({
                 ),
         },
         {
-            title: "Current Location",
-            dataIndex: "current_location",
-            key: "current_location",
-            render: (value?: string) =>
-                formatName(value) || "—",
-        },
-        {
             title: "Asset Value",
             dataIndex: "device_value",
             key: "device_value",
-            align: "right",
+            align: "center",
             render: (value?: number) =>
                 formatCurrency(value),
         },

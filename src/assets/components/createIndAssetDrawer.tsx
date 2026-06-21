@@ -16,7 +16,6 @@ import { useCreateAssetMutation } from "../features/assetSlice";
 type CreateAssetFormValues = {
     identifier_type: string;
     unique_id: string;
-    current_location: string;
     device_value: number;
 };
 
@@ -61,8 +60,7 @@ const CreateAssetDrawer = ({
                 identifier_type:
                     values.identifier_type.trim(),
                 unique_id: values.unique_id.trim(),
-                current_location:
-                    values.current_location.trim(),
+
                 device_value: Number(
                     values.device_value,
                 ),
@@ -154,20 +152,7 @@ const CreateAssetDrawer = ({
                     <Input placeholder="Enter the asset's unique identifier" />
                 </Form.Item>
 
-                <Form.Item
-                    label="Current Location"
-                    name="current_location"
-                    rules={[
-                        {
-                            required: true,
-                            whitespace: true,
-                            message:
-                                "Please enter the current location",
-                        },
-                    ]}
-                >
-                    <Input placeholder="Enter current location" />
-                </Form.Item>
+
 
                 <Form.Item
                     label="Asset Value"

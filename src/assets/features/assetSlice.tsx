@@ -15,7 +15,6 @@ type CreateAssetPayload = {
     asset_type: string | number;
     identifier_type: string;
     unique_id: string;
-    current_location: string;
     device_value: number;
 };
 

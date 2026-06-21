@@ -26,7 +26,7 @@ export type CompanyAsset = {
   asset_type_name?: string;
   identifier_type?: string;
   unique_id?: string;
-  current_location?: string;
+
   device_value?: number;
   owner_type?: string;
   owner_id?: number;
@@ -67,21 +67,16 @@ const CompanyAssetsTable = ({
       title: "Unique ID",
       dataIndex: "unique_id",
       key: "unique_id",
+      align: "center",
       render: (value?: string) =>
         value ? <Text code>{value}</Text> : "—",
     },
-    {
-      title: "Current Location",
-      dataIndex: "current_location",
-      key: "current_location",
-      render: (value?: string) =>
-        formatName(value) || "—",
-    },
+
     {
       title: "Asset Value",
       dataIndex: "device_value",
       key: "device_value",
-      align: "right",
+      align: "center",
       render: (value?: number) =>
         formatCurrency(value),
     },
@@ -89,6 +84,7 @@ const CompanyAssetsTable = ({
       title: "Date Created",
       dataIndex: "date_created",
       key: "date_created",
+      align: "center",
       render: (value?: string) =>
         formatDateTime(value),
     },

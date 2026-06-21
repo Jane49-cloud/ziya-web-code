@@ -33,7 +33,6 @@ type GroupAsset = {
     asset_type_name?: string;
     identifier_type?: string;
     unique_id?: string;
-    current_location?: string;
     device_value?: number;
     owner_type?: string;
     owner_id?: number;
@@ -117,13 +116,6 @@ const GroupAssetsTab = ({
                 ) : (
                     "—"
                 ),
-        },
-        {
-            title: "Current Location",
-            dataIndex: "current_location",
-            key: "current_location",
-            render: (value?: string) =>
-                formatName(value) || "—",
         },
         {
             title: "Asset Value",
