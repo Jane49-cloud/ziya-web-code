@@ -42,7 +42,7 @@ interface GroupPaymentFormModalProps {
 const GroupPaymentFormModal = ({
   visible,
   onClose,
-  groupId,
+  //groupId,
   loan,
   payment,
   refetch,
