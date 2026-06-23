@@ -65,9 +65,9 @@ const StaffTab = ({
 
     const totalStaff = Number(
         data?.total ??
-            data?.total_staff ??
-            data?.pagination?.total ??
-            staff.length,
+        data?.total_staff ??
+        data?.pagination?.total ??
+        staff.length,
     );
 
     const columns: ColumnsType<PartnerStaff> = [
@@ -123,7 +123,7 @@ const StaffTab = ({
             key: "last_login",
             render: (value?: string) =>
                 !value ||
-                value.startsWith("0001-")
+                    value.startsWith("0001-")
                     ? "Never"
                     : formatDateTime(value),
         },
