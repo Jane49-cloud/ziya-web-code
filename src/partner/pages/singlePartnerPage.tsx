@@ -21,7 +21,7 @@ import {
 import { useGetSingleSaccoQuery } from "../features";
 import { formatName } from "../../utils";
 
-import OverviewTab, {type Partner} from "../components/overviewTab";
+import OverviewTab, { type Partner } from "../components/overviewTab";
 import StaffTab from "../components/staffTab";
 import CustomersTab from "../components/customersTab";
 import GroupsTab from "../components/groupsTab";
@@ -102,7 +102,7 @@ const SinglePartnerPage = () => {
             label: (
                 <Space size={6}>
                     Staff
-                    
+
                 </Space>
             ),
             children: (
@@ -117,7 +117,7 @@ const SinglePartnerPage = () => {
             label: (
                 <Space size={6}>
                     Customers
-                    
+
                 </Space>
             ),
             children: (
@@ -132,7 +132,7 @@ const SinglePartnerPage = () => {
             label: (
                 <Space size={6}>
                     Groups
-                    
+
                 </Space>
             ),
             children: (
@@ -164,9 +164,9 @@ const SinglePartnerPage = () => {
         },
         {
             key: "update",
-            label:  (
+            label: (
                 <Space size={6}>
-                   Update Partner
+                    Update Partner
                 </Space>
             ),
             children: (

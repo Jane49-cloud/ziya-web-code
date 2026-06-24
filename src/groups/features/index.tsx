@@ -43,7 +43,13 @@ export const {
 
   useGetGroupAdminActivityQuery,
 
-  useCreateGroupLoanMutation,
+  //Group LOans
+  useInitiateStandardGroupLoanMutation,
+  useInitiateInsuranceGroupLoanMutation,
+  useInitiateAssetGroupLoanMutation,
+  useConfirmGroupLoanMutation,
+
+  //useCreateGroupLoanMutation,
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,
   // useCreateGroupLoanPaymentMutation,

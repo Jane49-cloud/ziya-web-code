@@ -16,6 +16,7 @@ type CreateAssetPayload = {
     identifier_type: string;
     unique_id: string;
     device_value: number;
+    asset_name?: string;
 };
 
 type UpdateAssetPayload =

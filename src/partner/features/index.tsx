@@ -17,11 +17,17 @@ export const {
     useLazyGetSinglePartnerWalletQuery,
     useDepositToPartnerWalletMutation,
 
+    //partner staff
+    useCreatePartnerStaffMutation,
+
     useGetPartnerStaffQuery,
     useLazyGetPartnerStaffQuery,
 
     useGetSinglePartnerStaffQuery,
     useLazyGetSinglePartnerStaffQuery,
+
+    //partner customers
+    useCreatePartnerCustomerMutation,
 
     useGetPartnerCustomersQuery,
     useLazyGetPartnerCustomersQuery,
@@ -33,9 +39,12 @@ export const {
     useMoveGroupToPartnerMutation,
     useRemoveGroupFromPartnerMutation,
 
-    //get single partner assets
+    // single partner assets
     useGetPartnerAssetsQuery,
     useLazyGetPartnerAssetsQuery,
+
+    useLazyGetGroupAssetsQuery,
+    useLazyGetCustomerAssetsQuery,
 
     //search partner
     useSearchPartnersQuery,

@@ -12,7 +12,7 @@ import { FiEdit, FiEye } from "react-icons/fi";
 import {
     formatDateTime,
     formatName,
-    formatCurrency,
+    // formatCurrency,
 } from "../../utils";
 import type { AssetTypeRecord } from "./updateAssetTypeModal";
 
@@ -50,24 +50,24 @@ const AssetTypeTable = ({
             render: (value: number) =>
                 Number(value ?? 0).toLocaleString(),
         },
-        {
-            title: "Unit Value",
-            dataIndex: "asset_unit_value",
-            key: "asset_unit_value",
-            align: "center",
-            render: (value: number) =>
-                formatCurrency(value),
-        },
-        {
-            title: "Total Value",
-            key: "total_value",
-            align: "center",
-            render: (_, record) =>
-                formatCurrency (
-                    Number(record.asset_quantity ?? 0) *
-                    Number(record.asset_unit_value ?? 0)
-                ).toLocaleString(),
-        },
+        // {
+        //     title: "Unit Value",
+        //     dataIndex: "asset_unit_value",
+        //     key: "asset_unit_value",
+        //     align: "center",
+        //     render: (value: number) =>
+        //         formatCurrency(value),
+        // },
+        // {
+        //     title: "Total Value",
+        //     key: "total_value",
+        //     align: "center",
+        //     render: (_, record) =>
+        //         formatCurrency (
+        //             Number(record.asset_quantity ?? 0) *
+        //             Number(record.asset_unit_value ?? 0)
+        //         ).toLocaleString(),
+        // },
         {
             title: "Date Created",
             dataIndex: "date_created",

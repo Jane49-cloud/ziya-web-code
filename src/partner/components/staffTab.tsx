@@ -3,10 +3,12 @@ import {
     Alert,
     Button,
     Empty,
+    Space,
     Table,
     Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { FiPlus } from "react-icons/fi";
 
 import { useGetPartnerStaffQuery } from "../features";
 import {
@@ -14,6 +16,7 @@ import {
     formatName,
 } from "../../utils";
 import TabPagination from "./pagination";
+import CreatePartnerStaffDrawer from "./createPartnerStaffDrawer";
 
 type StaffTabProps = {
     partnerId: number | string;
@@ -39,6 +42,8 @@ const StaffTab = ({
 }: StaffTabProps) => {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const [createDrawerOpen, setCreateDrawerOpen] =
+        useState(false);
 
     const {
         data,
@@ -57,17 +62,15 @@ const StaffTab = ({
         },
     );
 
-    const staff: PartnerStaff[] = Array.isArray(
-        data?.staff,
-    )
+    const staff: PartnerStaff[] = Array.isArray(data?.staff)
         ? data.staff
         : [];
 
     const totalStaff = Number(
         data?.total ??
-            data?.total_staff ??
-            data?.pagination?.total ??
-            staff.length,
+        data?.total_staff ??
+        data?.pagination?.total ??
+        staff.length,
     );
 
     const columns: ColumnsType<PartnerStaff> = [
@@ -89,31 +92,25 @@ const StaffTab = ({
             title: "Email",
             dataIndex: "email",
             key: "email",
-            render: (value?: string) =>
-                value || "—",
+            render: (value?: string) => value || "—",
         },
         {
             title: "Phone Number",
             dataIndex: "phone_number",
             key: "phone_number",
-            render: (value?: string) =>
-                value || "—",
+            render: (value?: string) => value || "—",
         },
         {
             title: "Role",
             dataIndex: "role_name",
             key: "role_name",
-            render: (roleName?: string) => (
-                <Tag
-                    color={
-                        roleName?.trim()
-                            ? "blue"
-                            : "default"
-                    }
-                >
+            render: (roleName?: string, record?: PartnerStaff) => (
+                <Tag color={roleName?.trim() ? "blue" : "default"}>
                     {roleName?.trim()
                         ? formatName(roleName)
-                        : "—"}
+                        : record?.role
+                            ? `Role ${record.role}`
+                            : "—"}
                 </Tag>
             ),
         },
@@ -122,8 +119,7 @@ const StaffTab = ({
             dataIndex: "last_login",
             key: "last_login",
             render: (value?: string) =>
-                !value ||
-                value.startsWith("0001-")
+                !value || value.startsWith("0001-")
                     ? "Never"
                     : formatDateTime(value),
         },
@@ -156,6 +152,18 @@ const StaffTab = ({
 
     return (
         <>
+            <div className="mb-4 flex justify-end">
+                <Space>
+                    <Button
+                        type="primary"
+                        icon={<FiPlus />}
+                        onClick={() => setCreateDrawerOpen(true)}
+                    >
+                        Create Staff
+                    </Button>
+                </Space>
+            </div>
+
             <Table<PartnerStaff>
                 rowKey="id"
                 columns={columns}
@@ -182,6 +190,16 @@ const StaffTab = ({
                 ) => {
                     setPage(nextPage);
                     setPageSize(nextPageSize);
+                }}
+            />
+
+            <CreatePartnerStaffDrawer
+                open={createDrawerOpen}
+                partnerId={partnerId}
+                onClose={() => setCreateDrawerOpen(false)}
+                onCreated={() => {
+                    setPage(0);
+                    refetch();
                 }}
             />
         </>

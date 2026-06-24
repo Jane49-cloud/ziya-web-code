@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import {
+    AutoComplete,
     Button,
     Drawer,
     Form,
@@ -17,6 +18,7 @@ type CreateAssetFormValues = {
     identifier_type: string;
     unique_id: string;
     device_value: number;
+    asset_name: string;
 };
 
 type CreateAssetDrawerProps = {
@@ -27,6 +29,21 @@ type CreateAssetDrawerProps = {
     onCreated?: () => void;
 };
 
+const IDENTIFIER_TYPE_OPTIONS = [
+    {
+        label: "IMEI",
+        value: "IMEI",
+    },
+    {
+        label: "Serial Number",
+        value: "serial_number",
+    },
+    {
+        label: "Logbook",
+        value: "logbook",
+    },
+];
+
 const CreateAssetDrawer = ({
     open,
     assetTypeId,
@@ -34,11 +51,9 @@ const CreateAssetDrawer = ({
     onClose,
     onCreated,
 }: CreateAssetDrawerProps) => {
-    const [form] =
-        Form.useForm<CreateAssetFormValues>();
+    const [form] = Form.useForm<CreateAssetFormValues>();
 
-    const [createAsset, { isLoading }] =
-        useCreateAssetMutation();
+    const [createAsset, { isLoading }] = useCreateAssetMutation();
 
     useEffect(() => {
         if (!open) {
@@ -47,35 +62,31 @@ const CreateAssetDrawer = ({
     }, [open, form]);
 
     const handleClose = () => {
+        if (isLoading) return;
+
         form.resetFields();
         onClose();
     };
 
-    const handleSubmit = async (
-        values: CreateAssetFormValues,
-    ) => {
+    const handleSubmit = async (values: CreateAssetFormValues) => {
         try {
             await createAsset({
-                asset_type: assetTypeId,
-                identifier_type:
-                    values.identifier_type.trim(),
+                asset_type: Number(assetTypeId),
+                identifier_type: values.identifier_type.trim(),
                 unique_id: values.unique_id.trim(),
-
-                device_value: Number(
-                    values.device_value,
-                ),
+                device_value: Number(values.device_value),
+                asset_name: values.asset_name.trim(),
             }).unwrap();
 
-            message.success(
-                "Asset created successfully",
-            );
+            message.success("Asset created successfully");
 
             form.resetFields();
             onClose();
             onCreated?.();
         } catch (error: any) {
             message.error(
-                error?.data?.message ??
+                error?.data?.error ||
+                error?.data?.message ||
                 "Failed to create asset",
             );
         }
@@ -88,12 +99,11 @@ const CreateAssetDrawer = ({
             width={500}
             destroyOnClose
             onClose={handleClose}
+            maskClosable={!isLoading}
+            closable={!isLoading}
             extra={
                 <Space>
-                    <Button
-                        onClick={handleClose}
-                        disabled={isLoading}
-                    >
+                    <Button onClick={handleClose} disabled={isLoading}>
                         Cancel
                     </Button>
 
@@ -114,12 +124,23 @@ const CreateAssetDrawer = ({
             >
                 <Form.Item label="Asset Type">
                     <Input
-                        value={
-                            assetTypeName ||
-                            String(assetTypeId)
-                        }
+                        value={assetTypeName || String(assetTypeId)}
                         disabled
                     />
+                </Form.Item>
+
+                <Form.Item
+                    label="Asset Name"
+                    name="asset_name"
+                    rules={[
+                        {
+                            required: true,
+                            whitespace: true,
+                            message: "Please enter the asset name",
+                        },
+                    ]}
+                >
+                    <Input placeholder="Enter asset name" />
                 </Form.Item>
 
                 <Form.Item
@@ -129,12 +150,19 @@ const CreateAssetDrawer = ({
                         {
                             required: true,
                             whitespace: true,
-                            message:
-                                "Please enter the identifier type",
+                            message: "Please select or enter the identifier type",
                         },
                     ]}
                 >
-                    <Input placeholder="For example, number plate or log book" />
+                    <AutoComplete
+                        options={IDENTIFIER_TYPE_OPTIONS}
+                        placeholder="Select or type identifier type"
+                        filterOption={(inputValue, option) =>
+                            String(option?.label ?? "")
+                                .toLowerCase()
+                                .includes(inputValue.toLowerCase())
+                        }
+                    />
                 </Form.Item>
 
                 <Form.Item
@@ -144,15 +172,12 @@ const CreateAssetDrawer = ({
                         {
                             required: true,
                             whitespace: true,
-                            message:
-                                "Please enter the unique ID",
+                            message: "Please enter the unique ID",
                         },
                     ]}
                 >
                     <Input placeholder="Enter the asset's unique identifier" />
                 </Form.Item>
-
-
 
                 <Form.Item
                     label="Asset Value"
@@ -160,8 +185,7 @@ const CreateAssetDrawer = ({
                     rules={[
                         {
                             required: true,
-                            message:
-                                "Please enter the asset value",
+                            message: "Please enter the asset value",
                         },
                     ]}
                 >

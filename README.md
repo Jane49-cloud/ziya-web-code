@@ -1,5 +1,4 @@
-total asset type value = frontend
-need single asset, asset type child get all for a particular asset type = done
+
 
 on asset creation bike, preload logbook
                    phone, preload imei
@@ -7,10 +6,15 @@ on asset creation bike, preload logbook
                    assets/category/id
   remove unit value
 
-Permission on roles
 
-confirm asset movement   -done
-group loans - creation   -done
-
-partners/all?page=1&page_size=20 = members and staff picks 0
  
+
+ manage single partner staff = done
+ manage single partner customer = done
+ payments and loans = done
+ role name = single staff 
+ create staff 403
+ create customer 403
+
+
+ single group and customer drawer from partner page = pending Id error

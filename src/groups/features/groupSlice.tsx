@@ -53,6 +53,36 @@ type ConfirmGroupLoanPaymentPayload = {
   loan_id: number;
 };
 
+//group loans 
+
+type GroupLoanKind = "standard" | "insurance" | "asset";
+
+type InitiateStandardGroupLoanPayload = {
+  issued_to: number;
+  amount: number;
+  loan_type: number;
+  cycle: number;
+};
+
+type InitiateInsuranceGroupLoanPayload = {
+  issued_to: number;
+  amount: number;
+  loan_type: number;
+};
+
+type InitiateAssetGroupLoanPayload = {
+  issued_to: number;
+  loan_type: number;
+  asset_id: number;
+};
+
+type ConfirmGroupLoanPayload = {
+  transaction_id: string;
+  token: string;
+  loan_kind: GroupLoanKind;
+  groupId?: number;
+};
+
 export const GroupSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createGroup: builder.mutation({
@@ -247,7 +277,7 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
 
-
+    //Group Loans
 
 
     getGroupLoans: builder.query<any, GroupLoansQuery>({
@@ -319,15 +349,62 @@ export const GroupSlice = apiSlice.injectEndpoints({
     }),
 
 
-    // group loans
-    createGroupLoan: builder.mutation({
-      query: (loanData) => ({
-        url: `/group-loans/create`,
+    // group loans initiate
+    // createGroupLoan: builder.mutation({
+    //   query: (loanData) => ({
+    //     url: `/group-loans/create`,
+    //     method: "POST",
+    //     body: loanData,
+    //   }),
+    //   invalidatesTags: [{ type: "GroupLoans" }],
+    // }),
+
+    initiateStandardGroupLoan: builder.mutation<any, InitiateStandardGroupLoanPayload>({
+      query: (body) => ({
+        url: "/group-loans/create",
         method: "POST",
-        body: loanData,
+        body,
       }),
       invalidatesTags: [{ type: "GroupLoans" }],
     }),
+
+    initiateInsuranceGroupLoan: builder.mutation<any, InitiateInsuranceGroupLoanPayload>({
+      query: (body) => ({
+        url: "/group-loans/insurance-loan",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "GroupLoans" }],
+    }),
+
+    initiateAssetGroupLoan: builder.mutation<any, InitiateAssetGroupLoanPayload>({
+      query: (body) => ({
+        url: "/group-loans/asset-loan",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "GroupLoans" }],
+    }),
+
+    confirmGroupLoan: builder.mutation<any, ConfirmGroupLoanPayload>({
+      query: ({ transaction_id, token, loan_kind }) => ({
+        url: "/group-loans/confirm/loan",
+        method: "POST",
+        body: {
+          transaction_id,
+          loan_kind,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: [
+        { type: "GroupLoans" },
+        { type: "Wallets", id: "LIST" },
+      ],
+    }),
+
+
 
     updateGroupLoan: builder.mutation({
       query: ({ loanId, updatedData }) => ({
