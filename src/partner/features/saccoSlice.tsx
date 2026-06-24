@@ -25,10 +25,10 @@ type DepositPartnerWalletPayload = {
 };
 
 type UpdateSaccoPayload = {
-            id: string | string;
-            partner_name: string;
-            partner_location: string;
-        };
+    id: string | string;
+    partner_name: string;
+    partner_location: string;
+};
 
 type PartnerGroupPayload = {
     group_id: string | number;
@@ -45,9 +45,29 @@ type PartnerTransactionsPayload = {
     page_size?: number;
 };
 
+type CreatePartnerStaffPayload = {
+    partner_id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    phone_number: string;
+    email: string;
+    role: number;
+};
+
+type CreatePartnerCustomerPayload = {
+    partner_id: number;
+    firstname: string;
+    lastname: string;
+    country_code: string;
+    phone_number: string;
+    identification_type: string;
+    identification_number: string;
+};
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getAllSaccos: builder.query< any, PaginationQuery | void >({
+        getAllSaccos: builder.query<any, PaginationQuery | void>({
             query: (params) => ({
                 url: "/partners/all",
                 method: "GET",
@@ -64,10 +84,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
 
-        getSingleSacco: builder.query<
-            any,
-            number | string
-        >({
+        getSingleSacco: builder.query<any, number | string>({
             query: (id) => ({
                 url: `/partners/single/${id}`,
                 method: "GET",
@@ -80,10 +97,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
 
-        createSacco: builder.mutation<
-            any,
-            CreateSaccoPayload
-        >({
+        createSacco: builder.mutation<any, CreateSaccoPayload>({
             query: (body) => ({
                 url: "/partners/onboard",
                 method: "POST",
@@ -98,10 +112,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner wallets
-        getAllPartnerWallets: builder.query<
-            any,
-            PaginationQuery | void
-        >({
+        getAllPartnerWallets: builder.query<any, PaginationQuery | void>({
             query: (params) => ({
                 url: "/partners/wallets/all",
                 method: "GET",
@@ -118,10 +129,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
 
-        getSinglePartnerWallet: builder.query<
-            any,
-            number | string
-        >({
+        getSinglePartnerWallet: builder.query<any, number | string>({
             query: (id) => ({
                 url: `/partners/wallet/${id}`,
                 method: "GET",
@@ -135,7 +143,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner staff
-        getPartnerStaff: builder.query< any,  PartnerPaginationQuery >({
+        getPartnerStaff: builder.query<any, PartnerPaginationQuery>({
             query: ({
                 partnerId,
                 page = 0,
@@ -153,17 +161,28 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 _error,
                 { partnerId },
             ) => [
+                    {
+                        type: "Saccos",
+                        id: `STAFF-${partnerId}`,
+                    },
+                ],
+        }),
+
+        createPartnerStaff: builder.mutation<any, CreatePartnerStaffPayload>({
+            query: (body) => ({
+                url: "partners/staff/register",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { partner_id }) => [
                 {
                     type: "Saccos",
-                    id: `STAFF-${partnerId}`,
+                    id: `STAFF-${partner_id}`,
                 },
             ],
         }),
 
-        getSinglePartnerStaff: builder.query<
-            any,
-            number | string
-        >({
+        getSinglePartnerStaff: builder.query<any, number | string>({
             query: (staffId) => ({
                 url: `/partners/staff/single/${staffId}`,
                 method: "GET",
@@ -177,10 +196,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         // Partner customers
-        getPartnerCustomers: builder.query<
-            any,
-            PartnerPaginationQuery
-        >({
+        getPartnerCustomers: builder.query<any, PartnerPaginationQuery>({
             query: ({
                 partnerId,
                 page = 0,
@@ -198,15 +214,25 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 _error,
                 { partnerId },
             ) => [
-                {
-                    type: "Saccos",
-                    id: `CUSTOMERS-${partnerId}`,
-                },
-            ],
+                    {
+                        type: "Saccos",
+                        id: `CUSTOMERS-${partnerId}`,
+                    },
+                ],
         }),
 
+        createPartnerCustomer: builder.mutation<any, CreatePartnerCustomerPayload>({
+            query: (body) => ({
+                url: "partners/customers/create",
+                method: "POST",
+                body,
+            }),
+        }),
+
+
+
         // Partner groups
-        getPartnerGroups: builder.query<any, PartnerPaginationQuery >({
+        getPartnerGroups: builder.query<any, PartnerPaginationQuery>({
             query: ({
                 partnerId,
                 page = 0,
@@ -224,15 +250,15 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 _error,
                 { partnerId },
             ) => [
-                {
-                    type: "Saccos",
-                    id: `GROUPS-${partnerId}`,
-                },
-            ],
+                    {
+                        type: "Saccos",
+                        id: `GROUPS-${partnerId}`,
+                    },
+                ],
         }),
 
         //deposit
-        depositToPartnerWallet: builder.mutation< any, DepositPartnerWalletPayload >({
+        depositToPartnerWallet: builder.mutation<any, DepositPartnerWalletPayload>({
             query: (body) => ({
                 url: "/partner-wallets/deposit",
                 method: "POST",
@@ -247,7 +273,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         //update partner
-        
+
         updateSacco: builder.mutation<any, UpdateSaccoPayload>({
             query: ({ id, ...body }) => ({
                 url: `/partners/profile/${id}`,
@@ -261,7 +287,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
         //move group and remove group
-        moveGroupToPartner: builder.mutation< any, PartnerGroupPayload >({
+        moveGroupToPartner: builder.mutation<any, PartnerGroupPayload>({
             query: (body) => ({
                 url: "/partners/add-group",
                 method: "POST",
@@ -272,7 +298,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
 
-        removeGroupFromPartner: builder.mutation< any, PartnerGroupPayload >({
+        removeGroupFromPartner: builder.mutation<any, PartnerGroupPayload>({
             query: (body) => ({
                 url: "/partners/remove-group",
                 method: "DELETE",
@@ -283,7 +309,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
         //get single partner assets
-        getPartnerAssets: builder.query< any, string | number>({
+        getPartnerAssets: builder.query<any, string | number>({
             query: (partnerId) => ({
                 url: `/company-wallets/assets/partner/${partnerId}`,
                 method: "GET",
@@ -296,29 +322,19 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
         //search partner
-        searchPartners: builder.query<any[],SearchPartnersPayload>({
+        searchPartners: builder.query<any, SearchPartnersPayload>({
             query: ({ q }) => ({
                 url: "/partners/search",
                 method: "GET",
                 params: {
-                    q: q.trim() || "all",
+                    q,
                 },
             }),
-            transformResponse: (response: any) => {
-                if (Array.isArray(response)) return response;
 
-                const records =
-                    response?.partners ??
-                    response?.data ??
-                    response?.results ??
-                    [];
-
-                return Array.isArray(records) ? records : [];
-            },
         }),
 
         //partner transactions
-        getPartnerTransactions: builder.query< any, PartnerTransactionsPayload>({
+        getPartnerTransactions: builder.query<any, PartnerTransactionsPayload>({
             query: ({
                 partnerId,
                 page = 0,
@@ -336,14 +352,29 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 _error,
                 { partnerId },
             ) => [
-                {
-                    type: "Saccos",
-                    id: `TRANSACTIONS-${partnerId}`,
-                },
-            ],
+                    {
+                        type: "Saccos",
+                        id: `TRANSACTIONS-${partnerId}`,
+                    },
+                ],
         }),
 
-        
+
+        getGroupAssets: builder.query<any, number | string>({
+            query: (groupId) => ({
+                url: `/company-wallets/assets/group/${groupId}`,
+                method: "GET",
+            }),
+        }),
+
+        getCustomerAssets: builder.query<any, number | string>({
+            query: (customerId) => ({
+                url: `/company-wallets/assets/customer/${customerId}`,
+                method: "GET",
+            }),
+        }),
+
+
 
     }),
 });

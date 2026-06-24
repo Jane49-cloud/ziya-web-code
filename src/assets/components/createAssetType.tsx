@@ -67,7 +67,7 @@ const AssetTypeForm = ({
                 />
             </Form.Item>
 
-            <Form.Item
+            {/* <Form.Item
                 label="Unit Value"
                 name="asset_unit_value"
                 rules={[
@@ -84,7 +84,7 @@ const AssetTypeForm = ({
                     style={{ width: "100%" }}
                     placeholder="Enter unit value"
                 />
-            </Form.Item>
+            </Form.Item> */}
 
             <Button
                 type="primary"

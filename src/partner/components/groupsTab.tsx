@@ -12,6 +12,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
+    FiEye,
     FiMoreVertical,
     FiMove,
     FiTrash2,
@@ -27,6 +28,7 @@ import {
 } from "../../utils";
 import TabPagination from "./pagination";
 import MoveGroupDrawer from "./movePartGrpDrawer";
+//import GroupAssetsDrawer from "./groupAssetsDrawer";
 
 type GroupsTabProps = {
     partnerId: number | string;
@@ -118,14 +120,30 @@ const formatGroupValue = (
     return String(value);
 };
 
+const getGroupId = (record: PartnerGroup) =>
+    record.group_id ?? record.id ?? record.ID;
+
+// const getGroupName = (record: PartnerGroup) =>
+//     record.name ??
+//     record.group_name ??
+//     record.groupName ??
+//     record.group;
+
 const GroupsTab = ({
     partnerId,
     active,
 }: GroupsTabProps) => {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    const [selectedGroup, setSelectedGroup] =
+
+    const [selectedMoveGroup, setSelectedMoveGroup] =
         useState<PartnerGroup | null>(null);
+
+    // const [assetsDrawerOpen, setAssetsDrawerOpen] =
+    //     useState(false);
+
+    // const [selectedAssetGroup, setSelectedAssetGroup] =
+    //     useState<PartnerGroup | null>(null);
 
     const {
         data,
@@ -169,11 +187,22 @@ const GroupsTab = ({
         refetch();
     };
 
+    // const handleViewGroupAssets = (
+    //     group: PartnerGroup,
+    // ) => {
+    //     setSelectedAssetGroup(group);
+    //     setAssetsDrawerOpen(true);
+    // };
+
+    // const handleCloseGroupAssets = () => {
+    //     setAssetsDrawerOpen(false);
+    //     setSelectedAssetGroup(null);
+    // };
+
     const handleRemove = async (
         record: PartnerGroup,
     ) => {
-        const groupId =
-            record.group_id ?? record.id;
+        const groupId = getGroupId(record);
 
         if (!groupId) {
             message.error("Group ID is missing");
@@ -233,6 +262,11 @@ const GroupsTab = ({
                     menu={{
                         items: [
                             {
+                                key: "view-assets",
+                                label: "View Assets",
+                                icon: <FiEye />,
+                            },
+                            {
                                 key: "move",
                                 label: "Move Group",
                                 icon: <FiMove />,
@@ -245,8 +279,12 @@ const GroupsTab = ({
                             },
                         ],
                         onClick: ({ key }) => {
+                            // if (key === "view-assets") {
+                            //     handleViewGroupAssets(record);
+                            // }
+
                             if (key === "move") {
-                                setSelectedGroup(record);
+                                setSelectedMoveGroup(record);
                             }
 
                             if (key === "remove") {
@@ -348,8 +386,7 @@ const GroupsTab = ({
             <Table<PartnerGroup>
                 rowKey={(record) =>
                     String(
-                        record.group_id ??
-                        record.id ??
+                        getGroupId(record) ??
                         record.name,
                     )
                 }
@@ -381,17 +418,36 @@ const GroupsTab = ({
             />
 
             <MoveGroupDrawer
-                open={Boolean(selectedGroup)}
-                group={selectedGroup}
+                open={Boolean(selectedMoveGroup)}
+                group={selectedMoveGroup}
                 currentPartnerId={partnerId}
                 onClose={() =>
-                    setSelectedGroup(null)
+                    setSelectedMoveGroup(null)
                 }
                 onMoved={() => {
-                    setSelectedGroup(null);
+                    setSelectedMoveGroup(null);
                     refreshAfterChange();
                 }}
             />
+
+            {/* <GroupAssetsDrawer
+                open={assetsDrawerOpen}
+                groupId={
+                    selectedAssetGroup
+                        ? getGroupId(selectedAssetGroup)
+                        : undefined
+                }
+                groupName={
+                    selectedAssetGroup
+                        ? formatName(
+                            getGroupName(
+                                selectedAssetGroup,
+                            ),
+                        )
+                        : ""
+                }
+                onClose={handleCloseGroupAssets}
+            /> */}
         </>
     );
 };

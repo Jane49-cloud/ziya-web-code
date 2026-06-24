@@ -1,18 +1,32 @@
-import { useMemo, useState } from "react";
-import { Button, Col, Input, Row, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import {
+    Alert,
+    Button,
+    Col,
+    Input,
+    Row,
+    Space,
+    Table,
+    Tag,
+    Tooltip,
+    Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { FiEye, FiMapPin, FiSearch, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+
 import {
-    cleanLowerInput,
     formatDateTime,
     formatFullName,
     formatName,
 } from "../../utils/index";
 
+import { useLazySearchPartnersQuery } from "../features";
+
 const { Title, Text } = Typography;
 
 const PAGE_SIZE_OPTIONS = ["5", "10", "20", "50"];
+const SEARCH_DEBOUNCE_MS = 500;
 
 export type SaccoRow = {
     ID?: number;
@@ -51,7 +65,10 @@ type AllSaccosTabProps = {
     page: number;
     pageSize: number;
     totalSaccos: number;
-    onPaginationChange: (page: number, pageSize: number) => void | Promise<void>;
+    onPaginationChange: (
+        page: number,
+        pageSize: number,
+    ) => void | Promise<void>;
 };
 
 const getSaccoId = (record: SaccoRow) => record.ID ?? record.id;
@@ -60,14 +77,14 @@ const getPartnerName = (record: SaccoRow) =>
     record.saccoName ?? record.name;
 
 const getChairperson = (record: SaccoRow) =>
-    record.chairperson_name ?? record.chairperson_name;
+    record.chairperson_name ?? record.chairPersonName;
 
 const getMembersCount = (record: SaccoRow) => {
     return Number(
         record.totalMembers ??
-            record.members_count ??
-            record.total_members ??
-            0
+        record.members_count ??
+        record.total_members ??
+        0,
     );
 };
 
@@ -77,6 +94,18 @@ const getStaffCount = (record: SaccoRow) => {
 
 const getCreatedDate = (record: SaccoRow) =>
     record.dateCreated ?? record.created_at ?? record.date_created;
+
+const extractSearchedPartners = (result: any): SaccoRow[] => {
+    const rows =
+        result?.partners ??
+        result?.data?.partners ??
+        result?.data ??
+        result?.rows ??
+        result?.results ??
+        [];
+
+    return Array.isArray(rows) ? rows : [];
+};
 
 const AllSaccosTab = ({
     saccos,
@@ -88,25 +117,59 @@ const AllSaccosTab = ({
     onPaginationChange,
 }: AllSaccosTabProps) => {
     const navigate = useNavigate();
+
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
-    const filteredSaccos = useMemo(() => {
-        const term = cleanLowerInput(search);
 
-        if (!term) return saccos;
+    const [
+        searchPartners,
+        {
+            data: searchResponse,
+            isLoading: searchLoading,
+            isFetching: searchFetching,
+            isError: searchError,
+        },
+    ] = useLazySearchPartnersQuery();
 
-        return saccos.filter((sacco) => {
-            const saccoId = getSaccoId(sacco);
+    const searchTerm = debouncedSearch.trim();
+    const isSearchMode = searchTerm.length > 0;
 
-            return (
-                cleanLowerInput(saccoId).includes(term) ||
-                cleanLowerInput(getPartnerName(sacco)).includes(term) ||
-                cleanLowerInput(sacco.location).includes(term) ||
-                cleanLowerInput(sacco.chairPersonName).includes(term) ||
-                cleanLowerInput(getChairperson(sacco)).includes(term)
-            );
+    const searchedSaccos = useMemo(() => {
+        return extractSearchedPartners(searchResponse);
+    }, [searchResponse]);
+
+    const totalSearchResults = Number(
+        searchResponse?.total ??
+        searchResponse?.total_partners ??
+        searchResponse?.pagination?.total ??
+        searchedSaccos.length,
+    );
+
+    const tableData = isSearchMode ? searchedSaccos : saccos;
+
+    const tableLoading =
+        isSearchMode
+            ? searchLoading || searchFetching
+            : isLoading || isFetching;
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+
+            setDebouncedSearch(search.trim());
+        }, SEARCH_DEBOUNCE_MS);
+
+        return () => clearTimeout(timer);
+    }, [search]);
+
+
+    useEffect(() => {
+        if (!isSearchMode) return;
+
+        void searchPartners({
+            q: searchTerm,
         });
-    }, [search, saccos]);
+    }, [isSearchMode, searchTerm, searchPartners]);
 
     const handleViewPartner = (record: SaccoRow) => {
         const partnerId = getSaccoId(record);
@@ -153,9 +216,7 @@ const AllSaccosTab = ({
                 }
 
                 return (
-                    <Tag>
-                        {formatName(getChairperson(record)) ?? "—"}
-                    </Tag>
+                    <Tag>{formatName(getChairperson(record)) || "—"}</Tag>
                 );
             },
         },
@@ -214,15 +275,13 @@ const AllSaccosTab = ({
                         View and search existing Partner records.
                     </Text>
                 </Col>
-
-                
             </Row>
 
             <Input
                 allowClear
                 size="large"
                 prefix={<FiSearch />}
-                placeholder="Search by Partner name, location, chairperson, or ID"
+                placeholder="Search by partner name, location, chairperson, or ID"
                 value={search}
                 onChange={(event) => {
                     setSearch(event.target.value);
@@ -230,21 +289,43 @@ const AllSaccosTab = ({
                 style={{ marginBottom: 20 }}
             />
 
+            {isSearchMode && searchError && (
+                <Alert
+                    showIcon
+                    type="error"
+                    message="Unable to search partners"
+                    style={{ marginBottom: 16 }}
+                    action={
+                        <Button
+                            size="small"
+                            onClick={() =>
+                                searchPartners({
+                                    q: searchTerm,
+                                })
+                            }
+                        >
+                            Try Again
+                        </Button>
+                    }
+                />
+            )}
+
             <Table
                 rowKey={(record) =>
                     String(
                         getSaccoId(record) ??
-                            `${getPartnerName(record) ?? "partner"}-${record.location ?? ""}-${getCreatedDate(record) ?? ""}`
+                        `${getPartnerName(record) ?? "partner"}-${record.location ?? ""
+                        }-${getCreatedDate(record) ?? ""}`,
                     )
                 }
                 columns={columns}
-                dataSource={filteredSaccos}
-                loading={isLoading || isFetching}
+                dataSource={tableData}
+                loading={tableLoading}
                 tableLayout="auto"
                 pagination={{
                     current: page,
                     pageSize,
-                    total: search.trim() ? filteredSaccos.length : totalSaccos,
+                    total: isSearchMode ? totalSearchResults : totalSaccos,
                     showSizeChanger: true,
                     pageSizeOptions: PAGE_SIZE_OPTIONS,
                     showTotal: (total, range) =>

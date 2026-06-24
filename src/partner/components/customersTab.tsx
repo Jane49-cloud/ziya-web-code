@@ -9,6 +9,7 @@ import {
     Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { FiPlus } from "react-icons/fi";
 
 import { useGetPartnerCustomersQuery } from "../features";
 import {
@@ -16,6 +17,8 @@ import {
     formatName,
 } from "../../utils";
 import TabPagination from "./pagination";
+import CreatePartnerCustomerDrawer from "./createPartnerCustomerDrawer";
+//import CustomerAssetsDrawer from "./customerAssetsDrawer";
 
 const { Text } = Typography;
 
@@ -44,6 +47,21 @@ const CustomersTab = ({
 }: CustomersTabProps) => {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+
+    // const [assetsDrawerOpen, setAssetsDrawerOpen] = useState(false);
+    // const [selectedCustomer, setSelectedCustomer] =
+    //     useState<PartnerCustomer | null>(null);
+
+    // const handleViewCustomerAssets = (customer: PartnerCustomer) => {
+    //     setSelectedCustomer(customer);
+    //     setAssetsDrawerOpen(true);
+    // };
+
+    // const handleCloseCustomerAssets = () => {
+    //     setAssetsDrawerOpen(false);
+    //     setSelectedCustomer(null);
+    // };
 
     const {
         data,
@@ -69,9 +87,9 @@ const CustomersTab = ({
 
     const totalCustomers = Number(
         data?.total ??
-            data?.total_customers ??
-            data?.pagination?.total ??
-            customers.length,
+        data?.total_customers ??
+        data?.pagination?.total ??
+        customers.length,
     );
 
     const columns: ColumnsType<PartnerCustomer> = [
@@ -80,18 +98,15 @@ const CustomersTab = ({
             key: "name",
             render: (_, record) =>
                 formatName(
-                    `${record.firstname ?? ""} ${
-                        record.lastname ?? ""
-                    }`,
+                    `${record.firstname ?? ""} ${record.lastname ?? ""}`,
                 ) || "—",
         },
         {
             title: "Phone Number",
             key: "phone_number",
             render: (_, record) => {
-                const phone = `${
-                    record.country_code ?? ""
-                }${record.phone_number ?? ""}`;
+                const phone = `${record.country_code ?? ""}${record.phone_number ?? ""
+                    }`;
 
                 return phone || "—";
             },
@@ -102,9 +117,7 @@ const CustomersTab = ({
             render: (_, record) => (
                 <Space direction="vertical" size={0}>
                     <Text>
-                        {formatName(
-                            record.identification_type,
-                        ) || "—"}
+                        {formatName(record.identification_type) || "—"}
                     </Text>
 
                     <Text type="secondary">
@@ -118,16 +131,8 @@ const CustomersTab = ({
             dataIndex: "status",
             key: "status",
             render: (status?: number) => (
-                <Tag
-                    color={
-                        status === 1
-                            ? "green"
-                            : "default"
-                    }
-                >
-                    {status === 1
-                        ? "Active"
-                        : "Inactive"}
+                <Tag color={status === 1 ? "green" : "default"}>
+                    {status === 1 ? "Active" : "Inactive"}
                 </Tag>
             ),
         },
@@ -146,6 +151,19 @@ const CustomersTab = ({
             render: (value?: string) =>
                 formatDateTime(value) || "—",
         },
+        // {
+        //     title: "Actions",
+        //     key: "actions",
+        //     align: "center",
+        //     width: 100,
+        //     render: (_, record) => (
+        //         <Button
+        //             type="text"
+        //             icon={<FiEye />}
+        //             onClick={() => handleViewCustomerAssets(record)}
+        //         />
+        //     ),
+        // },
     ];
 
     if (isError) {
@@ -168,6 +186,16 @@ const CustomersTab = ({
 
     return (
         <>
+            <div className="mb-4 flex justify-end">
+                <Button
+                    type="primary"
+                    icon={<FiPlus />}
+                    onClick={() => setCreateDrawerOpen(true)}
+                >
+                    Create Customer
+                </Button>
+            </div>
+
             <Table<PartnerCustomer>
                 rowKey="partner_customer_id"
                 columns={columns}
@@ -196,6 +224,29 @@ const CustomersTab = ({
                     setPageSize(nextPageSize);
                 }}
             />
+
+            <CreatePartnerCustomerDrawer
+                open={createDrawerOpen}
+                partnerId={partnerId}
+                onClose={() => setCreateDrawerOpen(false)}
+                onCreated={() => {
+                    setPage(0);
+                    refetch();
+                }}
+
+            />
+            {/* <CustomerAssetsDrawer
+                open={assetsDrawerOpen}
+                customerId={
+                    selectedCustomer?.customer_id ??
+                    selectedCustomer?.partner_customer_id
+                }
+                customerName={formatName(
+                    `${selectedCustomer?.firstname ?? ""} ${selectedCustomer?.lastname ?? ""
+                    }`,
+                )}
+                onClose={handleCloseCustomerAssets}
+            /> */}
         </>
     );
 };

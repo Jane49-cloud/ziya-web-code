@@ -15,11 +15,15 @@ import {
     Space,
     Spin,
     Table,
-    //Tag,
+    Tooltip,
     Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FiArrowLeft, FiPlus } from "react-icons/fi";
+import {
+    FiArrowLeft,
+    FiEdit,
+    FiPlus,
+} from "react-icons/fi";
 import {
     useLocation,
     useNavigate,
@@ -32,6 +36,7 @@ import {
 } from "../features/assetSlice";
 
 import CreateAssetDrawer from "../components/createIndAssetDrawer";
+import UpdateAssetDrawer from "../components/updateIndAssetDrawer";
 import type { AssetTypeRecord } from "../components/updateAssetTypeModal";
 
 import {
@@ -63,13 +68,19 @@ const SingleAssetType = () => {
     const location = useLocation();
     const { id } = useParams<{ id: string }>();
 
-    const routeState =
-        location.state as LocationState | null;
+    const routeState = location.state as LocationState | null;
 
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+
     const [createDrawerOpen, setCreateDrawerOpen] =
         useState(false);
+
+    const [updateDrawerOpen, setUpdateDrawerOpen] =
+        useState(false);
+
+    const [selectedAsset, setSelectedAsset] =
+        useState<IndividualAsset | null>(null);
 
     const [
         getAssetTypes,
@@ -118,8 +129,7 @@ const SingleAssetType = () => {
         }
 
         return assetTypes.find(
-            (record) =>
-                String(record.id) === String(id),
+            (record) => String(record.id) === String(id),
         );
     }, [routeState?.assetType, assetTypes, id]);
 
@@ -128,16 +138,44 @@ const SingleAssetType = () => {
             ? productsData.data
             : [];
 
-    const displayedAssets = useMemo(() => {
-        const start = page * pageSize;
+    const totalAssets = Number(
+        productsData?.total ??
+        productsData?.total_assets ??
+        productsData?.pagination?.total ??
+        individualAssets.length,
+    );
 
-        return individualAssets.slice(
-            start,
-            start + pageSize,
-        );
-    }, [individualAssets, page, pageSize]);
+    const displayedAssets = useMemo(() => {
+        return individualAssets;
+    }, [individualAssets]);
+
+    const refreshAssetProducts = () => {
+        if (!id) return;
+
+        getAssetTypeProducts({
+            assetTypeId: id,
+            page,
+            page_size: pageSize,
+        });
+    };
+
+    const handleOpenUpdateDrawer = (asset: IndividualAsset) => {
+        setSelectedAsset(asset);
+        setUpdateDrawerOpen(true);
+    };
+
+    const handleCloseUpdateDrawer = () => {
+        setUpdateDrawerOpen(false);
+        setSelectedAsset(null);
+    };
 
     const columns: ColumnsType<IndividualAsset> = [
+        {
+            title: "Asset Name",
+            dataIndex: "asset_type_name",
+            key: "asset_name",
+            render: (value?: string) => formatName(value) || "—",
+        },
         {
             title: "Identifier Type",
             dataIndex: "identifier_type",
@@ -154,17 +192,10 @@ const SingleAssetType = () => {
             ),
         },
         {
-            title: "Current Location",
-            dataIndex: "current_location",
-            key: "current_location",
-            render: (value?: string) =>
-                formatName(value) || "—",
-        },
-        {
             title: "Asset Value",
             dataIndex: "device_value",
             key: "device_value",
-            align: "right",
+            align: "center",
             render: (value?: number) =>
                 formatCurrency(value),
         },
@@ -174,6 +205,23 @@ const SingleAssetType = () => {
             key: "date_created",
             render: (value?: string) =>
                 formatDateTime(value),
+        },
+        {
+            title: "Actions",
+            key: "actions",
+            align: "center",
+            width: 100,
+            render: (_, record) => (
+                <Tooltip title="Update asset">
+                    <Button
+                        type="text"
+                        icon={<FiEdit />}
+                        onClick={() =>
+                            handleOpenUpdateDrawer(record)
+                        }
+                    />
+                </Tooltip>
+            ),
         },
     ];
 
@@ -201,9 +249,7 @@ const SingleAssetType = () => {
                         <Space>
                             <Button
                                 onClick={() =>
-                                    navigate(
-                                        "/loan-assets",
-                                    )
+                                    navigate("/loan-assets")
                                 }
                             >
                                 Back to Assets
@@ -211,9 +257,7 @@ const SingleAssetType = () => {
 
                             <Button
                                 type="primary"
-                                onClick={() =>
-                                    getAssetTypes()
-                                }
+                                onClick={() => getAssetTypes()}
                             >
                                 Try Again
                             </Button>
@@ -223,10 +267,6 @@ const SingleAssetType = () => {
             </Card>
         );
     }
-
-    // const totalValue =
-    //     Number(assetType.asset_quantity ?? 0) *
-    //     Number(assetType.asset_unit_value ?? 0);
 
     return (
         <Card>
@@ -267,27 +307,10 @@ const SingleAssetType = () => {
                             setCreateDrawerOpen(true)
                         }
                     >
-                        Create Asset
+                        Create Asset Product
                     </Button>
                 </Col>
             </Row>
-
-            <Space size="middle" wrap style={{ marginBottom: 20 }}>
-                {/* <Tag color="blue">
-                    Quantity:{" "}
-                    {Number(assetType.asset_quantity ?? 0).toLocaleString()}
-                </Tag>
-
-                <Tag color="green">
-                    Unit Value:{" "}
-                    {formatCurrency(assetType.asset_unit_value)}
-                </Tag>
-
-                <Tag color="purple">
-                    Total Value:{" "}
-                    {formatCurrency(totalValue)}
-                </Tag> */}
-            </Space>
 
             <Table<IndividualAsset>
                 rowKey="id"
@@ -306,7 +329,7 @@ const SingleAssetType = () => {
             <TabPagination
                 page={page}
                 pageSize={pageSize}
-                total={individualAssets.length}
+                total={totalAssets}
                 itemName="Assets"
                 onPaginationChange={(nextPage, nextPageSize) => {
                     setPage(nextPage);
@@ -321,12 +344,19 @@ const SingleAssetType = () => {
                 onClose={() => setCreateDrawerOpen(false)}
                 onCreated={() => {
                     setCreateDrawerOpen(false);
+                    refreshAssetProducts();
+                }}
+            />
 
-                    getAssetTypeProducts({
-                        assetTypeId: id,
-                        page,
-                        page_size: pageSize,
-                    });
+            <UpdateAssetDrawer
+                open={updateDrawerOpen}
+                asset={selectedAsset}
+                assetTypeId={assetType.id}
+                assetTypeName={formatName(assetType.asset_name)}
+                onClose={handleCloseUpdateDrawer}
+                onUpdated={() => {
+                    handleCloseUpdateDrawer();
+                    refreshAssetProducts();
                 }}
             />
         </Card>

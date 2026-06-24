@@ -103,7 +103,7 @@ const UpdateAssetTypeModal = ({
                     />
                 </Form.Item>
 
-                <Form.Item
+                {/* <Form.Item
                     label="Unit Value"
                     name="asset_unit_value"
                     rules={[
@@ -119,7 +119,7 @@ const UpdateAssetTypeModal = ({
                         
                         style={{ width: "100%" }}
                     />
-                </Form.Item>
+                </Form.Item> */}
             </Form>
         </Modal>
     );
