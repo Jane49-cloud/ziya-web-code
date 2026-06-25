@@ -71,16 +71,29 @@ const CustomerAssetsDrawer = ({
     ] = useLazyGetCustomerAssetsQuery();
 
     useEffect(() => {
-        if (!open || !customerId) return;
+        if (!open) return;
+
+        const numericCustomerId = Number(customerId);
+
+        if (
+            !customerId ||
+            Number.isNaN(numericCustomerId) ||
+            numericCustomerId <= 0
+        ) {
+            message.error("Customer ID is missing");
+            return;
+        }
 
         const loadAssets = async () => {
             try {
-                await getCustomerAssets(customerId).unwrap();
+                await getCustomerAssets({
+                    customerId: numericCustomerId,
+                }).unwrap();
             } catch (err: any) {
                 message.error(
                     err?.data?.error ||
-                    err?.data?.message ||
-                    "Failed to load customer assets",
+                        err?.data?.message ||
+                        "Failed to load customer assets",
                 );
             }
         };
@@ -95,23 +108,30 @@ const CustomerAssetsDrawer = ({
     const columns: ColumnsType<CustomerAsset> = [
         {
             title: "Asset Name",
-            dataIndex: "asset_name",
+            dataIndex: "asset_type_name",
             key: "asset_name",
-            render: (value?: string) => formatName(value) || "—",
+            render: (value?: string) =>
+                formatName(value) || "—",
         },
         {
             title: "Asset Type",
             dataIndex: "asset_type_name",
             key: "asset_type_name",
-            render: (value?: string, record?: CustomerAsset) =>
+            render: (
+                value?: string,
+                record?: CustomerAsset,
+            ) =>
                 formatName(value) ||
-                (record?.asset_type ? `Type ${record.asset_type}` : "—"),
+                (record?.asset_type
+                    ? `Type ${record.asset_type}`
+                    : "—"),
         },
         {
             title: "Identifier Type",
             dataIndex: "identifier_type",
             key: "identifier_type",
-            render: (value?: string) => formatName(value) || "—",
+            render: (value?: string) =>
+                formatName(value) || "—",
         },
         {
             title: "Unique ID",
@@ -126,7 +146,8 @@ const CustomerAssetsDrawer = ({
             dataIndex: "device_value",
             key: "device_value",
             align: "right",
-            render: (value?: number) => formatCurrency(value),
+            render: (value?: number) =>
+                formatCurrency(value),
         },
         {
             title: "Issued",
@@ -142,7 +163,8 @@ const CustomerAssetsDrawer = ({
             title: "Date Created",
             dataIndex: "date_created",
             key: "date_created",
-            render: (value?: string) => formatDateTime(value) || "—",
+            render: (value?: string) =>
+                formatDateTime(value) || "—",
         },
     ];
 
@@ -156,9 +178,10 @@ const CustomerAssetsDrawer = ({
         >
             <div style={{ marginBottom: 16 }}>
                 <Text type="secondary">
-                    Viewing assets for{" "}
+                    Assets for{" "}
                     <Text strong>
-                        {customerName || `Customer ID ${customerId}`}
+                        {customerName ||
+                            `Customer ID ${customerId}`}
                     </Text>
                 </Text>
             </div>

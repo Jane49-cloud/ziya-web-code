@@ -7,9 +7,10 @@ import {
     Table,
     Tag,
     Typography,
+    message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FiPlus } from "react-icons/fi";
+import { FiEye, FiPlus } from "react-icons/fi";
 
 import { useGetPartnerCustomersQuery } from "../features";
 import {
@@ -18,7 +19,7 @@ import {
 } from "../../utils";
 import TabPagination from "./pagination";
 import CreatePartnerCustomerDrawer from "./createPartnerCustomerDrawer";
-//import CustomerAssetsDrawer from "./customerAssetsDrawer";
+import CustomerAssetsDrawer from "./customerAssetsDrawer";
 
 const { Text } = Typography;
 
@@ -30,6 +31,10 @@ type CustomersTabProps = {
 type PartnerCustomer = {
     partner_customer_id: number;
     customer_id?: number;
+    customerId?: number;
+    customer?: {
+        id?: number;
+    };
     firstname?: string;
     lastname?: string;
     country_code?: string;
@@ -41,27 +46,36 @@ type PartnerCustomer = {
     date_created?: string;
 };
 
+const getCustomerId = (record: PartnerCustomer) =>
+    record.customer_id ??
+    record.customerId ??
+    record.customer?.id;
+
+const getCustomerName = (record: PartnerCustomer | null) =>
+    formatName(
+        `${record?.firstname ?? ""} ${record?.lastname ?? ""}`,
+    );
+
 const CustomersTab = ({
     partnerId,
     active,
 }: CustomersTabProps) => {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
 
-    // const [assetsDrawerOpen, setAssetsDrawerOpen] = useState(false);
-    // const [selectedCustomer, setSelectedCustomer] =
-    //     useState<PartnerCustomer | null>(null);
+    const [createDrawerOpen, setCreateDrawerOpen] =
+        useState(false);
 
-    // const handleViewCustomerAssets = (customer: PartnerCustomer) => {
-    //     setSelectedCustomer(customer);
-    //     setAssetsDrawerOpen(true);
-    // };
+    const [assetsDrawerOpen, setAssetsDrawerOpen] =
+        useState(false);
 
-    // const handleCloseCustomerAssets = () => {
-    //     setAssetsDrawerOpen(false);
-    //     setSelectedCustomer(null);
-    // };
+    const [selectedAssetCustomerId, setSelectedAssetCustomerId] =
+        useState<number | string | null>(null);
+
+    const [
+        selectedAssetCustomerName,
+        setSelectedAssetCustomerName,
+    ] = useState("");
 
     const {
         data,
@@ -87,26 +101,49 @@ const CustomersTab = ({
 
     const totalCustomers = Number(
         data?.total ??
-        data?.total_customers ??
-        data?.pagination?.total ??
-        customers.length,
+            data?.total_customers ??
+            data?.pagination?.total ??
+            customers.length,
     );
+
+    const handleViewCustomerAssets = (
+        customer: PartnerCustomer,
+    ) => {
+        const customerId = getCustomerId(customer);
+
+        if (!customerId) {
+            console.log("CUSTOMER RECORD WITHOUT ID", customer);
+            message.error("Customer ID is missing");
+            return;
+        }
+
+        setSelectedAssetCustomerId(customerId);
+        setSelectedAssetCustomerName(
+            getCustomerName(customer) || `Customer ${customerId}`,
+        );
+        setAssetsDrawerOpen(true);
+    };
+
+    const handleCloseCustomerAssets = () => {
+        setAssetsDrawerOpen(false);
+        setSelectedAssetCustomerId(null);
+        setSelectedAssetCustomerName("");
+    };
 
     const columns: ColumnsType<PartnerCustomer> = [
         {
             title: "Customer Name",
             key: "name",
             render: (_, record) =>
-                formatName(
-                    `${record.firstname ?? ""} ${record.lastname ?? ""}`,
-                ) || "—",
+                getCustomerName(record) || "—",
         },
         {
             title: "Phone Number",
             key: "phone_number",
             render: (_, record) => {
-                const phone = `${record.country_code ?? ""}${record.phone_number ?? ""
-                    }`;
+                const phone = `${record.country_code ?? ""}${
+                    record.phone_number ?? ""
+                }`;
 
                 return phone || "—";
             },
@@ -151,19 +188,21 @@ const CustomersTab = ({
             render: (value?: string) =>
                 formatDateTime(value) || "—",
         },
-        // {
-        //     title: "Actions",
-        //     key: "actions",
-        //     align: "center",
-        //     width: 100,
-        //     render: (_, record) => (
-        //         <Button
-        //             type="text"
-        //             icon={<FiEye />}
-        //             onClick={() => handleViewCustomerAssets(record)}
-        //         />
-        //     ),
-        // },
+        {
+            title: "Actions",
+            key: "actions",
+            align: "center",
+            width: 100,
+            render: (_, record) => (
+                <Button
+                    type="text"
+                    icon={<FiEye />}
+                    onClick={() =>
+                        handleViewCustomerAssets(record)
+                    }
+                />
+            ),
+        },
     ];
 
     if (isError) {
@@ -190,7 +229,9 @@ const CustomersTab = ({
                 <Button
                     type="primary"
                     icon={<FiPlus />}
-                    onClick={() => setCreateDrawerOpen(true)}
+                    onClick={() =>
+                        setCreateDrawerOpen(true)
+                    }
                 >
                     Create Customer
                 </Button>
@@ -233,20 +274,14 @@ const CustomersTab = ({
                     setPage(0);
                     refetch();
                 }}
-
             />
-            {/* <CustomerAssetsDrawer
+
+            <CustomerAssetsDrawer
                 open={assetsDrawerOpen}
-                customerId={
-                    selectedCustomer?.customer_id ??
-                    selectedCustomer?.partner_customer_id
-                }
-                customerName={formatName(
-                    `${selectedCustomer?.firstname ?? ""} ${selectedCustomer?.lastname ?? ""
-                    }`,
-                )}
+                customerId={selectedAssetCustomerId}
+                customerName={selectedAssetCustomerName}
                 onClose={handleCloseCustomerAssets}
-            /> */}
+            />
         </>
     );
 };

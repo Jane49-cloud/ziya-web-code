@@ -65,6 +65,20 @@ type CreatePartnerCustomerPayload = {
     identification_number: string;
 };
 
+ type GroupAssetsArg =
+  | number
+  | string
+  | {
+      groupId: number | string;
+    };
+
+    type CustomerAssetsArg =
+  | number
+  | string
+  | {
+      customerId: number | string;
+    };
+
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllSaccos: builder.query<any, PaginationQuery | void>({
@@ -360,19 +374,40 @@ export const saccoSlice = apiSlice.injectEndpoints({
         }),
 
 
-        getGroupAssets: builder.query<any, number | string>({
-            query: (groupId) => ({
-                url: `/company-wallets/assets/group/${groupId}`,
-                method: "GET",
-            }),
+        // getGroupAssets: builder.query<any, number | string>({
+        //     query: (groupId) => ({
+        //         url: `/company-wallets/assets/group/${groupId}`,
+        //         method: "GET",
+        //     }),
+        // }),
+
+       
+
+        getGroupAssets: builder.query<any, GroupAssetsArg>({
+        query: (arg) => {
+            const groupId =
+            typeof arg === "object" && arg !== null ? arg.groupId : arg;
+
+            return {
+            url: `/company-wallets/assets/group/${groupId}`,
+            method: "GET",
+            };
+        },
         }),
 
-        getCustomerAssets: builder.query<any, number | string>({
-            query: (customerId) => ({
+        getCustomerAssets: builder.query<any, CustomerAssetsArg>({
+            query: (arg) => {
+                const customerId =
+                typeof arg === "object" && arg !== null
+                    ? arg.customerId
+                    : arg;
+
+                return {
                 url: `/company-wallets/assets/customer/${customerId}`,
                 method: "GET",
+                };
+            },
             }),
-        }),
 
 
 

@@ -70,23 +70,36 @@ const GroupAssetsDrawer = ({
     },
   ] = useLazyGetGroupAssetsQuery();
 
-  useEffect(() => {
-    if (!open || !groupId) return;
 
-    const loadAssets = async () => {
-      try {
-        await getGroupAssets(groupId).unwrap();
-      } catch (err: any) {
-        message.error(
-          err?.data?.error ||
+  useEffect(() => {
+  if (!open) return;
+
+  const numericGroupId = Number(groupId);
+
+  console.log("GROUP ASSETS DRAWER ID", groupId);
+  console.log("GROUP ASSETS NUMERIC ID", numericGroupId);
+
+  if (!groupId || Number.isNaN(numericGroupId) || numericGroupId <= 0) {
+    message.error("Group ID is missing");
+    return;
+  }
+
+  const loadAssets = async () => {
+    try {
+      await getGroupAssets({
+        groupId: numericGroupId,
+      }).unwrap();
+    } catch (err: any) {
+      message.error(
+        err?.data?.error ||
           err?.data?.message ||
           "Failed to load group assets",
-        );
-      }
-    };
+      );
+    }
+  };
 
-    void loadAssets();
-  }, [open, groupId, getGroupAssets]);
+  void loadAssets();
+}, [open, groupId, getGroupAssets]);
 
   const assets = useMemo(() => {
     return extractAssets(data);
@@ -95,7 +108,7 @@ const GroupAssetsDrawer = ({
   const columns: ColumnsType<GroupAsset> = [
     {
       title: "Asset Name",
-      dataIndex: "asset_name",
+      dataIndex: "asset_type_name",
       key: "asset_name",
       render: (value?: string) => formatName(value) || "—",
     },
@@ -156,7 +169,7 @@ const GroupAssetsDrawer = ({
     >
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          Viewing assets for{" "}
+          Assets for{" "}
           <Text strong>{groupName || `Group ID ${groupId}`}</Text>
         </Text>
       </div>

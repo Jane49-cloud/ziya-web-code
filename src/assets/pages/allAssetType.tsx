@@ -65,8 +65,6 @@ const LoanAssets = () => {
     const assetTypes: AssetTypeRecord[] =
         Array.isArray(data?.data) ? data.data : [];
 
-    // The current API returns all records, so pagination
-    // is handled locally until backend pagination is added.
     const displayedAssetTypes = useMemo(() => {
         const start = page * pageSize;
         const end = start + pageSize;

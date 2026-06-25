@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
     Alert,
     Button,
@@ -28,7 +28,7 @@ import {
 } from "../../utils";
 import TabPagination from "./pagination";
 import MoveGroupDrawer from "./movePartGrpDrawer";
-//import GroupAssetsDrawer from "./groupAssetsDrawer";
+import GroupAssetsDrawer from "./groupAssetsDrawer";
 
 type GroupsTabProps = {
     partnerId: number | string;
@@ -40,9 +40,7 @@ type PartnerGroup = Record<string, any>;
 const formatColumnTitle = (key: string) =>
     key
         .replace(/_/g, " ")
-        .replace(/\b\w/g, (letter) =>
-            letter.toUpperCase(),
-        );
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const isDateColumn = (key: string) => {
     const normalizedKey = key.toLowerCase();
@@ -89,10 +87,7 @@ const shouldFormatAsName = (key: string) => {
     );
 };
 
-const formatGroupValue = (
-    value: unknown,
-    key: string,
-) => {
+const formatGroupValue = (value: unknown, key: string) => {
     if (
         value === null ||
         value === undefined ||
@@ -121,13 +116,17 @@ const formatGroupValue = (
 };
 
 const getGroupId = (record: PartnerGroup) =>
-    record.group_id ?? record.id ?? record.ID;
+    record.group_id ??
+    record.groupId ??
+    record.group?.id ??
+    record.group?.group_id;
 
-// const getGroupName = (record: PartnerGroup) =>
-//     record.name ??
-//     record.group_name ??
-//     record.groupName ??
-//     record.group;
+const getGroupName = (record: PartnerGroup) =>
+    record.name ??
+    record.group_name ??
+    record.groupName ??
+    record.group ??
+    "";
 
 const GroupsTab = ({
     partnerId,
@@ -139,11 +138,16 @@ const GroupsTab = ({
     const [selectedMoveGroup, setSelectedMoveGroup] =
         useState<PartnerGroup | null>(null);
 
-    // const [assetsDrawerOpen, setAssetsDrawerOpen] =
-    //     useState(false);
+    const [assetsDrawerOpen, setAssetsDrawerOpen] =
+        useState(false);
 
-    // const [selectedAssetGroup, setSelectedAssetGroup] =
-    //     useState<PartnerGroup | null>(null);
+    const [selectedAssetGroupId, setSelectedAssetGroupId] =
+        useState<number | string | null>(null);
+
+    const [
+        selectedAssetGroupName,
+        setSelectedAssetGroupName,
+    ] = useState("");
 
     const {
         data,
@@ -165,91 +169,102 @@ const GroupsTab = ({
     const [removeGroup, { isLoading: removing }] =
         useRemoveGroupFromPartnerMutation();
 
-    const groups: PartnerGroup[] = Array.isArray(
-        data?.groups,
-    )
+    const groups: PartnerGroup[] = Array.isArray(data?.groups)
         ? data.groups
         : [];
 
     const totalGroups = Number(
         data?.total ??
-        data?.total_groups ??
-        data?.pagination?.total ??
-        groups.length,
+            data?.total_groups ??
+            data?.pagination?.total ??
+            groups.length,
     );
 
-    const refreshAfterChange = () => {
+    const refreshAfterChange = useCallback(() => {
         if (groups.length === 1 && page > 0) {
             setPage((currentPage) => currentPage - 1);
             return;
         }
 
         refetch();
-    };
+    }, [groups.length, page, refetch]);
 
-    // const handleViewGroupAssets = (
-    //     group: PartnerGroup,
-    // ) => {
-    //     setSelectedAssetGroup(group);
-    //     setAssetsDrawerOpen(true);
-    // };
+    const handleViewGroupAssets = useCallback(
+        (group: PartnerGroup) => {
+            const groupId = getGroupId(group);
 
-    // const handleCloseGroupAssets = () => {
-    //     setAssetsDrawerOpen(false);
-    //     setSelectedAssetGroup(null);
-    // };
+            if (!groupId) {
+                console.log("GROUP RECORD WITHOUT ID", group);
+                message.error("Group ID is missing");
+                return;
+            }
 
-    const handleRemove = async (
-        record: PartnerGroup,
-    ) => {
-        const groupId = getGroupId(record);
-
-        if (!groupId) {
-            message.error("Group ID is missing");
-            return;
-        }
-
-        try {
-            await removeGroup({
-                group_id: groupId,
-                partner_id: partnerId,
-            }).unwrap();
-
-            message.success(
-                "Group removed from partner successfully",
+            setSelectedAssetGroupId(groupId);
+            setSelectedAssetGroupName(
+                formatName(getGroupName(group)) ||
+                    `Group ${groupId}`,
             );
+            setAssetsDrawerOpen(true);
+        },
+        [],
+    );
 
-            refreshAfterChange();
-        } catch (error: any) {
-            message.error(
-                error?.data?.message ??
-                "Failed to remove group",
-            );
-        }
+    const handleCloseGroupAssets = () => {
+        setAssetsDrawerOpen(false);
+        setSelectedAssetGroupId(null);
+        setSelectedAssetGroupName("");
     };
 
-    const confirmRemove = (
-        record: PartnerGroup,
-    ) => {
-        Modal.confirm({
-            title: "Remove Group",
-            content:
-                "Are you sure you want to remove this group from the current partner?",
-            okText: "Remove",
-            cancelText: "Cancel",
-            okButtonProps: {
-                danger: true,
-                loading: removing,
-            },
-            onOk: () => handleRemove(record),
-        });
-    };
+    const handleRemove = useCallback(
+        async (record: PartnerGroup) => {
+            const groupId = getGroupId(record);
 
-    const columns = useMemo<
-        ColumnsType<PartnerGroup>
-    >(() => {
-        const actionColumn: ColumnsType<PartnerGroup>[number] =
-        {
+            if (!groupId) {
+                message.error("Group ID is missing");
+                return;
+            }
+
+            try {
+                await removeGroup({
+                    group_id: groupId,
+                    partner_id: partnerId,
+                }).unwrap();
+
+                message.success(
+                    "Group removed from partner successfully",
+                );
+
+                refreshAfterChange();
+            } catch (error: any) {
+                message.error(
+                    error?.data?.message ??
+                        "Failed to remove group",
+                );
+            }
+        },
+        [partnerId, refreshAfterChange, removeGroup],
+    );
+
+    const confirmRemove = useCallback(
+        (record: PartnerGroup) => {
+            Modal.confirm({
+                title: "Remove Group",
+                content:
+                    "Are you sure you want to remove this group from the current partner?",
+                okText: "Remove",
+                cancelText: "Cancel",
+                okButtonProps: {
+                    danger: true,
+                    loading: removing,
+                },
+                onOk: () => handleRemove(record),
+            });
+        },
+        [handleRemove, removing],
+    );
+
+    const columns = useMemo<ColumnsType<PartnerGroup>>(() => {
+        const actionColumn: ColumnsType<PartnerGroup>[number] = {
             title: "Actions",
             key: "actions",
             width: 90,
@@ -279,9 +294,9 @@ const GroupsTab = ({
                             },
                         ],
                         onClick: ({ key }) => {
-                            // if (key === "view-assets") {
-                            //     handleViewGroupAssets(record);
-                            // }
+                            if (key === "view-assets") {
+                                handleViewGroupAssets(record);
+                            }
 
                             if (key === "move") {
                                 setSelectedMoveGroup(record);
@@ -296,11 +311,7 @@ const GroupsTab = ({
                     <Button
                         type="text"
                         aria-label="Group actions"
-                        icon={
-                            <FiMoreVertical
-                                size={18}
-                            />
-                        }
+                        icon={<FiMoreVertical size={18} />}
                         className="cursor-pointer hover:!bg-blue-50 hover:!text-blue-600"
                     />
                 </Dropdown>
@@ -349,8 +360,7 @@ const GroupsTab = ({
 
         const dataColumns = Object.keys(groups[0])
             .filter(
-                (key) =>
-                    !hiddenColumns.includes(key),
+                (key) => !hiddenColumns.includes(key),
             )
             .map((key) => ({
                 title: formatColumnTitle(key),
@@ -361,7 +371,11 @@ const GroupsTab = ({
             }));
 
         return [...dataColumns, actionColumn];
-    }, [groups, removing]);
+    }, [
+        groups,
+        handleViewGroupAssets,
+        confirmRemove,
+    ]);
 
     if (isError) {
         return (
@@ -387,7 +401,8 @@ const GroupsTab = ({
                 rowKey={(record) =>
                     String(
                         getGroupId(record) ??
-                        record.name,
+                            record.partner_group_id ??
+                            record.name,
                     )
                 }
                 columns={columns}
@@ -421,33 +436,19 @@ const GroupsTab = ({
                 open={Boolean(selectedMoveGroup)}
                 group={selectedMoveGroup}
                 currentPartnerId={partnerId}
-                onClose={() =>
-                    setSelectedMoveGroup(null)
-                }
+                onClose={() => setSelectedMoveGroup(null)}
                 onMoved={() => {
                     setSelectedMoveGroup(null);
                     refreshAfterChange();
                 }}
             />
 
-            {/* <GroupAssetsDrawer
+            <GroupAssetsDrawer
                 open={assetsDrawerOpen}
-                groupId={
-                    selectedAssetGroup
-                        ? getGroupId(selectedAssetGroup)
-                        : undefined
-                }
-                groupName={
-                    selectedAssetGroup
-                        ? formatName(
-                            getGroupName(
-                                selectedAssetGroup,
-                            ),
-                        )
-                        : ""
-                }
+                groupId={selectedAssetGroupId}
+                groupName={selectedAssetGroupName}
                 onClose={handleCloseGroupAssets}
-            /> */}
+            />
         </>
     );
 };
