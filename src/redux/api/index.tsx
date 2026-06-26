@@ -6,7 +6,8 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://betaapi.ziya.co.ke/api/v2",
+  baseUrl: "https://betaapi.ziya.co.ke/api/v2",  
+  //baseUrl: "http://192.168.150.112:4001/api/v2",
 
   // baseUrl: "https://api.ziya.co.ke/api/v2",
 

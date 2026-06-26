@@ -16,6 +16,7 @@ import {
   FiUserCheck,
 } from "react-icons/fi";
 
+//import MoveGroupDrawer from "../partner/components/movePartGrpDrawer";
 import EditGroupModal from "./components/editGroupModal";
 import GroupTable from "./components/groupList";
 import UpdateMemberCountModal from "./components/updateMemberCountModal";
@@ -146,6 +147,8 @@ const GroupTabs = () => {
     edit: false,
     manager: false,
     member: false,
+    //move: false,
+
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -735,6 +738,16 @@ const GroupTabs = () => {
         }}
         onSubmit={onManagerSubmit}
       />
+
+      {/* <MoveGroupDrawer
+        visible={modals.move}
+        form={form}
+        onCancel={() => {
+          form.resetFields();
+          setModals((prev) => ({ ...prev, move: false }));
+        }}
+        onMove={onMove}
+      /> */}
 
       <UpdateMemberCountModal
         visible={modals.member}

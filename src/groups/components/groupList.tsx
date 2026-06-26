@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import { useState, type FC } from "react";
 import {
   Table,
   Button,
@@ -17,9 +17,12 @@ import {
   FiMoreVertical,
   FiSearch,
   FiUsers,
+  FiMove,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { formatName, getInitials, lowerInput } from "../../utils";
+
+import MoveGroupDrawer from "../../partner/components/movePartGrpDrawer";
 
 const { Text, Title } = Typography;
 
@@ -29,15 +32,6 @@ const GROUP_TAG_COLORS: Record<string, string> = {
   dev: "geekblue",
   testing: "gold",
 };
-
-// export type GroupRecord = {
-//   id: string | number;
-//   name: string;
-//   tags?: string | null;
-//   relationship_manager?: number;
-//   relationship_manager_name?: string | null;
-//   admin_name?: string | null;
-// };
 
 export type GroupRecord = {
   id: string | number;
@@ -56,8 +50,6 @@ export type GroupRecord = {
   admin_name?: string | null;
   tags?: string | null;
 
-  
-
   [key: string]: any;
 };
 
@@ -69,10 +61,12 @@ type GroupTableProps = {
   total: number;
   searchValue: string;
   isSearchMode?: boolean;
+  currentPartnerId?: string | number;
   onSearchChange: (value: string) => void;
   onPaginationChange: (page: number, pageSize: number) => void;
   onEdit: (record: GroupRecord) => void;
   onChangeManager: (record: GroupRecord) => void;
+  onGroupMoved?: () => void;
 };
 
 const GroupTable: FC<GroupTableProps> = ({
@@ -83,12 +77,17 @@ const GroupTable: FC<GroupTableProps> = ({
   total,
   searchValue,
   isSearchMode = false,
+  currentPartnerId = "",
   onSearchChange,
   onPaginationChange,
   onEdit,
   onChangeManager,
+  onGroupMoved,
 }) => {
   const navigate = useNavigate();
+
+  const [selectedMoveGroup, setSelectedMoveGroup] =
+    useState<GroupRecord | null>(null);
 
   const renderManager = (managerName?: string | null) => {
     const fullName = formatName(managerName ?? "").trim();
@@ -125,12 +124,19 @@ const GroupTable: FC<GroupTableProps> = ({
       case "view":
         navigate(`/groups/${record.id}`);
         break;
+
       case "edit":
         onEdit(record);
         break;
+
       case "manager":
         onChangeManager(record);
         break;
+
+      case "move":
+        setSelectedMoveGroup(record);
+        break;
+
       default:
         break;
     }
@@ -217,7 +223,6 @@ const GroupTable: FC<GroupTableProps> = ({
           </Tag>
         ),
     },
-    //created by
     {
       title: "Created By",
       dataIndex: "created_by_name",
@@ -245,7 +250,6 @@ const GroupTable: FC<GroupTableProps> = ({
           </Tag>
         ),
     },
-
     {
       title: "",
       key: "actions",
@@ -253,9 +257,26 @@ const GroupTable: FC<GroupTableProps> = ({
       align: "right" as const,
       render: (_: unknown, record: GroupRecord) => {
         const items = [
-          { key: "view", label: "View Details", icon: <FiEye /> },
-          { key: "edit", label: "Edit Group", icon: <FiEdit /> },
-          { key: "manager", label: "Change Manager", icon: <FiUserCheck /> },
+          {
+            key: "view",
+            label: "View Details",
+            icon: <FiEye />,
+          },
+          {
+            key: "edit",
+            label: "Edit Group",
+            icon: <FiEdit />,
+          },
+          {
+            key: "manager",
+            label: "Change Manager",
+            icon: <FiUserCheck />,
+          },
+          {
+            key: "move",
+            label: "Move Group",
+            icon: <FiMove />,
+          },
         ];
 
         return (
@@ -278,68 +299,80 @@ const GroupTable: FC<GroupTableProps> = ({
   ];
 
   return (
-    <Card
-      bordered={false}
-      className="shadow-lg rounded-lg"
-      styles={{ body: { padding: "24px" } }}
-    >
-      <div className="mb-6">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-          <div>
-            <Title level={4} className="!mb-1">
-              Group Directory
-            </Title>
-            <Text type="secondary" className="text-sm">
-              Search, inspect, and manage existing groups
-            </Text>
+    <>
+      <Card
+        bordered={false}
+        className="shadow-lg rounded-lg"
+        styles={{ body: { padding: "24px" } }}
+      >
+        <div className="mb-6">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div>
+              <Title level={4} className="!mb-1">
+                Group Directory
+              </Title>
+              <Text type="secondary" className="text-sm">
+                Search, inspect, and manage existing groups
+              </Text>
+            </div>
+
+            <Tag
+              color={isSearchMode ? "green" : "blue"}
+              className="px-3 py-1 text-sm font-medium"
+            >
+              {data.length} {data.length === 1 ? "Group" : "Groups"}
+            </Tag>
           </div>
 
-          <Tag
-            color={isSearchMode ? "green" : "blue"}
-            className="px-3 py-1 text-sm font-medium"
-          >
-            {data.length} {data.length === 1 ? "Group" : "Groups"}
-          </Tag>
+          <Input
+            allowClear
+            prefix={<FiSearch className="text-gray-400" />}
+            placeholder="Search by group name"
+            value={searchValue}
+            onChange={(event) => onSearchChange(lowerInput(event.target.value))}
+            size="large"
+            className="w-full sm:w-96"
+            style={{ borderRadius: "8px" }}
+          />
         </div>
 
-        <Input
-          allowClear
-          prefix={<FiSearch className="text-gray-400" />}
-          // placeholder="Search by group name, manager, tag, or admin..."
-          placeholder="Search by group name"
-          value={searchValue}
-          onChange={(event) => onSearchChange(lowerInput(event.target.value))}
-          size="large"
-          className="w-full sm:w-96"
-          style={{ borderRadius: "8px" }}
+        <Table<GroupRecord>
+          dataSource={data}
+          loading={loading}
+          columns={columns}
+          rowKey={(record) => String(record.id)}
+          bordered
+          sortDirections={["ascend", "descend"]}
+          showSorterTooltip={{ target: "sorter-icon" }}
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            pageSizeOptions: [5, 10, 20, 50],
+            onChange: (nextPage, nextPageSize) => {
+              onPaginationChange(nextPage, nextPageSize);
+            },
+          }}
+          scroll={{ x: 900 }}
+          size="middle"
+          tableLayout="auto"
+          className="group-table"
+          rowClassName="hover:bg-blue-50 transition-colors"
         />
-      </div>
+      </Card>
 
-      <Table<GroupRecord>
-        dataSource={data}
-        loading={loading}
-        columns={columns}
-        rowKey={(record) => String(record.id)}
-        bordered
-        sortDirections={["ascend", "descend"]}
-        showSorterTooltip={{ target: "sorter-icon" }}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          pageSizeOptions: [5, 10, 20, 50],
-          onChange: (nextPage, nextPageSize) => {
-            onPaginationChange(nextPage, nextPageSize);
-          },
+      <MoveGroupDrawer
+        open={Boolean(selectedMoveGroup)}
+        group={selectedMoveGroup}
+        currentPartnerId={currentPartnerId}
+        onClose={() => setSelectedMoveGroup(null)}
+        onMoved={() => {
+          setSelectedMoveGroup(null);
+          onGroupMoved?.();
         }}
-        scroll={{ x: 900 }}
-        size="middle"
-        tableLayout="auto"
-        className="group-table"
-        rowClassName="hover:bg-blue-50 transition-colors"
       />
-    </Card>
+    </>
   );
 };
 
