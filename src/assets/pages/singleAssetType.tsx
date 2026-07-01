@@ -172,7 +172,7 @@ const SingleAssetType = () => {
     const columns: ColumnsType<IndividualAsset> = [
         {
             title: "Asset Name",
-            dataIndex: "asset_type_name",
+            dataIndex: "asset_name",
             key: "asset_name",
             render: (value?: string) => formatName(value) || "—",
         },

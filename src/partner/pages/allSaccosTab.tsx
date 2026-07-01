@@ -281,7 +281,7 @@ const AllSaccosTab = ({
                 allowClear
                 size="large"
                 prefix={<FiSearch />}
-                placeholder="Search by partner name, location, chairperson, or ID"
+                placeholder="Search by partner name, location, chairperson or ID"
                 value={search}
                 onChange={(event) => {
                     setSearch(event.target.value);

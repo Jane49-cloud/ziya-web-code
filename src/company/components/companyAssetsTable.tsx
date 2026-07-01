@@ -50,8 +50,8 @@ const CompanyAssetsTable = ({
   const columns: ColumnsType<CompanyAsset> = [
     {
       title: "Asset Type",
-      dataIndex: "asset_type_name",
-      key: "asset_type_name",
+      dataIndex: "asset_name",
+      key: "asset_name",
       render: (value?: string) => (
         <Text strong>{formatName(value) || "—"}</Text>
       ),
@@ -85,6 +85,7 @@ const CompanyAssetsTable = ({
       dataIndex: "date_created",
       key: "date_created",
       align: "center",
+      // width: 120,
       render: (value?: string) =>
         formatDateTime(value),
     },

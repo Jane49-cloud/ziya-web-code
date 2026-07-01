@@ -335,6 +335,8 @@ const GroupsTab = ({
                     title: "Members",
                     dataIndex: "total_members",
                     key: "total_members",
+                    align: "center",
+                    width:90,
                     render: (value: unknown) =>
                         formatGroupValue(
                             value,
@@ -409,7 +411,7 @@ const GroupsTab = ({
                 dataSource={groups}
                 loading={isLoading || isFetching}
                 pagination={false}
-                scroll={{ x: 1000 }}
+                scroll={{ x: 800 }}
                 locale={{
                     emptyText: (
                         <Empty description="No group records available" />
