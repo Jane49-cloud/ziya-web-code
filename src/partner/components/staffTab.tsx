@@ -108,8 +108,8 @@ const StaffTab = ({
                 <Tag color={roleName?.trim() ? "blue" : "default"}>
                     {roleName?.trim()
                         ? formatName(roleName)
-                        : record?.role
-                            ? `Role ${record.role}`
+                        : record?.role_name
+                            ? `Role ${record.role_name}`
                             : "—"}
                 </Tag>
             ),

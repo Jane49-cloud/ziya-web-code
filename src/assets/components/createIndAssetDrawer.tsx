@@ -31,6 +31,10 @@ type CreateAssetDrawerProps = {
 
 const IDENTIFIER_TYPE_OPTIONS = [
     {
+        label: "Chassis Number",
+        value: "chassis number",
+    },
+    {
         label: "IMEI",
         value: "IMEI",
     },
@@ -42,6 +46,7 @@ const IDENTIFIER_TYPE_OPTIONS = [
         label: "Logbook",
         value: "logbook",
     },
+    
 ];
 
 const CreateAssetDrawer = ({
@@ -140,7 +145,7 @@ const CreateAssetDrawer = ({
                         },
                     ]}
                 >
-                    <Input placeholder="Enter asset name" />
+                    <Input placeholder="Enter asset name eg. ktws 123" />
                 </Form.Item>
 
                 <Form.Item

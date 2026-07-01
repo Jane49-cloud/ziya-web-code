@@ -8,7 +8,7 @@ import {
     Button,
     Empty,
     Table,
-    Tag,
+   // Tag,
     Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -97,8 +97,8 @@ const AssetsTab = ({
     const columns: ColumnsType<PartnerAsset> = [
         {
             title: "Asset Type",
-            dataIndex: "asset_type_name",
-            key: "asset_type_name",
+            dataIndex: "asset_name",
+            key: "asset_name",
             render: (value?: string) => (
                 <Text strong>
                     {formatName(value) || "—"}
@@ -132,17 +132,17 @@ const AssetsTab = ({
             render: (value?: number) =>
                 formatCurrency(value),
         },
-        {
-            title: "Owner Type",
-            dataIndex: "owner_type",
-            key: "owner_type",
-            align: "center",
-            render: (value?: string) => (
-                <Tag color="blue">
-                    {formatName(value) || "—"}
-                </Tag>
-            ),
-        },
+        // {
+        //     title: "Owner Type",
+        //     dataIndex: "owner_type",
+        //     key: "owner_type",
+        //     align: "center",
+        //     render: (value?: string) => (
+        //         <Tag color="blue">
+        //             {formatName(value) || "—"}
+        //         </Tag>
+        //     ),
+        // },
         {
             title: "Date Created",
             dataIndex: "date_created",

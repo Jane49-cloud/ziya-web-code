@@ -11,7 +11,6 @@ export type Partner = {
     id?: number;
     name?: string;
     location?: string;
-    chairperson?: number;
     chairperson_name?: string;
     total_members?: number;
     total_staff?: number;
@@ -44,13 +43,13 @@ const OverviewTab = ({ partner }: OverviewTabProps) => {
             value: formatName(partner.location) || "—",
         },
         {
-            key: "chairperson",
-            field: "Chairperson",
+            key: "chairperson_name",
+            field: "Chairperson Name",
             value: partner.chairperson_name ? (
                 formatName(partner.chairperson_name)
-            ) : partner.chairperson ? (
+            ) : partner.chairperson_name ? (
                 <Tag color="gold">
-                    {partner.chairperson}
+                    {partner.chairperson_name}
                 </Tag>
             ) : (
                 "—"
@@ -82,12 +81,7 @@ const OverviewTab = ({ partner }: OverviewTabProps) => {
             value:
                 formatDateTime(partner.date_created) || "—",
         },
-        {
-            key: "date_updated",
-            field: "Date Updated",
-            value:
-                formatDateTime(partner.date_updated) || "—",
-        },
+      
     ];
 
     const columns: ColumnsType<OverviewRecord> = [

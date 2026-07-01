@@ -141,7 +141,7 @@ const CustomersTab = ({
             title: "Phone Number",
             key: "phone_number",
             render: (_, record) => {
-                const phone = `${record.country_code ?? ""}${
+                const phone = `${
                     record.phone_number ?? ""
                 }`;
 
@@ -151,6 +151,7 @@ const CustomersTab = ({
         {
             title: "Identification",
             key: "identification",
+            align: "center",
             render: (_, record) => (
                 <Space direction="vertical" size={0}>
                     <Text>
@@ -167,6 +168,7 @@ const CustomersTab = ({
             title: "Status",
             dataIndex: "status",
             key: "status",
+            align: "center",
             render: (status?: number) => (
                 <Tag color={status === 1 ? "green" : "default"}>
                     {status === 1 ? "Active" : "Inactive"}
@@ -185,6 +187,7 @@ const CustomersTab = ({
             title: "Date Created",
             dataIndex: "date_created",
             key: "date_created",
+            align: "center",
             render: (value?: string) =>
                 formatDateTime(value) || "—",
         },
