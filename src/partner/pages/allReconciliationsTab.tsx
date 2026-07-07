@@ -3,18 +3,10 @@ import type { ColumnsType } from "antd/es/table";
 
 import { useGetAllPartnerReconciliationsQuery } from "../features";
 import type { PartnerReconciliation } from "../types";
+import { formatDateTimeWithTime, formatName, formatCurrency } from "../../utils/index";
 
 const { Text } = Typography;
 
-const formatAmount = (amount: number) => {
-    return Number(amount || 0).toLocaleString();
-};
-
-const formatDate = (date?: string | null) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleString();
-};
 
 const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -56,16 +48,16 @@ const AllReconciliationsTab = () => {
             dataIndex: "amount",
             key: "amount",
             render: (amount: number) => (
-                <Text strong>{formatAmount(amount)}</Text>
+                <Text strong>{formatCurrency(amount)}</Text>
             ),
         },
         {
             title: "Status",
-            dataIndex: "status",
+            dataIndex: "status", 
             key: "status",
             render: (status: string) => (
                 <Tag color={getStatusColor(status)}>
-                    {status || "-"}
+                    {formatName(status) || "-"}
                 </Tag>
             ),
         },
@@ -90,13 +82,13 @@ const AllReconciliationsTab = () => {
             title: "Date Created",
             dataIndex: "date_created",
             key: "date_created",
-            render: formatDate,
+            render: (value: string | null) => formatDateTimeWithTime(value), 
         },
         {
             title: "Date Confirmed",
             dataIndex: "date_confirmed",
             key: "date_confirmed",
-            render: formatDate,
+            render: (value: string | null) => formatDateTimeWithTime(value),
         },
     ];
 

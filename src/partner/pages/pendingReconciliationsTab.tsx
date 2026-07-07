@@ -1,6 +1,6 @@
 import { Alert, Button, Popconfirm, Space, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FiCheck } from "react-icons/fi";
+import { formatDateTimeWithTime, formatName, formatCurrency  } from "../../utils/index";
 
 import {
     useConfirmPartnerReconciliationMutation,
@@ -11,15 +11,7 @@ import type { PartnerReconciliation } from "../types";
 
 const { Text } = Typography;
 
-const formatAmount = (amount: number) => {
-    return Number(amount || 0).toLocaleString();
-};
 
-const formatDate = (date?: string | null) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleString();
-};
 
 const PendingReconciliationsTab = () => {
     const [messageApi, contextHolder] = message.useMessage();
@@ -68,7 +60,7 @@ const PendingReconciliationsTab = () => {
             dataIndex: "amount",
             key: "amount",
             render: (amount: number) => (
-                <Text strong>{formatAmount(amount)}</Text>
+                <Text strong>{formatCurrency(amount)}</Text>
             ),
         },
         {
@@ -76,7 +68,7 @@ const PendingReconciliationsTab = () => {
             dataIndex: "status",
             key: "status",
             render: (status: string) => (
-                <Tag color="gold">{status || "pending"}</Tag>
+                <Tag color="gold">{formatName(status) || "pending"}</Tag>
             ),
         },
         {
@@ -94,7 +86,8 @@ const PendingReconciliationsTab = () => {
             title: "Date Created",
             dataIndex: "date_created",
             key: "date_created",
-            render: formatDate,
+           // render: formatDateTime,
+           render: (value: string | null) => formatDateTimeWithTime(value),
         },
         {
             title: "Action",
@@ -111,7 +104,6 @@ const PendingReconciliationsTab = () => {
                 >
                     <Button
                         type="primary"
-                        icon={<FiCheck />}
                         loading={isConfirming}
                     >
                         Confirm
