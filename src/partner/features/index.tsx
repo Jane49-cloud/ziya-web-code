@@ -54,4 +54,9 @@ export const {
     useGetPartnerTransactionsQuery,
     useLazyGetPartnerTransactionsQuery,
 
+    // reconciliation hooks
+    useGetAllPartnerReconciliationsQuery,
+    useGetPendingPartnerReconciliationsQuery,
+    useConfirmPartnerReconciliationMutation,
+
 } = saccoSlice;

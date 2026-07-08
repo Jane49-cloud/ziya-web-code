@@ -192,6 +192,27 @@ export const formatDateTime = (
   }).format(parsed);
 };
 
+export const formatDateTimeWithTime = (
+  value?: string | null,
+  fallback = "—"
+): string => {
+  if (!value || value.startsWith("0001-01-01")) return fallback;
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(parsed);
+};
+
 export const formatCurrency = (
   value: number | string | null | undefined,
   options?: {

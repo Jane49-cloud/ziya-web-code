@@ -329,6 +329,23 @@ export const GroupSlice = apiSlice.injectEndpoints({
       invalidatesTags: (_res, _err, { id }) => [{ type: "Groups", id }],
     }),
 
+    //search
+    searchGroupLoan: builder.query<any[], { groupId: string | number; q: string }>({
+      query: ({ groupId, q }) => ({
+        url: "/group-loans/search",
+        method: "GET",
+        params: {
+          q: q || "all",
+          g: groupId,
+        },
+      }),
+      transformResponse: (response: any) => response?.loans ?? [],
+
+      providesTags: (_result, _error, arg) => [
+        { type: "Groups", id: `SEARCH-${arg.groupId}` },
+      ],
+    }),
+
 
     getAllGroupActivities: builder.query({
       query: () => "/group-activities/all",
@@ -403,8 +420,6 @@ export const GroupSlice = apiSlice.injectEndpoints({
         { type: "Wallets", id: "LIST" },
       ],
     }),
-
-
 
     updateGroupLoan: builder.mutation({
       query: ({ loanId, updatedData }) => ({

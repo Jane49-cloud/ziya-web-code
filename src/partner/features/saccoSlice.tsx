@@ -1,4 +1,9 @@
 import { apiSlice } from "../../redux/api";
+import type {
+  PartnerReconciliationResponse,
+  ConfirmPartnerReconciliationResponse,
+  
+} from "../types";
 
 type PaginationQuery = {
     page?: number;
@@ -78,6 +83,8 @@ type CreatePartnerCustomerPayload = {
   | {
       customerId: number | string;
     };
+
+
 
 export const saccoSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -373,16 +380,6 @@ export const saccoSlice = apiSlice.injectEndpoints({
                 ],
         }),
 
-
-        // getGroupAssets: builder.query<any, number | string>({
-        //     query: (groupId) => ({
-        //         url: `/company-wallets/assets/group/${groupId}`,
-        //         method: "GET",
-        //     }),
-        // }),
-
-       
-
         getGroupAssets: builder.query<any, GroupAssetsArg>({
         query: (arg) => {
             const groupId =
@@ -409,6 +406,51 @@ export const saccoSlice = apiSlice.injectEndpoints({
             },
             }),
 
+       //reconciliations
+
+       // Reconciliations
+        getAllPartnerReconciliations: builder.query<PartnerReconciliationResponse, void>({
+        query: () => ({
+            url: "/partners/reconcile/all-requests",
+            method: "GET",
+        }),
+        providesTags: [
+            {
+            type: "PartnerReconciliation",
+            id: "LIST",
+            },
+        ],
+        }),
+
+        getPendingPartnerReconciliations: builder.query<PartnerReconciliationResponse, void >({
+        query: () => ({
+            url: "/partners/reconcile/pending",
+            method: "GET",
+        }),
+        providesTags: [
+            {
+            type: "PartnerReconciliation",
+            id: "PENDING",
+            },
+        ],
+        }),
+
+        confirmPartnerReconciliation: builder.mutation< ConfirmPartnerReconciliationResponse, number>({
+        query: (reconciliationId) => ({
+            url: `/partners/reconcile/confirm/${reconciliationId}`,
+            method: "POST",
+        }),
+        invalidatesTags: [
+            {
+            type: "PartnerReconciliation",
+            id: "LIST",
+            },
+            {
+            type: "PartnerReconciliation",
+            id: "PENDING",
+            },
+        ],
+        }),
 
 
     }),

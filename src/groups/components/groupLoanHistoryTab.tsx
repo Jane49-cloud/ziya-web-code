@@ -14,7 +14,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
-import { useLazyGetGroupLoansQuery } from "../features";
+import { useLazyGetGroupLoansQuery, useLazySearchGroupLoanQuery } from "../features";
 import GroupLoanFormModal from "./groupFormModal";
 import GroupPaymentFormModal from "./groupPaymentFormModal";
 import { cleanLowerInput, formatName, getUser } from "../../utils";
@@ -91,6 +91,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
   const [fetchGroupLoans, { isFetching }] = useLazyGetGroupLoansQuery();
 
+  const [searchGroupLoan, { isFetching: isSearchFetching }] = useLazySearchGroupLoanQuery();
+
   const rowsRef = useRef<any[]>([]);
 
   const [loans, setLoans] = useState<any[]>([]);
@@ -104,6 +106,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend">("descend");
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchRows, setSearchRows] = useState<any[]>([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [editLoan, setEditLoan] = useState<any>(null);
 
@@ -183,6 +186,8 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
       setUiPageSize(10);
       setBackendPage(0);
       setHasMore(true);
+      setSearchTerm("");
+      setSearchRows([]);
       syncRows([]);
 
       await loadBatch(1, true);
@@ -225,44 +230,86 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
   //   [totalLoaned, totalLoanCount]
   // );
 
-  const filteredLoans = useMemo(() => {
-    const needle = sanitizeSearchInput(searchTerm);
+  // const filteredLoans = useMemo(() => {
+  //   const needle = sanitizeSearchInput(searchTerm);
 
-    if (!needle) return loans;
+  //   if (!needle) return loans;
 
-    return loans.filter((loan: any) => {
-      const recipient = sanitizeSearchInput(
-        formatName(
-          `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
-        )
-      );
+  //   return loans.filter((loan: any) => {
+  //     const recipient = sanitizeSearchInput(
+  //       formatName(
+  //         `${loan.recipient_firstname ?? ""} ${loan.recipient_lastname ?? ""}`
+  //       )
+  //     );
 
-      const loanTypeName = sanitizeSearchInput(loan.loan_type_name);
-      const loanType = sanitizeSearchInput(loan.loan_type);
-      const cycle = sanitizeSearchInput(loan.cycle);
+  //     const loanTypeName = sanitizeSearchInput(loan.loan_type_name);
+  //     const loanType = sanitizeSearchInput(loan.loan_type);
+  //     const cycle = sanitizeSearchInput(loan.cycle);
 
-      return (
-        recipient.includes(needle) ||
-        loanTypeName.includes(needle) ||
-        loanType.includes(needle) ||
-        cycle.includes(needle)
-      );
-    });
-  }, [loans, searchTerm]);
+  //     return (
+  //       recipient.includes(needle) ||
+  //       loanTypeName.includes(needle) ||
+  //       loanType.includes(needle) ||
+  //       cycle.includes(needle)
+  //     );
+  //   });
+  // }, [loans, searchTerm]);
+
+const cleanedSearchTerm = sanitizeSearchInput(searchTerm);
+const isSearching = Boolean(cleanedSearchTerm);
+
+useEffect(() => {
+  setUiPage(1);
+
+  if (!cleanedSearchTerm) {
+    setSearchRows([]);
+    return;
+  }
+
+  let cancelled = false;
+
+  const timeout = window.setTimeout(async () => {
+    try {
+      const response = await searchGroupLoan({
+        groupId,
+        q: cleanedSearchTerm,
+      }).unwrap();
+
+      if (!cancelled) {
+        setSearchRows(dedupeGroupLoanRows(response));
+      }
+    } catch (error) {
+      if (!cancelled) {
+        console.error("Failed to search group loans:", error);
+        setSearchRows([]);
+      }
+    }
+  }, 350);
+
+  return () => {
+    cancelled = true;
+    window.clearTimeout(timeout);
+  };
+}, [cleanedSearchTerm, groupId, searchGroupLoan]);
+
+const displayLoans = useMemo(() => {
+  return isSearching ? searchRows : loans;
+}, [isSearching, searchRows, loans]);
+
 
   const sortedLoans = useMemo(
-    () =>
-      [...filteredLoans].sort((a, b) =>
-        sortOrder === "ascend"
-          ? new Date(a.created_at ?? a.date_issued).getTime() -
+  () =>
+    [...displayLoans].sort((a, b) =>
+      sortOrder === "ascend"
+        ? new Date(a.created_at ?? a.date_issued).getTime() -
           new Date(b.created_at ?? b.date_issued).getTime()
-          : new Date(b.created_at ?? b.date_issued).getTime() -
+        : new Date(b.created_at ?? b.date_issued).getTime() -
           new Date(a.created_at ?? a.date_issued).getTime()
-      ),
-    [filteredLoans, sortOrder]
-  );
+    ),
+  [displayLoans, sortOrder]
+);
 
-  const isFiltering = Boolean(sanitizeSearchInput(searchTerm));
+  const isFiltering = isSearching;
 
   const progressiveTotal = isFiltering
     ? sortedLoans.length
@@ -488,12 +535,10 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
 
           <Input.Search
             allowClear
-            placeholder="Search recipient, type, or cycle"
+            placeholder="Search loan by recipient name..."
             value={searchTerm}
-            onChange={(event) => {
-              setSearchTerm(sanitizeSearchInput(event.target.value));
-              setUiPage(1);
-            }}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            onSearch={(value) => setSearchTerm(value)}
             className="w-64"
           />
         </Space>
@@ -501,7 +546,7 @@ const GroupLoanHistoryTab: FC<GroupLoanHistoryTabProps> = ({
         <Table
           columns={columns}
           dataSource={sortedLoans}
-          loading={isBootstrapping || isFetching || isPaginationLoading}
+          loading={isBootstrapping || isFetching || isSearchFetching || isPaginationLoading}
           rowKey="id"
           pagination={{
             current: uiPage,
