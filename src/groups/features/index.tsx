@@ -49,6 +49,8 @@ export const {
   useInitiateAssetGroupLoanMutation,
   useConfirmGroupLoanMutation,
 
+  useLazySearchGroupLoanQuery,
+
   //useCreateGroupLoanMutation,
   useUpdateGroupLoanMutation,
   useDeleteGroupLoanMutation,

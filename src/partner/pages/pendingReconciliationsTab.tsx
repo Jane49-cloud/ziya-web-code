@@ -55,8 +55,18 @@ const PendingReconciliationsTab = () => {
         //     key: "partner_id",
         //     width: 120,
         // },
+
         {
-            title: "Amount",
+             title: "Partner Name",
+             dataIndex: "partner_name",
+            key: "partner_name",
+             width: 120,
+             render: (value: string | null | undefined) => formatName(value),
+         },
+
+
+        {
+            title: "Amount", 
             dataIndex: "amount",
             key: "amount",
             render: (amount: number) => (

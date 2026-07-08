@@ -44,6 +44,14 @@ const AllReconciliationsTab = () => {
         //     width: 120,
         // },
         {
+             title: "Partner Name",
+             dataIndex: "partner_name",
+             key: "partner_name",
+             width: 120,
+             render: (value: string | null | undefined) => formatName(value),
+         },
+
+        {
             title: "Amount",
             dataIndex: "amount",
             key: "amount",
