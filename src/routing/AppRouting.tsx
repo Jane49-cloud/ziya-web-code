@@ -41,21 +41,12 @@ import WalletTransactionsTab from "../transactions/pages/groupTransactions";
 import PersonalTransactionsTab from "../transactions/pages/personalTransactions";
 
 // role groups
-import {
-  ALL_ROLES,
-  STAFF_ROLES,
-  ADMIN_DEV,
-  STAFF_MANAGEMENT_ROLES,
-} from "../utils/roles";
+import { ALL_ROLES, STAFF_ROLES, ADMIN_DEV, STAFF_MANAGEMENT_ROLES, ADMIN_DEV_FINANCE } from "../utils/roles";
 // import AnalysisModule from "../analysis";
 import HomePage from "../home";
 import AdminTasksPage from "../tasks/pages/adminTasks";
 import BlogsModuleLayout from "../blogs";
-import {
-  BlogsListPage,
-  BlogComposerPage,
-  BlogDetailsPage,
-} from "../blogs/pages";
+import { BlogsListPage, BlogComposerPage, BlogDetailsPage} from "../blogs/pages";
 import { CreateDocumentForm } from "../documents/components/createDocumentForm";
 import { DocumentsList } from "../documents/pages/documentList";
 import { DocumentViewer } from "../documents/pages/documentViewer";
@@ -178,18 +169,20 @@ const AppRouting = (): ReactElement => {
           <Route element={<Layout children={undefined} />}>
             <Route path="/roles" element={<RolesManagement />} />
             <Route path="/loan-types" element={<LoanCategories />} />
-            <Route path="/tasks" element={<AdminTasksPage />} />
-
-            {/* partner */}
-            <Route path="/sacco" element={<SaccoPage />} />
-            <Route path="/partners/:id" element={<SinglePartnerPage />} />
-            <Route path="/partners/wallet/:id" element={<SinglePartnerWalletPage />} />
-
+            <Route path="/tasks" element={<AdminTasksPage />} />          
           </Route>
-
-
-
         </Route>
+
+
+       {/* Staff management (admin, dev, support, finance) */}
+        <Route element={<PrivateRoutes allowedRoles={ADMIN_DEV_FINANCE} />}>
+          <Route element={<Layout children={undefined} />}>
+            <Route path="/company-assets" element={<CompanyAssetsPage />} />  
+            <Route path="partners/:id" element={<SinglePartnerWalletPage />} />      
+          </Route>
+        </Route>
+
+
 
         {/* Staff management (admin, dev, support) */}
         <Route element={<PrivateRoutes allowedRoles={STAFF_MANAGEMENT_ROLES} />}>
@@ -201,8 +194,16 @@ const AppRouting = (): ReactElement => {
             <Route path="/loan-categories/:id" element={<SingleLoanCategory />} />
             <Route path="/loan-assets" element={<LoanAssets />} />
             <Route path="/loan-assets/:id" element={<SingleAssetType />} />
-            <Route path="/company-assets" element={<CompanyAssetsPage />} />
             <Route path="/roles/:id" element={<SingleRolePage />} />
+             <Route path="/activities/user/:id" element={<UserGroupActivities />} />
+             <Route path="/activities/group/:id"  element={<GroupActivitiesByGroup />} />
+
+            {/* partner */}
+            <Route path="/sacco" element={<SaccoPage />} />
+            <Route path="/partners/:id" element={<SinglePartnerPage />} />
+            <Route path="/partners/wallet/:id" element={<SinglePartnerWalletPage />} />
+           
+            <Route path="partners" element={<PartnerWalletsPage />} />
 
           </Route>
         </Route>
@@ -223,11 +224,8 @@ const AppRouting = (): ReactElement => {
               <Route index element={<Navigate to="group" replace />} />
               <Route path="group" element={<GroupWalletsTab />} />
               <Route path="personal" element={<PersonalWalletsTab />} />
-              //new
-              <Route path="partners" element={<PartnerWalletsPage />} />
-              <Route path="partners/:id" element={<SinglePartnerWalletPage />} />
+              
             </Route>
-
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
             <Route
               path="/subscriptions/group/:groupId"
@@ -245,18 +243,10 @@ const AppRouting = (): ReactElement => {
               <Route index element={<Navigate to="group" replace />} />
               <Route path="group" element={<WalletTransactionsTab />} />
               <Route path="personal" element={<PersonalTransactionsTab />} />
-            </Route>
-
-
-            <Route
-              path="/activities/user/:id"
-              element={<UserGroupActivities />}
-            />
-            <Route
-              path="/activities/group/:id"
-              element={<GroupActivitiesByGroup />}
-            />
+            </Route>             
           </Route>
+
+
         </Route>
       </Routes>
     </Suspense >

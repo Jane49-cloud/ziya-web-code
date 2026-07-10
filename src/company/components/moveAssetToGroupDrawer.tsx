@@ -24,9 +24,7 @@ import {
 import { formatName } from "../../utils";
 import BatchSearchSelect from "./batchSearchSelect";
 import type { CompanyAsset } from "./companyAssetsTable";
-import MoveAssetToGroupConfirmModal, {
-    type MoveAssetToGroupTransaction,
-} from "./moveAstGroupConfMod";
+import MoveAssetToGroupConfirmModal, { type MoveAssetToGroupTransaction } from "./moveAstGroupConfMod";
 
 const { Text } = Typography;
 
@@ -189,7 +187,7 @@ const MoveAssetToGroupDrawer = ({
             group_id: groupId,
         };
 
-        console.log("Move asset to group payload:", payload);
+        // console.log("Move asset to group payload:", payload);
 
         try {
             setSelectedGroupId(groupId);

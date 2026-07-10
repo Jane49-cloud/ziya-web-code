@@ -37,4 +37,5 @@ export const STAFF_ROLES: UserRole[] = [
 export const ADMIN_DEV: UserRole[] = ["admin", "dev"];
 export const STAFF_MANAGEMENT_ROLES: UserRole[] = ["admin", "dev", "support"];
 
-export const ADMIN_DEV_FINANCE: UserRole[] = ["admin", "dev", "finance"];
+export const ADMIN_DEV_FINANCE: UserRole[] = ["admin", "dev", "support", "finance"];
+

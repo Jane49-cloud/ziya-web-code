@@ -23,6 +23,7 @@ const { Text } = Typography;
 export type CompanyAsset = {
   id: number;
   asset_type: number;
+  asset_name: string;
   asset_type_name?: string;
   identifier_type?: string;
   unique_id?: string;

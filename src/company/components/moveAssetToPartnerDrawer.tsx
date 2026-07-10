@@ -4,14 +4,7 @@ import {
     useCallback,
     useState,
 } from "react";
-import {
-    Button,
-    Drawer,
-    Form,
-    Space,
-    Typography,
-    message,
-} from "antd";
+import {Button, Drawer, Form, Space, Typography, message,} from "antd";
 
 import {
     useLazyGetAllSaccosQuery,
@@ -27,15 +20,16 @@ import type { CompanyAsset } from "./companyAssetsTable";
 import MoveAssetToPartnerConfirmModal, {
     type MoveAssetToPartnerTransaction,
 } from "./moveAstPartnerConfMod";
+import type { PartnerOption } from "../../partner/types";
 
 const { Text } = Typography;
 
-type PartnerOption = {
-    id: string | number;
-    name?: string;
-    location?: string;
-    chairperson_name?: string;
-};
+// type PartnerOption = {
+//     id: string | number;
+//     name?: string;
+//     location?: string;
+//     chairperson_name?: string;
+// };
 
 type Props = {
     open: boolean;
@@ -99,15 +93,13 @@ const MoveAssetToPartnerDrawer = ({
     );
 
     const searchPartnerRecords = useCallback(
-        async (
-            query: string,
-        ): Promise<PartnerOption[]> => {
+        async ( query: string ): Promise<PartnerOption[]> => {
             const response = await searchPartners({
-                q: query,
+                q: query.trim(),
             }).unwrap();
 
-            return Array.isArray(response)
-                ? response
+            return Array.isArray(response?.partners)
+                ? response.partners
                 : [];
         },
         [searchPartners],

@@ -79,8 +79,8 @@ const MoveAssetToGroupConfirmModal = ({
                 <Descriptions.Item label="Asset">
                     {formatName(
                         transactionDetails?.asset
-                            ?.asset_type_name ??
-                        asset?.asset_type_name,
+                            ?.asset_name ??
+                        asset?.asset_name,
                     ) || "—"}
                 </Descriptions.Item>
 

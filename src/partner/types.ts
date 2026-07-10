@@ -20,3 +20,22 @@ export interface ConfirmPartnerReconciliationResponse {
   message: string;
   success: boolean;
 }
+
+export type SearchPartnersPayload = {
+    q: string;
+};
+
+export type SearchPartnersResponse = {
+    page: number;
+    page_size: number;
+    partners: PartnerOption[];
+    query: string;
+    success: boolean;
+};
+
+ export type PartnerOption = {
+     id: string | number;
+     name?: string;
+     location?: string;
+     chairperson_name?: string;
+};

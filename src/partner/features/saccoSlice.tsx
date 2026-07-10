@@ -1,8 +1,6 @@
 import { apiSlice } from "../../redux/api";
 import type {
-  PartnerReconciliationResponse,
-  ConfirmPartnerReconciliationResponse,
-  
+  PartnerReconciliationResponse, ConfirmPartnerReconciliationResponse, SearchPartnersResponse 
 } from "../types";
 
 type PaginationQuery = {
@@ -343,7 +341,7 @@ export const saccoSlice = apiSlice.injectEndpoints({
             ],
         }),
         //search partner
-        searchPartners: builder.query<any, SearchPartnersPayload>({
+        searchPartners: builder.query<SearchPartnersResponse, SearchPartnersPayload>({
             query: ({ q }) => ({
                 url: "/partners/search",
                 method: "GET",
